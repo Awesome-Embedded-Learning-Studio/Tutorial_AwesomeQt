@@ -1,0 +1,1964 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Awesome-Embedded-Learning-Studio的现代Qt教程">
+      
+      
+        <meta name="author" content="CharlieChen">
+      
+      
+      
+        <link rel="prev" href="../12-plugin-beginner/">
+      
+      
+        <link rel="next" href="../14-logging-beginner/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../Awesome-Embedded.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+    
+    
+      
+        <title>13 i18n beginner - Tutorial_AwesomeQt的文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#1-前言为什么一开始就要考虑国际化" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Tutorial_AwesomeQt的文档" class="md-header__button md-logo" aria-label="Tutorial_AwesomeQt的文档" data-md-component="logo">
+      
+  <img src="../../../Awesome-Embedded.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tutorial_AwesomeQt的文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              13 i18n beginner
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至暗色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换至暗色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="切换至亮色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换至亮色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  AwesomeQt 教程索引
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../00-environment-setup/00-qt6-install-beginner/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Beginner
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Tutorial_AwesomeQt的文档" class="md-nav__button md-logo" aria-label="Tutorial_AwesomeQt的文档" data-md-component="logo">
+      
+  <img src="../../../Awesome-Embedded.png" alt="logo">
+
+    </a>
+    Tutorial_AwesomeQt的文档
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AwesomeQt 教程索引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beginner
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Beginner
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    00 environment setup
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    00 environment setup
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../00-environment-setup/00-qt6-install-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    00 qt6 install beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../00-environment-setup/01-ide-setup-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    01 ide setup beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../00-environment-setup/02-cmake-first-project-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    02 cmake first project beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    01 qtbase
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    01 qtbase
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-qobject-meta-system-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    01 qobject meta system beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-signal-slot-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    02 signal slot beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-string-encoding-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    03 string encoding beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-container-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    04 container beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-variant-type-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    05 variant type beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-memory-management-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    06 memory management beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-event-system-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    07 event system beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-file-io-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    08 file io beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-multithreading-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    09 multithreading beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-qprocess-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10 qprocess beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-timer-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11 timer beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-plugin-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    12 plugin beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13 i18n beginner
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13 i18n beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-前言为什么一开始就要考虑国际化" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 前言：为什么一开始就要考虑国际化
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-环境说明" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 环境说明
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-核心概念讲解" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 核心概念讲解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 核心概念讲解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-tr-函数--国际化的基石" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 tr() 函数 —— 国际化的基石
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-复数形式处理" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 复数形式处理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-qtranslator--加载翻译文件" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 QTranslator —— 加载翻译文件
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-lupdatelrelease-工作流" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 lupdate/lrelease 工作流
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#35-字符串字面量-vs-tr-的选择" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.5 字符串字面量 vs tr() 的选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#36-上下文和翻译条目组织" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.6 上下文和翻译条目组织
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#37-动态语言切换的完整流程" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.7 动态语言切换的完整流程
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-踩坑预防清单" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 踩坑预防清单
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-练习项目" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 练习项目
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-官方文档参考" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 官方文档参考
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-logging-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14 logging beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-regex-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    15 regex beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-json-xml-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16 json xml beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="导航栏" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    AwesomeQt 教程索引
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../00-environment-setup/00-qt6-install-beginner/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Beginner
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../01-qobject-meta-system-beginner/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    01 qtbase
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>13 i18n beginner</h1>
+
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+入门 · QtBase · 13 · 国际化
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<h2 id="1-前言为什么一开始就要考虑国际化">1. 前言：为什么一开始就要考虑国际化<a class="headerlink" href="#1-前言为什么一开始就要考虑国际化" title="链接到此章节">&para;</a></h2>
+<p>说实话，我第一次做独立项目的时候，完全没想过国际化这回事。等程序写到一半，用户说「我们需要英文版」，我才发现所有的用户可见文本都硬编码成了中文。那时候我花了整整一个周末把所有字符串翻出来，用最笨拙的方式一一替换。</p>
+<p>如果你一开始就做了国际化准备，后续添加语言支持只需要翻译一个 <code>.ts</code> 文件，改一行代码就能切换语言。但如果后期再补，工作量是指数级增长的。</p>
+<p>Qt 的国际化系统非常成熟，从 <code>tr()</code> 函数到 <code>lupdate</code>/<code>lrelease</code> 工具链，再到 Qt Linguist 翻译工具，形成了一套完整的工作流。这一篇我们要做的就是把这个工作流跑通，让你的程序从一开始就具备走向世界的能力。</p>
+<h2 id="2-环境说明">2. 环境说明<a class="headerlink" href="#2-环境说明" title="链接到此章节">&para;</a></h2>
+<p>本篇基于 Qt 6.9.1，需要以下模块：</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>CMake 组件</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QtCore</td>
+<td>Qt6::Core</td>
+<td>tr()、QTranslator</td>
+</tr>
+<tr>
+<td>Qt Tools</td>
+<td>lupdate, lrelease</td>
+<td>命令行工具</td>
+</tr>
+</tbody>
+</table>
+<p>Qt Linguist 是一个独立的 GUI 工具，通常随 Qt 安装包一同安装。如果你用 Qt Creator，这些工具都已经配置好了。</p>
+<h2 id="3-核心概念讲解">3. 核心概念讲解<a class="headerlink" href="#3-核心概念讲解" title="链接到此章节">&para;</a></h2>
+<h3 id="31-tr-函数--国际化的基石">3.1 tr() 函数 —— 国际化的基石<a class="headerlink" href="#31-tr-函数--国际化的基石" title="链接到此章节">&para;</a></h3>
+<p>Qt 的国际化系统围绕 <code>tr()</code> 函数展开。这个函数的作用是标记需要翻译的字符串，并在运行时查找对应的翻译。</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 在 QObject 派生类中</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QString</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Hello, World!&quot;</span><span class="p">);</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos="3 "></span></a><span class="n">QString</span><span class="w"> </span><span class="n">greeting</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Welcome to %1&quot;</span><span class="p">).</span><span class="n">arg</span><span class="p">(</span><span class="n">applicationName</span><span class="p">);</span>
+</span></code></pre></div>
+<p><code>tr()</code> 是 <code>QObject</code> 的静态成员函数，所以所有继承自 <code>QObject</code> 的类都可以直接调用。它的基本签名是：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QString</span><span class="w"> </span><span class="nf">tr</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">sourceText</span><span class="p">,</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">           </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">disambiguation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">           </span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
+</span></code></pre></div>
+<p>三个参数的含义分别是：
+- <code>sourceText</code>：源文本（通常是英文）
+- <code>disambiguation</code>：消歧义字符串，同样文本在不同上下文有不同翻译时使用
+- <code>n</code>：用于复数形式的数字</p>
+<p>消歧义是个很实用的功能。比如「File」这个词在菜单里是「文件」，在动词时是「文件操作」。你可以这样区分：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QString</span><span class="w"> </span><span class="n">menuText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;File&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Menu item&quot;</span><span class="p">);</span><span class="w">         </span><span class="c1">// 菜单项</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QString</span><span class="w"> </span><span class="n">actionText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;File&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;To file something&quot;</span><span class="p">);</span><span class="w"> </span><span class="c1">// 动词</span>
+</span></code></pre></div>
+<p>翻译者看到这两个条目时会分别处理，不会混淆。</p>
+<h3 id="32-复数形式处理">3.2 复数形式处理<a class="headerlink" href="#32-复数形式处理" title="链接到此章节">&para;</a></h3>
+<p>不同语言的复数规则差异很大，比如英语只有单数和复数，而阿拉伯语有六种复数形式。Qt 用一个特殊的 <code>tr()</code> 语法处理这个问题：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">messages</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QString</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;%n message(s)&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="p">);</span>
+</span></code></pre></div>
+<p>这里的 <code>%n</code> 是特殊占位符，Qt 会根据 <code>count</code> 的值和语言规则自动选择正确的复数形式。翻译文件里会定义每种数字范围对应的翻译。</p>
+<blockquote>
+<p>📝 <strong>随堂测验：口述回答</strong>
+用自己的话说说：为什么不能用传统的 <code>if (count == 1)</code> 来处理复数？这在国际化的场景下会有什么问题？</p>
+<p><em>(请先自己想一下，再往下滑看答案)</em></p>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<p><strong>答案参考</strong>：
+- 不同语言的复数规则不同，波兰语有单数、复数、少数等多种形式
+- 用 <code>if</code> 判断需要为每种语言写不同的代码逻辑，维护成本高
+- Qt 的 <code>%n</code> 机制把复数规则放到翻译文件里，代码不需要知道语言的具体规则
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+</blockquote>
+<h3 id="33-qtranslator--加载翻译文件">3.3 QTranslator —— 加载翻译文件<a class="headerlink" href="#33-qtranslator--加载翻译文件" title="链接到此章节">&para;</a></h3>
+<p><code>QTranslator</code> 负责在运行时加载翻译文件（<code>.qm</code>）并提供翻译查询功能。</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="n">QApplication</span><span class="w"> </span><span class="n">app</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="c1">// 创建翻译器</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="n">QTranslator</span><span class="w"> </span><span class="n">translator</span><span class="p">;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><a href="#__codelineno-4-6"><span class="linenos" data-linenos=" 6 "></span></a>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7"></a><a href="#__codelineno-4-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="c1">// 加载翻译文件</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8"></a><a href="#__codelineno-4-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">translator</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;:/translations/zh_CN.qm&quot;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9"></a><a href="#__codelineno-4-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">app</span><span class="p">.</span><span class="n">installTranslator</span><span class="p">(</span><span class="o">&amp;</span><span class="n">translator</span><span class="p">);</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10"></a><a href="#__codelineno-4-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11"></a><a href="#__codelineno-4-11"><span class="linenos" data-linenos="11 "></span></a>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12"></a><a href="#__codelineno-4-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="c1">// 之后所有 tr() 调用都会使用这个翻译</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13"></a><a href="#__codelineno-4-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">app</span><span class="p">.</span><span class="n">exec</span><span class="p">();</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14"></a><a href="#__codelineno-4-14"><span class="linenos" data-linenos="14 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+<p><code>load()</code> 的参数可以是文件路径，也可以是资源路径（<code>:</code> 开头）。加载成功后，用 <code>installTranslator()</code> 把翻译器安装到应用程序实例上。之后所有 <code>tr()</code> 调用都会通过这个翻译器查找翻译。</p>
+<p>你可以安装多个翻译器，Qt 会按照安装顺序依次查找，找到第一个匹配的翻译就使用。</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QTranslator</span><span class="w"> </span><span class="n">baseTranslator</span><span class="p">;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QTranslator</span><span class="w"> </span><span class="n">appTranslator</span><span class="p">;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos="3 "></span></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">baseTranslator</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;:/qtbase_zh_CN.qm&quot;</span><span class="p">);</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><a href="#__codelineno-5-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">appTranslator</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;:/app_zh_CN.qm&quot;</span><span class="p">);</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a><a href="#__codelineno-5-6"><span class="linenos" data-linenos="6 "></span></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7"></a><a href="#__codelineno-5-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">app</span><span class="p">.</span><span class="n">installTranslator</span><span class="p">(</span><span class="o">&amp;</span><span class="n">baseTranslator</span><span class="p">);</span><span class="w">  </span><span class="c1">// 先安装 Qt 基础翻译</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8"></a><a href="#__codelineno-5-8"><span class="linenos" data-linenos="8 "></span></a><span class="n">app</span><span class="p">.</span><span class="n">installTranslator</span><span class="p">(</span><span class="o">&amp;</span><span class="n">appTranslator</span><span class="p">);</span><span class="w">   </span><span class="c1">// 再安装应用翻译</span>
+</span></code></pre></div>
+<p>这个顺序很重要。如果应用翻译覆盖了 Qt 基础翻译（比如你重新翻译了标准对话框的按钮），应该把应用翻译放在后面。</p>
+<blockquote>
+<p>⚠️ <strong>坑 #1：在 main() 之前创建的 QObject 不会翻译</strong>
+❌ 错误做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="c1">// 全局对象，在 main 之前构造</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">static</span><span class="w"> </span><span class="n">MyGlobalWidget</span><span class="w"> </span><span class="n">globalWidget</span><span class="p">;</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a><a href="#__codelineno-6-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="n">QApplication</span><span class="w"> </span><span class="n">app</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6"></a><a href="#__codelineno-6-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="n">QTranslator</span><span class="w"> </span><span class="n">translator</span><span class="p">;</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a><a href="#__codelineno-6-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="n">translator</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;zh_CN.qm&quot;</span><span class="p">);</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a><a href="#__codelineno-6-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="n">app</span><span class="p">.</span><span class="n">installTranslator</span><span class="p">(</span><span class="o">&amp;</span><span class="n">translator</span><span class="p">);</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9"></a><a href="#__codelineno-6-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="c1">// globalWidget 的文本不会翻译</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10"></a><a href="#__codelineno-6-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+✅ 正确做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><a href="#__codelineno-7-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><a href="#__codelineno-7-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">QApplication</span><span class="w"> </span><span class="n">app</span><span class="p">(</span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3"></a><a href="#__codelineno-7-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">QTranslator</span><span class="w"> </span><span class="n">translator</span><span class="p">;</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4"></a><a href="#__codelineno-7-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="n">translator</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">&quot;zh_CN.qm&quot;</span><span class="p">);</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5"></a><a href="#__codelineno-7-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">app</span><span class="p">.</span><span class="n">installTranslator</span><span class="p">(</span><span class="o">&amp;</span><span class="n">translator</span><span class="p">);</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6"></a><a href="#__codelineno-7-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="c1">// 在安装翻译器之后再创建对象</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7"></a><a href="#__codelineno-7-7"><span class="linenos" data-linenos="7 "></span></a><span class="w">    </span><span class="n">MyGlobalWidget</span><span class="w"> </span><span class="n">globalWidget</span><span class="p">;</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8"></a><a href="#__codelineno-7-8"><span class="linenos" data-linenos="8 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+💥 后果：在翻译器安装之前创建的对象，其 <code>tr()</code> 调用发生在安装之前，永远使用源文本
+💡 一句话记住：翻译器必须在任何需要翻译的 QObject 创建之前安装</p>
+</blockquote>
+<h3 id="34-lupdatelrelease-工作流">3.4 lupdate/lrelease 工作流<a class="headerlink" href="#34-lupdatelrelease-工作流" title="链接到此章节">&para;</a></h3>
+<p>Qt 的翻译工具链分三个阶段：</p>
+<ol>
+<li><strong>提取阶段（lupdate）</strong>：扫描源代码，找出所有 <code>tr()</code> 调用，生成 <code>.ts</code> 文件</li>
+<li><strong>翻译阶段（Qt Linguist）</strong>：在 <code>.ts</code> 文件中添加翻译文本</li>
+<li><strong>编译阶段（lrelease）</strong>：把 <code>.ts</code> 编译成 <code>.qm</code> 二进制文件供运行时使用</li>
+</ol>
+<p><code>.ts</code> 文件是 XML 格式，人类可读。<code>.qm</code> 是二进制格式，体积小加载快。</p>
+<p>完整的 CMakeLists.txt 配置：</p>
+<div class="language-cmake highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><a href="#__codelineno-8-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span><span class="w"> </span><span class="s">3.26</span><span class="p">)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><a href="#__codelineno-8-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="nb">project</span><span class="p">(</span><span class="s">MyApp</span><span class="w"> </span><span class="s">LANGUAGES</span><span class="w"> </span><span class="s">CXX</span><span class="p">)</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a><a href="#__codelineno-8-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a><a href="#__codelineno-8-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_CXX_STANDARD</span><span class="w"> </span><span class="s">23</span><span class="p">)</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5"></a><a href="#__codelineno-8-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_AUTOMOC</span><span class="w"> </span><span class="s">ON</span><span class="p">)</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6"></a><a href="#__codelineno-8-6"><span class="linenos" data-linenos=" 6 "></span></a>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7"></a><a href="#__codelineno-8-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="nb">find_package</span><span class="p">(</span><span class="s">Qt6</span><span class="w"> </span><span class="s">REQUIRED</span><span class="w"> </span><span class="s">COMPONENTS</span><span class="w"> </span><span class="s">Core</span><span class="w"> </span><span class="s">Widgets</span><span class="p">)</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8"></a><a href="#__codelineno-8-8"><span class="linenos" data-linenos=" 8 "></span></a>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9"></a><a href="#__codelineno-8-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="c"># 添加可执行文件</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10"></a><a href="#__codelineno-8-10"><span class="linenos" data-linenos="10 "></span></a><span class="nb">qt_add_executable</span><span class="p">(</span><span class="s">myapp</span><span class="w"> </span><span class="s">main.cpp</span><span class="p">)</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11"></a><a href="#__codelineno-8-11"><span class="linenos" data-linenos="11 "></span></a>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12"></a><a href="#__codelineno-8-12"><span class="linenos" data-linenos="12 "></span></a><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">myapp</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">Qt6::Core</span><span class="w"> </span><span class="s">Qt6::Widgets</span><span class="p">)</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13"></a><a href="#__codelineno-8-13"><span class="linenos" data-linenos="13 "></span></a>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14"></a><a href="#__codelineno-8-14"><span class="linenos" data-linenos="14 "></span></a><span class="c"># 设置翻译源文件</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15"></a><a href="#__codelineno-8-15"><span class="linenos" data-linenos="15 "></span></a><span class="nb">set</span><span class="p">(</span><span class="s">TS_FILES</span><span class="w"> </span><span class="s">translations/myapp_zh_CN.ts</span><span class="p">)</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16"></a><a href="#__codelineno-8-16"><span class="linenos" data-linenos="16 "></span></a>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17"></a><a href="#__codelineno-8-17"><span class="linenos" data-linenos="17 "></span></a><span class="c"># 让 lupdate 能找到源文件</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18"></a><a href="#__codelineno-8-18"><span class="linenos" data-linenos="18 "></span></a><span class="nb">target_sources</span><span class="p">(</span><span class="s">myapp</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="o">${</span><span class="nv">TS_FILES</span><span class="o">}</span><span class="p">)</span>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19"></a><a href="#__codelineno-8-19"><span class="linenos" data-linenos="19 "></span></a>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20"></a><a href="#__codelineno-8-20"><span class="linenos" data-linenos="20 "></span></a><span class="c"># 添加 lupdate 和 lrelease 目标</span>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21"></a><a href="#__codelineno-8-21"><span class="linenos" data-linenos="21 "></span></a><span class="nb">qt_add_lupdate</span><span class="p">(</span><span class="s">myapp</span>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22"></a><a href="#__codelineno-8-22"><span class="linenos" data-linenos="22 "></span></a><span class="w">    </span><span class="s">TS_FILES</span><span class="w"> </span><span class="o">${</span><span class="nv">TS_FILES</span><span class="o">}</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23"></a><a href="#__codelineno-8-23"><span class="linenos" data-linenos="23 "></span></a><span class="w">    </span><span class="s">OPTIONS</span><span class="w"> </span><span class="s">-no-obsolete</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24"></a><a href="#__codelineno-8-24"><span class="linenos" data-linenos="24 "></span></a><span class="p">)</span>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25"></a><a href="#__codelineno-8-25"><span class="linenos" data-linenos="25 "></span></a>
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26"></a><a href="#__codelineno-8-26"><span class="linenos" data-linenos="26 "></span></a><span class="nb">qt_add_lrelease</span><span class="p">(</span><span class="s">myapp</span>
+</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27"></a><a href="#__codelineno-8-27"><span class="linenos" data-linenos="27 "></span></a><span class="w">    </span><span class="s">TS_FILES</span><span class="w"> </span><span class="o">${</span><span class="nv">TS_FILES</span><span class="o">}</span>
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28"></a><a href="#__codelineno-8-28"><span class="linenos" data-linenos="28 "></span></a><span class="w">    </span><span class="s">QM_FILES_OUTPUT_VARIABLE</span><span class="w"> </span><span class="s">qm_files</span>
+</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29"></a><a href="#__codelineno-8-29"><span class="linenos" data-linenos="29 "></span></a><span class="p">)</span>
+</span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30"></a><a href="#__codelineno-8-30"><span class="linenos" data-linenos="30 "></span></a>
+</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31"></a><a href="#__codelineno-8-31"><span class="linenos" data-linenos="31 "></span></a><span class="c"># 把 .qm 文件添加到资源（可选）</span>
+</span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32"></a><a href="#__codelineno-8-32"><span class="linenos" data-linenos="32 "></span></a><span class="c">#qt_add_resources(myapp &quot;translations&quot;</span>
+</span><span id="__span-8-33"><a id="__codelineno-8-33" name="__codelineno-8-33"></a><a href="#__codelineno-8-33"><span class="linenos" data-linenos="33 "></span></a><span class="c">#    FILES ${qm_files}</span>
+</span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34"></a><a href="#__codelineno-8-34"><span class="linenos" data-linenos="34 "></span></a><span class="c">#    PREFIX &quot;/translations&quot;</span>
+</span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35"></a><a href="#__codelineno-8-35"><span class="linenos" data-linenos="35 "></span></a><span class="c">#)</span>
+</span></code></pre></div>
+<p>这样配置后，你可以：
+- 运行 <code>cmake --build . --target lupdate</code> 更新 <code>.ts</code> 文件
+- 运行 <code>cmake --build . --target lrelease</code> 生成 <code>.qm</code> 文件</p>
+<p><code>-no-obsolete</code> 选项会从 <code>.ts</code> 文件中删除已经不存在的翻译条目，保持文件整洁。</p>
+<blockquote>
+<p>🔲 <strong>随堂测验：代码填空</strong>
+补全以下代码，实现动态切换语言：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><a href="#__codelineno-9-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">MainWindow</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QMainWindow</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><a href="#__codelineno-9-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a><a href="#__codelineno-9-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a><a href="#__codelineno-9-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="n">MainWindow</span><span class="p">(</span><span class="n">QWidget</span><span class="w"> </span><span class="o">*</span><span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">QMainWindow</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5"></a><a href="#__codelineno-9-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">        </span><span class="n">m_translator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QTranslator</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6"></a><a href="#__codelineno-9-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="n">switchLanguage</span><span class="p">(</span><span class="s">&quot;zh_CN&quot;</span><span class="p">);</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7"></a><a href="#__codelineno-9-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8"></a><a href="#__codelineno-9-8"><span class="linenos" data-linenos=" 8 "></span></a>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9"></a><a href="#__codelineno-9-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">switchLanguage</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">QString</span><span class="w"> </span><span class="o">&amp;</span><span class="n">language</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10"></a><a href="#__codelineno-9-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">        </span><span class="c1">// 移除旧翻译器</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11"></a><a href="#__codelineno-9-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">        </span><span class="n">qApp</span><span class="o">-&gt;</span><span class="n">removeTranslator</span><span class="p">(</span><span class="n">m_translator</span><span class="p">);</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12"></a><a href="#__codelineno-9-12"><span class="linenos" data-linenos="12 "></span></a>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13"></a><a href="#__codelineno-9-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">        </span><span class="c1">// 加载新翻译</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14"></a><a href="#__codelineno-9-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">        </span><span class="n">QString</span><span class="w"> </span><span class="n">fileName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">QString</span><span class="p">(</span><span class="s">&quot;:/translations/%1.qm&quot;</span><span class="p">).</span><span class="n">arg</span><span class="p">(</span><span class="n">______</span><span class="p">);</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15"></a><a href="#__codelineno-9-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m_translator</span><span class="o">-&gt;</span><span class="n">load</span><span class="p">(</span><span class="n">fileName</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16"></a><a href="#__codelineno-9-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">            </span><span class="n">qApp</span><span class="o">-&gt;</span><span class="n">______</span><span class="p">(</span><span class="n">m_translator</span><span class="p">);</span><span class="w">  </span><span class="c1">// 安装翻译器</span>
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17"></a><a href="#__codelineno-9-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18"></a><a href="#__codelineno-9-18"><span class="linenos" data-linenos="18 "></span></a>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19"></a><a href="#__codelineno-9-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">        </span><span class="c1">// 重新构建 UI，让 tr() 重新执行</span>
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20"></a><a href="#__codelineno-9-20"><span class="linenos" data-linenos="20 "></span></a><span class="w">        </span><span class="n">retranslateUi</span><span class="p">();</span>
+</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21"></a><a href="#__codelineno-9-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22"></a><a href="#__codelineno-9-22"><span class="linenos" data-linenos="22 "></span></a>
+</span><span id="__span-9-23"><a id="__codelineno-9-23" name="__codelineno-9-23"></a><a href="#__codelineno-9-23"><span class="linenos" data-linenos="23 "></span></a><span class="k">private</span><span class="o">:</span>
+</span><span id="__span-9-24"><a id="__codelineno-9-24" name="__codelineno-9-24"></a><a href="#__codelineno-9-24"><span class="linenos" data-linenos="24 "></span></a><span class="w">    </span><span class="n">QTranslator</span><span class="w"> </span><span class="o">*</span><span class="n">m_translator</span><span class="p">;</span>
+</span><span id="__span-9-25"><a id="__codelineno-9-25" name="__codelineno-9-25"></a><a href="#__codelineno-9-25"><span class="linenos" data-linenos="25 "></span></a><span class="p">};</span>
+</span></code></pre></div>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<p><strong>答案参考</strong>：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><a href="#__codelineno-10-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QString</span><span class="w"> </span><span class="n">fileName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">QString</span><span class="p">(</span><span class="s">&quot;:/translations/%1.qm&quot;</span><span class="p">).</span><span class="n">arg</span><span class="p">(</span><span class="n">language</span><span class="p">);</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><a href="#__codelineno-10-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">qApp</span><span class="o">-&gt;</span><span class="n">installTranslator</span><span class="p">(</span><span class="n">m_translator</span><span class="p">);</span>
+</span></code></pre></div>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+</blockquote>
+<h3 id="35-字符串字面量-vs-tr-的选择">3.5 字符串字面量 vs tr() 的选择<a class="headerlink" href="#35-字符串字面量-vs-tr-的选择" title="链接到此章节">&para;</a></h3>
+<p>不是所有字符串都需要翻译。只有用户可见的文本才需要 <code>tr()</code> 包裹。</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><a href="#__codelineno-11-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 需要翻译</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><a href="#__codelineno-11-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">setLabel</span><span class="p">(</span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;File Name:&quot;</span><span class="p">));</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3"></a><a href="#__codelineno-11-3"><span class="linenos" data-linenos="3 "></span></a><span class="n">setWindowTitle</span><span class="p">(</span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Open File&quot;</span><span class="p">));</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a><a href="#__codelineno-11-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">showMessage</span><span class="p">(</span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Operation completed successfully&quot;</span><span class="p">));</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5"></a><a href="#__codelineno-11-5"><span class="linenos" data-linenos="5 "></span></a>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6"></a><a href="#__codelineno-11-6"><span class="linenos" data-linenos="6 "></span></a><span class="c1">// 不需要翻译</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7"></a><a href="#__codelineno-11-7"><span class="linenos" data-linenos="7 "></span></a><span class="n">qDebug</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Debug: value changed to&quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">value</span><span class="p">;</span><span class="w">  </span><span class="c1">// 调试输出</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8"></a><a href="#__codelineno-11-8"><span class="linenos" data-linenos="8 "></span></a><span class="n">setObjectName</span><span class="p">(</span><span class="s">&quot;mainButton&quot;</span><span class="p">);</span><span class="w">                      </span><span class="c1">// 对象名</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9"></a><a href="#__codelineno-11-9"><span class="linenos" data-linenos="9 "></span></a><span class="n">writeLog</span><span class="p">(</span><span class="s">&quot;User logged in&quot;</span><span class="p">);</span><span class="w">                       </span><span class="c1">// 日志</span>
+</span></code></pre></div>
+<p>一个常见的错误是对所有字符串都加 <code>tr()</code>，这会增加翻译工作量，也会让 <code>.ts</code> 文件变得臃肿。</p>
+<h3 id="36-上下文和翻译条目组织">3.6 上下文和翻译条目组织<a class="headerlink" href="#36-上下文和翻译条目组织" title="链接到此章节">&para;</a></h3>
+<p><code>tr()</code> 调用有一个默认的「上下文」，就是类的名称。这有助于避免相同文本在不同类中的翻译冲突。</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><a href="#__codelineno-12-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 在 FileMenu 类中</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2"></a><a href="#__codelineno-12-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Open&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// 上下文是 &quot;FileMenu&quot;</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3"></a><a href="#__codelineno-12-3"><span class="linenos" data-linenos="3 "></span></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4"></a><a href="#__codelineno-12-4"><span class="linenos" data-linenos="4 "></span></a><span class="c1">// 在 Dialog 类中</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5"></a><a href="#__codelineno-12-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Open&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// 上下文是 &quot;Dialog&quot;</span>
+</span></code></pre></div>
+<p>翻译者会看到两个不同的条目：
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><a href="#__codelineno-13-1"><span class="linenos" data-linenos="1 "></span></a>FileMenu::Open
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2"></a><a href="#__codelineno-13-2"><span class="linenos" data-linenos="2 "></span></a>Dialog::Open
+</span></code></pre></div></p>
+<p>可以分别翻译。如果你想使用自定义上下文，可以用 <code>QT_TR_CONTEXT_NOOP</code> 宏：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a><a href="#__codelineno-14-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 在类的顶部定义自定义上下文</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2"></a><a href="#__codelineno-14-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">my_context</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;CustomContext&quot;</span><span class="p">;</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3"></a><a href="#__codelineno-14-3"><span class="linenos" data-linenos="3 "></span></a><span class="cp">#define tr(s) QObject::tr(s)</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4"></a><a href="#__codelineno-14-4"><span class="linenos" data-linenos="4 "></span></a>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5"></a><a href="#__codelineno-14-5"><span class="linenos" data-linenos="5 "></span></a><span class="c1">// 使用时</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6"></a><a href="#__codelineno-14-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Save&quot;</span><span class="p">)</span><span class="w">  </span><span class="c1">// 上下文是 &quot;CustomContext&quot;</span>
+</span></code></pre></div>
+<p>不过大多数情况下，默认的类名上下文就够用了。</p>
+<blockquote>
+<p>⚠️ <strong>坑 #2：tr() 在非 QObject 派生类中不工作</strong>
+❌ 错误做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1"></a><a href="#__codelineno-15-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">struct</span><span class="w"> </span><span class="nc">Data</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2"></a><a href="#__codelineno-15-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">QString</span><span class="w"> </span><span class="nf">getStatus</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3"></a><a href="#__codelineno-15-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Active&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// 编译错误！tr() 不存在</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4"></a><a href="#__codelineno-15-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5"></a><a href="#__codelineno-15-5"><span class="linenos" data-linenos="5 "></span></a><span class="p">};</span>
+</span></code></pre></div>
+✅ 正确做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1"></a><a href="#__codelineno-16-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">struct</span><span class="w"> </span><span class="nc">Data</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2"></a><a href="#__codelineno-16-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="n">QString</span><span class="w"> </span><span class="nf">getStatus</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3"></a><a href="#__codelineno-16-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">QObject</span><span class="o">::</span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Active&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// 使用静态成员</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4"></a><a href="#__codelineno-16-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5"></a><a href="#__codelineno-16-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="p">};</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6"></a><a href="#__codelineno-16-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="c1">// 或者更好的做法，传递翻译上下文</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7"></a><a href="#__codelineno-16-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="k">struct</span><span class="w"> </span><span class="nc">Data</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8"></a><a href="#__codelineno-16-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="n">QString</span><span class="w"> </span><span class="nf">getStatus</span><span class="p">(</span><span class="n">QObject</span><span class="w"> </span><span class="o">*</span><span class="n">ctx</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9"></a><a href="#__codelineno-16-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Active&quot;</span><span class="p">);</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10"></a><a href="#__codelineno-16-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11"></a><a href="#__codelineno-16-11"><span class="linenos" data-linenos="11 "></span></a><span class="p">};</span>
+</span></code></pre></div>
+💥 后果：在非 QObject 派生类中直接调用 <code>tr()</code> 会导致编译错误
+💡 一句话记住：没有继承 QObject 的类用 <code>QObject::tr()</code> 或传递上下文对象</p>
+</blockquote>
+<h3 id="37-动态语言切换的完整流程">3.7 动态语言切换的完整流程<a class="headerlink" href="#37-动态语言切换的完整流程" title="链接到此章节">&para;</a></h3>
+<p>如果你的应用需要在运行时切换语言，需要做一点额外的工作。因为 <code>tr()</code> 调用只发生在执行时刻，切换翻译器不会自动更新已经显示的文本。</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1"></a><a href="#__codelineno-17-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">MainWindow</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QMainWindow</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2"></a><a href="#__codelineno-17-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3"></a><a href="#__codelineno-17-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4"></a><a href="#__codelineno-17-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5"></a><a href="#__codelineno-17-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="n">MainWindow</span><span class="p">(</span><span class="n">QWidget</span><span class="w"> </span><span class="o">*</span><span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">QMainWindow</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6"></a><a href="#__codelineno-17-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="n">m_translator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QTranslator</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7"></a><a href="#__codelineno-17-7"><span class="linenos" data-linenos=" 7 "></span></a>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8"></a><a href="#__codelineno-17-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">        </span><span class="c1">// 创建语言切换菜单</span>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9"></a><a href="#__codelineno-17-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">QMenu</span><span class="w"> </span><span class="o">*</span><span class="n">langMenu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">menuBar</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">addMenu</span><span class="p">(</span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Language&quot;</span><span class="p">));</span>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10"></a><a href="#__codelineno-17-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">        </span><span class="n">QAction</span><span class="w"> </span><span class="o">*</span><span class="n">enAction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">langMenu</span><span class="o">-&gt;</span><span class="n">addAction</span><span class="p">(</span><span class="s">&quot;English&quot;</span><span class="p">);</span>
+</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11"></a><a href="#__codelineno-17-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">        </span><span class="n">QAction</span><span class="w"> </span><span class="o">*</span><span class="n">zhAction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">langMenu</span><span class="o">-&gt;</span><span class="n">addAction</span><span class="p">(</span><span class="s">&quot;中文&quot;</span><span class="p">);</span>
+</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12"></a><a href="#__codelineno-17-12"><span class="linenos" data-linenos="12 "></span></a>
+</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13"></a><a href="#__codelineno-17-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">        </span><span class="n">connect</span><span class="p">(</span><span class="n">enAction</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">QAction</span><span class="o">::</span><span class="n">triggered</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="k">this</span><span class="p">]()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">switchLanguage</span><span class="p">(</span><span class="s">&quot;en&quot;</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14"></a><a href="#__codelineno-17-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">        </span><span class="n">connect</span><span class="p">(</span><span class="n">zhAction</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">QAction</span><span class="o">::</span><span class="n">triggered</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="k">this</span><span class="p">]()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">switchLanguage</span><span class="p">(</span><span class="s">&quot;zh_CN&quot;</span><span class="p">);</span><span class="w"> </span><span class="p">});</span>
+</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15"></a><a href="#__codelineno-17-15"><span class="linenos" data-linenos="15 "></span></a>
+</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16"></a><a href="#__codelineno-17-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">        </span><span class="c1">// 创建 UI</span>
+</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17"></a><a href="#__codelineno-17-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">        </span><span class="n">m_label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QLabel</span><span class="p">(</span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Hello, World!&quot;</span><span class="p">),</span><span class="w"> </span><span class="k">this</span><span class="p">);</span>
+</span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18"></a><a href="#__codelineno-17-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">        </span><span class="n">setCentralWidget</span><span class="p">(</span><span class="n">m_label</span><span class="p">);</span>
+</span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19"></a><a href="#__codelineno-17-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-17-20"><a id="__codelineno-17-20" name="__codelineno-17-20"></a><a href="#__codelineno-17-20"><span class="linenos" data-linenos="20 "></span></a>
+</span><span id="__span-17-21"><a id="__codelineno-17-21" name="__codelineno-17-21"></a><a href="#__codelineno-17-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">switchLanguage</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">QString</span><span class="w"> </span><span class="o">&amp;</span><span class="n">language</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-17-22"><a id="__codelineno-17-22" name="__codelineno-17-22"></a><a href="#__codelineno-17-22"><span class="linenos" data-linenos="22 "></span></a><span class="w">        </span><span class="c1">// 移除旧翻译</span>
+</span><span id="__span-17-23"><a id="__codelineno-17-23" name="__codelineno-17-23"></a><a href="#__codelineno-17-23"><span class="linenos" data-linenos="23 "></span></a><span class="w">        </span><span class="n">qApp</span><span class="o">-&gt;</span><span class="n">removeTranslator</span><span class="p">(</span><span class="n">m_translator</span><span class="p">);</span>
+</span><span id="__span-17-24"><a id="__codelineno-17-24" name="__codelineno-17-24"></a><a href="#__codelineno-17-24"><span class="linenos" data-linenos="24 "></span></a>
+</span><span id="__span-17-25"><a id="__codelineno-17-25" name="__codelineno-17-25"></a><a href="#__codelineno-17-25"><span class="linenos" data-linenos="25 "></span></a><span class="w">        </span><span class="c1">// 加载新翻译</span>
+</span><span id="__span-17-26"><a id="__codelineno-17-26" name="__codelineno-17-26"></a><a href="#__codelineno-17-26"><span class="linenos" data-linenos="26 "></span></a><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m_translator</span><span class="o">-&gt;</span><span class="n">load</span><span class="p">(</span><span class="n">QString</span><span class="p">(</span><span class="s">&quot;:/translations/%1.qm&quot;</span><span class="p">).</span><span class="n">arg</span><span class="p">(</span><span class="n">language</span><span class="p">)))</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-17-27"><a id="__codelineno-17-27" name="__codelineno-17-27"></a><a href="#__codelineno-17-27"><span class="linenos" data-linenos="27 "></span></a><span class="w">            </span><span class="n">qApp</span><span class="o">-&gt;</span><span class="n">installTranslator</span><span class="p">(</span><span class="n">m_translator</span><span class="p">);</span>
+</span><span id="__span-17-28"><a id="__codelineno-17-28" name="__codelineno-17-28"></a><a href="#__codelineno-17-28"><span class="linenos" data-linenos="28 "></span></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-17-29"><a id="__codelineno-17-29" name="__codelineno-17-29"></a><a href="#__codelineno-17-29"><span class="linenos" data-linenos="29 "></span></a>
+</span><span id="__span-17-30"><a id="__codelineno-17-30" name="__codelineno-17-30"></a><a href="#__codelineno-17-30"><span class="linenos" data-linenos="30 "></span></a><span class="w">        </span><span class="c1">// 重新翻译 UI</span>
+</span><span id="__span-17-31"><a id="__codelineno-17-31" name="__codelineno-17-31"></a><a href="#__codelineno-17-31"><span class="linenos" data-linenos="31 "></span></a><span class="w">        </span><span class="n">m_label</span><span class="o">-&gt;</span><span class="n">setText</span><span class="p">(</span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Hello, World!&quot;</span><span class="p">));</span><span class="w">  </span><span class="c1">// tr() 会查找新翻译</span>
+</span><span id="__span-17-32"><a id="__codelineno-17-32" name="__codelineno-17-32"></a><a href="#__codelineno-17-32"><span class="linenos" data-linenos="32 "></span></a>
+</span><span id="__span-17-33"><a id="__codelineno-17-33" name="__codelineno-17-33"></a><a href="#__codelineno-17-33"><span class="linenos" data-linenos="33 "></span></a><span class="w">        </span><span class="c1">// 如果有菜单或标准按钮，也要重新设置</span>
+</span><span id="__span-17-34"><a id="__codelineno-17-34" name="__codelineno-17-34"></a><a href="#__codelineno-17-34"><span class="linenos" data-linenos="34 "></span></a><span class="w">        </span><span class="n">menuBar</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">clear</span><span class="p">();</span>
+</span><span id="__span-17-35"><a id="__codelineno-17-35" name="__codelineno-17-35"></a><a href="#__codelineno-17-35"><span class="linenos" data-linenos="35 "></span></a><span class="w">        </span><span class="c1">// 重建菜单...</span>
+</span><span id="__span-17-36"><a id="__codelineno-17-36" name="__codelineno-17-36"></a><a href="#__codelineno-17-36"><span class="linenos" data-linenos="36 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-17-37"><a id="__codelineno-17-37" name="__codelineno-17-37"></a><a href="#__codelineno-17-37"><span class="linenos" data-linenos="37 "></span></a>
+</span><span id="__span-17-38"><a id="__codelineno-17-38" name="__codelineno-17-38"></a><a href="#__codelineno-17-38"><span class="linenos" data-linenos="38 "></span></a><span class="k">private</span><span class="o">:</span>
+</span><span id="__span-17-39"><a id="__codelineno-17-39" name="__codelineno-17-39"></a><a href="#__codelineno-17-39"><span class="linenos" data-linenos="39 "></span></a><span class="w">    </span><span class="n">QTranslator</span><span class="w"> </span><span class="o">*</span><span class="n">m_translator</span><span class="p">;</span>
+</span><span id="__span-17-40"><a id="__codelineno-17-40" name="__codelineno-17-40"></a><a href="#__codelineno-17-40"><span class="linenos" data-linenos="40 "></span></a><span class="w">    </span><span class="n">QLabel</span><span class="w"> </span><span class="o">*</span><span class="n">m_label</span><span class="p">;</span>
+</span><span id="__span-17-41"><a id="__codelineno-17-41" name="__codelineno-17-41"></a><a href="#__codelineno-17-41"><span class="linenos" data-linenos="41 "></span></a><span class="p">};</span>
+</span></code></pre></div>
+<p>关键点是：切换翻译器后，需要重新执行所有 <code>tr()</code> 调用。这通常意味着你需要一个 <code>retranslateUi()</code> 方法来更新所有用户可见的文本。</p>
+<blockquote>
+<p>⚠️ <strong>坑 #3：忘记在切换语言后重新调用 tr()</strong>
+❌ 错误做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1"></a><a href="#__codelineno-18-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">void</span><span class="w"> </span><span class="nf">switchLanguage</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">QString</span><span class="w"> </span><span class="o">&amp;</span><span class="n">language</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2"></a><a href="#__codelineno-18-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">m_translator</span><span class="o">-&gt;</span><span class="n">load</span><span class="p">(</span><span class="n">language</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;.qm&quot;</span><span class="p">);</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3"></a><a href="#__codelineno-18-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">qApp</span><span class="o">-&gt;</span><span class="n">installTranslator</span><span class="p">(</span><span class="n">m_translator</span><span class="p">);</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4"></a><a href="#__codelineno-18-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="c1">// UI 文本还是旧的，因为 tr() 已经执行过了</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5"></a><a href="#__codelineno-18-5"><span class="linenos" data-linenos="5 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+✅ 正确做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1"></a><a href="#__codelineno-19-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">void</span><span class="w"> </span><span class="nf">switchLanguage</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">QString</span><span class="w"> </span><span class="o">&amp;</span><span class="n">language</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2"></a><a href="#__codelineno-19-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">m_translator</span><span class="o">-&gt;</span><span class="n">load</span><span class="p">(</span><span class="n">language</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&quot;.qm&quot;</span><span class="p">);</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3"></a><a href="#__codelineno-19-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">qApp</span><span class="o">-&gt;</span><span class="n">installTranslator</span><span class="p">(</span><span class="n">m_translator</span><span class="p">);</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4"></a><a href="#__codelineno-19-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="n">retranslateUi</span><span class="p">();</span><span class="w">  </span><span class="c1">// 重新翻译所有文本</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5"></a><a href="#__codelineno-19-5"><span class="linenos" data-linenos="5 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+💥 后果：切换语言后界面文本不会更新，用户看不到变化
+💡 一句话记住：翻译器切换后，必须重新执行所有 tr() 调用才能更新显示</p>
+</blockquote>
+<h2 id="4-踩坑预防清单">4. 踩坑预防清单<a class="headerlink" href="#4-踩坑预防清单" title="链接到此章节">&para;</a></h2>
+<blockquote>
+<p>⚠️ <strong>坑 #4：tr() 参数中的拼接字符串</strong>
+❌ 错误做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1"></a><a href="#__codelineno-20-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QString</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Loading file &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">fileName</span><span class="p">);</span><span class="w">  </span><span class="c1">// 拼接后的字符串无法提取</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2"></a><a href="#__codelineno-20-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;File: &quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">fileName</span><span class="p">;</span><span class="w">                  </span><span class="c1">// 部分拼接无法提取</span>
+</span></code></pre></div>
+✅ 正确做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1"></a><a href="#__codelineno-21-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QString</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Loading file %1&quot;</span><span class="p">).</span><span class="n">arg</span><span class="p">(</span><span class="n">fileName</span><span class="p">);</span><span class="w">  </span><span class="c1">// 使用占位符</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2"></a><a href="#__codelineno-21-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">text</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;File: %1&quot;</span><span class="p">).</span><span class="n">arg</span><span class="p">(</span><span class="n">fileName</span><span class="p">);</span>
+</span></code></pre></div>
+💥 后果：lupdate 无法提取动态拼接的字符串，翻译文件里不会有这些条目
+💡 一句话记住：tr() 的参数必须是字符串字面量，用占位符代替动态内容</p>
+<p>⚠️ <strong>坑 #5：在构造函数初始化列表中使用 tr()</strong>
+❌ 错误做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1"></a><a href="#__codelineno-22-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">MyWidget</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QWidget</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2"></a><a href="#__codelineno-22-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3"></a><a href="#__codelineno-22-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4"></a><a href="#__codelineno-22-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="n">MyWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="w"> </span><span class="o">*</span><span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">)</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5"></a><a href="#__codelineno-22-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">        </span><span class="o">:</span><span class="w"> </span><span class="n">QWidget</span><span class="p">(</span><span class="n">parent</span><span class="p">),</span><span class="w"> </span><span class="n">m_label</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">QLabel</span><span class="p">(</span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Initial text&quot;</span><span class="p">),</span><span class="w"> </span><span class="k">this</span><span class="p">))</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6"></a><a href="#__codelineno-22-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="c1">// 如果翻译器在 MyWidget 构造之前安装，这里的 tr() 找不到翻译</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7"></a><a href="#__codelineno-22-7"><span class="linenos" data-linenos="7 "></span></a><span class="p">};</span>
+</span></code></pre></div>
+✅ 正确做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1"></a><a href="#__codelineno-23-1"><span class="linenos" data-linenos="1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">MyWidget</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QWidget</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2"></a><a href="#__codelineno-23-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3"></a><a href="#__codelineno-23-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4"></a><a href="#__codelineno-23-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="n">MyWidget</span><span class="p">(</span><span class="n">QWidget</span><span class="w"> </span><span class="o">*</span><span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">QWidget</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5"></a><a href="#__codelineno-23-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">        </span><span class="n">m_label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QLabel</span><span class="p">(</span><span class="k">this</span><span class="p">);</span><span class="w">  </span><span class="c1">// 先创建对象</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6"></a><a href="#__codelineno-23-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">        </span><span class="n">m_label</span><span class="o">-&gt;</span><span class="n">setText</span><span class="p">(</span><span class="n">tr</span><span class="p">(</span><span class="s">&quot;Initial text&quot;</span><span class="p">));</span><span class="w">  </span><span class="c1">// 在构造函数体内设置文本</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7"></a><a href="#__codelineno-23-7"><span class="linenos" data-linenos="7 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8"></a><a href="#__codelineno-23-8"><span class="linenos" data-linenos="8 "></span></a><span class="p">};</span>
+</span></code></pre></div>
+💥 后果：初始化列表执行时，派生类的虚表还没完全建立，tr() 可能工作异常
+💡 一句话记住：在构造函数体内设置文本，不要在初始化列表里调用 tr()</p>
+<p>⚠️ <strong>坑 #6：翻译文件编码问题</strong>
+❌ 错误做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1"></a><a href="#__codelineno-24-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 用文本编辑器直接修改 .ts 文件</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2"></a><a href="#__codelineno-24-2"><span class="linenos" data-linenos="2 "></span></a><span class="c1">// 保存时使用了错误的编码</span>
+</span></code></pre></div>
+✅ 正确做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1"></a><a href="#__codelineno-25-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 使用 Qt Linguist 编辑 .ts 文件</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2"></a><a href="#__codelineno-25-2"><span class="linenos" data-linenos="2 "></span></a><span class="c1">// 或者确保编辑器保存为 UTF-8 编码</span>
+</span></code></pre></div>
+💥 后果：非 ASCII 字符（如中文）在运行时显示为乱码或方框
+💡 一句话记住：用 Qt Linguist 编辑翻译文件，确保 UTF-8 编码</p>
+</blockquote>
+<h2 id="5-练习项目">5. 练习项目<a class="headerlink" href="#5-练习项目" title="链接到此章节">&para;</a></h2>
+<p>🎯 <strong>练习项目：多语言时钟</strong></p>
+<p>📋 <strong>功能描述</strong>：
+做一个简单的时钟应用，支持中英文切换。显示当前时间，并提供菜单选项切换语言。</p>
+<p>✅ <strong>完成标准</strong>：
+- 窗口标题随语言变化（「时钟」/「Clock」）
+- 时间标签下方显示语言切换后的提示文本
+- 菜单栏有「Language」菜单，包含「English」和「中文」选项
+- 切换语言后界面立即更新，无需重启
+- 正确生成和加载 <code>.qm</code> 翻译文件</p>
+<p>💡 <strong>提示</strong>：
+1. 用 <code>QTimer</code> 每秒更新时间显示
+2. 创建一个 <code>retranslateUi()</code> 方法，统一处理所有文本更新
+3. 用 <code>QAction::setData()</code> 存储语言代码，简化槽函数
+4. 记得在 CMakeLists.txt 中配置 <code>qt_add_lupdate</code> 和 <code>qt_add_lrelease</code></p>
+<h2 id="6-官方文档参考">6. 官方文档参考<a class="headerlink" href="#6-官方文档参考" title="链接到此章节">&para;</a></h2>
+<p>📎 <a href="https://doc.qt.io/qt-6/internationalization.html">Qt 文档 · Internationalization with Qt</a> · Qt 国际化的完整概述，包含所有相关工具和最佳实践</p>
+<p>📎 <a href="https://doc.qt.io/qt-6/qtranslator.html">Qt 文档 · QTranslator</a> · QTranslator 类的详细说明，包含 load() 和 installTranslator() 的用法</p>
+<p>📎 <a href="https://doc.qt.io/qt-6/i18n-source-translation.html">Qt 文档 · Writing Source Code for Translation</a> · 如何编写可翻译的源代码，tr() 函数的完整说明</p>
+<p>📎 <a href="https://doc.qt.io/qt-6/linguist-manual.html">Qt 文档 · Qt Linguist Manual</a> · Qt Linguist 翻译工具的使用指南</p>
+<p><em>（链接已验证，2026-03-17 可访问）</em></p>
+<hr />
+<p>到这里就大功告成了！Qt 的国际化系统虽然步骤多，但每一步都很清晰：用 <code>tr()</code> 标记字符串、lupdate 提取、Qt Linguist 翻译、lrelease 编译、QTranslator 加载。这套工作流掌握后，你的程序从一开始就具备了走向世界的能力。下一篇我们进入日志系统，看看 Qt 是如何帮助开发者调试和诊断问题的。</p>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年3月17日 10:21:58 CST">2026年3月17日 10:21:58</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年3月17日 10:21:58 CST">2026年3月17日 10:21:58</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../12-plugin-beginner/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 12 plugin beginner">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                12 plugin beginner
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../14-logging-beginner/" class="md-footer__link md-footer__link--next" aria-label="下一页: 14 logging beginner">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                14 logging beginner
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 CharlieChen - 保留所有权利
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/Awesome-Embedded-Learning-Studio" target="_blank" rel="noopener" title="GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:725610365@qq.com" target="_blank" rel="noopener" title="发送邮件" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M536.4-26.3c9.8-3.5 20.6-1 28 6.3s9.8 18.2 6.3 28l-178 496.9c-5 13.9-18.1 23.1-32.8 23.1-14.2 0-27-8.6-32.3-21.7l-64.2-158c-4.5-11-2.5-23.6 5.2-32.6l94.5-112.4c5.1-6.1 4.7-15-.9-20.6s-14.6-6-20.6-.9l-112.4 94.3c-9.1 7.6-21.6 9.6-32.6 5.2L38.1 216.8c-13.1-5.3-21.7-18.1-21.7-32.3 0-14.7 9.2-27.8 23.1-32.8z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "toc.integrate", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>

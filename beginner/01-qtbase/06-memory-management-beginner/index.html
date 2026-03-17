@@ -1,0 +1,1841 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Awesome-Embedded-Learning-Studio的现代Qt教程">
+      
+      
+        <meta name="author" content="CharlieChen">
+      
+      
+      
+        <link rel="prev" href="../05-variant-type-beginner/">
+      
+      
+        <link rel="next" href="../07-event-system-beginner/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../Awesome-Embedded.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+    
+    
+      
+        <title>06 memory management beginner - Tutorial_AwesomeQt的文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#1-前言c-内存管理的痛" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Tutorial_AwesomeQt的文档" class="md-header__button md-logo" aria-label="Tutorial_AwesomeQt的文档" data-md-component="logo">
+      
+  <img src="../../../Awesome-Embedded.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tutorial_AwesomeQt的文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              06 memory management beginner
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至暗色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换至暗色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="切换至亮色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换至亮色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  AwesomeQt 教程索引
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../00-environment-setup/00-qt6-install-beginner/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Beginner
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Tutorial_AwesomeQt的文档" class="md-nav__button md-logo" aria-label="Tutorial_AwesomeQt的文档" data-md-component="logo">
+      
+  <img src="../../../Awesome-Embedded.png" alt="logo">
+
+    </a>
+    Tutorial_AwesomeQt的文档
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AwesomeQt 教程索引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beginner
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Beginner
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    00 environment setup
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    00 environment setup
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../00-environment-setup/00-qt6-install-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    00 qt6 install beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../00-environment-setup/01-ide-setup-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    01 ide setup beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../00-environment-setup/02-cmake-first-project-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    02 cmake first project beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    01 qtbase
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    01 qtbase
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-qobject-meta-system-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    01 qobject meta system beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-signal-slot-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    02 signal slot beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-string-encoding-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    03 string encoding beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-container-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    04 container beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-variant-type-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    05 variant type beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    06 memory management beginner
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    06 memory management beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-前言c-内存管理的痛" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 前言：C++ 内存管理的痛
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-对象树自动清理qt-的第一道防线" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 对象树自动清理——Qt 的第一道防线
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. 对象树自动清理——Qt 的第一道防线">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-栈对象的自动管理" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 栈对象的自动管理
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-对象树的限制" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 对象树的限制
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-智能指针qt-的第二道防线" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 智能指针——Qt 的第二道防线
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. 智能指针——Qt 的第二道防线">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-qscopedpointer独占所有权" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 QScopedPointer——独占所有权
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-qsharedpointer共享所有权" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 QSharedPointer——共享所有权
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-qweakpointer弱引用" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 QWeakPointer——弱引用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-qpointer弱引用的另一种选择" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 QPointer——弱引用的另一种选择
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-何时用什么实战指南" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 何时用什么——实战指南
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-练习项目" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 练习项目
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-官方文档参考" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 官方文档参考
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-event-system-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    07 event system beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../08-file-io-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    08 file io beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-multithreading-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    09 multithreading beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-qprocess-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10 qprocess beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../11-timer-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    11 timer beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../12-plugin-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    12 plugin beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../13-i18n-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    13 i18n beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../14-logging-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    14 logging beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../15-regex-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    15 regex beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../16-json-xml-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    16 json xml beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="导航栏" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    AwesomeQt 教程索引
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../../00-environment-setup/00-qt6-install-beginner/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Beginner
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../01-qobject-meta-system-beginner/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    01 qtbase
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>06 memory management beginner</h1>
+
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+入门 · QtBase · 06 · 内存管理
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<h2 id="1-前言c-内存管理的痛">1. 前言：C++ 内存管理的痛<a class="headerlink" href="#1-前言c-内存管理的痛" title="链接到此章节">&para;</a></h2>
+<p>说实话，C++ 的内存管理是最让新手头疼，也最让老手翻车的部分。我自己刚学 Qt 的时候，没少在 <code>new</code> 和 <code>delete</code> 上栽跟头。要么忘了 <code>delete</code> 导致内存泄漏，要么同一个对象被 <code>delete</code> 了两次直接程序崩溃。</p>
+<p>更绝的是，Qt 这套框架自己就有对象树机制，而 C++11 之后又有了 <code>std::unique_ptr</code>、<code>std::shared_ptr</code>，然后 Qt 自己又搞了一套 <code>QSharedPointer</code>、<code>QScopedPointer</code>。这堆东西混在一起，新手很容易迷失方向。</p>
+<p>所以这一篇，我们要把这些东西捋清楚。不是让你死记硬背 API，而是理解每种方案背后的设计理念和使用场景。学会之后，你会发现 Qt 的内存管理其实比纯 C++ 要轻松很多。</p>
+<h2 id="2-对象树自动清理qt-的第一道防线">2. 对象树自动清理——Qt 的第一道防线<a class="headerlink" href="#2-对象树自动清理qt-的第一道防线" title="链接到此章节">&para;</a></h2>
+<p>Qt 最经典的内存管理机制就是对象树。简单来说，当你创建一个 <code>QObject</code> 派生类对象时，可以给它指定一个父对象。这个父对象就拥有了这个子对象的所有权，当父对象被销毁时，所有子对象会被自动销毁。</p>
+<p>这听起来很抽象，我们来看个具体的例子。假设你在做一个窗口程序，里面有一个按钮、一个标签、一个输入框。在传统 C++ 里，你需要手动管理这些控件的生命周期：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="c1">// 传统 C++ 风格，容易出错</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">window</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">();</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="n">QPushButton</span><span class="o">*</span><span class="w"> </span><span class="n">button</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QPushButton</span><span class="p">(</span><span class="n">window</span><span class="p">);</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4"></a><a href="#__codelineno-0-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="n">QLabel</span><span class="o">*</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QLabel</span><span class="p">(</span><span class="n">window</span><span class="p">);</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5"></a><a href="#__codelineno-0-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="n">QLineEdit</span><span class="o">*</span><span class="w"> </span><span class="n">edit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QLineEdit</span><span class="p">(</span><span class="n">window</span><span class="p">);</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6"></a><a href="#__codelineno-0-6"><span class="linenos" data-linenos=" 6 "></span></a>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="c1">// 用完之后必须手动 delete，顺序还不能乱</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8"></a><a href="#__codelineno-0-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="k">delete</span><span class="w"> </span><span class="n">edit</span><span class="p">;</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9"></a><a href="#__codelineno-0-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="k">delete</span><span class="w"> </span><span class="n">label</span><span class="p">;</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10"></a><a href="#__codelineno-0-10"><span class="linenos" data-linenos="10 "></span></a><span class="k">delete</span><span class="w"> </span><span class="n">button</span><span class="p">;</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11"></a><a href="#__codelineno-0-11"><span class="linenos" data-linenos="11 "></span></a><span class="k">delete</span><span class="w"> </span><span class="n">window</span><span class="p">;</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12"></a><a href="#__codelineno-0-12"><span class="linenos" data-linenos="12 "></span></a><span class="c1">// 一旦中间抛异常，内存泄漏妥妥的</span>
+</span></code></pre></div>
+<p>而在 Qt 里，只要在构造时指定父对象，就万事大吉了：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// Qt 风格，自动管理</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">window</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">();</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos="3 "></span></a><span class="c1">// 这里传入 window 作为父对象，这些控件就加入了 window 的对象树</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4"></a><a href="#__codelineno-1-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">QPushButton</span><span class="o">*</span><span class="w"> </span><span class="n">button</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QPushButton</span><span class="p">(</span><span class="s">&quot;Click me&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">window</span><span class="p">);</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5"></a><a href="#__codelineno-1-5"><span class="linenos" data-linenos="5 "></span></a><span class="n">QLabel</span><span class="o">*</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QLabel</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">window</span><span class="p">);</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6"></a><a href="#__codelineno-1-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">QLineEdit</span><span class="o">*</span><span class="w"> </span><span class="n">edit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QLineEdit</span><span class="p">(</span><span class="n">window</span><span class="p">);</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7"></a><a href="#__codelineno-1-7"><span class="linenos" data-linenos="7 "></span></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8"></a><a href="#__codelineno-1-8"><span class="linenos" data-linenos="8 "></span></a><span class="c1">// 只需要 delete 窗口，所有子控件会自动被清理</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9"></a><a href="#__codelineno-1-9"><span class="linenos" data-linenos="9 "></span></a><span class="k">delete</span><span class="w"> </span><span class="n">window</span><span class="p">;</span><span class="w">  </span><span class="c1">// button、label、edit 都会自动 delete</span>
+</span></code></pre></div>
+<p>这个机制的核心在于 <code>QObject</code> 的构造函数：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QObject</span><span class="o">::</span><span class="n">QObject</span><span class="p">(</span><span class="n">QObject</span><span class="o">*</span><span class="w"> </span><span class="n">parent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">nullptr</span><span class="p">);</span>
+</span></code></pre></div>
+<p>当你传入一个非空的 <code>parent</code> 时，这个对象就会被添加到父对象的 <code>children()</code> 列表里。当父对象析构时，它会遍历所有子对象并逐个删除。</p>
+<blockquote>
+<p>📝 <strong>随堂测验：口述回答</strong>
+用自己的话说说：Qt 的对象树机制解决了什么问题？为什么比手动 <code>delete</code> 更安全？</p>
+<p><em>(请先自己想一下，再往下滑看答案)</em></p>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<p><strong>答案参考</strong>：
+- 解决了对象所有权不明确的问题，父对象拥有子对象
+- 自动清理避免了忘记 <code>delete</code> 导致的内存泄漏
+- 异常安全，即使中间代码抛异常，对象树仍然会正确清理
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+</blockquote>
+<h3 id="21-栈对象的自动管理">2.1 栈对象的自动管理<a class="headerlink" href="#21-栈对象的自动管理" title="链接到此章节">&para;</a></h3>
+<p>其实更推荐的做法是直接在栈上创建父对象：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 更好的做法，栈对象自动析构</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2"></a><a href="#__codelineno-3-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QWidget</span><span class="w"> </span><span class="n">window</span><span class="p">;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3"></a><a href="#__codelineno-3-3"><span class="linenos" data-linenos="3 "></span></a><span class="n">QPushButton</span><span class="w"> </span><span class="n">button</span><span class="p">(</span><span class="s">&quot;Click me&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">window</span><span class="p">);</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4"></a><a href="#__codelineno-3-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">QLabel</span><span class="w"> </span><span class="n">label</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">window</span><span class="p">);</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5"></a><a href="#__codelineno-3-5"><span class="linenos" data-linenos="5 "></span></a>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6"></a><a href="#__codelineno-3-6"><span class="linenos" data-linenos="6 "></span></a><span class="c1">// window 超出作用域自动析构，button 和 label 也会自动清理</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7"></a><a href="#__codelineno-3-7"><span class="linenos" data-linenos="7 "></span></a><span class="c1">// 不需要任何 delete，完美</span>
+</span></code></pre></div>
+<p>这种写法结合了 C++ 的 RAII（资源获取即初始化）和 Qt 的对象树，是最安全的做法。栈对象在离开作用域时会自动调用析构函数，触发对象树的清理机制。</p>
+<h3 id="22-对象树的限制">2.2 对象树的限制<a class="headerlink" href="#22-对象树的限制" title="链接到此章节">&para;</a></h3>
+<p>对象树机制虽好，但不是万能的。它有几个明显的限制：</p>
+<p>第一，只能用于 <code>QObject</code> 及其派生类。如果你用的是标准 C++ 类或者第三方库的类，这套机制就用不上。</p>
+<p>第二，子对象的生命周期完全绑定在父对象上。你不能单独删除一个子对象然后继续使用它，也不能在父对象删除后继续访问子对象。</p>
+<p>第三，对象树不适合共享所有权的场景。如果一个对象可能被多个地方同时引用，对象树就无法表示这种关系。</p>
+<blockquote>
+<p>⚠️ <strong>坑 #1：重复删除导致崩溃</strong>
+❌ 错误做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">window</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">();</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QPushButton</span><span class="o">*</span><span class="w"> </span><span class="n">button</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QPushButton</span><span class="p">(</span><span class="s">&quot;Click&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">window</span><span class="p">);</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">delete</span><span class="w"> </span><span class="n">button</span><span class="p">;</span><span class="w">  </span><span class="c1">// 手动删除子对象</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="k">delete</span><span class="w"> </span><span class="n">window</span><span class="p">;</span><span class="w">  </span><span class="c1">// window 析构时会再次删除 button，崩溃！</span>
+</span></code></pre></div>
+✅ 正确做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">window</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">();</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QPushButton</span><span class="o">*</span><span class="w"> </span><span class="n">button</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QPushButton</span><span class="p">(</span><span class="s">&quot;Click&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">window</span><span class="p">);</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">delete</span><span class="w"> </span><span class="n">window</span><span class="p">;</span><span class="w">  </span><span class="c1">// 只删除父对象，子对象自动清理</span>
+</span></code></pre></div>
+💥 后果：双重 <code>free</code> 导致程序崩溃，或者内存损坏
+💡 一句话记住：子对象交给对象树后，就别再手动 <code>delete</code></p>
+</blockquote>
+<h2 id="3-智能指针qt-的第二道防线">3. 智能指针——Qt 的第二道防线<a class="headerlink" href="#3-智能指针qt-的第二道防线" title="链接到此章节">&para;</a></h2>
+<p>当对象树不够用时，Qt 提供了一套智能指针来帮助管理内存。这套智能指针在 C++11 之前就存在了，比标准库的智能指针出现得更早。</p>
+<h3 id="31-qscopedpointer独占所有权">3.1 QScopedPointer——独占所有权<a class="headerlink" href="#31-qscopedpointer独占所有权" title="链接到此章节">&para;</a></h3>
+<p><code>QScopedPointer</code> 是最简单的智能指针，它表示对某个对象的独占所有权。当 <code>QScopedPointer</code> 超出作用域时，它所指向的对象会被自动删除。你不能复制它，只能移动它（C++11 之后）。</p>
+<p>这个类在 Qt 5.15 之后被标记为已废弃，推荐使用 C++11 的 <code>std::unique_ptr</code>。但既然是教程，我们还是了解一下，毕竟可能会在老代码里见到。</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QScopedPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">window</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">());</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos="2 "></span></a><span class="c1">// 使用 window.get() 获取原始指针</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos="3 "></span></a><span class="c1">// 或者用 window-&gt; 直接访问成员（重载了 -&gt; 和 *）</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">window</span><span class="o">-&gt;</span><span class="n">show</span><span class="p">();</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a><a href="#__codelineno-6-5"><span class="linenos" data-linenos="5 "></span></a><span class="c1">// window 超出作用域时，自动 delete</span>
+</span></code></pre></div>
+<p><code>QScopedPointer</code> 的使用场景很明确：当你需要一个对象，且这个对象的所有权不会被转移时，用它就很合适。</p>
+<blockquote>
+<p>⚠️ <strong>坑 #2：QScopedPointer 不能复制</strong>
+❌ 错误做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><a href="#__codelineno-7-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QScopedPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptr1</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">());</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><a href="#__codelineno-7-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QScopedPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptr2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ptr1</span><span class="p">;</span><span class="w">  </span><span class="c1">// 编译错误！不能复制</span>
+</span></code></pre></div>
+✅ 正确做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><a href="#__codelineno-8-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QScopedPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptr1</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">());</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><a href="#__codelineno-8-2"><span class="linenos" data-linenos="2 "></span></a><span class="c1">// 如果需要转移所有权，使用 reset()</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a><a href="#__codelineno-8-3"><span class="linenos" data-linenos="3 "></span></a><span class="n">QScopedPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptr2</span><span class="p">;</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a><a href="#__codelineno-8-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">ptr2</span><span class="p">.</span><span class="n">reset</span><span class="p">(</span><span class="n">ptr1</span><span class="p">.</span><span class="n">take</span><span class="p">());</span><span class="w">  </span><span class="c1">// take() 释放所有权但不删除对象</span>
+</span></code></pre></div>
+💥 后果：代码无法编译，设计上就防止了所有权的混乱
+💡 一句话记住：<code>QScopedPointer</code> 是排他性的，一个对象只能被一个 <code>QScopedPointer</code> 拥有</p>
+</blockquote>
+<h3 id="32-qsharedpointer共享所有权">3.2 QSharedPointer——共享所有权<a class="headerlink" href="#32-qsharedpointer共享所有权" title="链接到此章节">&para;</a></h3>
+<p><code>QScopedPointer</code> 的局限在于它不支持共享所有权，而 <code>QSharedPointer</code> 正好解决了这个问题。它使用引用计数来追踪有多少个 <code>QSharedPointer</code> 指向同一个对象，当引用计数归零时，对象被删除。</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><a href="#__codelineno-9-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 创建一个共享指针</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><a href="#__codelineno-9-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QSharedPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptr1</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">());</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a><a href="#__codelineno-9-3"><span class="linenos" data-linenos="3 "></span></a><span class="c1">// 复制共享指针，引用计数增加到 2</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a><a href="#__codelineno-9-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">QSharedPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptr2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ptr1</span><span class="p">;</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5"></a><a href="#__codelineno-9-5"><span class="linenos" data-linenos="5 "></span></a>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6"></a><a href="#__codelineno-9-6"><span class="linenos" data-linenos="6 "></span></a><span class="c1">// 现在有两个指针指向同一个对象</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7"></a><a href="#__codelineno-9-7"><span class="linenos" data-linenos="7 "></span></a><span class="c1">// 无论哪个先离开作用域，对象都不会被删除</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8"></a><a href="#__codelineno-9-8"><span class="linenos" data-linenos="8 "></span></a><span class="c1">// 只有当两者都离开作用域，引用计数归零，对象才被删除</span>
+</span></code></pre></div>
+<p>这个机制在处理不确定生命周期的对象时非常有用。比如你可能有一个全局的资源管理器，多个组件都需要访问同一个配置对象，但又没人真正"拥有"这个对象。这时候用 <code>QSharedPointer</code> 就很合适。</p>
+<p><code>QSharedPointer</code> 还支持自定义删除器，可以在删除对象时执行额外的操作：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><a href="#__codelineno-10-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 自定义删除器</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><a href="#__codelineno-10-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">auto</span><span class="w"> </span><span class="n">customDeleter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="n">QWidget</span><span class="o">*</span><span class="w"> </span><span class="n">obj</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a><a href="#__codelineno-10-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">qDebug</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;About to delete widget&quot;</span><span class="p">;</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><a href="#__codelineno-10-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">obj</span><span class="p">;</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a><a href="#__codelineno-10-5"><span class="linenos" data-linenos="5 "></span></a><span class="p">};</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a><a href="#__codelineno-10-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">QSharedPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptr</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">(),</span><span class="w"> </span><span class="n">customDeleter</span><span class="p">);</span>
+</span></code></pre></div>
+<h3 id="33-qweakpointer弱引用">3.3 QWeakPointer——弱引用<a class="headerlink" href="#33-qweakpointer弱引用" title="链接到此章节">&para;</a></h3>
+<p><code>QWeakPointer</code> 是 <code>QSharedPointer</code> 的伴生类，它持有对某个对象的弱引用，不会增加引用计数。这听起来很奇怪，为什么需要这样一个东西？</p>
+<p>想象一个场景：两个对象互相持有对方的 <code>QSharedPointer</code>。A 对象有 B 的共享指针，B 对象也有 A 的共享指针。这样它们的引用计数永远不会归零，永远不会被删除，这就是典型的循环引用问题。</p>
+<p><code>QWeakPointer</code> 的作用就是打破这种循环。它指向一个由 <code>QSharedPointer</code> 管理的对象，但不参与引用计数。当原对象被删除后，<code>QWeakPointer</code> 会自动变为空：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><a href="#__codelineno-11-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">QSharedPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">strongPtr</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">());</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><a href="#__codelineno-11-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="n">QWeakPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">weakPtr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strongPtr</span><span class="p">;</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3"></a><a href="#__codelineno-11-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a><a href="#__codelineno-11-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="c1">// weakPtr 不会影响 strongPtr 的引用计数</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5"></a><a href="#__codelineno-11-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">weakPtr</span><span class="p">.</span><span class="n">isNull</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6"></a><a href="#__codelineno-11-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="c1">// 安全地使用对象</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7"></a><a href="#__codelineno-11-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="n">QSharedPointer</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">locked</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weakPtr</span><span class="p">.</span><span class="n">toStrongRef</span><span class="p">();</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8"></a><a href="#__codelineno-11-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">locked</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9"></a><a href="#__codelineno-11-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">locked</span><span class="o">-&gt;</span><span class="n">show</span><span class="p">();</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10"></a><a href="#__codelineno-11-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11"></a><a href="#__codelineno-11-11"><span class="linenos" data-linenos="11 "></span></a><span class="p">}</span>
+</span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12"></a><a href="#__codelineno-11-12"><span class="linenos" data-linenos="12 "></span></a>
+</span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13"></a><a href="#__codelineno-11-13"><span class="linenos" data-linenos="13 "></span></a><span class="c1">// 当 strongPtr 离开作用域，对象被删除</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14"></a><a href="#__codelineno-11-14"><span class="linenos" data-linenos="14 "></span></a><span class="c1">// weakPtr 会自动变为空，再调用 isNull() 会返回 true</span>
+</span></code></pre></div>
+<blockquote>
+<p>🔲 <strong>随堂测验：代码填空</strong>
+补全以下代码，使用 <code>QWeakPointer</code> 安全地访问可能已删除的对象：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><a href="#__codelineno-12-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">QSharedPointer</span><span class="o">&lt;</span><span class="n">QLabel</span><span class="o">&gt;</span><span class="w"> </span><span class="n">labelPtr</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">QLabel</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">));</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2"></a><a href="#__codelineno-12-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="n">QWeakPointer</span><span class="o">&lt;</span><span class="n">QLabel</span><span class="o">&gt;</span><span class="w"> </span><span class="n">weakLabel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">______</span><span class="p">;</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3"></a><a href="#__codelineno-12-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4"></a><a href="#__codelineno-12-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="c1">// 一段时间后...</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5"></a><a href="#__codelineno-12-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">weakLabel</span><span class="p">.</span><span class="n">______</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6"></a><a href="#__codelineno-12-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="n">QSharedPointer</span><span class="o">&lt;</span><span class="n">QLabel</span><span class="o">&gt;</span><span class="w"> </span><span class="n">strong</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weakLabel</span><span class="p">.</span><span class="n">______</span><span class="p">();</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7"></a><a href="#__codelineno-12-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">______</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8"></a><a href="#__codelineno-12-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">        </span><span class="n">strong</span><span class="o">-&gt;</span><span class="n">show</span><span class="p">();</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9"></a><a href="#__codelineno-12-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10"></a><a href="#__codelineno-12-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+<p><em>(提示：labelPtr、isNull、toStrongRef、strong)</em></p>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<p><strong>答案参考</strong>：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><a href="#__codelineno-13-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">QSharedPointer</span><span class="o">&lt;</span><span class="n">QLabel</span><span class="o">&gt;</span><span class="w"> </span><span class="n">labelPtr</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">QLabel</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">));</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2"></a><a href="#__codelineno-13-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="n">QWeakPointer</span><span class="o">&lt;</span><span class="n">QLabel</span><span class="o">&gt;</span><span class="w"> </span><span class="n">weakLabel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">labelPtr</span><span class="p">;</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3"></a><a href="#__codelineno-13-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4"></a><a href="#__codelineno-13-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="c1">// 一段时间后...</span>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5"></a><a href="#__codelineno-13-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">weakLabel</span><span class="p">.</span><span class="n">isNull</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6"></a><a href="#__codelineno-13-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="n">QSharedPointer</span><span class="o">&lt;</span><span class="n">QLabel</span><span class="o">&gt;</span><span class="w"> </span><span class="n">strong</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weakLabel</span><span class="p">.</span><span class="n">toStrongRef</span><span class="p">();</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7"></a><a href="#__codelineno-13-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">strong</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8"></a><a href="#__codelineno-13-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">        </span><span class="n">strong</span><span class="o">-&gt;</span><span class="n">show</span><span class="p">();</span>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9"></a><a href="#__codelineno-13-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10"></a><a href="#__codelineno-13-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+</blockquote>
+<h3 id="34-qpointer弱引用的另一种选择">3.4 QPointer——弱引用的另一种选择<a class="headerlink" href="#34-qpointer弱引用的另一种选择" title="链接到此章节">&para;</a></h3>
+<p><code>QPointer</code> 是专门为 <code>QObject</code> 设计的弱指针。它比 <code>QWeakPointer</code> 更早出现，用法也更简单：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a><a href="#__codelineno-14-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QPointer</span><span class="o">&lt;</span><span class="n">QLabel</span><span class="o">&gt;</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QLabel</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">);</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2"></a><a href="#__codelineno-14-2"><span class="linenos" data-linenos="2 "></span></a><span class="c1">// label 不持有强引用，不影响对象生命周期</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3"></a><a href="#__codelineno-14-3"><span class="linenos" data-linenos="3 "></span></a>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4"></a><a href="#__codelineno-14-4"><span class="linenos" data-linenos="4 "></span></a><span class="c1">// 检查对象是否还存在</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5"></a><a href="#__codelineno-14-5"><span class="linenos" data-linenos="5 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6"></a><a href="#__codelineno-14-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="n">label</span><span class="o">-&gt;</span><span class="n">show</span><span class="p">();</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7"></a><a href="#__codelineno-14-7"><span class="linenos" data-linenos="7 "></span></a><span class="p">}</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8"></a><a href="#__codelineno-14-8"><span class="linenos" data-linenos="8 "></span></a>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9"></a><a href="#__codelineno-14-9"><span class="linenos" data-linenos="9 "></span></a><span class="c1">// 如果 label 指向的对象被删除，label 会自动变为空</span>
+</span></code></pre></div>
+<p><code>QPointer</code> 的优势是专门为 <code>QObject</code> 优化，当对象被删除时能立即感知。但它只能用于 <code>QObject</code> 及其派生类，而 <code>QWeakPointer</code> 更通用。</p>
+<h2 id="4-何时用什么实战指南">4. 何时用什么——实战指南<a class="headerlink" href="#4-何时用什么实战指南" title="链接到此章节">&para;</a></h2>
+<p>讲了这么多，我们来总结一下不同场景下的最佳实践：</p>
+<p><strong>场景一：UI 控件的父子关系</strong>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1"></a><a href="#__codelineno-15-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 推荐用对象树</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2"></a><a href="#__codelineno-15-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QWidget</span><span class="w"> </span><span class="n">window</span><span class="p">;</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3"></a><a href="#__codelineno-15-3"><span class="linenos" data-linenos="3 "></span></a><span class="n">QPushButton</span><span class="o">*</span><span class="w"> </span><span class="n">button</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QPushButton</span><span class="p">(</span><span class="s">&quot;Click&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">window</span><span class="p">);</span>
+</span></code></pre></div></p>
+<p><strong>场景二：短暂使用的临时对象</strong>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1"></a><a href="#__codelineno-16-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 推荐用栈对象或 std::unique_ptr</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2"></a><a href="#__codelineno-16-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">QWidget</span><span class="o">&gt;</span><span class="w"> </span><span class="n">window</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">QWidget</span><span class="p">());</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3"></a><a href="#__codelineno-16-3"><span class="linenos" data-linenos="3 "></span></a><span class="c1">// 或者直接</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4"></a><a href="#__codelineno-16-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">QWidget</span><span class="w"> </span><span class="n">window</span><span class="p">;</span>
+</span></code></pre></div></p>
+<p><strong>场景三：需要在多个地方共享的对象</strong>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1"></a><a href="#__codelineno-17-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 推荐用 QSharedPointer</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2"></a><a href="#__codelineno-17-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QSharedPointer</span><span class="o">&lt;</span><span class="n">Config</span><span class="o">&gt;</span><span class="w"> </span><span class="n">config</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Config</span><span class="p">());</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3"></a><a href="#__codelineno-17-3"><span class="linenos" data-linenos="3 "></span></a><span class="c1">// 多个模块都持有这个 config 的副本</span>
+</span></code></pre></div></p>
+<p><strong>场景四：观察某个可能被删除的 QObject</strong>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1"></a><a href="#__codelineno-18-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 推荐用 QPointer</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2"></a><a href="#__codelineno-18-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QPointer</span><span class="o">&lt;</span><span class="n">QLabel</span><span class="o">&gt;</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">findLabel</span><span class="p">();</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3"></a><a href="#__codelineno-18-3"><span class="linenos" data-linenos="3 "></span></a><span class="c1">// 需要使用时先检查</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4"></a><a href="#__codelineno-18-4"><span class="linenos" data-linenos="4 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5"></a><a href="#__codelineno-18-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">label</span><span class="o">-&gt;</span><span class="n">setText</span><span class="p">(</span><span class="s">&quot;Updated&quot;</span><span class="p">);</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6"></a><a href="#__codelineno-18-6"><span class="linenos" data-linenos="6 "></span></a><span class="p">}</span>
+</span></code></pre></div></p>
+<blockquote>
+<p>🐛 <strong>随堂测验：调试挑战</strong></p>
+<p>以下代码有什么问题？会导致什么后果？</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1"></a><a href="#__codelineno-19-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">NetworkManager</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QObject</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2"></a><a href="#__codelineno-19-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3"></a><a href="#__codelineno-19-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">setReply</span><span class="p">(</span><span class="n">QNetworkReply</span><span class="o">*</span><span class="w"> </span><span class="n">r</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4"></a><a href="#__codelineno-19-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">reply</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">r</span><span class="p">;</span>
+</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5"></a><a href="#__codelineno-19-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6"></a><a href="#__codelineno-19-6"><span class="linenos" data-linenos=" 6 "></span></a>
+</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7"></a><a href="#__codelineno-19-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="k">private</span><span class="o">:</span>
+</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8"></a><a href="#__codelineno-19-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="n">QNetworkReply</span><span class="o">*</span><span class="w"> </span><span class="n">reply</span><span class="p">;</span>
+</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9"></a><a href="#__codelineno-19-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="p">};</span>
+</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10"></a><a href="#__codelineno-19-10"><span class="linenos" data-linenos="10 "></span></a>
+</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11"></a><a href="#__codelineno-19-11"><span class="linenos" data-linenos="11 "></span></a><span class="kt">void</span><span class="w"> </span><span class="nf">processData</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12"></a><a href="#__codelineno-19-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">    </span><span class="n">QNetworkAccessManager</span><span class="o">*</span><span class="w"> </span><span class="n">mgr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QNetworkAccessManager</span><span class="p">();</span>
+</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13"></a><a href="#__codelineno-19-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="n">NetworkManager</span><span class="o">*</span><span class="w"> </span><span class="n">handler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">NetworkManager</span><span class="p">();</span>
+</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14"></a><a href="#__codelineno-19-14"><span class="linenos" data-linenos="14 "></span></a>
+</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15"></a><a href="#__codelineno-19-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="n">QNetworkReply</span><span class="o">*</span><span class="w"> </span><span class="n">reply</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mgr</span><span class="o">-&gt;</span><span class="n">get</span><span class="p">(</span><span class="n">QNetworkRequest</span><span class="p">(</span><span class="n">QUrl</span><span class="p">(</span><span class="s">&quot;http://example.com&quot;</span><span class="p">)));</span>
+</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16"></a><a href="#__codelineno-19-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">    </span><span class="n">handler</span><span class="o">-&gt;</span><span class="n">setReply</span><span class="p">(</span><span class="n">reply</span><span class="p">);</span>
+</span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17"></a><a href="#__codelineno-19-17"><span class="linenos" data-linenos="17 "></span></a>
+</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18"></a><a href="#__codelineno-19-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">    </span><span class="k">delete</span><span class="w"> </span><span class="n">mgr</span><span class="p">;</span><span class="w">  </span><span class="c1">//mgr 被删除，reply 也会被删除</span>
+</span><span id="__span-19-19"><a id="__codelineno-19-19" name="__codelineno-19-19"></a><a href="#__codelineno-19-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">    </span><span class="c1">// handler-&gt;reply 现在是悬空指针！</span>
+</span><span id="__span-19-20"><a id="__codelineno-19-20" name="__codelineno-19-20"></a><a href="#__codelineno-19-20"><span class="linenos" data-linenos="20 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<p><strong>答案参考</strong>：
+- <code>QNetworkAccessManager</code> 析构时会删除所有相关的 <code>QNetworkReply</code>
+- <code>handler-&gt;reply</code> 变成悬空指针，后续使用会导致崩溃
+- 应该用 <code>QPointer&lt;QNetworkReply&gt;</code> 或者在 <code>mgr</code> 删除前将 <code>reply</code> 置空
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<p>⚠️ <strong>坑 #3：QNetworkReply 的所有权陷阱</strong>
+❌ 错误做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1"></a><a href="#__codelineno-20-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QNetworkAccessManager</span><span class="o">*</span><span class="w"> </span><span class="n">mgr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QNetworkAccessManager</span><span class="p">();</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2"></a><a href="#__codelineno-20-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QNetworkReply</span><span class="o">*</span><span class="w"> </span><span class="n">reply</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mgr</span><span class="o">-&gt;</span><span class="n">get</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3"></a><a href="#__codelineno-20-3"><span class="linenos" data-linenos="3 "></span></a><span class="k">delete</span><span class="w"> </span><span class="n">mgr</span><span class="p">;</span><span class="w">  </span><span class="c1">// 以为只是删除 manager</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4"></a><a href="#__codelineno-20-4"><span class="linenos" data-linenos="4 "></span></a><span class="c1">// 继续使用 reply... 崩溃！reply 已经被删除了</span>
+</span></code></pre></div>
+✅ 正确做法：
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1"></a><a href="#__codelineno-21-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QNetworkAccessManager</span><span class="w"> </span><span class="n">mgr</span><span class="p">;</span><span class="w">  </span><span class="c1">// 栈对象，不需要手动删除</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2"></a><a href="#__codelineno-21-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QNetworkReply</span><span class="o">*</span><span class="w"> </span><span class="n">reply</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mgr</span><span class="p">.</span><span class="n">get</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3"></a><a href="#__codelineno-21-3"><span class="linenos" data-linenos="3 "></span></a><span class="c1">// 或者用 QPointer 监听 reply</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4"></a><a href="#__codelineno-21-4"><span class="linenos" data-linenos="4 "></span></a><span class="n">QPointer</span><span class="o">&lt;</span><span class="n">QNetworkReply</span><span class="o">&gt;</span><span class="w"> </span><span class="n">replyPtr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">reply</span><span class="p">;</span>
+</span></code></pre></div>
+💥 后果：访问已删除的 <code>QNetworkReply</code> 导致程序崩溃
+💡 一句话记住：<code>QNetworkAccessManager</code> 拥有其创建的 <code>QNetworkReply</code>，删除 manager 会导致 reply 也被删除</p>
+</blockquote>
+<h2 id="5-练习项目">5. 练习项目<a class="headerlink" href="#5-练习项目" title="链接到此章节">&para;</a></h2>
+<p>🎯 <strong>练习项目：任务管理器</strong></p>
+<p>📋 <strong>功能描述</strong>：
+创建一个简单的任务管理器程序，每个任务有一个名称、优先级和状态。主界面显示所有任务，用户可以添加、删除、完成任务。</p>
+<p>✅ <strong>完成标准</strong>：
+- 使用对象树管理 UI 控件的生命周期
+- 使用 <code>QSharedPointer</code> 管理任务对象的共享所有权
+- 使用 <code>QPointer</code> 安全地持有对可能被删除的任务项的引用
+- 程序退出时无内存泄漏（可以用 Valgrind 或 Qt Creator 的内置工具检测）
+- 删除任务后，所有对该任务的引用都能正确处理</p>
+<p>💡 <strong>提示</strong>：
+- 定义一个 <code>Task</code> 类，存储任务信息
+- 用 <code>QSharedPointer&lt;Task&gt;</code> 在主窗口和任务详情窗口之间共享任务数据
+- 用 <code>QPointer&lt;QListWidgetItem&gt;</code> 安全地持有列表项的引用
+- 记得在析构函数中打印调试信息，验证对象被正确删除</p>
+<h2 id="6-官方文档参考">6. 官方文档参考<a class="headerlink" href="#6-官方文档参考" title="链接到此章节">&para;</a></h2>
+<p>📎 <a href="https://doc.qt.io/qt-6/objecttrees.html">Object Trees &amp; Ownership | Qt Core 6.10.2</a> · Qt 对象树与所有权机制的官方文档
+📎 <a href="https://doc.qt.io/qt-6/qsharedpointer.html">QSharedPointer Class | Qt Core 6.10.2</a> · QSharedPointer 完整参考
+📎 <a href="https://doc.qt.io/qt-6/qweakpointer.html">QWeakPointer Class | Qt Core 6.10.2</a> · QWeakPointer 完整参考
+📎 <a href="https://doc.qt.io/qt-6/qscopedpointer.html">QScopedPointer Class | Qt Core 6.10.2</a> · QScopedPointer 完整参考</p>
+<p><em>（链接已验证，2026-03-17 可访问）</em></p>
+<hr />
+<p>到这里，Qt 的内存管理基础就讲完了。掌握了对象树和智能指针，你的 Qt 程序就已经能够避免大部分内存相关的 bug。下一节我们会深入 Qt 的事件系统，这是理解 Qt 程序运行机制的关键。</p>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年3月17日 10:21:58 CST">2026年3月17日 10:21:58</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年3月17日 10:21:58 CST">2026年3月17日 10:21:58</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../05-variant-type-beginner/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 05 variant type beginner">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                05 variant type beginner
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../07-event-system-beginner/" class="md-footer__link md-footer__link--next" aria-label="下一页: 07 event system beginner">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                07 event system beginner
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 CharlieChen - 保留所有权利
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/Awesome-Embedded-Learning-Studio" target="_blank" rel="noopener" title="GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:725610365@qq.com" target="_blank" rel="noopener" title="发送邮件" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M536.4-26.3c9.8-3.5 20.6-1 28 6.3s9.8 18.2 6.3 28l-178 496.9c-5 13.9-18.1 23.1-32.8 23.1-14.2 0-27-8.6-32.3-21.7l-64.2-158c-4.5-11-2.5-23.6 5.2-32.6l94.5-112.4c5.1-6.1 4.7-15-.9-20.6s-14.6-6-20.6-.9l-112.4 94.3c-9.1 7.6-21.6 9.6-32.6 5.2L38.1 216.8c-13.1-5.3-21.7-18.1-21.7-32.3 0-14.7 9.2-27.8 23.1-32.8z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "toc.integrate", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
