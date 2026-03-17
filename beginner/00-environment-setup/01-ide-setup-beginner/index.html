@@ -1,0 +1,1518 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Awesome-Embedded-Learning-Studio的现代Qt教程">
+      
+      
+        <meta name="author" content="CharlieChen">
+      
+      
+      
+        <link rel="prev" href="../00-qt6-install-beginner/">
+      
+      
+        <link rel="next" href="../02-cmake-first-project-beginner/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../Awesome-Embedded.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+    
+    
+      
+        <title>01 ide setup beginner - Tutorial_AwesomeQt的文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#1-前言为什么-ide-配置能折腾死人" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="Tutorial_AwesomeQt的文档" class="md-header__button md-logo" aria-label="Tutorial_AwesomeQt的文档" data-md-component="logo">
+      
+  <img src="../../../Awesome-Embedded.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Tutorial_AwesomeQt的文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              01 ide setup beginner
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="切换至暗色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="切换至暗色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="切换至亮色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换至亮色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  AwesomeQt 教程索引
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../00-qt6-install-beginner/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Beginner
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Tutorial_AwesomeQt的文档" class="md-nav__button md-logo" aria-label="Tutorial_AwesomeQt的文档" data-md-component="logo">
+      
+  <img src="../../../Awesome-Embedded.png" alt="logo">
+
+    </a>
+    Tutorial_AwesomeQt的文档
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AwesomeQt 教程索引
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beginner
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Beginner
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    00 environment setup
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    00 environment setup
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../00-qt6-install-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    00 qt6 install beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    01 ide setup beginner
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    01 ide setup beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-前言为什么-ide-配置能折腾死人" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 前言：为什么 IDE 配置能折腾死人
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-环境说明" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 环境说明
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-vs-code-配置" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. VS Code 配置
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. VS Code 配置">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-必装插件清单" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 必装插件清单
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-cmake-工具链配置" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 CMake 工具链配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-智能提示配置c_cpp_propertiesjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 智能提示配置（c_cpp_properties.json）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#34-调试配置launchjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.4 调试配置（launch.json）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-clion-配置" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. CLion 配置
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. CLion 配置">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-工具链设置" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 工具链设置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-cmake-profile-配置" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 CMake Profile 配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-运行与调试" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 运行与调试
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-qt-quick-qml-支持" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 Qt Quick (.qml) 支持
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-qt-creator-配置" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Qt Creator 配置
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Qt Creator 配置">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-为什么还要说-qt-creator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 为什么还要说 Qt Creator
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-首次启动配置" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 首次启动配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#53-打开-cmake-项目" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.3 打开 CMake 项目
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#54-ui-文件可视化编辑" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.4 .ui 文件可视化编辑
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-三端对比与选择建议" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. 三端对比与选择建议
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-通用调试技巧" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 通用调试技巧
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. 通用调试技巧">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-查看-qstring-内容" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 查看 QString 内容
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-信号槽调试" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 信号槽调试
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-断点位置" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 断点位置
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-练习项目" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 练习项目
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-官方文档参考" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 官方文档参考
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-cmake-first-project-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    02 cmake first project beginner
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="导航栏" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="../../.." class="md-path__link">
+        
+  <span class="md-ellipsis">
+    AwesomeQt 教程索引
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../00-qt6-install-beginner/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    Beginner
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+    
+  
+
+      
+        
+  
+  
+    
+    
+      <li class="md-path__item">
+        <a href="../00-qt6-install-beginner/" class="md-path__link">
+          
+  <span class="md-ellipsis">
+    00 environment setup
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+  <h1>01 ide setup beginner</h1>
+
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+入门 · 环境搭建 · 01 · IDE 配置全指南
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<h2 id="1-前言为什么-ide-配置能折腾死人">1. 前言：为什么 IDE 配置能折腾死人<a class="headerlink" href="#1-前言为什么-ide-配置能折腾死人" title="链接到此章节">&para;</a></h2>
+<p>老实说，我第一次用 VS Code 跑 Qt 项目的时候，对着满屏的红色波浪线差点砸键盘。智能提示不工作、找不到头文件、CMake 配置报错——这些问题每一个都够让人崩溃的。</p>
+<p>后来我才发现，问题不是 IDE 不好用，而是我根本没配对。Qt 的开发环境确实有点特殊：有 MOC、有 RCC、有 UIC，再加上 CMake 的各种变量，配错一个地方整条链就断了。</p>
+<p>所以这一篇我们不是走马观花，而是真的要把三个主流 IDE（VS Code、CLion、Qt Creator）的配置彻底搞明白。你可以选一个自己喜欢的主力，另外两个备用——毕竟总有那么些时候，主力 IDE 突然抽风，有个备用能救命。</p>
+<p>现在我们要做的是：选好你的武器，把它调教到能顺滑地写 Qt 代码。</p>
+<h2 id="2-环境说明">2. 环境说明<a class="headerlink" href="#2-环境说明" title="链接到此章节">&para;</a></h2>
+<p>本篇假设你已经完成了上一篇的 Qt 安装，并且：</p>
+<table>
+<thead>
+<tr>
+<th>前置条件</th>
+<th>验证方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Qt 6.9.1 已安装</td>
+<td><code>qmake --version</code> 能看到版本号</td>
+</tr>
+<tr>
+<td>CMake 可用</td>
+<td><code>cmake --version</code> 输出 ≥ 3.26</td>
+</tr>
+<tr>
+<td>编译器已装</td>
+<td>Windows: MSVC 或 MinGW；Linux: GCC</td>
+</tr>
+</tbody>
+</table>
+<p>我们会分别配置三个 IDE，你可以按需跳跃到感兴趣的部分。</p>
+<blockquote>
+<p>💡 <strong>重要提示</strong>：无论选哪个 IDE，确保先在命令行能成功编译一个 Qt 工程。IDE 只是包装，底层工具链才是核心。命令行跑不通，IDE 配再花也没用。</p>
+</blockquote>
+<h2 id="3-vs-code-配置">3. VS Code 配置<a class="headerlink" href="#3-vs-code-配置" title="链接到此章节">&para;</a></h2>
+<h3 id="31-必装插件清单">3.1 必装插件清单<a class="headerlink" href="#31-必装插件清单" title="链接到此章节">&para;</a></h3>
+<p>VS Code 装好之后，你至少需要这几个插件：</p>
+<ul>
+<li><strong>C/C++</strong>（由 Microsoft 提供）</li>
+<li>智能提示、语法高亮、跳转定义</li>
+<li>
+<p>别装错了，是微软那个，下载量最高的</p>
+</li>
+<li>
+<p><strong>CMake Tools</strong></p>
+</li>
+<li>CMake 项目管理、一键构建调试</li>
+<li>
+<p>这是个神器，不用它你会累死</p>
+</li>
+<li>
+<p><strong>Qt C++ Helpers</strong>（可选但推荐）</p>
+</li>
+<li>信号槽语法高亮、.ui 文件预览</li>
+<li>写 Qt 项目的贴心助手</li>
+</ul>
+<blockquote>
+<p>⚠️ <strong>坑 #1：插件装错了</strong>
+❌ 错误做法：看到名字像的就装，最后装了一堆重复功能的
+✅ 正确做法：认准发布者，Microsoft 的 C/C++、twxs 的 CMake Tools
+💥 后果：插件冲突、智能提示乱报错、你以为是代码问题其实是插件问题
+💡 一句话记住：VS Code 插件看发布者，别看下载量盲目装</p>
+</blockquote>
+<h3 id="32-cmake-工具链配置">3.2 CMake 工具链配置<a class="headerlink" href="#32-cmake-工具链配置" title="链接到此章节">&para;</a></h3>
+<p>VS Code 的 CMake Tools 插件需要知道你的编译器和 Qt 在哪里。</p>
+<p>打开任意 CMake 项目（或者新建一个），按下 <code>Ctrl+Shift+P</code>，输入：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos="1 "></span></a>CMake: Select a Kit
+</span></code></pre></div>
+<p>第一次运行它会让你选择编译器：
+- <strong>Windows MSVC</strong>：选 Visual Studio Community 2019 Release - amd64
+- <strong>Windows MinGW</strong>：选 GCC x86_64-w64-mingw32
+- <strong>Linux/WSL2</strong>：选 GCC x86_64-linux-gnu</p>
+<p>然后需要设置 Qt 的路径。同样是 <code>Ctrl+Shift+P</code>：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos="1 "></span></a>CMake: Configure Args
+</span></code></pre></div>
+<p>添加以下参数：</p>
+<div class="language-cmake highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos="1 "></span></a><span class="err">-DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2"></a><a href="#__codelineno-2-2"><span class="linenos" data-linenos="2 "></span></a><span class="c"># Linux 下改成：</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3"></a><a href="#__codelineno-2-3"><span class="linenos" data-linenos="3 "></span></a><span class="err">-DCMAKE_PREFIX_PATH=/home/你的用户名/Qt/6.9.1/gcc_64</span>
+</span></code></pre></div>
+<p>这个配置会保存到 <code>.vscode/cmake-kits.json</code> 里，不用每次都设。</p>
+<h3 id="33-智能提示配置c_cpp_propertiesjson">3.3 智能提示配置（c_cpp_properties.json）<a class="headerlink" href="#33-智能提示配置c_cpp_propertiesjson" title="链接到此章节">&para;</a></h3>
+<p>VS Code 的智能提示需要知道 Qt 的头文件在哪里。按 <code>Ctrl+Shift+P</code>：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos="1 "></span></a>C/C++: Edit Configurations (UI)
+</span></code></pre></div>
+<p>在 "Include path" 里添加：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos="1 "></span></a><span class="p">[</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="s2">&quot;${workspaceFolder}/**&quot;</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="s2">&quot;C:/Qt/6.9.1/mingw_64/include&quot;</span><span class="p">,</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4"></a><a href="#__codelineno-4-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="s2">&quot;C:/Qt/6.9.1/mingw_64/include/QtCore&quot;</span><span class="p">,</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="s2">&quot;C:/Qt/6.9.1/mingw_64/include/QtWidgets&quot;</span><span class="p">,</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6"></a><a href="#__codelineno-4-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="s2">&quot;C:/Qt/6.9.1/mingw_64/include/QtGui&quot;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7"></a><a href="#__codelineno-4-7"><span class="linenos" data-linenos="7 "></span></a><span class="p">]</span>
+</span></code></pre></div>
+<p>Linux 路径同理调整。</p>
+<p>配置完后，你会看到红色的波浪线消失，<code>#include &lt;QApplication&gt;</code> 不再报错。</p>
+<h3 id="34-调试配置launchjson">3.4 调试配置（launch.json）<a class="headerlink" href="#34-调试配置launchjson" title="链接到此章节">&para;</a></h3>
+<p>按 F5 调试时，VS Code 会读取 <code>.vscode/launch.json</code>。CMake Tools 会自动生成一个，但你可能需要微调：</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.2.0&quot;</span><span class="p">,</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="nt">&quot;configurations&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5"></a><a href="#__codelineno-5-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">            </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Debug Qt App&quot;</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6"></a><a href="#__codelineno-5-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">            </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;cppdbg&quot;</span><span class="p">,</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7"></a><a href="#__codelineno-5-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">            </span><span class="nt">&quot;request&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;launch&quot;</span><span class="p">,</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8"></a><a href="#__codelineno-5-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">            </span><span class="nt">&quot;program&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;${command:cmake.launchTargetPath}&quot;</span><span class="p">,</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9"></a><a href="#__codelineno-5-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">            </span><span class="nt">&quot;args&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10"></a><a href="#__codelineno-5-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">            </span><span class="nt">&quot;stopAtEntry&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11"></a><a href="#__codelineno-5-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">            </span><span class="nt">&quot;cwd&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;${workspaceFolder}&quot;</span><span class="p">,</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12"></a><a href="#__codelineno-5-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">            </span><span class="nt">&quot;environment&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13"></a><a href="#__codelineno-5-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">            </span><span class="nt">&quot;externalConsole&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14"></a><a href="#__codelineno-5-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">            </span><span class="nt">&quot;MIMode&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gdb&quot;</span><span class="p">,</span>
+</span><span id="__span-5-15"><a id="__codelineno-5-15" name="__codelineno-5-15"></a><a href="#__codelineno-5-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">            </span><span class="nt">&quot;setupCommands&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+</span><span id="__span-5-16"><a id="__codelineno-5-16" name="__codelineno-5-16"></a><a href="#__codelineno-5-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">                </span><span class="p">{</span>
+</span><span id="__span-5-17"><a id="__codelineno-5-17" name="__codelineno-5-17"></a><a href="#__codelineno-5-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">                    </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Enable pretty-printing&quot;</span><span class="p">,</span>
+</span><span id="__span-5-18"><a id="__codelineno-5-18" name="__codelineno-5-18"></a><a href="#__codelineno-5-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">                    </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;-enable-pretty-printing&quot;</span><span class="p">,</span>
+</span><span id="__span-5-19"><a id="__codelineno-5-19" name="__codelineno-5-19"></a><a href="#__codelineno-5-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">                    </span><span class="nt">&quot;ignoreFailures&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-5-20"><a id="__codelineno-5-20" name="__codelineno-5-20"></a><a href="#__codelineno-5-20"><span class="linenos" data-linenos="20 "></span></a><span class="w">                </span><span class="p">}</span>
+</span><span id="__span-5-21"><a id="__codelineno-5-21" name="__codelineno-5-21"></a><a href="#__codelineno-5-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">            </span><span class="p">]</span>
+</span><span id="__span-5-22"><a id="__codelineno-5-22" name="__codelineno-5-22"></a><a href="#__codelineno-5-22"><span class="linenos" data-linenos="22 "></span></a><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-5-23"><a id="__codelineno-5-23" name="__codelineno-5-23"></a><a href="#__codelineno-5-23"><span class="linenos" data-linenos="23 "></span></a><span class="w">    </span><span class="p">]</span>
+</span><span id="__span-5-24"><a id="__codelineno-5-24" name="__codelineno-5-24"></a><a href="#__codelineno-5-24"><span class="linenos" data-linenos="24 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+<blockquote>
+<p>📝 <strong>随堂测验：口述回答</strong>
+用自己的话说说：为什么 VS Code 需要配置 CMAKE_PREFIX_PATH？不配会怎样？</p>
+<p><em>(请先自己想一下，再往下滑看答案)</em></p>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<p><strong>答案参考</strong>：
+- CMAKE_PREFIX_PATH 告诉 CMake 去哪里找 Qt 的库文件和 CMake 配置
+- 不配的话 find_package(Qt6) 会找不到，整条构建链就断了
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+</blockquote>
+<h2 id="4-clion-配置">4. CLion 配置<a class="headerlink" href="#4-clion-配置" title="链接到此章节">&para;</a></h2>
+<h3 id="41-工具链设置">4.1 工具链设置<a class="headerlink" href="#41-工具链设置" title="链接到此章节">&para;</a></h3>
+<p>CLion 的好处是它对 CMake 的支持是原生的，配置起来比 VS Code 简单一些。</p>
+<p>打开 Settings → Build, Execution, Deployment → Toolchains：</p>
+<table>
+<thead>
+<tr>
+<th>设置项</th>
+<th>Windows MinGW</th>
+<th>Windows MSVC</th>
+<th>Linux/WSL2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CMake</td>
+<td>bundled 或系统安装</td>
+<td>同左</td>
+<td>同左</td>
+</tr>
+<tr>
+<td>Build tool</td>
+<td>Ninja 或 MinGW Makefiles</td>
+<td>同左</td>
+<td>Unix Makefiles</td>
+</tr>
+<tr>
+<td>C Compiler</td>
+<td>gcc 路径</td>
+<td>cl.exe（VS自带）</td>
+<td>/usr/bin/gcc</td>
+</tr>
+<tr>
+<td>C++ Compiler</td>
+<td>g++ 路径</td>
+<td>cl.exe</td>
+<td>/usr/bin/g++</td>
+</tr>
+<tr>
+<td>Debugger</td>
+<td>gdb 或 lldb</td>
+<td>同左</td>
+<td>gdb</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>坑 #2：CLon 找不到 Visual Studio</strong>
+❌ 错误做法：装了 VS 但 CLion 报错找不到 cl.exe
+✅ 正确做法：用 VS Installer里的 "Developer Command Prompt for VS" 路径
+💥 后果：CLion 无法使用 MSVC 编译器，被迫用 MinGW
+💡 一句话记住：CLion 需要知道 VS 工具链的确切路径，不是装了就能找到</p>
+</blockquote>
+<h3 id="42-cmake-profile-配置">4.2 CMake Profile 配置<a class="headerlink" href="#42-cmake-profile-配置" title="链接到此章节">&para;</a></h3>
+<p>在同一设置页面，找到 CMake profiles：</p>
+<p>添加一个新的 Profile，配置如下：</p>
+<div class="language-cmake highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="c"># Build directory</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="err">${workspaceFolder}/cmake-build-debug</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="c"># CMake options (关键部分)</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5"></a><a href="#__codelineno-6-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="err">-DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6"></a><a href="#__codelineno-6-6"><span class="linenos" data-linenos=" 6 "></span></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7"></a><a href="#__codelineno-6-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="c"># Build type</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8"></a><a href="#__codelineno-6-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="err">Debug</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9"></a><a href="#__codelineno-6-9"><span class="linenos" data-linenos=" 9 "></span></a>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10"></a><a href="#__codelineno-6-10"><span class="linenos" data-linenos="10 "></span></a><span class="c"># Toolchain</span>
+</span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11"></a><a href="#__codelineno-6-11"><span class="linenos" data-linenos="11 "></span></a><span class="err">默认即可（CLion</span><span class="w"> </span><span class="err">会自动检测）</span>
+</span></code></pre></div>
+<p>保存后，CLion 会在右上方显示这个 Profile，切换过去就行。</p>
+<h3 id="43-运行与调试">4.3 运行与调试<a class="headerlink" href="#43-运行与调试" title="链接到此章节">&para;</a></h3>
+<p>CLion 的调试配置很直观：点击右上角的运行配置，选择 Edit…</p>
+<p>在 "Program arguments" 里填参数（如果需要），"Working directory" 默认是项目根目录。</p>
+<p>按 Shift+F9 就能开始调试。CLion 的调试器体验比 VS Code 好一些，尤其是查看 Qt 容器内容的时候。</p>
+<h3 id="44-qt-quick-qml-支持">4.4 Qt Quick (.qml) 支持<a class="headerlink" href="#44-qt-quick-qml-支持" title="链接到此章节">&para;</a></h3>
+<p>CLion 默认对 QML 的支持有限，需要额外配置：</p>
+<p>安装插件：Settings → Plugins → 搜索 "QML"，安装 QML Support 插件。</p>
+<blockquote>
+<p>🔲 <strong>随堂测验：代码填空</strong>
+补全以下 CLion CMake 配置，使其能找到 Qt 6.9.1：</p>
+<div class="language-cmake highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><a href="#__codelineno-7-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="c"># CMake options</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><a href="#__codelineno-7-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="err">______=C:/Qt/6.9.1/mingw_64</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3"></a><a href="#__codelineno-7-3"><span class="linenos" data-linenos=" 3 "></span></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4"></a><a href="#__codelineno-7-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="c"># Build type</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5"></a><a href="#__codelineno-7-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="err">______</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6"></a><a href="#__codelineno-7-6"><span class="linenos" data-linenos=" 6 "></span></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7"></a><a href="#__codelineno-7-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="c"># 如果要启用 Qt 的 MOC、RCC、UIC</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8"></a><a href="#__codelineno-7-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="nb">set</span><span class="p">(</span><span class="s">______</span><span class="w"> </span><span class="s">ON</span><span class="p">)</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9"></a><a href="#__codelineno-7-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_AUTORCC</span><span class="w"> </span><span class="s">ON</span><span class="p">)</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10"></a><a href="#__codelineno-7-10"><span class="linenos" data-linenos="10 "></span></a><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_AUTOUIC</span><span class="w"> </span><span class="s">ON</span><span class="p">)</span>
+</span></code></pre></div>
+<p><em>(提示：第一个是 CMAKE_PREFIX_PATH，第二个是 Debug/Release，第三个是 AUTOMOC)</em></p>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<p><strong>答案参考</strong>：
+<div class="language-cmake highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><a href="#__codelineno-8-1"><span class="linenos" data-linenos="1 "></span></a><span class="err">-DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><a href="#__codelineno-8-2"><span class="linenos" data-linenos="2 "></span></a><span class="err">Debug</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a><a href="#__codelineno-8-3"><span class="linenos" data-linenos="3 "></span></a><span class="err">CMAKE_AUTOMOC</span>
+</span></code></pre></div>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+</blockquote>
+<h2 id="5-qt-creator-配置">5. Qt Creator 配置<a class="headerlink" href="#5-qt-creator-配置" title="链接到此章节">&para;</a></h2>
+<h3 id="51-为什么还要说-qt-creator">5.1 为什么还要说 Qt Creator<a class="headerlink" href="#51-为什么还要说-qt-creator" title="链接到此章节">&para;</a></h3>
+<p>我知道有些人可能觉得 Qt Creator 界面"老旧"，但说实话，它是官方 IDE，对 Qt 的支持是原生的。有些功能——比如 .ui 文件的可视化编辑、信号槽的图形化连接——只有 Qt Creator 做得最好。</p>
+<p>所以建议是：主力可以选别的，但 Qt Creator 留着备用，特别是做 UI 设计的时候。</p>
+<h3 id="52-首次启动配置">5.2 首次启动配置<a class="headerlink" href="#52-首次启动配置" title="链接到此章节">&para;</a></h3>
+<p>Qt Creator 首次启动时会自动检测 Qt 安装，如果检测不到：</p>
+<p>打开 Edit → Preferences → Kits → Qt Versions</p>
+<p>手动添加：</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><a href="#__codelineno-9-1"><span class="linenos" data-linenos="1 "></span></a>名称: Qt 6.9.1 (mingw_64)
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><a href="#__codelineno-9-2"><span class="linenos" data-linenos="2 "></span></a>qmake 路径: C:/Qt/6.9.1/mingw_64/bin/qmake.exe
+</span></code></pre></div>
+<p>然后在 Kits 页面，确保有一个 Kit 包含这个 Qt 版本。</p>
+<h3 id="53-打开-cmake-项目">5.3 打开 CMake 项目<a class="headerlink" href="#53-打开-cmake-项目" title="链接到此章节">&para;</a></h3>
+<p>Qt Creator 打开 CMake 项目超简单：File → Open File or Project → 选择 <code>CMakeLists.txt</code></p>
+<p>它会自动配置，然后你就可以直接按 Ctrl+R 运行了。</p>
+<blockquote>
+<p>⚠️ <strong>坑 #3：Kit 未配置导致编译失败</strong>
+❌ 错误做法：看到没 Kit 就不管，直接尝试编译
+✅ 正确做法：先确认 Kits 页面有一个有效的 Kit（编译器 + Qt 版本组合）
+💥 后果：项目无法构建，报错 "No valid kit found"
+💡 一句话记住：Qt Creator 的 Kit 是编译器 + Qt + 调试器的组合，缺一不可</p>
+</blockquote>
+<h3 id="54-ui-文件可视化编辑">5.4 .ui 文件可视化编辑<a class="headerlink" href="#54-ui-文件可视化编辑" title="链接到此章节">&para;</a></h3>
+<p>这是 Qt Creator 的杀手级功能。双击项目里的 .ui 文件，会打开一个可视化设计器：</p>
+<ul>
+<li>左侧是控件面板，拖拽就能加到界面上</li>
+<li>右侧是属性编辑器，改字体、颜色、大小</li>
+<li>底部是信号槽编辑器，图形化连接信号和槽</li>
+</ul>
+<p>说实话，这个功能真的好用，特别是对新手。等你熟练了可以手写 UI，但刚开始用可视化工具能省很多时间。</p>
+<blockquote>
+<p>🐛 <strong>随堂测验：调试挑战</strong></p>
+<p>以下配置片段有问题，请问哪里错了，会导致什么后果？</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><a href="#__codelineno-10-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// .vscode/cmake-kits.json</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><a href="#__codelineno-10-2"><span class="linenos" data-linenos="2 "></span></a><span class="p">{</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a><a href="#__codelineno-10-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;MinGW&quot;</span><span class="p">,</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><a href="#__codelineno-10-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="nt">&quot;compilers&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a><a href="#__codelineno-10-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">        </span><span class="nt">&quot;C&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;C:/mingw64/bin/gcc.exe&quot;</span><span class="p">,</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a><a href="#__codelineno-10-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">        </span><span class="nt">&quot;CXX&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;C:/mingw64/bin/g++.exe&quot;</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7"></a><a href="#__codelineno-10-7"><span class="linenos" data-linenos="7 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8"></a><a href="#__codelineno-10-8"><span class="linenos" data-linenos="8 "></span></a><span class="p">}</span>
+</span></code></pre></div>
+<p>同时，launch.json 里没有配置 program 字段。</p>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<p><strong>答案参考</strong>：
+- 问题：cmake-kits.json 里缺少 CMAKE_PREFIX_PATH，launch.json 缺少 program
+- 后果：CMake 找不到 Qt，无法找到可执行文件来调试
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+</blockquote>
+<h2 id="6-三端对比与选择建议">6. 三端对比与选择建议<a class="headerlink" href="#6-三端对比与选择建议" title="链接到此章节">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>VS Code</th>
+<th>CLion</th>
+<th>Qt Creator</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>轻量程度</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>CMake 支持</td>
+<td>⭐⭐⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>Qt 专用功能</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>调试体验</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td>插件生态</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐</td>
+</tr>
+<tr>
+<td>价格</td>
+<td>免费</td>
+<td>收费（学生免费）</td>
+<td>免费</td>
+</tr>
+</tbody>
+</table>
+<p><strong>选择建议</strong>：
+- <strong>预算敏感 + 喜欢折腾</strong>：VS Code
+- <strong>重度 CMake 用户 + 预算充足</strong>：CLion
+- <strong>Qt 专用 + UI 设计频繁</strong>：Qt Creator</p>
+<h2 id="7-通用调试技巧">7. 通用调试技巧<a class="headerlink" href="#7-通用调试技巧" title="链接到此章节">&para;</a></h2>
+<p>无论你用哪个 IDE，调试 Qt 项目有几个通用的要点：</p>
+<h3 id="71-查看-qstring-内容">7.1 查看 QString 内容<a class="headerlink" href="#71-查看-qstring-内容" title="链接到此章节">&para;</a></h3>
+<p>GDB 默认看不到 QString 的内部内容，需要使用 pretty-printer。Qt Creator 自带，VS Code 和 CLion 需要额外配置。</p>
+<h3 id="72-信号槽调试">7.2 信号槽调试<a class="headerlink" href="#72-信号槽调试" title="链接到此章节">&para;</a></h3>
+<p>在 <code>main.cpp</code> 里加这一行，可以看到信号槽的调用信息：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><a href="#__codelineno-11-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QLoggingCategory</span><span class="o">::</span><span class="n">setFilterRules</span><span class="p">(</span><span class="s">&quot;qt.core.qobject.connect=true&quot;</span><span class="p">);</span>
+</span></code></pre></div>
+<h3 id="73-断点位置">7.3 断点位置<a class="headerlink" href="#73-断点位置" title="链接到此章节">&para;</a></h3>
+<p>Qt 的 MOC 会生成额外代码，有时候断点会打在奇怪的地方。建议断点打在你自己写的函数里，而不是 Qt 的内部函数。</p>
+<h2 id="8-练习项目">8. 练习项目<a class="headerlink" href="#8-练习项目" title="链接到此章节">&para;</a></h2>
+<p>🎯 <strong>练习项目：三端 Hello Qt</strong></p>
+<p>📋 <strong>功能描述</strong>：
+用三个 IDE 分别打开同一个 Qt Hello World 项目，配置好工具链，确保每个 IDE 都能成功编译运行。</p>
+<p>✅ <strong>完成标准</strong>：
+- VS Code: F5 能调试，智能提示正常
+- CLion: 右上角能选 Kit，Shift+F9 调试正常
+- Qt Creator: 能打开项目，Ctrl+R 运行正常
+- 三个 IDE 编译出的程序都能弹出 "Hello Qt" 窗口</p>
+<p>💡 <strong>提示</strong>：
+- 项目很简单：一个 QApplication，一个 QWidget 显示 "Hello Qt"
+- 先在命令行确认能编译，再用 IDE 打开
+- 每个 IDE 配置 CMAKE_PREFIX_PATH 是关键
+- VS Code 需要手动配 include path，CLion 和 Qt Creator 会自动检测</p>
+<h2 id="9-官方文档参考">9. 官方文档参考<a class="headerlink" href="#9-官方文档参考" title="链接到此章节">&para;</a></h2>
+<p>📎 <a href="https://doc.qt.io/qtcreator/">Qt Creator 手册</a> · 官方 IDE 的完整文档
+📎 <a href="https://code.visualstudio.com/docs/cpp/config-mingw">VS Code C++ 教程</a> · 微软官方配置指南
+📎 <a href="https://www.jetbrains.com/help/clion/cmake-support.html">CLion CMake 教程</a> · JetBrains CMake 支持</p>
+<p><em>（链接已验证，2026-03-17 可访问）</em></p>
+<hr />
+<p><strong>到这里就大功告成了！</strong> 选一个你喜欢的 IDE，把它调教顺手。后面我们就要正式进入 Qt 代码的世界了。记住，IDE 只是工具，代码才是核心。别在配置上花太多时间，能用就行。</p>
+<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="最后更新">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年3月17日 09:27:22 CST">2026年3月17日 09:27:22</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="创建日期">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年3月17日 09:27:22 CST">2026年3月17日 09:27:22</span>
+  </span>
+
+    
+    
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../00-qt6-install-beginner/" class="md-footer__link md-footer__link--prev" aria-label="上一页: 00 qt6 install beginner">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                00 qt6 install beginner
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../02-cmake-first-project-beginner/" class="md-footer__link md-footer__link--next" aria-label="下一页: 02 cmake first project beginner">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                02 cmake first project beginner
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025 CharlieChen - 保留所有权利
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/Awesome-Embedded-Learning-Studio" target="_blank" rel="noopener" title="GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:725610365@qq.com" target="_blank" rel="noopener" title="发送邮件" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M536.4-26.3c9.8-3.5 20.6-1 28 6.3s9.8 18.2 6.3 28l-178 496.9c-5 13.9-18.1 23.1-32.8 23.1-14.2 0-27-8.6-32.3-21.7l-64.2-158c-4.5-11-2.5-23.6 5.2-32.6l94.5-112.4c5.1-6.1 4.7-15-.9-20.6s-14.6-6-20.6-.9l-112.4 94.3c-9.1 7.6-21.6 9.6-32.6 5.2L38.1 216.8c-13.1-5.3-21.7-18.1-21.7-32.3 0-14.7 9.2-27.8 23.1-32.8z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "toc.integrate", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../../javascripts/mathjax.js"></script>
+      
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
