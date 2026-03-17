@@ -1,0 +1,45 @@
+# CMake 生成的文件和目录
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# 编译产物
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+*.app
+*.a
+*.lib
+
+# Qt 生成的文件
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.qmlc
+*.jsc
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 用户文件
+*.user
+*.autosave
+
+# 调试文件
+*.dSYM/
+*.su
+*.idb
+*.pdb

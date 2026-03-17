@@ -1,0 +1,38 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Qt generated files
+*.autosave
+*.user
+*.pro.user
+*.qmlc
+*.jsc
+
+# Qt Creator
+*.autosave
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Executable
+11-timer-beginner
+*.exe
+*.app
+*.dSYM
+
+# Object files
+*.o
+*.obj

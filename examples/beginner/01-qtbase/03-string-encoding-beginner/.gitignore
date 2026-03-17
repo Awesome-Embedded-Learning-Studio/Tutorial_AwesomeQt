@@ -1,0 +1,37 @@
+# CMake 生成文件
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# 编译产物
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+*.app
+*.a
+*.lib
+
+# IDE 配置
+.vscode/
+.idea/
+*.user
+*.pro.user
+
+# Qt 特定
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.autosave
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*~

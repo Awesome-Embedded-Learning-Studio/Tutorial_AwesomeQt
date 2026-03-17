@@ -1,0 +1,34 @@
+# CMake 生成文件
+build/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Qt 生成文件
+*.user
+*.autosave
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 可执行文件
+*.exe
+*.app
+*.dSYM
+
+# 目标文件
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+
+# 示例运行生成的测试文件
+config.json
+catalog.xml

@@ -1,0 +1,46 @@
+# Qt 内存管理入门示例 - Git 忽略文件
+# 标准 C++/Qt 项目忽略规则
+
+# 构建目录
+build/
+Build/
+cmake-build-*/
+
+# CMake 生成文件
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# 编译产物
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+*.app
+*.a
+*.lib
+
+# Qt 特定文件
+*.user
+*.autosave
+*.qmlc
+*.jsc
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+*.pro.user
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db

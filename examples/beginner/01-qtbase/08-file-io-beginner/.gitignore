@@ -1,0 +1,48 @@
+# CMake 生成文件
+build/
+cmake-build-*/
+out/
+
+# CMake 缓存
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# 编译产物
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+*.app
+*.a
+*.lib
+
+# Qt 相关
+*.user
+*.autosave
+*.qmlc
+*.jsc
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 日志和数据文件（示例程序运行产生的）
+*.txt
+*.ini
+*.bin
+logs/
+test_data/
+
+# 系统文件
+.DS_Store
+Thumbs.db

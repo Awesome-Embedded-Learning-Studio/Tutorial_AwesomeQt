@@ -9,10 +9,10 @@
 ## 🔢 总体进度
 
 ```
-入门层    ███░░░░░░░░  3 / 预估 130 篇
+入门层    ██░░░░░░░░░  23 / 预估 130 篇
 进阶层    ░░░░░░░░░░  0 / 预估 130 篇
 专家层    ░░░░░░░░░░  0 / 预估 145 篇（含专属章节）
-合计      ░░░░░░░░░░  3 / 预估 405 篇
+合计      ░░░░░░░░░░  23 / 预估 405 篇
 ```
 
 ---
@@ -26,103 +26,7 @@
 
 <details>
 <summary><strong>01 · QtBase</strong>（16 篇）</summary>
-
-- [ ] 🔴 `01-qobject-meta-system-beginner.md` — QObject 与元对象系统初识
-  - QObject 是什么，为什么几乎所有 Qt 类都继承它
-  - Q_OBJECT 宏的作用与必须加的场景
-  - 对象树（parent-child）内存管理基础
-  - `qobject_cast` 与 `dynamic_cast` 的区别
-
-- [ ] 🔴 `02-signal-slot-beginner.md` — Signal / Slot 基础用法与新式语法
-  - `signals:` / `slots:` 声明方式
-  - `connect()` 四种写法对比（宏 / 函数指针 / Lambda / PMF）
-  - 同步连接与异步连接的区别（Qt::DirectConnection vs Qt::QueuedConnection）
-  - `disconnect()` 与连接生命周期管理
-
-- [ ] 🔴 `03-qstring-encoding-beginner.md` — QString、QByteArray、字符串操作入门
-  - `QString` 与 `std::string` 的本质区别（UTF-16 内部编码）
-  - 常用操作：`split` / `contains` / `replace` / `arg` / `number`
-  - `QByteArray` 的适用场景（网络/二进制数据）
-  - `QString::fromUtf8` / `toUtf8` 编码转换基础
-
-- [ ] 🔴 `04-containers-beginner.md` — QList、QMap、QHash、QSet 基础用法
-  - `QList<T>` 替代 `QVector` 的 Qt6 变化
-  - `QMap` vs `QHash`：有序 vs 哈希，使用场景判断
-  - 容器遍历：range-for / `QMapIterator` / `begin-end`
-  - 隐式共享（写时复制）概念初识
-
-- [ ] 🟡 `05-qvariant-metatype-beginner.md` — QVariant 与类型系统基础
-  - `QVariant` 是什么，解决了什么问题
-  - 常用类型存取：`setValue` / `value<T>` / `canConvert`
-  - `QMetaType::fromType<T>()` 基础用法
-  - 在 Model/View 中传递数据时为何常用 QVariant
-
-- [ ] 🔴 `06-memory-management-beginner.md` — Qt 内存管理与对象树基础
-  - 对象树所有权：parent 负责释放 child
-  - `QScopedPointer` 与 `std::unique_ptr` 对比
-  - `QSharedPointer` 基础用法
-  - 何时用 Qt 对象树，何时用智能指针
-
-- [ ] 🔴 `07-event-system-beginner.md` — Qt 事件系统与事件循环初识
-  - 事件（Event）vs 信号槽（Signal/Slot）的根本区别
-  - `QCoreApplication::exec()` 启动的事件循环是什么
-  - 重写 `event()` 与具体事件处理函数（如 `mousePressEvent`）
-  - `QEvent::accept()` / `ignore()` 控制事件传播
-
-- [ ] 🔴 `08-file-io-beginner.md` — QFile、QDir、QTextStream 文件读写
-  - `QFile::open` 标志位（ReadOnly / WriteOnly / Append / Text）
-  - `QTextStream` 按行读写文本文件
-  - `QDir` 遍历目录、过滤文件、创建/删除目录
-  - `QFileInfo` 获取文件元信息（大小、修改时间、权限）
-
-- [ ] 🔴 `09-qthread-beginner.md` — QThread 与线程安全基础
-  - 为什么 Qt GUI 必须在主线程操作
-  - `QThread` 两种用法：继承 run() vs moveToThread()
-  - 跨线程信号槽（Qt::QueuedConnection 自动保证线程安全）
-  - `QMutex` / `QMutexLocker` 基础保护共享数据
-
-- [ ] 🟡 `10-qprocess-beginner.md` — QProcess 启动外部程序基础
-  - `QProcess::start()` 与 `startDetached()` 区别
-  - 读取 `stdout` / `stderr` 输出
-  - `waitForFinished()` 同步等待与异步信号接收
-  - 环境变量设置与工作目录配置
-
-- [ ] 🔴 `11-qtimer-beginner.md` — QTimer 定时器基础用法
-  - 单次定时器（`singleShot`）与重复定时器
-  - `QTimer::singleShot` 静态方法快速使用
-  - 定时器在线程中的注意事项（必须属于该线程）
-  - `QElapsedTimer` 计时测量
-
-- [ ] 🟡 `12-plugin-system-beginner.md` — QPluginLoader 插件系统初识
-  - 插件系统解决了什么问题（动态扩展能力）
-  - `Q_DECLARE_INTERFACE` / `Q_PLUGIN_METADATA` 宏的作用
-  - `QPluginLoader::load()` 加载与 `instance()` 获取接口
-  - 插件的 CMakeLists.txt 配置（`MODULE` 类型）
-
-- [ ] 🟡 `13-i18n-beginner.md` — 国际化 tr() 与翻译流程基础
-  - `tr()` 的正确使用范围与注意事项
-  - `lupdate` 提取字符串 → Qt Linguist 翻译 → `lrelease` 编译 `.qm`
-  - `QTranslator::load()` 加载翻译文件
-  - 复数形式处理 `tr("%n item(s)", "", count)`
-
-- [ ] 🟡 `14-logging-beginner.md` — qDebug / qWarning / QLoggingCategory 日志基础
-  - `qDebug` / `qInfo` / `qWarning` / `qCritical` / `qFatal` 五级日志
-  - `QLoggingCategory` 按模块过滤日志
-  - `QT_LOGGING_RULES` 环境变量动态过滤
-  - Release 构建禁用 qDebug 输出的方法
-
-- [ ] 🟡 `15-regex-beginner.md` — QRegularExpression 正则表达式基础
-  - `QRegularExpression` vs 已废弃的 `QRegExp`
-  - 常用模式：匹配、捕获组、全局搜索
-  - `QRegularExpressionMatch` 提取捕获结果
-  - 在 `QLineEdit` 中设置输入验证正则
-
-- [ ] 🟡 `16-json-xml-beginner.md` — QJsonDocument 与 QXmlStreamReader 解析基础
-  - `QJsonDocument::fromJson()` 解析 JSON 字符串
-  - `QJsonObject` / `QJsonArray` 取值
-  - `QXmlStreamReader` 流式解析 XML 的读取循环
-  - JSON 序列化写入文件完整示例
-
+全部完成
 </details>
 
 <details>
@@ -1797,10 +1701,10 @@
 
 | 层级 | 总篇数 | 已完成 | 进行中 | 未开始 |
 |------|--------|--------|--------|--------|
-| 入门 | 130 | 0 | 0 | 130 |
+| 入门 | 130 | 16 | 0 | 114 |
 | 进阶 | 130 | 0 | 0 | 130 |
 | 专家 | 145 | 0 | 0 | 145 |
-| **合计** | **405** | **0** | **0** | **405** |
+| **合计** | **405** | **16** | **0** | **389** |
 
 ---
 

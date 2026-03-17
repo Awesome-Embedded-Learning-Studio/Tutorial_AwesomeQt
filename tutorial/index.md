@@ -116,7 +116,7 @@
 
 ## 当前进度
 
-### 入门层 (3 / 预估 130 篇)
+### 入门层 (19 / 预估 130 篇)
 
 #### ✅ 00 · 环境搭建 (已完成 3/3)
 
@@ -124,24 +124,24 @@
 - [x] [IDE 配置全指南](beginner/00-environment-setup/01-ide-setup-beginner.md) — VS Code / CLion / Qt Creator 三端配置
 - [x] [第一个 CMake Qt6 工程](beginner/00-environment-setup/02-cmake-first-project-beginner.md) — 从零跑通最小项目
 
-#### 🔄 01 · QtBase 核心模块 (待完成 0/16)
+#### ✅ 01 · QtBase 核心模块 (已完成 16/16)
 
-- [ ] QObject 与元对象系统初识
-- [ ] Signal / Slot 基础用法与新式语法
-- [ ] QString、QByteArray、字符串操作入门
-- [ ] QList、QMap、QHash、QSet 基础用法
-- [ ] QVariant 与类型系统基础
-- [ ] Qt 内存管理与对象树基础
-- [ ] Qt 事件系统与事件循环初识
-- [ ] QFile、QDir、QTextStream 文件读写
-- [ ] QThread 与线程安全基础
-- [ ] QProcess 启动外部程序基础
-- [ ] QTimer 定时器基础用法
-- [ ] QPluginLoader 插件系统初识
-- [ ] 国际化 tr() 与翻译流程基础
-- [ ] qDebug / qWarning 日志基础
-- [ ] QRegularExpression 正则表达式基础
-- [ ] QJsonDocument 与 QXmlStreamReader 解析基础
+- [x] [QObject 与元对象系统初识](beginner/01-qtbase/01-qobject-meta-system-beginner.md)
+- [x] [Signal / Slot 基础用法与新式语法](beginner/01-qtbase/02-signal-slot-beginner.md)
+- [x] [QString、QByteArray、字符串操作入门](beginner/01-qtbase/03-string-encoding-beginner.md)
+- [x] [QList、QMap、QHash、QSet 基础用法](beginner/01-qtbase/04-container-beginner.md)
+- [x] [QVariant 与类型系统基础](beginner/01-qtbase/05-variant-type-beginner.md)
+- [x] [Qt 内存管理与对象树基础](beginner/01-qtbase/06-memory-management-beginner.md)
+- [x] [Qt 事件系统与事件循环初识](beginner/01-qtbase/07-event-system-beginner.md)
+- [x] [QFile、QDir、QTextStream 文件读写](beginner/01-qtbase/08-file-io-beginner.md)
+- [x] [QThread 与线程安全基础](beginner/01-qtbase/09-multithreading-beginner.md)
+- [x] [QProcess 启动外部程序基础](beginner/01-qtbase/10-qprocess-beginner.md)
+- [x] [QTimer 定时器基础用法](beginner/01-qtbase/11-timer-beginner.md)
+- [x] [QPluginLoader 插件系统初识](beginner/01-qtbase/12-plugin-beginner.md)
+- [x] [国际化 tr() 与翻译流程基础](beginner/01-qtbase/13-i18n-beginner.md)
+- [x] [qDebug / qWarning 日志基础](beginner/01-qtbase/14-logging-beginner.md)
+- [x] [QRegularExpression 正则表达式基础](beginner/01-qtbase/15-regex-beginner.md)
+- [x] [QJsonDocument 与 QXmlStreamReader 解析基础](beginner/01-qtbase/16-json-xml-beginner.md)
 
 #### ⏳ 02 · QtGui (待完成 0/6)
 
