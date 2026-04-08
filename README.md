@@ -139,6 +139,58 @@ cd Tutorial_AwesomeQt
 
 ---
 
+## 项目规划
+
+除了教程文档之外，项目还规划了完整的 **代码实例库**，目标覆盖 1000+ 个 QtWidgets 项目。详见 [`todo/`](todo/) 目录下的规划清单：
+
+| 清单 | 内容 | 条目数 |
+|------|------|--------|
+| [`todo/01-widget.md`](todo/01-widget.md) | 单个自定义控件（按钮/标签/输入/进度条/仪表盘/图表/表格/树/列表等） | 500+ |
+| [`todo/02-app.md`](todo/02-app.md) | 完整应用 Demo（开发工具/网络工具/文件工具/系统工具/图像工具/多媒体/办公/游戏等） | 190+ |
+| [`todo/03-model.md`](todo/03-model.md) | 控件组合与设计模式（窗口框架/导航布局/主题系统/表单/属性编辑器/拖拽/命令模式等） | 300+ |
+| [`todo/04-qml.md`](todo/04-qml.md) | QML 专项项目 | 50+ |
+
+代码实例统一使用 **Qt 6 + CMake** 构建，第三方依赖通过 CMake FetchContent 自动管理。
+
+---
+
+## 致谢
+
+本项目的代码实例规划大量参考了以下开源项目和社区资源，在此致以诚挚的感谢：
+
+### 核心参考仓库
+
+| 项目 | 作者 | 说明 |
+|------|------|------|
+| [QWidgetDemo](https://github.com/feiyangqingyun/QWidgetDemo) | [feiyangqingyun (Qt实战)](https://qtchina.blog.csdn.net) | 5800+ Stars，涵盖 100+ 个 Qt 自定义控件、工具和界面 Demo，是本项目最核心的参考来源 |
+| [MyTestCode](https://github.com/gongjianbo/MyTestCode) | [gongjianbo1992](https://blog.csdn.net/gongjianbo1992) | 丰富的 Qt/QML 博客示例代码，涵盖网络、多线程、OpenGL、插件、QML/C++ 互操作等 |
+| [TTKWidgetTools](https://github.com/Greedysky/TTKWidgetTools) | [Greedysky Studio](https://github.com/Greedysky) | 86 个精美自定义控件，包含按钮、标签、进度条、仪表盘、滑块等，支持 Qt 4/5/6 全版本 |
+
+### 灵感来源与参考项目
+
+| 项目 | 说明 |
+|------|------|
+| [Qt-Advanced-Docking-System](https://github.com/githubuser0xFFFF/Qt-Advanced-Docking-System) | 高级停靠窗口框架，IDE 风格 Dock 管理器 |
+| [qt-material-widgets](https://github.com/laserpants/qt-material-widgets) | Material Design 风格的 Qt Widgets 控件库 |
+| [Qt-ShowyWidgets](https://github.com/iwxyi/Qt-ShowyWidgets) | 花式/创意 Qt 控件集（心形开关、线条开关等） |
+| [QCodeEditor](https://github.com/Megaxela/QCodeEditor) | Qt 代码编辑器控件（行号、语法高亮、代码折叠） |
+| [JKQTPlotter](https://github.com/jkriege2/JKQtPlotter) | 功能丰富的 Qt 2D 绘图库 |
+| [Chart-Qt](https://github.com/fair-acc/chart-qt) | 高性能 Qt 图表库 |
+| [QDoubleRangeSlider](https://github.com/robert1207/QDoubleRangeSlider) | 双端范围滑块控件 |
+| [Qt-FacileMenu](https://github.com/nicholasgasior/Qt-FacileMenu) | 动画右键菜单控件 |
+| [QGeoView](https://github.com/nicholasgasior/QGeoView) | Qt 地图数据可视化控件 |
+| [prison (QR/DataMatrix)](https://github.com/nicholasgasior/prison) | Qt 条形码与二维码生成库 |
+| [SARibbon](https://github.com/czyt1988/SARibbon) | Microsoft Office 风格 Ribbon 工具栏控件 |
+| [KDDockWidgets](https://github.com/KDAB/KDDockWidgets) | KDAB 出品的停靠窗口框架 |
+| [QLineEditExt](https://github.com/divideconcept/QLineEditExt) | 混合型输入控件（滑块+文本+进度条） |
+| [QWidget-FancyUI](https://github.com/nicholasgasior/QWidget-FancyUI) | Qt6 现代化 UI 组件库 |
+| [QCustomPlot](https://www.qcustomplot.com/) | 高质量 2D 绘图控件 |
+| [Qwt](https://qwt.sourceforge.io/) | 科学与技术绘图库 |
+
+> 如果您是以上项目的作者，且对本项目的引用方式有任何疑问或希望调整，欢迎通过 [Issue](https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/issues) 联系我们。
+
+---
+
 ## 技术栈
 
 | 项目 | 说明 |
