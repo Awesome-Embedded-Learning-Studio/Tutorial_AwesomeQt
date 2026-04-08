@@ -12,6 +12,8 @@
         <meta name="author" content="CharlieChen">
       
       
+        <link rel="canonical" href="https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/00-environment-setup/00-qt6-install-beginner/">
+      
       
         <link rel="prev" href="../../..">
       
@@ -48,10 +50,12 @@
         
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans+SC:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans SC";--md-code-font:"JetBrains Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
     
     <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -288,9 +292,7 @@
   
 
 
-  
-
-<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="导航栏" data-md-level="0">
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
     <a href="../../.." title="Tutorial_AwesomeQt的文档" class="md-nav__button md-logo" aria-label="Tutorial_AwesomeQt的文档" data-md-component="logo">
       
@@ -356,6 +358,8 @@
       
     
     
+      
+    
     <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
@@ -420,6 +424,8 @@
         
       
     
+    
+      
     
     <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
@@ -960,13 +966,13 @@
       
     
     
+      
+    
     <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
         
           
           <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
@@ -1468,6 +1474,343 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-前言为什么装个-qt-都能折腾半夜" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 前言：为什么装个 Qt 都能折腾半夜
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-环境说明" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 环境说明
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-qt-online-installer-详解" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Qt Online Installer 详解
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Qt Online Installer 详解">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-第一步获取安装程序" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 第一步——获取安装程序
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-安装器选项逐行解读" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 安装器选项逐行解读
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3.2 安装器选项逐行解读">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#基础必选无论如何都要装" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基础必选（无论如何都要装）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#推荐安装根据需求选" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        推荐安装（根据需求选）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#冷门可忽略" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        冷门/可忽略
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-安装过程验证" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 安装过程验证
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-windows-专题" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Windows 专题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Windows 专题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-编译器配置" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 编译器配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-环境变量验证" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 环境变量验证
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-linux-专题" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Linux 专题
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. Linux 专题">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-系统依赖安装" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 系统依赖安装
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-安装器权限问题" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 安装器权限问题
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-wsl2-专题gui-的正确打开方式" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. WSL2 专题：GUI 的正确打开方式
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. WSL2 专题：GUI 的正确打开方式">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-确认-wslg-可用" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 确认 WSLg 可用
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-qt-环境配置" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Qt 环境配置
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-常见安装报错与修复" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. 常见安装报错与修复
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. 常见安装报错与修复">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-error-while-loading-module-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 "Error while loading module dependencies"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-cmake-was-unable-to-find-a-build-program" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 "CMake was unable to find a build program"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-安装器卡在-downloading" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 安装器卡在 "Downloading"
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-最终验证" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. 最终验证
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-练习项目" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. 练习项目
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-官方文档参考" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. 官方文档参考
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           
             <div class="md-content" data-md-component="content">
@@ -1948,7 +2291,7 @@
       <div class="md-copyright">
   
     <div class="md-copyright__highlight">
-      Copyright &copy; 2025 CharlieChen - 保留所有权利
+      Copyright &copy; 2026 CharlieChen - 保留所有权利
     </div>
   
   
@@ -1995,16 +2338,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "toc.integrate", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.prune", "navigation.path", "navigation.indexes", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "search.share", "content.code.copy", "content.code.select", "content.code.annotate", "content.tabs.link", "content.tooltips", "content.action.edit", "content.action.view"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
     
     
       <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="../../../javascripts/mathjax.js"></script>
-      
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       
     
   </body>
