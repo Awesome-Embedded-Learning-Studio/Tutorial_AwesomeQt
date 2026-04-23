@@ -346,6 +346,8 @@
       
         
       
+        
+      
     
     
     
@@ -1298,6 +1300,253 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    02 qtgui
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    02 qtgui
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/01-qpainter-basic-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.1——QPainter 绘图基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/02-coordinate-transform-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.2——坐标系与 QTransform 变换基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/03-image-pixmap-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.3——QImage、QPixmap、QIcon 图像处理基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/04-font-text-rendering-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.4——QFont 与文本渲染基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/05-opengl-widget-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.5——QOpenGLWidget 嵌入 OpenGL 基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/06-drag-drop-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.6——拖放系统基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1577,11 +1826,7 @@
 <p>后来我才发现，Qt 的多线程机制虽然设计得很优雅，但前提是你得理解它的工作方式。特别是 GUI 编程这个场景，有一条铁律你必须记住：GUI 操作必须在主线程进行。这条规则违反一次，程序就可能给你来个随机崩溃，而且还是那种间歇性的，最难调试。</p>
 <p>这一篇我们会从最基础的 QThread 用法讲起，然后介绍更高级的 QThreadPool 和 QtConcurrent。你会发现，Qt 其实把很多复杂的事情都替你做好了——只要你用对姿势。</p>
 <h2 id="2-环境说明">2. 环境说明<a class="headerlink" href="#2-环境说明" title="链接到此章节">&para;</a></h2>
-<p>本教程基于 Qt 6.9.1，适用于以下平台：
-- Windows 10/11（MSVC 2019+ 或 MinGW 11.2+）
-- Linux（GCC 11+）
-- WSL2 + WSLg（GUI 支持）</p>
-<p>所有示例代码均使用 C++17 标准和 CMake 3.26+ 构建系统。</p>
+<p>本教程基于 Qt 6.9.1，适用于 Windows 10/11（MSVC 2019+ 或 MinGW 11.2+）、Linux（GCC 11+）、WSL2 + WSLg（GUI 支持）。所有示例代码均使用 C++17 标准和 CMake 3.26+ 构建系统。</p>
 <h2 id="3-核心概念讲解">3. 核心概念讲解<a class="headerlink" href="#3-核心概念讲解" title="链接到此章节">&para;</a></h2>
 <h3 id="31-为什么需要多线程">3.1 为什么需要多线程<a class="headerlink" href="#31-为什么需要多线程" title="链接到此章节">&para;</a></h3>
 <p>想象一下，你要写一个图片处理软件。用户选了一张 4K 图片，点击"应用滤镜"按钮，然后你就开始在主线程里搞事情——读图片、遍历像素、应用滤镜算法。如果这个操作需要 3 秒，那这 3 秒内整个界面就是死的，按钮点不动，窗口拖不动，用户体验极其糟糕。</p>
@@ -1589,7 +1834,7 @@
 <p>但这里有个前提：任何 GUI 操作（更新控件、重绘界面）都必须在主线程进行。这是 Qt GUI 编程的铁律，违反必究。</p>
 <h3 id="32-qthread-的正确用法">3.2 QThread 的正确用法<a class="headerlink" href="#32-qthread-的正确用法" title="链接到此章节">&para;</a></h3>
 <p>QThread 是 Qt 中最基本的线程类，但说实话，它有两个用法，而且其中一个特别容易误导人。</p>
-<p><strong>错误但很常见的用法——继承 QThread：</strong></p>
+<p>先看错误但很常见的用法——继承 QThread：</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1"></a><a href="#__codelineno-0-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">WorkerThread</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QThread</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2"></a><a href="#__codelineno-0-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3"></a><a href="#__codelineno-0-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
@@ -1607,7 +1852,7 @@
 </span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15"></a><a href="#__codelineno-0-15"><span class="linenos" data-linenos="15 "></span></a><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">start</span><span class="p">();</span><span class="w">  </span><span class="c1">// 启动线程，run() 会在新线程中执行</span>
 </span></code></pre></div>
 <p>这个用法的问题在于，你把整个类都和 QThread 绑死了，而且很容易搞混哪些代码在哪个线程运行。</p>
-<p><strong>推荐的用法——使用 moveToThread：</strong></p>
+<p>推荐的做法是使用 moveToThread：</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1"></a><a href="#__codelineno-1-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">Worker</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QObject</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2"></a><a href="#__codelineno-1-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3"></a><a href="#__codelineno-1-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
@@ -1642,19 +1887,8 @@
 </span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32"></a><a href="#__codelineno-1-32"><span class="linenos" data-linenos="32 "></span></a>
 </span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33"></a><a href="#__codelineno-1-33"><span class="linenos" data-linenos="33 "></span></a><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">start</span><span class="p">();</span><span class="w">  </span><span class="c1">// 启动线程</span>
 </span></code></pre></div>
-<p>第二种方式的优势很明显：
-- Worker 是个独立的类，职责清晰
-- 通过信号槽机制通信，线程安全
-- 线程生命周期管理更清晰</p>
-<blockquote>
-<p>📝 <strong>随堂测验：口述回答</strong>
-用自己的话说说：为什么 moveToThread 后，worker 的槽函数会在新线程执行？</p>
-<p><em>(请先自己想一下，再往下滑看答案)</em></p>
-<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-<p><strong>答案参考</strong>：
-moveToThread 改变了对象的线程依附性，之后发给该对象的信号（如果使用 Qt::AutoConnection 或 Qt::QueuedConnection）会以队列方式投递，在对象所依附的线程中执行槽函数。
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-</blockquote>
+<p>第二种方式的优势很明显：Worker 是个独立的类，职责清晰；通过信号槽机制通信，线程安全；线程生命周期管理也更清晰。</p>
+<p>你可能会问：为什么 <code>moveToThread</code> 之后，worker 的槽函数会在新线程执行？原因在于 <code>moveToThread</code> 改变了对象的线程依附性（thread affinity），之后发给该对象的信号（如果使用 <code>Qt::AutoConnection</code> 或 <code>Qt::QueuedConnection</code>）会以队列方式投递，在对象所依附的线程中执行槽函数。这就是为什么信号槽能安全地实现跨线程通信——Qt 在底层帮你做了线程切换。</p>
 <h3 id="33-qthreadpool-线程池">3.3 QThreadPool 线程池<a class="headerlink" href="#33-qthreadpool-线程池" title="链接到此章节">&para;</a></h3>
 <p>每次要跑后台任务都创建新线程其实挺浪费的。线程创建有开销，而且线程太多也会让系统调度压力变大。QThreadPool 就是为此设计的——它维护了一组可重用的线程，任务来了就分配一个空闲线程去执行。</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1"></a><a href="#__codelineno-2-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">Task</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QRunnable</span>
@@ -1676,11 +1910,7 @@ moveToThread 改变了对象的线程依附性，之后发给该对象的信号�
 </span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17"></a><a href="#__codelineno-2-17"><span class="linenos" data-linenos="17 "></span></a><span class="c1">// 使用方式</span>
 </span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18"></a><a href="#__codelineno-2-18"><span class="linenos" data-linenos="18 "></span></a><span class="n">QThreadPool</span><span class="o">::</span><span class="n">globalInstance</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">start</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">Task</span><span class="p">(</span><span class="s">&quot;some data&quot;</span><span class="p">));</span>
 </span></code></pre></div>
-<p>QThreadPool 的优点：
-- 线程复用，减少创建开销
-- 可以限制最大线程数，避免资源耗尽
-- API 简单，适合短暂的、独立的任务</p>
-<p>但要注意，QRunnable 不是 QObject，不能发送信号。如果你需要结果通知，还是得用 QObject + moveToThread 的方式。</p>
+<p>QThreadPool 的优点在于线程复用、减少创建开销，可以限制最大线程数避免资源耗尽，API 也简单，适合短暂的、独立的任务。但要注意，QRunnable 不是 QObject，不能发送信号。如果你需要结果通知，还是得用 QObject + moveToThread 的方式。</p>
 <h3 id="34-qtconcurrent-便捷-api">3.4 QtConcurrent 便捷 API<a class="headerlink" href="#34-qtconcurrent-便捷-api" title="链接到此章节">&para;</a></h3>
 <p>QtConcurrent 是更高级的封装，可以用一行代码启动并发任务。它内部使用 QThreadPool，但提供了更简洁的接口。</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1"></a><a href="#__codelineno-3-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="c1">// 在后台线程运行函数</span>
@@ -1700,10 +1930,7 @@ moveToThread 改变了对象的线程依附性，之后发给该对象的信号�
 </span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15"></a><a href="#__codelineno-3-15"><span class="linenos" data-linenos="15 "></span></a><span class="p">});</span>
 </span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16"></a><a href="#__codelineno-3-16"><span class="linenos" data-linenos="16 "></span></a><span class="n">watcher</span><span class="o">-&gt;</span><span class="n">setFuture</span><span class="p">(</span><span class="n">future</span><span class="p">);</span>
 </span></code></pre></div>
-<p>QtConcurrent 还提供了一些常用算法的并发版本：
-- <code>QtConcurrent::mapped()</code>：对容器中每个元素应用函数
-- <code>QtConcurrent::filtered()</code>：过滤容器元素
-- <code>QtConcurrent::reduce()</code>：归约操作</p>
+<p>QtConcurrent 还提供了一些常用算法的并发版本：<code>QtConcurrent::mapped()</code> 对容器中每个元素应用函数，<code>QtConcurrent::filtered()</code> 过滤容器元素，<code>QtConcurrent::reduce()</code> 做归约操作。</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1"></a><a href="#__codelineno-4-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="n">QList</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">numbers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">};</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2"></a><a href="#__codelineno-4-2"><span class="linenos" data-linenos=" 2 "></span></a>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3"></a><a href="#__codelineno-4-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="c1">// 并发计算每个数的平方</span>
@@ -1749,250 +1976,115 @@ moveToThread 改变了对象的线程依附性，之后发给该对象的信号�
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11"></a><a href="#__codelineno-6-11"><span class="linenos" data-linenos="11 "></span></a>
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12"></a><a href="#__codelineno-6-12"><span class="linenos" data-linenos="12 "></span></a><span class="n">watcher</span><span class="o">-&gt;</span><span class="n">setFuture</span><span class="p">(</span><span class="n">future</span><span class="p">);</span>
 </span></code></pre></div>
-<blockquote>
-<p>⚠️ <strong>坑 #1：主线程阻塞</strong>
-❌ 错误做法：在主线程调用 <code>future.result()</code> 或 <code>future.waitForFinished()</code>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><a href="#__codelineno-7-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QFuture</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">future</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">QtConcurrent</span><span class="o">::</span><span class="n">run</span><span class="p">(</span><span class="n">heavyCalculation</span><span class="p">);</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><a href="#__codelineno-7-2"><span class="linenos" data-linenos="2 "></span></a><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">future</span><span class="p">.</span><span class="n">result</span><span class="p">();</span><span class="w">  </span><span class="c1">// 主线程阻塞等待！</span>
-</span></code></pre></div>
-✅ 正确做法：使用 QFutureWatcher 监听完成信号
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><a href="#__codelineno-8-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QFutureWatcher</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="o">*</span><span class="n">watcher</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QFutureWatcher</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><a href="#__codelineno-8-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">connect</span><span class="p">(</span><span class="n">watcher</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">QFutureWatcher</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">finished</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">watcher</span><span class="p">]()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a><a href="#__codelineno-8-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">watcher</span><span class="o">-&gt;</span><span class="n">result</span><span class="p">();</span><span class="w">  </span><span class="c1">// 在槽中获取结果</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a><a href="#__codelineno-8-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">    </span><span class="n">updateUI</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5"></a><a href="#__codelineno-8-5"><span class="linenos" data-linenos="5 "></span></a><span class="p">});</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6"></a><a href="#__codelineno-8-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">watcher</span><span class="o">-&gt;</span><span class="n">setFuture</span><span class="p">(</span><span class="n">future</span><span class="p">);</span>
-</span></code></pre></div>
-💥 后果：界面卡死，用户体验极差，和没用多线程一样
-💡 一句话记住：永远不要在主线程阻塞等待异步结果，用信号槽通知</p>
-</blockquote>
+<p>这里有个坑真的坑了我半天：在主线程调用 <code>future.result()</code> 或 <code>future.waitForFinished()</code> 会阻塞主线程，界面直接卡死，和没用多线程一样。正确做法是使用 QFutureWatcher 监听完成信号，在槽函数里获取结果。永远不要在主线程阻塞等待异步结果，用信号槽通知——这条规则和"GUI 操作必须在主线程"一样重要。</p>
 <h3 id="36-跨线程信号槽的线程安全">3.6 跨线程信号槽的线程安全<a class="headerlink" href="#36-跨线程信号槽的线程安全" title="链接到此章节">&para;</a></h3>
 <p>Qt 的信号槽机制在跨线程调用时会自动使用队列连接（Qt::QueuedConnection），这保证了线程安全。但前提是你得正确使用。</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><a href="#__codelineno-9-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="c1">// 后台线程发送信号</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><a href="#__codelineno-9-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">Worker</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QObject</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a><a href="#__codelineno-9-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="p">{</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a><a href="#__codelineno-9-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5"></a><a href="#__codelineno-9-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">public</span><span class="o">:</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6"></a><a href="#__codelineno-9-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">doWork</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7"></a><a href="#__codelineno-9-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">        </span><span class="c1">// ... 耗时操作 ...</span>
-</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8"></a><a href="#__codelineno-9-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">        </span><span class="n">emit</span><span class="w"> </span><span class="nf">progressChanged</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span><span class="w">     </span><span class="c1">// 跨线程发送信号</span>
-</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9"></a><a href="#__codelineno-9-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">emit</span><span class="w"> </span><span class="nf">workFinished</span><span class="p">(</span><span class="n">result</span><span class="p">);</span><span class="w">    </span><span class="c1">// 安全！</span>
-</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10"></a><a href="#__codelineno-9-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11"></a><a href="#__codelineno-9-11"><span class="linenos" data-linenos="11 "></span></a>
-</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12"></a><a href="#__codelineno-9-12"><span class="linenos" data-linenos="12 "></span></a><span class="nl">signals</span><span class="p">:</span>
-</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13"></a><a href="#__codelineno-9-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">progressChanged</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">percent</span><span class="p">);</span>
-</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14"></a><a href="#__codelineno-9-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">workFinished</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Result</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">);</span>
-</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15"></a><a href="#__codelineno-9-15"><span class="linenos" data-linenos="15 "></span></a><span class="p">};</span>
-</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16"></a><a href="#__codelineno-9-16"><span class="linenos" data-linenos="16 "></span></a>
-</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17"></a><a href="#__codelineno-9-17"><span class="linenos" data-linenos="17 "></span></a><span class="c1">// 主线程接收信号</span>
-</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18"></a><a href="#__codelineno-9-18"><span class="linenos" data-linenos="18 "></span></a><span class="n">connect</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Worker</span><span class="o">::</span><span class="n">progressChanged</span><span class="p">,</span>
-</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19"></a><a href="#__codelineno-9-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">        </span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MyClass</span><span class="o">::</span><span class="n">updateProgress</span><span class="p">);</span>
-</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20"></a><a href="#__codelineno-9-20"><span class="linenos" data-linenos="20 "></span></a><span class="n">connect</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Worker</span><span class="o">::</span><span class="n">workFinished</span><span class="p">,</span>
-</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21"></a><a href="#__codelineno-9-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">        </span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MyClass</span><span class="o">::</span><span class="n">handleResult</span><span class="p">);</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><a href="#__codelineno-7-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="c1">// 后台线程发送信号</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><a href="#__codelineno-7-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">Worker</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QObject</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3"></a><a href="#__codelineno-7-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="p">{</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4"></a><a href="#__codelineno-7-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5"></a><a href="#__codelineno-7-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6"></a><a href="#__codelineno-7-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">doWork</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7"></a><a href="#__codelineno-7-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">        </span><span class="c1">// ... 耗时操作 ...</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8"></a><a href="#__codelineno-7-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">        </span><span class="n">emit</span><span class="w"> </span><span class="nf">progressChanged</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span><span class="w">     </span><span class="c1">// 跨线程发送信号</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9"></a><a href="#__codelineno-7-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">emit</span><span class="w"> </span><span class="nf">workFinished</span><span class="p">(</span><span class="n">result</span><span class="p">);</span><span class="w">    </span><span class="c1">// 安全！</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10"></a><a href="#__codelineno-7-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11"></a><a href="#__codelineno-7-11"><span class="linenos" data-linenos="11 "></span></a>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12"></a><a href="#__codelineno-7-12"><span class="linenos" data-linenos="12 "></span></a><span class="nl">signals</span><span class="p">:</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13"></a><a href="#__codelineno-7-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">progressChanged</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">percent</span><span class="p">);</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14"></a><a href="#__codelineno-7-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">workFinished</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Result</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">);</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15"></a><a href="#__codelineno-7-15"><span class="linenos" data-linenos="15 "></span></a><span class="p">};</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16"></a><a href="#__codelineno-7-16"><span class="linenos" data-linenos="16 "></span></a>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17"></a><a href="#__codelineno-7-17"><span class="linenos" data-linenos="17 "></span></a><span class="c1">// 主线程接收信号</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18"></a><a href="#__codelineno-7-18"><span class="linenos" data-linenos="18 "></span></a><span class="n">connect</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Worker</span><span class="o">::</span><span class="n">progressChanged</span><span class="p">,</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19"></a><a href="#__codelineno-7-19"><span class="linenos" data-linenos="19 "></span></a><span class="w">        </span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MyClass</span><span class="o">::</span><span class="n">updateProgress</span><span class="p">);</span>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20"></a><a href="#__codelineno-7-20"><span class="linenos" data-linenos="20 "></span></a><span class="n">connect</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Worker</span><span class="o">::</span><span class="n">workFinished</span><span class="p">,</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21"></a><a href="#__codelineno-7-21"><span class="linenos" data-linenos="21 "></span></a><span class="w">        </span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MyClass</span><span class="o">::</span><span class="n">handleResult</span><span class="p">);</span>
 </span></code></pre></div>
 <p>这里的关键是：当信号发送者和接收者在不同线程时，Qt 会自动把信号参数拷贝到事件队列，然后在接收者所在线程执行槽函数。你不需要手动加锁。</p>
 <p>但要注意，如果你通过引用传递参数（比如 <code>const Result&amp;</code>），Qt 会强制拷贝。如果想避免拷贝，确保类型是可共享的，或者显式注册为元类型。</p>
-<blockquote>
-<p>⚠️ <strong>坑 #2：直接操作跨线程的 GUI 对象</strong>
-❌ 错误做法：在后台线程直接更新 GUI
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><a href="#__codelineno-10-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">void</span><span class="w"> </span><span class="nf">Worker::doWork</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><a href="#__codelineno-10-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="c1">// 错误！这里在后台线程</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a><a href="#__codelineno-10-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">label</span><span class="o">-&gt;</span><span class="n">setText</span><span class="p">(</span><span class="s">&quot;Processing...&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// 危险操作</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><a href="#__codelineno-10-4"><span class="linenos" data-linenos="4 "></span></a><span class="p">}</span>
-</span></code></pre></div>
-✅ 正确做法：通过信号槽让主线程更新 GUI
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><a href="#__codelineno-11-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">void</span><span class="w"> </span><span class="nf">Worker::doWork</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2"></a><a href="#__codelineno-11-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">emit</span><span class="w"> </span><span class="n">updateText</span><span class="p">(</span><span class="s">&quot;Processing...&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// 发送信号</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3"></a><a href="#__codelineno-11-3"><span class="linenos" data-linenos="3 "></span></a><span class="p">}</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4"></a><a href="#__codelineno-11-4"><span class="linenos" data-linenos="4 "></span></a>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5"></a><a href="#__codelineno-11-5"><span class="linenos" data-linenos="5 "></span></a><span class="c1">// 主线程连接</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6"></a><a href="#__codelineno-11-6"><span class="linenos" data-linenos="6 "></span></a><span class="n">connect</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Worker</span><span class="o">::</span><span class="n">updateText</span><span class="p">,</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7"></a><a href="#__codelineno-11-7"><span class="linenos" data-linenos="7 "></span></a><span class="w">        </span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">QLabel</span><span class="o">::</span><span class="n">setText</span><span class="p">);</span><span class="w">  </span><span class="c1">// 安全！</span>
-</span></code></pre></div>
-💥 后果：程序崩溃、界面闪烁、数据竞争、各种奇怪的行为
-💡 一句话记住：GUI 操作永远在主线程，用信号槽跨线程通信</p>
-</blockquote>
+<p>另一个必须强调的坑：绝对不能在后台线程直接操作 GUI 对象。比如你在后台线程的 <code>doWork()</code> 里写了 <code>label-&gt;setText("Processing...")</code>，这就是危险操作——程序可能崩溃、界面闪烁、出现数据竞争和各种奇怪的行为。GUI 操作永远在主线程，跨线程通信用信号槽，没有任何例外。</p>
 <h3 id="37-qmutex-基础保护">3.7 QMutex 基础保护<a class="headerlink" href="#37-qmutex-基础保护" title="链接到此章节">&para;</a></h3>
 <p>虽然信号槽能解决大部分问题，但有时候你还是需要在多线程间共享数据。这时候就需要互斥锁了。</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1"></a><a href="#__codelineno-12-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">SharedData</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QObject</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2"></a><a href="#__codelineno-12-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3"></a><a href="#__codelineno-12-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4"></a><a href="#__codelineno-12-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="k">public</span><span class="o">:</span>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5"></a><a href="#__codelineno-12-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">addData</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6"></a><a href="#__codelineno-12-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="nf">locker</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span><span class="w">  </span><span class="c1">// RAII 风格，作用域结束自动解锁</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7"></a><a href="#__codelineno-12-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">        </span><span class="n">m_data</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8"></a><a href="#__codelineno-12-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9"></a><a href="#__codelineno-12-9"><span class="linenos" data-linenos=" 9 "></span></a>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10"></a><a href="#__codelineno-12-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="n">QList</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">getData</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11"></a><a href="#__codelineno-12-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">        </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="nf">locker</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span>
-</span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12"></a><a href="#__codelineno-12-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">m_data</span><span class="p">;</span><span class="w">  </span><span class="c1">// 返回副本</span>
-</span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13"></a><a href="#__codelineno-12-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14"></a><a href="#__codelineno-12-14"><span class="linenos" data-linenos="14 "></span></a>
-</span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15"></a><a href="#__codelineno-12-15"><span class="linenos" data-linenos="15 "></span></a><span class="k">private</span><span class="o">:</span>
-</span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16"></a><a href="#__codelineno-12-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">    </span><span class="k">mutable</span><span class="w"> </span><span class="n">QMutex</span><span class="w"> </span><span class="n">m_mutex</span><span class="p">;</span>
-</span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17"></a><a href="#__codelineno-12-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">    </span><span class="n">QList</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m_data</span><span class="p">;</span>
-</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18"></a><a href="#__codelineno-12-18"><span class="linenos" data-linenos="18 "></span></a><span class="p">};</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1"></a><a href="#__codelineno-8-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">SharedData</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QObject</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2"></a><a href="#__codelineno-8-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="p">{</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3"></a><a href="#__codelineno-8-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4"></a><a href="#__codelineno-8-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5"></a><a href="#__codelineno-8-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">addData</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6"></a><a href="#__codelineno-8-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="nf">locker</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span><span class="w">  </span><span class="c1">// RAII 风格，作用域结束自动解锁</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7"></a><a href="#__codelineno-8-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">        </span><span class="n">m_data</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8"></a><a href="#__codelineno-8-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9"></a><a href="#__codelineno-8-9"><span class="linenos" data-linenos=" 9 "></span></a>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10"></a><a href="#__codelineno-8-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">    </span><span class="n">QList</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">getData</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11"></a><a href="#__codelineno-8-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">        </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="nf">locker</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12"></a><a href="#__codelineno-8-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">m_data</span><span class="p">;</span><span class="w">  </span><span class="c1">// 返回副本</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13"></a><a href="#__codelineno-8-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14"></a><a href="#__codelineno-8-14"><span class="linenos" data-linenos="14 "></span></a>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15"></a><a href="#__codelineno-8-15"><span class="linenos" data-linenos="15 "></span></a><span class="k">private</span><span class="o">:</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16"></a><a href="#__codelineno-8-16"><span class="linenos" data-linenos="16 "></span></a><span class="w">    </span><span class="k">mutable</span><span class="w"> </span><span class="n">QMutex</span><span class="w"> </span><span class="n">m_mutex</span><span class="p">;</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17"></a><a href="#__codelineno-8-17"><span class="linenos" data-linenos="17 "></span></a><span class="w">    </span><span class="n">QList</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">m_data</span><span class="p">;</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18"></a><a href="#__codelineno-8-18"><span class="linenos" data-linenos="18 "></span></a><span class="p">};</span>
 </span></code></pre></div>
 <p>QMutexLocker 是 RAII 风格的锁管理器，构造时加锁，析构时解锁，即使发生异常也能正确释放锁。比你手动 lock/unlock 安全得多。</p>
-<blockquote>
-<p>⚠️ <strong>坑 #3：忘记解锁导致死锁</strong>
-❌ 错误做法：手动 lock 但忘记 unlock
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1"></a><a href="#__codelineno-13-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">void</span><span class="w"> </span><span class="nf">processData</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2"></a><a href="#__codelineno-13-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">m_mutex</span><span class="p">.</span><span class="n">lock</span><span class="p">();</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3"></a><a href="#__codelineno-13-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">someCondition</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4"></a><a href="#__codelineno-13-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w">  </span><span class="c1">// 忘记解锁！</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5"></a><a href="#__codelineno-13-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6"></a><a href="#__codelineno-13-6"><span class="linenos" data-linenos="6 "></span></a><span class="w">    </span><span class="c1">// ...</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7"></a><a href="#__codelineno-13-7"><span class="linenos" data-linenos="7 "></span></a><span class="w">    </span><span class="n">m_mutex</span><span class="p">.</span><span class="n">unlock</span><span class="p">();</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8"></a><a href="#__codelineno-13-8"><span class="linenos" data-linenos="8 "></span></a><span class="p">}</span>
+<p>说到手动 lock/unlock，这真的是一个经典死锁来源——你手动调了 <code>m_mutex.lock()</code>，然后在某个 <code>if</code> 分支里直接 <code>return</code> 了，忘了 <code>unlock()</code>，结果锁就永远卡在那了。优先用 QMutexLocker，让编译器帮你管理锁的生命周期，<code>return</code> 也好、异常也好，析构函数都会帮你解锁。</p>
+<p>你可以试着想一下：下面这个安全的计数器类，两个空应该填什么？</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1"></a><a href="#__codelineno-9-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">SafeCounter</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2"></a><a href="#__codelineno-9-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a><a href="#__codelineno-9-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">increment</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a><a href="#__codelineno-9-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="nf">______</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5"></a><a href="#__codelineno-9-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">        </span><span class="o">++</span><span class="n">m_count</span><span class="p">;</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6"></a><a href="#__codelineno-9-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7"></a><a href="#__codelineno-9-7"><span class="linenos" data-linenos=" 7 "></span></a>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8"></a><a href="#__codelineno-9-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9"></a><a href="#__codelineno-9-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="nf">______</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10"></a><a href="#__codelineno-9-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">m_count</span><span class="p">;</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11"></a><a href="#__codelineno-9-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12"></a><a href="#__codelineno-9-12"><span class="linenos" data-linenos="12 "></span></a>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13"></a><a href="#__codelineno-9-13"><span class="linenos" data-linenos="13 "></span></a><span class="k">private</span><span class="o">:</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14"></a><a href="#__codelineno-9-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="k">mutable</span><span class="w"> </span><span class="n">QMutex</span><span class="w"> </span><span class="n">m_mutex</span><span class="p">;</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15"></a><a href="#__codelineno-9-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16"></a><a href="#__codelineno-9-16"><span class="linenos" data-linenos="16 "></span></a><span class="p">};</span>
 </span></code></pre></div>
-✅ 正确做法：使用 QMutexLocker 或 QMutexLockerer
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a><a href="#__codelineno-14-1"><span class="linenos" data-linenos="1 "></span></a><span class="kt">void</span><span class="w"> </span><span class="nf">processData</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2"></a><a href="#__codelineno-14-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="n">locker</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span><span class="w">  </span><span class="c1">// 自动管理</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3"></a><a href="#__codelineno-14-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">someCondition</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4"></a><a href="#__codelineno-14-4"><span class="linenos" data-linenos="4 "></span></a><span class="w">        </span><span class="k">return</span><span class="p">;</span><span class="w">  </span><span class="c1">// 析构时自动解锁</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5"></a><a href="#__codelineno-14-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6"></a><a href="#__codelineno-14-6"><span class="linenos" data-linenos="6 "></span></a><span class="p">}</span>
+<p>两个空都填 <code>locker</code> 就对了——<code>QMutexLocker locker(&amp;m_mutex);</code> 是标准写法，作用域结束时自动解锁。</p>
+<p>再看一个更有意思的调试场景。下面这段代码有什么问题？</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><a href="#__codelineno-10-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">MyWidget</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QWidget</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><a href="#__codelineno-10-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a><a href="#__codelineno-10-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4"></a><a href="#__codelineno-10-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="n">MyWidget</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a><a href="#__codelineno-10-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">        </span><span class="n">QPushButton</span><span class="w"> </span><span class="o">*</span><span class="n">btn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QPushButton</span><span class="p">(</span><span class="s">&quot;Process&quot;</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">);</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a><a href="#__codelineno-10-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="n">connect</span><span class="p">(</span><span class="n">btn</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">QPushButton</span><span class="o">::</span><span class="n">clicked</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MyWidget</span><span class="o">::</span><span class="n">onProcess</span><span class="p">);</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7"></a><a href="#__codelineno-10-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8"></a><a href="#__codelineno-10-8"><span class="linenos" data-linenos=" 8 "></span></a>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9"></a><a href="#__codelineno-10-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">onProcess</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10"></a><a href="#__codelineno-10-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">        </span><span class="n">QThread</span><span class="w"> </span><span class="o">*</span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">QThread</span><span class="o">::</span><span class="n">create</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11"></a><a href="#__codelineno-10-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">            </span><span class="n">heavyOperation</span><span class="p">();</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12"></a><a href="#__codelineno-10-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">            </span><span class="n">label</span><span class="o">-&gt;</span><span class="n">setText</span><span class="p">(</span><span class="s">&quot;Done&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// label 是成员变量</span>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13"></a><a href="#__codelineno-10-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">        </span><span class="p">});</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14"></a><a href="#__codelineno-10-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">        </span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">start</span><span class="p">();</span>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15"></a><a href="#__codelineno-10-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16"></a><a href="#__codelineno-10-16"><span class="linenos" data-linenos="16 "></span></a>
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17"></a><a href="#__codelineno-10-17"><span class="linenos" data-linenos="17 "></span></a><span class="k">private</span><span class="o">:</span>
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18"></a><a href="#__codelineno-10-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">    </span><span class="n">QLabel</span><span class="w"> </span><span class="o">*</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QLabel</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19"></a><a href="#__codelineno-10-19"><span class="linenos" data-linenos="19 "></span></a><span class="p">};</span>
 </span></code></pre></div>
-💥 后果：死锁，程序永远卡在锁上
-💡 一句话记住：优先用 QMutexLocker，让编译器帮你管理锁的生命周期</p>
-<p>🔲 <strong>随堂测验：代码填空</strong>
-补全以下代码，实现一个安全的计数器类，可以被多线程并发调用：</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1"></a><a href="#__codelineno-15-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">SafeCounter</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2"></a><a href="#__codelineno-15-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">public</span><span class="o">:</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3"></a><a href="#__codelineno-15-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">increment</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4"></a><a href="#__codelineno-15-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="nf">______</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5"></a><a href="#__codelineno-15-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">        </span><span class="o">++</span><span class="n">m_count</span><span class="p">;</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6"></a><a href="#__codelineno-15-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7"></a><a href="#__codelineno-15-7"><span class="linenos" data-linenos=" 7 "></span></a>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8"></a><a href="#__codelineno-15-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9"></a><a href="#__codelineno-15-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="nf">______</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span>
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10"></a><a href="#__codelineno-15-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">m_count</span><span class="p">;</span>
-</span><span id="__span-15-11"><a id="__codelineno-15-11" name="__codelineno-15-11"></a><a href="#__codelineno-15-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-15-12"><a id="__codelineno-15-12" name="__codelineno-15-12"></a><a href="#__codelineno-15-12"><span class="linenos" data-linenos="12 "></span></a>
-</span><span id="__span-15-13"><a id="__codelineno-15-13" name="__codelineno-15-13"></a><a href="#__codelineno-15-13"><span class="linenos" data-linenos="13 "></span></a><span class="k">private</span><span class="o">:</span>
-</span><span id="__span-15-14"><a id="__codelineno-15-14" name="__codelineno-15-14"></a><a href="#__codelineno-15-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="k">mutable</span><span class="w"> </span><span class="n">QMutex</span><span class="w"> </span><span class="n">m_mutex</span><span class="p">;</span>
-</span><span id="__span-15-15"><a id="__codelineno-15-15" name="__codelineno-15-15"></a><a href="#__codelineno-15-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-</span><span id="__span-15-16"><a id="__codelineno-15-16" name="__codelineno-15-16"></a><a href="#__codelineno-15-16"><span class="linenos" data-linenos="16 "></span></a><span class="p">};</span>
-</span></code></pre></div>
-<p><em>(提示：两个空都填 locker)</em></p>
-<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-<p><strong>答案参考</strong>：
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1"></a><a href="#__codelineno-16-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">SafeCounter</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2"></a><a href="#__codelineno-16-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="k">public</span><span class="o">:</span>
-</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3"></a><a href="#__codelineno-16-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">increment</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4"></a><a href="#__codelineno-16-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">        </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="nf">locker</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span>
-</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5"></a><a href="#__codelineno-16-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">        </span><span class="o">++</span><span class="n">m_count</span><span class="p">;</span>
-</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6"></a><a href="#__codelineno-16-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7"></a><a href="#__codelineno-16-7"><span class="linenos" data-linenos=" 7 "></span></a>
-</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8"></a><a href="#__codelineno-16-8"><span class="linenos" data-linenos=" 8 "></span></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9"></a><a href="#__codelineno-16-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">        </span><span class="n">QMutexLocker</span><span class="w"> </span><span class="nf">locker</span><span class="p">(</span><span class="o">&amp;</span><span class="n">m_mutex</span><span class="p">);</span>
-</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10"></a><a href="#__codelineno-16-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">m_count</span><span class="p">;</span>
-</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11"></a><a href="#__codelineno-16-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12"></a><a href="#__codelineno-16-12"><span class="linenos" data-linenos="12 "></span></a>
-</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13"></a><a href="#__codelineno-16-13"><span class="linenos" data-linenos="13 "></span></a><span class="k">private</span><span class="o">:</span>
-</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14"></a><a href="#__codelineno-16-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">    </span><span class="k">mutable</span><span class="w"> </span><span class="n">QMutex</span><span class="w"> </span><span class="n">m_mutex</span><span class="p">;</span>
-</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15"></a><a href="#__codelineno-16-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">m_count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16"></a><a href="#__codelineno-16-16"><span class="linenos" data-linenos="16 "></span></a><span class="p">};</span>
-</span></code></pre></div>
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-<p>🐛 <strong>随堂测验：调试挑战</strong></p>
-<p>以下代码有什么问题？会导致什么后果？</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1"></a><a href="#__codelineno-17-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">MyWidget</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QWidget</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2"></a><a href="#__codelineno-17-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3"></a><a href="#__codelineno-17-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">public</span><span class="o">:</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4"></a><a href="#__codelineno-17-4"><span class="linenos" data-linenos=" 4 "></span></a><span class="w">    </span><span class="n">MyWidget</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5"></a><a href="#__codelineno-17-5"><span class="linenos" data-linenos=" 5 "></span></a><span class="w">        </span><span class="n">QPushButton</span><span class="w"> </span><span class="o">*</span><span class="n">btn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QPushButton</span><span class="p">(</span><span class="s">&quot;Process&quot;</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">);</span>
-</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6"></a><a href="#__codelineno-17-6"><span class="linenos" data-linenos=" 6 "></span></a><span class="w">        </span><span class="n">connect</span><span class="p">(</span><span class="n">btn</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">QPushButton</span><span class="o">::</span><span class="n">clicked</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MyWidget</span><span class="o">::</span><span class="n">onProcess</span><span class="p">);</span>
-</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7"></a><a href="#__codelineno-17-7"><span class="linenos" data-linenos=" 7 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8"></a><a href="#__codelineno-17-8"><span class="linenos" data-linenos=" 8 "></span></a>
-</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9"></a><a href="#__codelineno-17-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="n">onProcess</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10"></a><a href="#__codelineno-17-10"><span class="linenos" data-linenos="10 "></span></a><span class="w">        </span><span class="n">QThread</span><span class="w"> </span><span class="o">*</span><span class="kr">thread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">QThread</span><span class="o">::</span><span class="n">create</span><span class="p">([</span><span class="o">&amp;</span><span class="p">]()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11"></a><a href="#__codelineno-17-11"><span class="linenos" data-linenos="11 "></span></a><span class="w">            </span><span class="n">heavyOperation</span><span class="p">();</span>
-</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12"></a><a href="#__codelineno-17-12"><span class="linenos" data-linenos="12 "></span></a><span class="w">            </span><span class="n">label</span><span class="o">-&gt;</span><span class="n">setText</span><span class="p">(</span><span class="s">&quot;Done&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// label 是成员变量</span>
-</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13"></a><a href="#__codelineno-17-13"><span class="linenos" data-linenos="13 "></span></a><span class="w">        </span><span class="p">});</span>
-</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14"></a><a href="#__codelineno-17-14"><span class="linenos" data-linenos="14 "></span></a><span class="w">        </span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">start</span><span class="p">();</span>
-</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15"></a><a href="#__codelineno-17-15"><span class="linenos" data-linenos="15 "></span></a><span class="w">    </span><span class="p">}</span>
-</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16"></a><a href="#__codelineno-17-16"><span class="linenos" data-linenos="16 "></span></a>
-</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17"></a><a href="#__codelineno-17-17"><span class="linenos" data-linenos="17 "></span></a><span class="k">private</span><span class="o">:</span>
-</span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18"></a><a href="#__codelineno-17-18"><span class="linenos" data-linenos="18 "></span></a><span class="w">    </span><span class="n">QLabel</span><span class="w"> </span><span class="o">*</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">QLabel</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-</span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19"></a><a href="#__codelineno-17-19"><span class="linenos" data-linenos="19 "></span></a><span class="p">};</span>
-</span></code></pre></div>
-<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-<p><strong>答案参考</strong>：
-- 问题：在后台线程（lambda）中直接操作 GUI 对象（label-&gt;setText）
-- 后果：程序可能崩溃或出现不可预测的行为，因为 GUI 必须在主线程操作
-- 解决：通过信号槽通知主线程更新，或使用 QMetaObject::invokeMethod
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-</blockquote>
+<p>问题出在 lambda 里直接操作了 GUI 对象——<code>label-&gt;setText("Done")</code> 是在后台线程执行的，而 label 是一个 GUI 控件，必须在主线程操作。后果是程序可能崩溃或出现不可预测的行为。解决办法是通过信号槽通知主线程更新，或者用 <code>QMetaObject::invokeMethod</code> 把调用安全地投递到主线程。</p>
 <h2 id="4-多线程方案选择指南">4. 多线程方案选择指南<a class="headerlink" href="#4-多线程方案选择指南" title="链接到此章节">&para;</a></h2>
-<p>到这里你可能会有点晕——这么多方案，到底该用哪个？这里给你一个简单的选择指南：</p>
-<table>
-<thead>
-<tr>
-<th>场景</th>
-<th>推荐方案</th>
-<th>理由</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>单个长期运行的后台任务</td>
-<td>QObject + moveToThread</td>
-<td>完整控制，信号槽通信</td>
-</tr>
-<tr>
-<td>多个短期的独立任务</td>
-<td>QRunnable + QThreadPool</td>
-<td>线程复用，API 简单</td>
-</tr>
-<tr>
-<td>并发处理容器数据</td>
-<td>QtConcurrent::mapped/filtered</td>
-<td>高层 API，代码简洁</td>
-</tr>
-<tr>
-<td>简单异步函数调用</td>
-<td>QtConcurrent::run</td>
-<td>一行搞定</td>
-</tr>
-<tr>
-<td>需要取消/暂停的任务</td>
-<td>QFuture + QFutureWatcher</td>
-<td>完整的异步控制</td>
-</tr>
-<tr>
-<td>简单的数据共享</td>
-<td>QMutex/QMutexLocker</td>
-<td>原子操作保证</td>
-</tr>
-</tbody>
-</table>
-<p>记住：从简单的开始。QtConcurrent::run 能解决的问题，就不要搞复杂的 moveToThread。</p>
+<p>到这里你可能会有点晕——这么多方案，到底该用哪个？我们简单梳理一下：单个长期运行的后台任务推荐用 <code>QObject + moveToThread</code>，因为你能完整控制线程生命周期，信号槽通信也很方便；多个短期的独立任务推荐用 <code>QRunnable + QThreadPool</code>，线程复用效率高，API 也简单；并发处理容器数据用 <code>QtConcurrent::mapped/filtered</code>，高层 API 代码最简洁；简单异步函数调用用 <code>QtConcurrent::run</code>，一行搞定；需要取消或暂停的任务用 <code>QFuture + QFutureWatcher</code>，提供完整的异步控制；简单的数据共享用 <code>QMutex/QMutexLocker</code>，保证原子操作。</p>
+<p>记住一个原则：从简单的开始。<code>QtConcurrent::run</code> 能解决的问题，就不要搞复杂的 <code>moveToThread</code>。</p>
 <h2 id="5-练习项目">5. 练习项目<a class="headerlink" href="#5-练习项目" title="链接到此章节">&para;</a></h2>
-<p>🎯 <strong>练习项目：多线程图片加载器</strong></p>
-<p>📋 <strong>功能描述</strong>：
-创建一个图片浏览程序，支持从本地加载大量图片。加载过程必须在后台线程进行，主线程显示加载进度，加载完成后更新缩略图。如果用户点击了"取消"按钮，能够中断加载过程。</p>
-<p>✅ <strong>完成标准</strong>：
-- 使用 QThreadPool 或 QtConcurrent 实现后台加载
-- 主界面有进度条显示当前加载进度
-- 缩略图加载完成后自动刷新显示
-- 取消按钮能正确中断加载过程
-- 程序运行流畅，界面不卡顿</p>
-<p>💡 <strong>提示</strong>：
-- 可以用 QtConcurrent::run 配合 QFutureWatcher 实现可取消的任务
-- 图片加载用 QImage::load()，然后用 QPixmap::fromImage() 转换（在主线程）
-- 进度更新可以通过自定义信号槽实现
-- 取消操作使用 QFuture::cancel()</p>
+<p>练习项目：多线程图片加载器。</p>
+<p>我们要创建一个图片浏览程序，支持从本地加载大量图片。加载过程必须在后台线程进行，主线程显示加载进度，加载完成后更新缩略图。如果用户点击了"取消"按钮，能够中断加载过程。</p>
+<p>完成标准是这样的：使用 QThreadPool 或 QtConcurrent 实现后台加载；主界面有进度条显示当前加载进度；缩略图加载完成后自动刷新显示；取消按钮能正确中断加载过程；程序运行流畅，界面不卡顿。</p>
+<p>几个实现提示：可以用 <code>QtConcurrent::run</code> 配合 <code>QFutureWatcher</code> 实现可取消的任务；图片加载用 <code>QImage::load()</code>，然后用 <code>QPixmap::fromImage()</code> 转换（这个转换必须在主线程）；进度更新可以通过自定义信号槽实现；取消操作使用 <code>QFuture::cancel()</code>。</p>
 <h2 id="6-官方文档参考">6. 官方文档参考<a class="headerlink" href="#6-官方文档参考" title="链接到此章节">&para;</a></h2>
-<p>📎 <a href="https://doc.qt.io/qt-6/thread.html">Qt 6 Thread Support</a> · Qt 多线程编程概述，必读基础
-📎 <a href="https://doc.qt.io/qt-6/qthreadpool.html">QThreadPool Class</a> · 线程池管理类文档
-📎 <a href="https://doc.qt.io/qt-6/qtconcurrent-index.html">Qt Concurrent Module</a> · QtConcurrent 高层 API 详解
-📎 <a href="https://doc.qt.io/qt-6/qfuture.html">QFuture Class</a> · 异步结果处理类文档
-📎 <a href="https://doc.qt.io/qt-6/qmutex.html">QMutex Class</a> · 互斥锁文档，包含 QMutexLocker 说明</p>
+<p><a href="https://doc.qt.io/qt-6/thread.html">Qt 6 Thread Support</a> -- Qt 多线程编程概述，必读基础</p>
+<p><a href="https://doc.qt.io/qt-6/qthreadpool.html">QThreadPool Class</a> -- 线程池管理类文档</p>
+<p><a href="https://doc.qt.io/qt-6/qtconcurrent-index.html">Qt Concurrent Module</a> -- QtConcurrent 高层 API 详解</p>
+<p><a href="https://doc.qt.io/qt-6/qfuture.html">QFuture Class</a> -- 异步结果处理类文档</p>
+<p><a href="https://doc.qt.io/qt-6/qmutex.html">QMutex Class</a> -- 互斥锁文档，包含 QMutexLocker 说明</p>
 <p><em>（链接已验证，2026-03-17 可访问）</em></p>
 <hr />
-<p><strong>到这里就大功告成了！</strong> 多线程是个大话题，入门篇我们先掌握这些核心概念和正确用法。实际工程中你还会遇到更多问题——比如线程池调优、死锁排查、性能分析等，那些我们留到进阶层再深入。</p>
+<p>到这里就大功告成了！多线程是个大话题，入门篇我们先掌握这些核心概念和正确用法。实际工程中你还会遇到更多问题——比如线程池调优、死锁排查、性能分析等，那些我们留到进阶层再深入。</p>
 <p>记住最关键的两条铁律：GUI 必须在主线程操作，跨线程通信用信号槽。遵守这两条，你的多线程 Qt 程序就已经成功了一半。</p>
 <p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
 
@@ -2017,7 +2109,7 @@ moveToThread 改变了对象的线程依附性，之后发给该对象的信号�
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年4月8日 21:38:00 CST">2026年4月8日 21:38:00</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年4月23日 09:08:38 CST">2026年4月23日 09:08:38</span>
   </span>
 
     

@@ -346,6 +346,8 @@
       
         
       
+        
+      
     
     
     
@@ -1298,6 +1300,253 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    02 qtgui
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    02 qtgui
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/01-qpainter-basic-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.1——QPainter 绘图基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/02-coordinate-transform-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.2——坐标系与 QTransform 变换基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/03-image-pixmap-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.3——QImage、QPixmap、QIcon 图像处理基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/04-font-text-rendering-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.4——QFont 与文本渲染基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/05-opengl-widget-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.5——QOpenGLWidget 嵌入 OpenGL 基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/06-drag-drop-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.6——拖放系统基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1591,17 +1840,7 @@
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7"></a><a href="#__codelineno-0-7"><span class="linenos" data-linenos="7 "></span></a><span class="kt">size_t</span><span class="w"> </span><span class="n">len</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">qs</span><span class="p">.</span><span class="n">length</span><span class="p">();</span><span class="w"> </span><span class="c1">// 得到 2，真正的字符数</span>
 </span></code></pre></div>
 <p>QString 内部用 UTF-16 存储，这意味着每个字符至少占 2 字节。对于常用汉字，一个 QChar 就够了。但对于超出基本多文种平面的字符（比如 emoji），可能需要两个 QChar（代理对），不过这是进阶话题，入门阶段我们先记住：QString 能正确处理 Unicode 字符。</p>
-<blockquote>
-<p>📝 <strong>随堂测验：口述回答</strong>
-用自己的话说说：为什么 std::string 的 length() 不能准确返回中文字符数，而 QString 可以？</p>
-<p><em>(请先自己想一下，再往下滑看答案)</em></p>
-<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-<p><strong>答案参考</strong>：
-- std::string 是字节序列，不知道编码，length() 返回的是字节数
-- UTF-8 中一个汉字占 3 字节，所以 length() 返回 6 而不是 2
-- QString 内部用 UTF-16，每个 QChar 代表一个 Unicode 码位，length() 返回字符数
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-</blockquote>
+<p>你可能会问：为什么 std::string 的 length() 不能准确返回中文字符数，而 QString 可以？原因很简单——std::string 是字节序列，不知道编码，length() 返回的是字节数。UTF-8 中一个汉字占 3 字节，所以 length() 返回 6 而不是 2。QString 内部用 UTF-16，每个 QChar 代表一个 Unicode 码位，length() 返回的是真正的字符数。</p>
 <h2 id="3-qbytearray-是什么什么时候用">3. QByteArray 是什么，什么时候用<a class="headerlink" href="#3-qbytearray-是什么什么时候用" title="链接到此章节">&para;</a></h2>
 <p>QByteArray 也很简单：它就是一个能够自动管理内存的字节数组。你可以把它看作带内存管理的 char*。</p>
 <p>那什么时候用 QByteArray，什么时候用 QString？记住一句话：如果是纯文本、需要显示给人看的，用 QString；如果是二进制数据、网络传输、文件原始内容，用 QByteArray。</p>
@@ -1636,21 +1875,18 @@
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5"></a><a href="#__codelineno-4-5"><span class="linenos" data-linenos="5 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="nf">contains</span><span class="p">(</span><span class="n">QStringView</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="p">;</span>
 </span></code></pre></div>
 <p>不过入门阶段你不需要过度优化，直接用 QString 传引用也没问题。QStringView 主要在你需要处理大量字符串操作、又想避免频繁分配内存时有用。</p>
-<blockquote>
-<p>⚠️ <strong>坑 #1：QStringView 的生命周期陷阱</strong>
-❌ 错误做法：返回一个指向临时对象的 QStringView
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QStringView</span><span class="w"> </span><span class="nf">getView</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">QString</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// 临时对象被销毁，视图悬空</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos="3 "></span></a><span class="p">}</span>
+<p>这里有个非常容易踩的坑——QStringView 不拥有数据，所以你必须确保被观察对象活得比视图久。比如你写了一个函数返回 QStringView，但返回的却是指向临时 QString 的视图，那临时对象一销毁，视图就悬空了。下面这种写法就会导致悬空引用，可能崩溃或读到垃圾数据：</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1"></a><a href="#__codelineno-5-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 错误做法：返回一个指向临时对象的 QStringView</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QStringView</span><span class="w"> </span><span class="nf">getView</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3"></a><a href="#__codelineno-5-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">QString</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// 临时对象被销毁，视图悬空</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4"></a><a href="#__codelineno-5-4"><span class="linenos" data-linenos="4 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-✅ 正确做法：只返回值类型，或者确保被观察对象生命周期足够长
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QString</span><span class="w"> </span><span class="nf">getView</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos="2 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">QString</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// 返回值，安全</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos="3 "></span></a><span class="p">}</span>
+<p>正确做法是直接返回 QString 值类型，或者确保被观察对象的生命周期足够长。一句话记住这个坑：QStringView 只是借别人的数据用一下，别让数据源先走了。</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 正确做法：返回值类型，安全</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QString</span><span class="w"> </span><span class="nf">getView</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">QString</span><span class="p">(</span><span class="s">&quot;Hello&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// 返回值，安全</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4"></a><a href="#__codelineno-6-4"><span class="linenos" data-linenos="4 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-💥 后果：悬空引用，可能导致崩溃或读取垃圾数据
-💡 一句话记住：QStringView 不拥有数据，要确保被观察对象活得比视图久</p>
-</blockquote>
 <h2 id="5-编码转换--gbkutf-8-互相转换的坑">5. 编码转换 —— GBK、UTF-8 互相转换的坑<a class="headerlink" href="#5-编码转换--gbkutf-8-互相转换的坑" title="链接到此章节">&para;</a></h2>
 <p>编码转换是国内 Qt 开发者的必经之路。Windows 默认编码可能是 GBK，Linux/Mac 通常是 UTF-8，网络传输通常用 UTF-8，这之间来回转换确实容易出错。</p>
 <h3 id="51-qstring-和-utf-8-互转">5.1 QString 和 UTF-8 互转<a class="headerlink" href="#51-qstring-和-utf-8-互转" title="链接到此章节">&para;</a></h3>
@@ -1680,9 +1916,7 @@
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3"></a><a href="#__codelineno-9-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">qWarning</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;GBK encoding not supported&quot;</span><span class="p">;</span>
 </span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4"></a><a href="#__codelineno-9-4"><span class="linenos" data-linenos="4 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<blockquote>
-<p>🐛 <strong>随堂测验：调试挑战</strong></p>
-<p>以下代码有什么问题？在 Windows 中文环境下会输出什么？</p>
+<p>来一道调试挑战。以下代码有什么问题？在 Windows 中文环境下会输出什么？</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1"></a><a href="#__codelineno-10-1"><span class="linenos" data-linenos="1 "></span></a><span class="n">QFile</span><span class="w"> </span><span class="n">file</span><span class="p">(</span><span class="s">&quot;data.txt&quot;</span><span class="p">);</span><span class="w">  </span><span class="c1">// 假设文件是 GBK 编码</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2"></a><a href="#__codelineno-10-2"><span class="linenos" data-linenos="2 "></span></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">file</span><span class="p">.</span><span class="n">open</span><span class="p">(</span><span class="n">QIODevice</span><span class="o">::</span><span class="n">ReadOnly</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3"></a><a href="#__codelineno-10-3"><span class="linenos" data-linenos="3 "></span></a><span class="w">    </span><span class="n">QByteArray</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">file</span><span class="p">.</span><span class="n">readAll</span><span class="p">();</span>
@@ -1690,13 +1924,7 @@
 </span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5"></a><a href="#__codelineno-10-5"><span class="linenos" data-linenos="5 "></span></a><span class="w">    </span><span class="n">qDebug</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">text</span><span class="p">;</span>
 </span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6"></a><a href="#__codelineno-10-6"><span class="linenos" data-linenos="6 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-<p><strong>答案参考</strong>：
-- 文件是 GBK 编码，但代码用 fromUtf8 解析，会导致乱码
-- 中文字符会变成问号或乱码
-- 正确做法是检测文件编码，或使用 QStringDecoder("GBK") 解析
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-</blockquote>
+<p>答案是文件是 GBK 编码，但代码用 fromUtf8 解析，中文字符会变成问号或乱码。正确做法是检测文件编码，或使用 QStringDecoder("GBK") 解析。这个坑我在做日志分析工具的时候踩过，收到的数据死活不对，最后发现是拿错了解码器。</p>
 <h3 id="53-qstringliteral--编译期字符串字面量">5.3 QStringLiteral —— 编译期字符串字面量<a class="headerlink" href="#53-qstringliteral--编译期字符串字面量" title="链接到此章节">&para;</a></h3>
 <p>如果你在代码里写固定的字符串字面量，用 QStringLiteral 宏：</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1"></a><a href="#__codelineno-11-1"><span class="linenos" data-linenos="1 "></span></a><span class="c1">// 运行时构造，有开销</span>
@@ -1734,13 +1962,7 @@
 </span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21"></a><a href="#__codelineno-13-21"><span class="linenos" data-linenos="21 "></span></a><span class="c1">// 去空格</span>
 </span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22"></a><a href="#__codelineno-13-22"><span class="linenos" data-linenos="22 "></span></a><span class="n">QString</span><span class="w"> </span><span class="n">trimmed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;  hello  &quot;</span><span class="p">.</span><span class="n">trimmed</span><span class="p">();</span><span class="w">  </span><span class="c1">// &quot;hello&quot;</span>
 </span></code></pre></div>
-<blockquote>
-<p>⚠️ <strong>坑 #2：QString::number 的精度陷阱</strong>
-❌ 错误做法：QString::number(3.1415926535) 默认只有 6 位精度
-✅ 正确做法：QString::number(3.1415926535, 'f', 10) 指定精度
-💥 后果：浮点数精度丢失，计算结果可能不正确
-💡 一句话记住：数字转字符串记得指定精度格式，不然默认 6 位不够用</p>
-</blockquote>
+<p>这里有一个精度陷阱值得说一声。QString::number 默认只有 6 位精度，如果你直接 <code>QString::number(3.1415926535)</code>，拿到的只有 3.14159。浮点数精度就这么丢了，计算结果可能不正确。解决办法是显式指定精度格式，写成 <code>QString::number(3.1415926535, 'f', 10)</code>。一句话记住：数字转字符串记得指定精度格式，不然默认 6 位不够用。</p>
 <h2 id="7-字符串拼接的性能问题">7. 字符串拼接的性能问题<a class="headerlink" href="#7-字符串拼接的性能问题" title="链接到此章节">&para;</a></h2>
 <p>Qt 5 时代，大家都被教导不要用 + 号拼接字符串，因为会有多次内存分配。Qt 6 里虽然优化了很多，但了解一下还是有好处。</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1"></a><a href="#__codelineno-14-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="c1">// Qt 5/6 都可以，但可能有多次分配</span>
@@ -1759,30 +1981,18 @@
 </span></code></pre></div>
 <p>不过说实话，对于日常使用，+ 号拼接的性能影响通常可以忽略，除非你在循环里拼接大量字符串。先写正确，再考虑优化。</p>
 <h2 id="8-练习项目">8. 练习项目<a class="headerlink" href="#8-练习项目" title="链接到此章节">&para;</a></h2>
-<p>🎯 <strong>练习项目：日志文件编码转换工具</strong></p>
-<p>📋 <strong>功能描述</strong>：
-写一个命令行工具，能够读取文本文件并转换编码。例如将 GBK 编码的日志文件转换为 UTF-8 编码。</p>
-<p>✅ <strong>完成标准</strong>：
-- 程序接受两个命令行参数：输入文件路径和输出文件路径
-- 能够检测或指定输入文件编码（至少支持 GBK 和 UTF-8）
-- 转换后输出为 UTF-8 编码
-- 转换失败时给出清晰的错误提示
-- 能够处理大文件（逐行读取，不一次性加载全部内容）</p>
-<p>💡 <strong>提示</strong>：
-- 用 QFile + QTextStream 逐行读取
-- QTextStream 可以设置编码：stream.setEncoding(QStringConverter::Utf8)
-- 用 QStringDecoder/QStringEncoder 处理编码转换
-- 错误处理：检查文件是否能打开、编码转换是否有效</p>
+<p>练习项目：日志文件编码转换工具。写一个命令行工具，能够读取文本文件并转换编码。例如将 GBK 编码的日志文件转换为 UTF-8 编码。</p>
+<p>完成标准是：程序接受两个命令行参数（输入文件路径和输出文件路径），能够检测或指定输入文件编码（至少支持 GBK 和 UTF-8），转换后输出为 UTF-8 编码，转换失败时给出清晰的错误提示，能够处理大文件（逐行读取，不一次性加载全部内容）。</p>
+<p>实现上有几个方向可以用。用 QFile + QTextStream 逐行读取是个好起点，QTextStream 可以设置编码（比如 <code>stream.setEncoding(QStringConverter::Utf8)</code>），用 QStringDecoder/QStringEncoder 处理编码转换。错误处理方面，记得检查文件是否能打开、编码转换是否有效。</p>
 <h2 id="9-官方文档参考">9. 官方文档参考<a class="headerlink" href="#9-官方文档参考" title="链接到此章节">&para;</a></h2>
-<p>📎 <a href="https://doc.qt.io/qt-6/qstring.html">Qt 6 QString 类文档</a> · QString 完整 API 参考
-📎 <a href="https://doc.qt.io/qt-6/qbytearray.html">Qt 6 QByteArray 类文档</a> · 字节数组处理，二进制数据必备
-📎 <a href="https://doc.qt.io/qt-6/qstringview.html">Qt 6 QStringView 类文档</a> · 零拷贝字符串视图
-📎 <a href="https://doc.qt.io/qt-6/string-processing.html">Qt 6 字符串处理概述</a> · 字符串体系全景图
-📎 <a href="https://doc.qt.io/qt-6/qstringencoder.html">Qt 6 QStringEncoder/QStringDecoder 文档</a> · 现代 Qt 6 编码转换方式</p>
+<p><a href="https://doc.qt.io/qt-6/qstring.html">Qt 6 QString 类文档</a> · QString 完整 API 参考</p>
+<p><a href="https://doc.qt.io/qt-6/qbytearray.html">Qt 6 QByteArray 类文档</a> · 字节数组处理，二进制数据必备</p>
+<p><a href="https://doc.qt.io/qt-6/qstringview.html">Qt 6 QStringView 类文档</a> · 零拷贝字符串视图</p>
+<p><a href="https://doc.qt.io/qt-6/string-processing.html">Qt 6 字符串处理概述</a> · 字符串体系全景图</p>
+<p><a href="https://doc.qt.io/qt-6/qstringencoder.html">Qt 6 QStringEncoder/QStringDecoder 文档</a> · 现代 Qt 6 编码转换方式</p>
 <p><em>（链接已验证，2026-03-17 可访问）</em></p>
 <hr />
-<p><strong>到这里你就掌握了 Qt 字符串处理的基础</strong>。编码转换这事儿说难不难，但一定要搞清楚每个环节的编码是什么，不然就是满天飞乱码。下一篇我们来讲 Qt 的容器类，和字符串配合使用非常频繁。</p>
-<p>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+<p>到这里你就掌握了 Qt 字符串处理的基础。编码转换这事儿说难不难，但一定要搞清楚每个环节的编码是什么，不然就是满天飞乱码。下一篇我们来讲 Qt 的容器类，和字符串配合使用非常频繁。</p>
 
 
 
@@ -1805,7 +2015,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年4月8日 21:38:00 CST">2026年4月8日 21:38:00</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年4月23日 09:08:38 CST">2026年4月23日 09:08:38</span>
   </span>
 
     

@@ -346,6 +346,8 @@
       
         
       
+        
+      
     
     
     
@@ -1276,6 +1278,253 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    02 qtgui
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    02 qtgui
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/01-qpainter-basic-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.1——QPainter 绘图基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/02-coordinate-transform-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.2——坐标系与 QTransform 变换基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/03-image-pixmap-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.3——QImage、QPixmap、QIcon 图像处理基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/04-font-text-rendering-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.4——QFont 与文本渲染基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/05-opengl-widget-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.5——QOpenGLWidget 嵌入 OpenGL 基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../02-qtgui/06-drag-drop-beginner/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    现代Qt开发教程（新手篇）2.6——拖放系统基础
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1582,6 +1831,7 @@
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7"></a><a href="#__codelineno-2-7"><span class="linenos" data-linenos="7 "></span></a><span class="w">    </span><span class="p">}</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8"></a><a href="#__codelineno-2-8"><span class="linenos" data-linenos="8 "></span></a><span class="p">}</span>
 </span></code></pre></div>
+<p>说到这里，你可以想一想：Qt 的事件系统和信号槽机制有什么本质区别？什么时候该用事件，什么时候该用信号槽？其实答案就藏在前面的分析里——事件是 Qt 内部的分发机制，处理的是底层输入（鼠标、键盘、定时器），而信号槽是对象间的高层通信。自定义控件需要处理底层输入时重写事件处理函数，组件之间需要通信时用信号槽。两者并不冲突，信号槽的很多底层实现本身就依赖事件系统。</p>
 <h3 id="33-事件过滤器">3.3 事件过滤器<a class="headerlink" href="#33-事件过滤器" title="链接到此章节">&para;</a></h3>
 <p>事件过滤器是个很强大的机制——它让你可以在一个对象身上监听另一个对象的事件。这比继承更灵活，因为你可以动态安装和卸载过滤器。</p>
 <p>使用场景比如：你有一个对话框，想禁用里面所有 <code>QLineEdit</code> 的回车键，但不想改每个 <code>QLineEdit</code> 的子类。这时就可以给对话框安装一个事件过滤器，过滤所有子控件的键盘事件。</p>
@@ -1601,6 +1851,7 @@
 </span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14"></a><a href="#__codelineno-3-14"><span class="linenos" data-linenos="14 "></span></a><span class="p">}</span>
 </span></code></pre></div>
 <p><code>eventFilter()</code> 返回 <code>true</code> 表示事件被拦截，返回 <code>false</code> 表示继续正常传播。事件过滤器链是有顺序的，后安装的过滤器先执行。</p>
+<p>这里有个非常容易踩的坑：<code>eventFilter()</code> 的返回值一定要想清楚再写。返回 <code>true</code> 是拦截，事件到此为止；返回 <code>false</code> 是放行，事件继续传播。如果你总是无脑返回 <code>false</code>，或者干脆忘了写 <code>return</code> 语句，结果就是事件要么被意外拦截导致功能失效，要么继续传播触发了不该触发的行为。正确的做法是，想拦截时返回 <code>true</code>，否则返回基类的 <code>eventFilter()</code> 结果，让 Qt 的默认处理逻辑继续工作。</p>
 <h3 id="34-postevent-vs-sendevent">3.4 postEvent vs sendEvent<a class="headerlink" href="#34-postevent-vs-sendevent" title="链接到此章节">&para;</a></h3>
 <p>这是新手最容易混淆的两个函数。<code>QCoreApplication::postEvent()</code> 和 <code>sendEvent()</code> 都能发送事件，但行为完全不同。</p>
 <p><code>postEvent()</code> 是异步的——它把事件放入事件队列就立即返回，事件会在稍后被事件循环处理。这是线程安全的，可以跨线程发送事件。而且 <code>postEvent()</code> 只接受堆上分配的事件（用 <code>new</code> 创建的），因为 Qt 会在事件处理完后自动删除它。</p>
@@ -1612,9 +1863,7 @@
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2"></a><a href="#__codelineno-5-2"><span class="linenos" data-linenos="2 "></span></a><span class="n">QCoreApplication</span><span class="o">::</span><span class="n">sendEvent</span><span class="p">(</span><span class="n">receiver</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">keyEvent</span><span class="p">);</span><span class="w">  </span><span class="c1">// 同步，不会删除</span>
 </span></code></pre></div>
 <p>简单记：<code>postEvent()</code> 是「发个消息就走」，<code>sendEvent()</code> 是「等着对方处理完」。跨线程必须用 <code>postEvent()</code>，同线程内如果需要立即处理结果用 <code>sendEvent()</code>。</p>
-<hr />
-<p>📝 口述回答：用自己的话说说，Qt 的事件系统和信号槽机制有什么本质区别？什么时候该用事件，什么时候该用信号槽？</p>
-<hr />
+<p>这里要特别提醒一下：如果你在工作线程中用 <code>sendEvent()</code> 向主线程的 widget 发送事件，轻则事件处理函数在错误的线程中执行导致崩溃，重则数据竞争引发各种诡异 bug。跨线程别用 <code>sendEvent()</code>，老老实实用 <code>postEvent()</code> 或者用信号槽。</p>
 <h3 id="35-常见事件类型">3.5 常见事件类型<a class="headerlink" href="#35-常见事件类型" title="链接到此章节">&para;</a></h3>
 <p>Qt 定义了几十种事件类型，这里列出几个最常用的：</p>
 <table>
@@ -1664,8 +1913,7 @@
 </tbody>
 </table>
 <p>可以通过重写对应的事件处理函数来响应这些事件。需要注意的是，<code>QPaintEvent</code> 比较特殊，不能直接用 <code>postEvent()</code> 或 <code>sendEvent()</code> 发送，只能通过 <code>update()</code> 或 <code>repaint()</code> 触发。</p>
-<hr />
-<p>🔲 代码填空：下面是一个自定义按钮的事件过滤器实现，请填空：</p>
+<p>你可以试着填一下下面这个练习：下面是一个自定义按钮的事件过滤器实现，看看你能不能把空填上——双击事件类型对应的枚举是什么？强制转换的目标类型是什么？左键枚举值怎么写？返回值应该填什么才能拦截事件、或者继续传播？</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1"></a><a href="#__codelineno-6-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="kt">bool</span><span class="w"> </span><span class="nf">MyFilter::eventFilter</span><span class="p">(</span><span class="n">QObject</span><span class="w"> </span><span class="o">*</span><span class="n">watched</span><span class="p">,</span><span class="w"> </span><span class="n">QEvent</span><span class="w"> </span><span class="o">*</span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2"></a><a href="#__codelineno-6-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">event</span><span class="o">-&gt;</span><span class="n">type</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">QEvent</span><span class="o">::</span><span class="n">______</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3"></a><a href="#__codelineno-6-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="w">        </span><span class="n">QMouseEvent</span><span class="w"> </span><span class="o">*</span><span class="n">mouseEvent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">______</span><span class="o">&gt;</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
@@ -1677,33 +1925,12 @@
 </span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9"></a><a href="#__codelineno-6-9"><span class="linenos" data-linenos=" 9 "></span></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">______</span><span class="p">;</span><span class="w">  </span><span class="c1">// 继续传播</span>
 </span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10"></a><a href="#__codelineno-6-10"><span class="linenos" data-linenos="10 "></span></a><span class="p">}</span>
 </span></code></pre></div>
-<p><em>提示：双击事件类型、强制转换的目标类型、左键枚举值、返回值含义</em></p>
-<hr />
+<p>答案依次是：<code>MouseButtonDblClick</code>、<code>QMouseEvent</code>、<code>Left</code>、<code>true</code>、基类的返回值（比如 <code>QObject::eventFilter(watched, event)</code>）。</p>
 <h2 id="4-踩坑清单">4. 踩坑清单<a class="headerlink" href="#4-踩坑清单" title="链接到此章节">&para;</a></h2>
-<blockquote>
-<p>⚠️ 坑 #1：忘记在 eventFilter 中正确返回值
-❌ 错误做法：总是返回 <code>false</code>，或者忘记 <code>return</code> 语句
-✅ 正确做法：想拦截事件时返回 <code>true</code>，否则返回基类的 <code>eventFilter()</code> 结果
-💥 后果：事件要么被意外拦截导致功能失效，要么继续传播导致触发不应该触发的行为
-💡 一句话记住：<code>true</code> 是拦截，<code>false</code> 是放行，想清楚再返回</p>
-<p>⚠️ 坑 #2：在事件处理函数中忘记调用基类实现
-❌ 错误做法：在 <code>mousePressEvent()</code> 中处理完后直接返回
-✅ 正确做法：处理后调用 <code>QWidget::mousePressEvent(event)</code>
-💥 后果：某些默认行为会失效，比如焦点切换、右键菜单等，排查起来非常困惑
-💡 一句话记住：自定义事件处理后，记得让基类也处理一下</p>
-<p>⚠️ 坑 #3：用 sendEvent 跨线程发送事件
-❌ 错误做法：在工作线程中用 <code>sendEvent()</code> 向主线程的 widget 发送事件
-✅ 正确做法：跨线程必须用 <code>postEvent()</code> 或者用信号槽
-💥 后果：轻则事件处理函数在错误的线程中执行导致崩溃，重则数据竞争引发各种诡异 bug
-💡 一句话记住：跨线程别用 <code>sendEvent()</code>，老老实实用 <code>postEvent()</code> 或信号槽</p>
-<p>⚠️ 坑 #4：事件过滤器安装后忘记卸载
-❌ 错误做法：给临时对象安装事件过滤器后，过滤器对象生命周期结束了也没卸载
-✅ 正确做法：确保在过滤器对象销毁前调用 <code>removeEventFilter()</code>
-💥 后果：事件循环会调用已销毁对象的 <code>eventFilter()</code>，导致崩溃或内存访问错误
-💡 一句话记住：安装和卸载要成对，对象销毁前先卸载</p>
-</blockquote>
-<hr />
-<p>🐛 调试挑战：下面这段代码有什么问题？它想实现一个点击计数器，但点击没反应。</p>
+<p>除了前面提到的 <code>eventFilter()</code> 返回值问题，还有几个常见的坑值得说一说。</p>
+<p>第一个是在事件处理函数中忘记调用基类实现。很多人在 <code>mousePressEvent()</code> 里处理完自己的逻辑就直接返回了，没有调用 <code>QWidget::mousePressEvent(event)</code>。后果是某些默认行为会失效，比如焦点切换、右键菜单等，而且排查起来非常困惑，因为表面上代码并没有写错。养成习惯就好：自定义事件处理完成后，记得让基类也处理一下。</p>
+<p>第二个坑是事件过滤器安装后忘记卸载。给临时对象安装了事件过滤器，结果过滤器对象的生命周期结束了也没卸载。事件循环会尝试调用已经销毁的对象的 <code>eventFilter()</code>，直接导致崩溃或内存访问错误。安装和卸载要成对出现，确保在过滤器对象销毁前调用 <code>removeEventFilter()</code>。</p>
+<p>接下来看一段有点意思的调试代码。下面这段代码想实现一个点击计数器，但点击没反应，你可以想想问题出在哪里：</p>
 <div class="language-cpp highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1"></a><a href="#__codelineno-7-1"><span class="linenos" data-linenos=" 1 "></span></a><span class="k">class</span><span class="w"> </span><span class="nc">ClickCounter</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">QWidget</span><span class="w"> </span><span class="p">{</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2"></a><a href="#__codelineno-7-2"><span class="linenos" data-linenos=" 2 "></span></a><span class="w">    </span><span class="n">Q_OBJECT</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3"></a><a href="#__codelineno-7-3"><span class="linenos" data-linenos=" 3 "></span></a><span class="k">public</span><span class="o">:</span>
@@ -1730,28 +1957,18 @@
 </span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24"></a><a href="#__codelineno-7-24"><span class="linenos" data-linenos="24 "></span></a><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="p">;</span>
 </span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25"></a><a href="#__codelineno-7-25"><span class="linenos" data-linenos="25 "></span></a><span class="p">};</span>
 </span></code></pre></div>
-<p><em>提示：思考 <code>installEventFilter(this)</code> 之后事件流向发生了什么变化</em></p>
-<hr />
+<p>问题出在 <code>installEventFilter(this)</code> 上——一个对象给自己安装事件过滤器，这意味着所有事件在到达 <code>event()</code> 之前都会先经过 <code>eventFilter()</code>。在这段代码里 <code>eventFilter()</code> 拦截了鼠标事件并返回 <code>true</code>，所以 <code>event()</code> 和后续的 <code>mousePressEvent()</code> 都不会被执行。表面上看这没问题，但 <code>return false</code> 分支没有调用基类的 <code>eventFilter()</code>，会导致其他事件也失去默认处理。更好的做法是不要让一个对象过滤自己的事件，或者在 <code>return false</code> 的地方改为 <code>return QWidget::eventFilter(watched, event)</code>。</p>
 <h2 id="5-本层级练习项目">5. 本层级练习项目<a class="headerlink" href="#5-本层级练习项目" title="链接到此章节">&para;</a></h2>
-<p>🎯 练习项目：事件拦截调试面板</p>
-<p>📋 功能描述：创建一个简单的调试面板，包含一个 <code>QLineEdit</code>、一个 <code>QTextEdit</code>、几个按钮。实现一个事件过滤器，能够记录并显示所有发生在这些控件上的键盘和鼠标事件。面板上显示事件的类型、时间戳、以及相关的详细信息（如按键码、鼠标坐标）。</p>
-<p>✅ 完成标准：
-- 实现一个 <code>DebugEventFilter</code> 类，继承自 <code>QObject</code>
-- 过滤器能够捕获 <code>KeyPress</code>、<code>KeyRelease</code>、<code>MouseButtonPress</code>、<code>MouseButtonRelease</code> 事件
-- 在 <code>QTextEdit</code> 中实时显示捕获到的事件信息，格式为 <code>[HH:mm:ss.sss] EventType: Details</code>
-- 提供一个「启用/禁用过滤」的复选框，动态安装/卸载事件过滤器
-- 验证当过滤器禁用时，控件行为恢复正常</p>
-<p>💡 提示：
-- 用 <code>QElapsedTimer</code> 或 <code>QTime::currentTime()</code> 获取时间戳
-- <code>QKeyEvent</code> 的 <code>text()</code> 可以获取按键对应的字符，<code>key()</code> 获取虚拟键码
-- 动态卸载事件过滤器用 <code>removeEventFilter()</code>
-- 记得在过滤时根据需要决定返回 <code>true</code> 还是 <code>false</code></p>
+<p>练习项目：事件拦截调试面板。</p>
+<p>我们要创建一个简单的调试面板，包含一个 <code>QLineEdit</code>、一个 <code>QTextEdit</code>、几个按钮。核心任务是实现一个事件过滤器，能够记录并显示所有发生在这些控件上的键盘和鼠标事件。面板上需要显示事件的类型、时间戳、以及相关的详细信息（如按键码、鼠标坐标）。</p>
+<p>完成标准是这样的：实现一个 <code>DebugEventFilter</code> 类，继承自 <code>QObject</code>；过滤器能够捕获 <code>KeyPress</code>、<code>KeyRelease</code>、<code>MouseButtonPress</code>、<code>MouseButtonRelease</code> 事件；在 <code>QTextEdit</code> 中实时显示捕获到的事件信息，格式为 <code>[HH:mm:ss.sss] EventType: Details</code>；提供一个启用/禁用过滤的复选框，动态安装/卸载事件过滤器；验证当过滤器禁用时，控件行为恢复正常。</p>
+<p>几个实现提示：用 <code>QElapsedTimer</code> 或 <code>QTime::currentTime()</code> 获取时间戳；<code>QKeyEvent</code> 的 <code>text()</code> 可以获取按键对应的字符，<code>key()</code> 获取虚拟键码；动态卸载事件过滤器用 <code>removeEventFilter()</code>；记得在过滤时根据需要决定返回 <code>true</code> 还是 <code>false</code>。</p>
 <h2 id="6-官方文档参考链接">6. 官方文档参考链接<a class="headerlink" href="#6-官方文档参考链接" title="链接到此章节">&para;</a></h2>
-<p>📎 <a href="https://doc.qt.io/qt-6/eventsandfilters.html">Qt 文档 · The Event System</a> · Qt 事件与过滤器完整文档，必读</p>
-<p>📎 <a href="https://doc.qt.io/qt-6/qevent.html">Qt 文档 · QEvent Class</a> · QEvent 类参考，包含所有事件类型枚举</p>
-<p>📎 <a href="https://doc.qt.io/qt-6/qeventloop.html">Qt 文档 · QEventLoop Class</a> · 事件循环类文档，理解 exec() 机制</p>
-<p>📎 <a href="https://doc.qt.io/qt-6/qcoreapplication.html#postEvent">Qt 文档 · QCoreApplication::postEvent</a> · postEvent 官方说明</p>
-<p>📎 <a href="https://doc.qt.io/qt-6/qcoreapplication.html#sendEvent">Qt 文档 · QCoreApplication::sendEvent</a> · sendEvent 官方说明</p>
+<p><a href="https://doc.qt.io/qt-6/eventsandfilters.html">Qt 文档 · The Event System</a> -- Qt 事件与过滤器完整文档，必读</p>
+<p><a href="https://doc.qt.io/qt-6/qevent.html">Qt 文档 · QEvent Class</a> -- QEvent 类参考，包含所有事件类型枚举</p>
+<p><a href="https://doc.qt.io/qt-6/qeventloop.html">Qt 文档 · QEventLoop Class</a> -- 事件循环类文档，理解 exec() 机制</p>
+<p><a href="https://doc.qt.io/qt-6/qcoreapplication.html#postEvent">Qt 文档 · QCoreApplication::postEvent</a> -- postEvent 官方说明</p>
+<p><a href="https://doc.qt.io/qt-6/qcoreapplication.html#sendEvent">Qt 文档 · QCoreApplication::sendEvent</a> -- sendEvent 官方说明</p>
 <hr />
 <p><em>本文档版本：v1.0 · 生成于 2026-03-17</em></p>
 
@@ -1776,7 +1993,7 @@
     <span class="md-icon" title="最后更新">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1zM12.5 7v5.2l4 2.4-1 1L11 13V7zM11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年4月8日 21:38:00 CST">2026年4月8日 21:38:00</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-datetime" title="2026年4月23日 09:08:38 CST">2026年4月23日 09:08:38</span>
   </span>
 
     
