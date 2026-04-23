@@ -51,18 +51,7 @@ QObject::QObject(QObject* parent = nullptr);
 
 当你传入一个非空的 `parent` 时，这个对象就会被添加到父对象的 `children()` 列表里。当父对象析构时，它会遍历所有子对象并逐个删除。
 
-> 📝 **随堂测验：口述回答**
-> 用自己的话说说：Qt 的对象树机制解决了什么问题？为什么比手动 `delete` 更安全？
->
-> *(请先自己想一下，再往下滑看答案)*
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> - 解决了对象所有权不明确的问题，父对象拥有子对象
-> - 自动清理避免了忘记 `delete` 导致的内存泄漏
-> - 异常安全，即使中间代码抛异常，对象树仍然会正确清理
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+你可能已经意识到了，Qt 的对象树机制本质上解决了对象所有权不明确的问题——父对象拥有子对象，所以自动清理时不会遗漏，即使中间代码抛异常，对象树的析构链条仍然会正确触发。这比手动 delete 安全得多，因为手动管理的最大风险就是忘了或者顺序错了。
 
 ### 2.1 栈对象的自动管理
 
@@ -82,30 +71,22 @@ QLabel label("Hello", &window);
 
 ### 2.2 对象树的限制
 
-对象树机制虽好，但不是万能的。它有几个明显的限制：
+对象树机制虽好，但不是万能的。首先它只能用于 `QObject` 及其派生类，如果你用的是标准 C++ 类或者第三方库的类，这套机制就用不上。其次子对象的生命周期完全绑定在父对象上，你不能单独删除一个子对象然后继续使用它，也不能在父对象删除后继续访问子对象。最后，对象树不适合共享所有权的场景，如果一个对象可能被多个地方同时引用，对象树就无法表示这种关系。
 
-第一，只能用于 `QObject` 及其派生类。如果你用的是标准 C++ 类或者第三方库的类，这套机制就用不上。
+这里有一个很经典的坑：重复删除导致崩溃。你把一个按钮交给窗口的对象树管理，然后又手动 delete 了这个按钮，接下来窗口析构时会再次删除它，双重 free 直接炸掉。所以一旦子对象交给对象树，就别再手动 delete 了。
 
-第二，子对象的生命周期完全绑定在父对象上。你不能单独删除一个子对象然后继续使用它，也不能在父对象删除后继续访问子对象。
+```cpp
+// 典型的崩溃场景
+QWidget* window = new QWidget();
+QPushButton* button = new QPushButton("Click", window);
+delete button;  // 手动删除子对象
+delete window;  // window 析构时会再次删除 button，崩溃！
 
-第三，对象树不适合共享所有权的场景。如果一个对象可能被多个地方同时引用，对象树就无法表示这种关系。
-
-> ⚠️ **坑 #1：重复删除导致崩溃**
-> ❌ 错误做法：
-> ```cpp
-> QWidget* window = new QWidget();
-> QPushButton* button = new QPushButton("Click", window);
-> delete button;  // 手动删除子对象
-> delete window;  // window 析构时会再次删除 button，崩溃！
-> ```
-> ✅ 正确做法：
-> ```cpp
-> QWidget* window = new QWidget();
-> QPushButton* button = new QPushButton("Click", window);
-> delete window;  // 只删除父对象，子对象自动清理
-> ```
-> 💥 后果：双重 `free` 导致程序崩溃，或者内存损坏
-> 💡 一句话记住：子对象交给对象树后，就别再手动 `delete`
+// 正确做法：只删除父对象
+QWidget* window2 = new QWidget();
+QPushButton* button2 = new QPushButton("Click", window2);
+delete window2;  // 子对象自动清理
+```
 
 ## 3. 智能指针——Qt 的第二道防线
 
@@ -127,21 +108,13 @@ window->show();
 
 `QScopedPointer` 的使用场景很明确：当你需要一个对象，且这个对象的所有权不会被转移时，用它就很合适。
 
-> ⚠️ **坑 #2：QScopedPointer 不能复制**
-> ❌ 错误做法：
-> ```cpp
-> QScopedPointer<QWidget> ptr1(new QWidget());
-> QScopedPointer<QWidget> ptr2 = ptr1;  // 编译错误！不能复制
-> ```
-> ✅ 正确做法：
-> ```cpp
-> QScopedPointer<QWidget> ptr1(new QWidget());
-> // 如果需要转移所有权，使用 reset()
-> QScopedPointer<QWidget> ptr2;
-> ptr2.reset(ptr1.take());  // take() 释放所有权但不删除对象
-> ```
-> 💥 后果：代码无法编译，设计上就防止了所有权的混乱
-> 💡 一句话记住：`QScopedPointer` 是排他性的，一个对象只能被一个 `QScopedPointer` 拥有
+有一点要注意，`QScopedPointer` 是排他性的，不能复制。如果你写 `QScopedPointer<QWidget> ptr2 = ptr1;`，编译直接报错，这是设计上就防止所有权混乱的做法。如果确实需要转移所有权，用 `take()` 释放所有权再交给另一个 `QScopedPointer`：
+
+```cpp
+QScopedPointer<QWidget> ptr1(new QWidget());
+QScopedPointer<QWidget> ptr2;
+ptr2.reset(ptr1.take());  // take() 释放所有权但不删除对象
+```
 
 ### 3.2 QSharedPointer——共享所有权
 
@@ -196,40 +169,22 @@ if (!weakPtr.isNull()) {
 // weakPtr 会自动变为空，再调用 isNull() 会返回 true
 ```
 
-> 🔲 **随堂测验：代码填空**
-> 补全以下代码，使用 `QWeakPointer` 安全地访问可能已删除的对象：
->
-> ```cpp
-> QSharedPointer<QLabel> labelPtr(new QLabel("Hello"));
-> QWeakPointer<QLabel> weakLabel = ______;
->
-> // 一段时间后...
-> if (!weakLabel.______) {
->     QSharedPointer<QLabel> strong = weakLabel.______();
->     if (______) {
->         strong->show();
->     }
-> }
-> ```
->
-> *(提示：labelPtr、isNull、toStrongRef、strong)*
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> ```cpp
-> QSharedPointer<QLabel> labelPtr(new QLabel("Hello"));
-> QWeakPointer<QLabel> weakLabel = labelPtr;
->
-> // 一段时间后...
-> if (!weakLabel.isNull()) {
->     QSharedPointer<QLabel> strong = weakLabel.toStrongRef();
->     if (strong) {
->         strong->show();
->     }
-> }
-> ```
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+我们来做一个填空练习：补全以下代码，使用 `QWeakPointer` 安全地访问可能已删除的对象。
+
+```cpp
+QSharedPointer<QLabel> labelPtr(new QLabel("Hello"));
+QWeakPointer<QLabel> weakLabel = labelPtr;
+
+// 一段时间后...
+if (!weakLabel.isNull()) {
+    QSharedPointer<QLabel> strong = weakLabel.toStrongRef();
+    if (strong) {
+        strong->show();
+    }
+}
+```
+
+这里的模式很固定：先用 `isNull()` 检查弱引用是否还有效，再通过 `toStrongRef()` 提升为共享指针来安全访问对象。提升失败说明对象已经被删除了，`strong` 会是空指针。
 
 ### 3.4 QPointer——弱引用的另一种选择
 
@@ -251,16 +206,18 @@ if (label) {
 
 ## 4. 何时用什么——实战指南
 
-讲了这么多，我们来总结一下不同场景下的最佳实践：
+讲了这么多，我们来总结一下不同场景下的最佳实践。
 
-**场景一：UI 控件的父子关系**
+场景一：UI 控件的父子关系。这是对象树的主战场，直接指定父对象就完事了。
+
 ```cpp
 // 推荐用对象树
 QWidget window;
 QPushButton* button = new QPushButton("Click", &window);
 ```
 
-**场景二：短暂使用的临时对象**
+场景二：短暂使用的临时对象。直接用栈对象或者 `std::unique_ptr`，简单粗暴。
+
 ```cpp
 // 推荐用栈对象或 std::unique_ptr
 std::unique_ptr<QWidget> window(new QWidget());
@@ -268,14 +225,16 @@ std::unique_ptr<QWidget> window(new QWidget());
 QWidget window;
 ```
 
-**场景三：需要在多个地方共享的对象**
+场景三：需要在多个地方共享的对象。用 `QSharedPointer`，引用计数帮你搞定生命周期。
+
 ```cpp
 // 推荐用 QSharedPointer
 QSharedPointer<Config> config(new Config());
 // 多个模块都持有这个 config 的副本
 ```
 
-**场景四：观察某个可能被删除的 QObject**
+场景四：观察某个可能被删除的 QObject。用 `QPointer`，访问前检查是否为空就行。
+
 ```cpp
 // 推荐用 QPointer
 QPointer<QLabel> label = findLabel();
@@ -285,90 +244,64 @@ if (label) {
 }
 ```
 
-> 🐛 **随堂测验：调试挑战**
->
-> 以下代码有什么问题？会导致什么后果？
->
-> ```cpp
-> class NetworkManager : public QObject {
-> public:
->     void setReply(QNetworkReply* r) {
->         reply = r;
->     }
->
-> private:
->     QNetworkReply* reply;
-> };
->
-> void processData() {
->     QNetworkAccessManager* mgr = new QNetworkAccessManager();
->     NetworkManager* handler = new NetworkManager();
->
->     QNetworkReply* reply = mgr->get(QNetworkRequest(QUrl("http://example.com")));
->     handler->setReply(reply);
->
->     delete mgr;  //mgr 被删除，reply 也会被删除
->     // handler->reply 现在是悬空指针！
-> }
-> ```
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> - `QNetworkAccessManager` 析构时会删除所有相关的 `QNetworkReply`
-> - `handler->reply` 变成悬空指针，后续使用会导致崩溃
-> - 应该用 `QPointer<QNetworkReply>` 或者在 `mgr` 删除前将 `reply` 置空
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+再看一个调试题：下面这段代码有什么问题？
 
-> ⚠️ **坑 #3：QNetworkReply 的所有权陷阱**
-> ❌ 错误做法：
-> ```cpp
-> QNetworkAccessManager* mgr = new QNetworkAccessManager();
-> QNetworkReply* reply = mgr->get(request);
-> delete mgr;  // 以为只是删除 manager
-> // 继续使用 reply... 崩溃！reply 已经被删除了
-> ```
-> ✅ 正确做法：
-> ```cpp
-> QNetworkAccessManager mgr;  // 栈对象，不需要手动删除
-> QNetworkReply* reply = mgr.get(request);
-> // 或者用 QPointer 监听 reply
-> QPointer<QNetworkReply> replyPtr = reply;
-> ```
-> 💥 后果：访问已删除的 `QNetworkReply` 导致程序崩溃
-> 💡 一句话记住：`QNetworkAccessManager` 拥有其创建的 `QNetworkReply`，删除 manager 会导致 reply 也被删除
+```cpp
+class NetworkManager : public QObject {
+public:
+    void setReply(QNetworkReply* r) {
+        reply = r;
+    }
+
+private:
+    QNetworkReply* reply;
+};
+
+void processData() {
+    QNetworkAccessManager* mgr = new QNetworkAccessManager();
+    NetworkManager* handler = new NetworkManager();
+
+    QNetworkReply* reply = mgr->get(QNetworkRequest(QUrl("http://example.com")));
+    handler->setReply(reply);
+
+    delete mgr;  //mgr 被删除，reply 也会被删除
+    // handler->reply 现在是悬空指针！
+}
+```
+
+问题很明确：`QNetworkAccessManager` 析构时会删除所有相关的 `QNetworkReply`，所以 `handler->reply` 变成了悬空指针，后续任何访问都会导致崩溃。解决办法是改用 `QPointer<QNetworkReply>` 来持有 reply 的引用，或者在 mgr 删除前把 reply 置空。实际上更好的做法是直接把 mgr 做成栈对象，让它的生命周期覆盖整个使用过程：
+
+```cpp
+QNetworkAccessManager mgr;  // 栈对象，不需要手动删除
+QNetworkReply* reply = mgr.get(request);
+// 或者用 QPointer 监听 reply
+QPointer<QNetworkReply> replyPtr = reply;
+```
+
+一句话记住这个坑：`QNetworkAccessManager` 拥有其创建的 `QNetworkReply`，删除 manager 会导致 reply 也被删除。
 
 ## 5. 练习项目
 
-🎯 **练习项目：任务管理器**
+练习项目：任务管理器。
 
-📋 **功能描述**：
 创建一个简单的任务管理器程序，每个任务有一个名称、优先级和状态。主界面显示所有任务，用户可以添加、删除、完成任务。
 
-✅ **完成标准**：
-- 使用对象树管理 UI 控件的生命周期
-- 使用 `QSharedPointer` 管理任务对象的共享所有权
-- 使用 `QPointer` 安全地持有对可能被删除的任务项的引用
-- 程序退出时无内存泄漏（可以用 Valgrind 或 Qt Creator 的内置工具检测）
-- 删除任务后，所有对该任务的引用都能正确处理
+完成标准是使用对象树管理 UI 控件的生命周期，使用 `QSharedPointer` 管理任务对象的共享所有权，使用 `QPointer` 安全地持有对可能被删除的任务项的引用。程序退出时无内存泄漏（可以用 Valgrind 或 Qt Creator 的内置工具检测），删除任务后所有对该任务的引用都能正确处理。
 
-💡 **提示**：
-- 定义一个 `Task` 类，存储任务信息
-- 用 `QSharedPointer<Task>` 在主窗口和任务详情窗口之间共享任务数据
-- 用 `QPointer<QListWidgetItem>` 安全地持有列表项的引用
-- 记得在析构函数中打印调试信息，验证对象被正确删除
+几个思路供参考：定义一个 `Task` 类存储任务信息，用 `QSharedPointer<Task>` 在主窗口和任务详情窗口之间共享任务数据，用 `QPointer<QListWidgetItem>` 安全地持有列表项的引用，记得在析构函数中打印调试信息来验证对象被正确删除。
 
 ## 6. 官方文档参考
 
-📎 [Object Trees & Ownership | Qt Core 6.10.2](https://doc.qt.io/qt-6/objecttrees.html) · Qt 对象树与所有权机制的官方文档
-📎 [QSharedPointer Class | Qt Core 6.10.2](https://doc.qt.io/qt-6/qsharedpointer.html) · QSharedPointer 完整参考
-📎 [QWeakPointer Class | Qt Core 6.10.2](https://doc.qt.io/qt-6/qweakpointer.html) · QWeakPointer 完整参考
-📎 [QScopedPointer Class | Qt Core 6.10.2](https://doc.qt.io/qt-6/qscopedpointer.html) · QScopedPointer 完整参考
+[Object Trees & Ownership | Qt Core 6.10.2](https://doc.qt.io/qt-6/objecttrees.html) - Qt 对象树与所有权机制的官方文档
 
-*（链接已验证，2026-03-17 可访问）*
+[QSharedPointer Class | Qt Core 6.10.2](https://doc.qt.io/qt-6/qsharedpointer.html) - QSharedPointer 完整参考
+
+[QWeakPointer Class | Qt Core 6.10.2](https://doc.qt.io/qt-6/qweakpointer.html) - QWeakPointer 完整参考
+
+[QScopedPointer Class | Qt Core 6.10.2](https://doc.qt.io/qt-6/qscopedpointer.html) - QScopedPointer 完整参考
+
+（链接已验证，2026-03-17 可访问）
 
 ---
 
 到这里，Qt 的内存管理基础就讲完了。掌握了对象树和智能指针，你的 Qt 程序就已经能够避免大部分内存相关的 bug。下一节我们会深入 Qt 的事件系统，这是理解 Qt 程序运行机制的关键。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

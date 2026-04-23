@@ -33,20 +33,7 @@ QProcess process;
 process.start("git status"); // Windows 下可能出问题
 ```
 
-第一种方式更安全，因为参数是分开传递的，不用担心空格和转义的问题。第二种方式看起来简洁，但在 Windows 下可能会因为路径解析问题导致失败。
-
-> 📝 **随堂测验：口述回答**
-> 用自己的话说说：为什么推荐用 `start(program, args)` 而不是 `start(command)`？
->
-> *(请先自己想一下，再往下滑看答案)*
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> - `start(program, args)` 分别传递程序名和参数列表，Qt 会自动处理空格和转义
-> - `start(command)` 把命令当成一个字符串，不同平台的 shell 解析规则不同，容易出问题
-> - 前者是跨平台的，后者依赖平台特定的 shell 行为
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+第一种方式更安全，因为参数是分开传递的，不用担心空格和转义的问题。第二种方式看起来简洁，但在 Windows 下可能会因为路径解析问题导致失败。你可能会问，为什么推荐用 `start(program, args)` 而不是 `start(command)`？原因很简单：`start(program, args)` 分别传递程序名和参数列表，Qt 会自动处理空格和转义，是跨平台的；而 `start(command)` 把命令当成一个字符串，不同平台的 shell 解析规则不同，容易出问题。
 
 ### 3.2 读取 stdout 和 stderr
 
@@ -66,19 +53,13 @@ QByteArray stderrData = process.readAllStandardError();
 qDebug() << "STDERR:" << stderrData;
 ```
 
-这里有几个关键点需要注意。`waitForFinished()` 是一个阻塞调用，会一直等待进程结束。如果进程执行时间很长，你的界面就会卡住。后面我们会讲异步方式。
-
-另外，`readAllStandardOutput()` 和 `readAllStandardError()` 返回的是 QByteArray，这是因为输出可能是二进制数据。如果你确定是文本，可以直接转成 QString：
+这里要注意，`waitForFinished()` 是一个阻塞调用，会一直等待进程结束。如果进程执行时间很长，你的界面就会卡住。后面我们会讲异步方式。另外，`readAllStandardOutput()` 和 `readAllStandardError()` 返回的是 QByteArray，这是因为输出可能是二进制数据。如果你确定是文本，可以直接转成 QString：
 
 ```cpp
 QString output = QString::fromUtf8(process.readAllStandardOutput());
 ```
 
-> ⚠️ **坑 #1：忘记 waitForFinished() 就读输出**
-> ❌ 错误做法：`start()` 后立即 `readAllStandardOutput()`
-> ✅ 正确做法：先 `waitForFinished()` 等进程结束，再读取输出
-> 💥 后果：读到的是空数据，因为进程还没执行完
-> 💡 一句话记住：进程是异步的，必须等结束才能读到完整输出
+这里有一个非常常见的坑：很多人在 `start()` 之后立即调用 `readAllStandardOutput()`，结果读到的是空数据。原因在于进程是异步执行的，你必须先等它结束，才能读到完整输出。所以一定要先调用 `waitForFinished()`，再读取。
 
 ### 3.3 异步等待进程结束
 
@@ -108,13 +89,7 @@ connect(process, &QProcess::readyReadStandardOutput, [=]() {
 process->start("long-running-command");
 ```
 
-这样写有几个好处：界面不会卡，输出是实时流式读取的，而且能检测到进程是否崩溃。
-
-> ⚠️ **坑 #2：忘记给 QProcess 设置 parent**
-> ❌ 错误做法：`QProcess *process = new QProcess();` 后面忘记 delete
-> ✅ 正确做法：`QProcess *process = new QProcess(this);` 或手动 delete
-> 💥 后果：内存泄漏，每次启动进程都泄漏一块内存
-> 💡 一句话记住：有 parent 的 QProcess 会在父对象销毁时自动清理
+这样写有几个好处：界面不会卡，输出是实时流式读取的，而且能检测到进程是否崩溃。不过这里有一个细节很多人会忽略——如果你用 `new QProcess()` 而不传 parent，那每次启动进程都会泄漏一块内存。正确的做法是 `new QProcess(this)`，让父对象在销毁时自动清理它。
 
 ### 3.4 start() vs startDetached()
 
@@ -129,13 +104,7 @@ process.start("some-command");
 bool success = QProcess::startDetached("some-command");
 ```
 
-`startDetached()` 返回一个 bool，表示启动是否成功。但它不会给你一个 QProcess 对象，因为你无法控制一个已经脱离的进程。这个方法适合启动那些完全独立运行的程序，比如打开浏览器、打开记事本等。
-
-> ⚠️ **坑 #3：startDetached() 后尝试读取输出**
-> ❌ 错误做法：用 `startDetached()` 后试图 `readAllStandardOutput()`
-> ✅ 正确做法：`startDetached()` 适合启动独立程序，不需要交互的场景
-> 💥 后果：读不到任何输出，因为 detached 进程已经和你的程序断开连接
-> 💡 一句话记住：需要交互用 start()，只需要启动用 startDetached()
+`startDetached()` 返回一个 bool，表示启动是否成功。但它不会给你一个 QProcess 对象，因为你无法控制一个已经脱离的进程。这个方法适合启动那些完全独立运行的程序，比如打开浏览器、打开记事本等。需要注意的是，`startDetached()` 之后你没法再读取输出，因为 detached 进程已经和你的程序断开了连接。简单来说：需要交互用 `start()`，只需要启动用 `startDetached()`。
 
 ### 3.5 环境变量和工作目录
 
@@ -162,109 +131,72 @@ process.start("my-program");
 
 ## 4. 踩坑预防清单
 
-> ⚠️ **坑 #4：路径中的空格问题**
-> ❌ 错误做法：`process.start("C:\\Program Files\\MyApp.exe");`
-> ✅ 正确做法：`process.start("C:\\Program Files\\MyApp.exe", QStringList());`
-> 💥 后果：在某些情况下，路径会被空格截断，导致找不到程序
-> 💡 一句话记住：路径有空格时，用参数列表形式启动，Qt 会正确处理
+这里集中列几个最容易被忽略的问题。
 
-> ⚠️ **坑 #5：在错误的线程启动进程**
-> ❌ 错误做法：在非 GUI 线程启动 QProcess 并同步等待
-> ✅ 正确做法：在主线程启动 QProcess，用异步信号槽处理
-> 💥 后果：可能导致事件循环问题，或者线程竞争
-> 💡 一句话记住：QProcess 虽然可以跨线程，但启动和事件处理最好在同一线程
+路径中如果包含空格，比如 `C:\Program Files\MyApp.exe`，在某些情况下路径会被空格截断，导致找不到程序。解决办法是用参数列表形式启动，Qt 会正确处理：`process.start("C:\\Program Files\\MyApp.exe", QStringList())`。
 
-> ⚠️ **坑 #6：忘记检查进程启动成功与否**
-> ❌ 错误做法：`start()` 后直接假设进程在运行
-> ✅ 正确做法：检查 `waitForStarted()` 返回值，或监听 `errorOccurred` 信号
-> 💥 后果：程序不存在或启动失败时，你还在傻等一个永远不会结束的进程
-> 💡 一句话记住：外部程序是你控制不了的，必须检查启动是否成功
+关于线程的问题：QProcess 虽然可以跨线程使用，但启动和事件处理最好在同一线程。如果在非 GUI 线程启动 QProcess 并同步等待，可能导致事件循环问题或者线程竞争。正确做法是在主线程启动 QProcess，用异步信号槽处理。
 
-> 🔲 **随堂测验：代码填空**
-> 补全以下代码，实现启动一个命令并读取其输出：
->
-> ```cpp
-> QProcess process;
-> process.______("git", QStringList() << "--version");
-> if (process.__________()) {
->     QByteArray output = process.____________________();
->     QString version = QString::fromUtf8(output);
->     qDebug() << "Git version:" << version;
-> } else {
->     qDebug() << "Failed to start git";
-> }
-> ```
->
-> *(提示：start、waitForFinished、readAllStandardOutput)*
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> ```cpp
-> QProcess process;
-> process.start("git", QStringList() << "--version");
-> if (process.waitForFinished()) {
->     QByteArray output = process.readAllStandardOutput();
->     QString version = QString::fromUtf8(output);
->     qDebug() << "Git version:" << version;
-> } else {
->     qDebug() << "Failed to start git";
-> }
-> ```
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+另外一件很多人偷懒不做的事情是检查进程是否启动成功。外部程序是你控制不了的，如果程序不存在或者启动失败，你还在傻等一个永远不会结束的进程。正确的做法是检查 `waitForStarted()` 的返回值，或者监听 `errorOccurred` 信号。
+
+现在我们来做一个小的代码填空练习，检验一下前面的内容。补全以下代码，实现启动一个命令并读取其输出：
+
+```cpp
+QProcess process;
+process.______("git", QStringList() << "--version");
+if (process.__________()) {
+    QByteArray output = process.____________________();
+    QString version = QString::fromUtf8(output);
+    qDebug() << "Git version:" << version;
+} else {
+    qDebug() << "Failed to start git";
+}
+```
+
+提示：需要填入的方法分别是 `start`、`waitForFinished`、`readAllStandardOutput`。
+
+参考答案如下：
+
+```cpp
+QProcess process;
+process.start("git", QStringList() << "--version");
+if (process.waitForFinished()) {
+    QByteArray output = process.readAllStandardOutput();
+    QString version = QString::fromUtf8(output);
+    qDebug() << "Git version:" << version;
+} else {
+    qDebug() << "Failed to start git";
+}
+```
 
 ## 5. 练习项目
 
-🎯 **练习项目：命令执行器**
+我们来做一个命令执行器，把这一节学的东西串起来。功能是创建一个简单的命令执行器程序，用户可以输入任意 shell 命令，程序会执行并显示输出。
 
-📋 **功能描述**：
-创建一个简单的命令执行器程序，用户可以输入任意 shell 命令，程序会执行并显示输出。
+完成标准：有一个 QLineEdit 用于输入命令，一个 QPushButton 用于执行命令，一个 QTextEdit 用于显示命令输出。执行长命令时界面不能卡，而且能区分标准输出和错误输出（用不同颜色显示）。
 
-✅ **完成标准**：
-- 有一个 QLineEdit 用于输入命令
-- 有一个 QPushButton 用于执行命令
-- 有一个 QTextEdit 用于显示命令输出
-- 执行长命令时界面不卡
-- 能区分标准输出和错误输出（用不同颜色显示）
+提示几个方向：用 `QProcess::start()` 启动命令，连接 `readyReadStandardOutput` 和 `readyReadStandardError` 信号来实时获取输出，连接 `finished` 信号来处理命令结束。命令字符串需要拆分成程序名和参数列表，可以用空格分割，但要注意引号里的空格。
 
-💡 **提示**：
-- 用 `QProcess::start()` 启动命令
-- 连接 `readyReadStandardOutput` 和 `readyReadStandardError` 信号来实时获取输出
-- 连接 `finished` 信号来处理命令结束
-- 命令字符串需要拆分成程序名和参数列表，可以用空格分割（注意引号里的空格）
+再看一个调试挑战：以下代码有什么问题？会导致什么后果？
 
-> 🐛 **随堂测验：调试挑战**
->
-> 以下代码有什么问题？会导致什么后果？
->
-> ```cpp
-> void executeCommand(QString command) {
->     QProcess process;
->     process.start(command);
->     process.waitForFinished();
->     qDebug() << process.readAllStandardOutput();
-> }
-> ```
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> - `start(command)` 把整个命令当成一个字符串，包含参数的话可能失败
-> - QProcess 是局部变量，函数结束后就被销毁，可能来不及完成异步操作
-> - 没有检查启动是否成功，如果命令不存在会静默失败
-> - 应该用 `start(command.split(' '))` 或更好的参数解析方式
-> - 应该检查 `waitForStarted()` 的返回值
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```cpp
+void executeCommand(QString command) {
+    QProcess process;
+    process.start(command);
+    process.waitForFinished();
+    qDebug() << process.readAllStandardOutput();
+}
+```
+
+这里面有几个隐患。首先，`start(command)` 把整个命令当成一个字符串，包含参数的话可能失败。其次，QProcess 是局部变量，函数结束后就被销毁，可能来不及完成异步操作。另外没有检查启动是否成功，如果命令不存在会静默失败。应该用 `start(command.split(' '))` 或更好的参数解析方式，同时检查 `waitForStarted()` 的返回值。
 
 ## 6. 官方文档参考
 
-📎 [Qt 文档 · QProcess 类](https://doc.qt.io/qt-6/qprocess.html) · QProcess 的完整 API 参考，包含所有信号和槽的说明
-📎 [Qt 文档 · QProcessEnvironment 类](https://doc.qt.io/qt-6/qprocessenvironment.html) · 环境变量处理的专用类
+- [Qt 文档 · QProcess 类](https://doc.qt.io/qt-6/qprocess.html) -- QProcess 的完整 API 参考，包含所有信号和槽的说明
+- [Qt 文档 · QProcessEnvironment 类](https://doc.qt.io/qt-6/qprocessenvironment.html) -- 环境变量处理的专用类
 
 *（链接已验证，2026-03-17 可访问）*
 
 ---
 
 到这里就大功告成了。掌握了 QProcess，你就可以在 Qt 程序里自由地调用外部程序，这大大扩展了 Qt 的能力边界。下一节我们会讲定时器，看看如何在 Qt 里实现周期性任务。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

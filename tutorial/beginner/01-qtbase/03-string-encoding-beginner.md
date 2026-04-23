@@ -32,18 +32,7 @@ size_t len = qs.length(); // 得到 2，真正的字符数
 
 QString 内部用 UTF-16 存储，这意味着每个字符至少占 2 字节。对于常用汉字，一个 QChar 就够了。但对于超出基本多文种平面的字符（比如 emoji），可能需要两个 QChar（代理对），不过这是进阶话题，入门阶段我们先记住：QString 能正确处理 Unicode 字符。
 
-> 📝 **随堂测验：口述回答**
-> 用自己的话说说：为什么 std::string 的 length() 不能准确返回中文字符数，而 QString 可以？
->
-> *(请先自己想一下，再往下滑看答案)*
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> - std::string 是字节序列，不知道编码，length() 返回的是字节数
-> - UTF-8 中一个汉字占 3 字节，所以 length() 返回 6 而不是 2
-> - QString 内部用 UTF-16，每个 QChar 代表一个 Unicode 码位，length() 返回字符数
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+你可能会问：为什么 std::string 的 length() 不能准确返回中文字符数，而 QString 可以？原因很简单——std::string 是字节序列，不知道编码，length() 返回的是字节数。UTF-8 中一个汉字占 3 字节，所以 length() 返回 6 而不是 2。QString 内部用 UTF-16，每个 QChar 代表一个 Unicode 码位，length() 返回的是真正的字符数。
 
 ## 3. QByteArray 是什么，什么时候用
 
@@ -97,21 +86,23 @@ bool contains(QStringView str) const;
 
 不过入门阶段你不需要过度优化，直接用 QString 传引用也没问题。QStringView 主要在你需要处理大量字符串操作、又想避免频繁分配内存时有用。
 
-> ⚠️ **坑 #1：QStringView 的生命周期陷阱**
-> ❌ 错误做法：返回一个指向临时对象的 QStringView
-> ```cpp
-> QStringView getView() {
->     return QString("Hello");  // 临时对象被销毁，视图悬空
-> }
-> ```
-> ✅ 正确做法：只返回值类型，或者确保被观察对象生命周期足够长
-> ```cpp
-> QString getView() {
->     return QString("Hello");  // 返回值，安全
-> }
-> ```
-> 💥 后果：悬空引用，可能导致崩溃或读取垃圾数据
-> 💡 一句话记住：QStringView 不拥有数据，要确保被观察对象活得比视图久
+这里有个非常容易踩的坑——QStringView 不拥有数据，所以你必须确保被观察对象活得比视图久。比如你写了一个函数返回 QStringView，但返回的却是指向临时 QString 的视图，那临时对象一销毁，视图就悬空了。下面这种写法就会导致悬空引用，可能崩溃或读到垃圾数据：
+
+```cpp
+// 错误做法：返回一个指向临时对象的 QStringView
+QStringView getView() {
+    return QString("Hello");  // 临时对象被销毁，视图悬空
+}
+```
+
+正确做法是直接返回 QString 值类型，或者确保被观察对象的生命周期足够长。一句话记住这个坑：QStringView 只是借别人的数据用一下，别让数据源先走了。
+
+```cpp
+// 正确做法：返回值类型，安全
+QString getView() {
+    return QString("Hello");  // 返回值，安全
+}
+```
 
 ## 5. 编码转换 —— GBK、UTF-8 互相转换的坑
 
@@ -156,26 +147,18 @@ if (!decoder.isValid()) {
 }
 ```
 
-> 🐛 **随堂测验：调试挑战**
->
-> 以下代码有什么问题？在 Windows 中文环境下会输出什么？
->
-> ```cpp
-> QFile file("data.txt");  // 假设文件是 GBK 编码
-> if (file.open(QIODevice::ReadOnly)) {
->     QByteArray data = file.readAll();
->     QString text = QString::fromUtf8(data);  // 直接按 UTF-8 解析
->     qDebug() << text;
-> }
-> ```
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> - 文件是 GBK 编码，但代码用 fromUtf8 解析，会导致乱码
-> - 中文字符会变成问号或乱码
-> - 正确做法是检测文件编码，或使用 QStringDecoder("GBK") 解析
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+来一道调试挑战。以下代码有什么问题？在 Windows 中文环境下会输出什么？
+
+```cpp
+QFile file("data.txt");  // 假设文件是 GBK 编码
+if (file.open(QIODevice::ReadOnly)) {
+    QByteArray data = file.readAll();
+    QString text = QString::fromUtf8(data);  // 直接按 UTF-8 解析
+    qDebug() << text;
+}
+```
+
+答案是文件是 GBK 编码，但代码用 fromUtf8 解析，中文字符会变成问号或乱码。正确做法是检测文件编码，或使用 QStringDecoder("GBK") 解析。这个坑我在做日志分析工具的时候踩过，收到的数据死活不对，最后发现是拿错了解码器。
 
 ### 5.3 QStringLiteral —— 编译期字符串字面量
 
@@ -225,11 +208,7 @@ double value = numStr.toDouble();                 // 3.14
 QString trimmed = "  hello  ".trimmed();  // "hello"
 ```
 
-> ⚠️ **坑 #2：QString::number 的精度陷阱**
-> ❌ 错误做法：QString::number(3.1415926535) 默认只有 6 位精度
-> ✅ 正确做法：QString::number(3.1415926535, 'f', 10) 指定精度
-> 💥 后果：浮点数精度丢失，计算结果可能不正确
-> 💡 一句话记住：数字转字符串记得指定精度格式，不然默认 6 位不够用
+这里有一个精度陷阱值得说一声。QString::number 默认只有 6 位精度，如果你直接 `QString::number(3.1415926535)`，拿到的只有 3.14159。浮点数精度就这么丢了，计算结果可能不正确。解决办法是显式指定精度格式，写成 `QString::number(3.1415926535, 'f', 10)`。一句话记住：数字转字符串记得指定精度格式，不然默认 6 位不够用。
 
 ## 7. 字符串拼接的性能问题
 
@@ -255,36 +234,26 @@ QString s = parts.join(" ");
 
 ## 8. 练习项目
 
-🎯 **练习项目：日志文件编码转换工具**
+练习项目：日志文件编码转换工具。写一个命令行工具，能够读取文本文件并转换编码。例如将 GBK 编码的日志文件转换为 UTF-8 编码。
 
-📋 **功能描述**：
-写一个命令行工具，能够读取文本文件并转换编码。例如将 GBK 编码的日志文件转换为 UTF-8 编码。
+完成标准是：程序接受两个命令行参数（输入文件路径和输出文件路径），能够检测或指定输入文件编码（至少支持 GBK 和 UTF-8），转换后输出为 UTF-8 编码，转换失败时给出清晰的错误提示，能够处理大文件（逐行读取，不一次性加载全部内容）。
 
-✅ **完成标准**：
-- 程序接受两个命令行参数：输入文件路径和输出文件路径
-- 能够检测或指定输入文件编码（至少支持 GBK 和 UTF-8）
-- 转换后输出为 UTF-8 编码
-- 转换失败时给出清晰的错误提示
-- 能够处理大文件（逐行读取，不一次性加载全部内容）
-
-💡 **提示**：
-- 用 QFile + QTextStream 逐行读取
-- QTextStream 可以设置编码：stream.setEncoding(QStringConverter::Utf8)
-- 用 QStringDecoder/QStringEncoder 处理编码转换
-- 错误处理：检查文件是否能打开、编码转换是否有效
+实现上有几个方向可以用。用 QFile + QTextStream 逐行读取是个好起点，QTextStream 可以设置编码（比如 `stream.setEncoding(QStringConverter::Utf8)`），用 QStringDecoder/QStringEncoder 处理编码转换。错误处理方面，记得检查文件是否能打开、编码转换是否有效。
 
 ## 9. 官方文档参考
 
-📎 [Qt 6 QString 类文档](https://doc.qt.io/qt-6/qstring.html) · QString 完整 API 参考
-📎 [Qt 6 QByteArray 类文档](https://doc.qt.io/qt-6/qbytearray.html) · 字节数组处理，二进制数据必备
-📎 [Qt 6 QStringView 类文档](https://doc.qt.io/qt-6/qstringview.html) · 零拷贝字符串视图
-📎 [Qt 6 字符串处理概述](https://doc.qt.io/qt-6/string-processing.html) · 字符串体系全景图
-📎 [Qt 6 QStringEncoder/QStringDecoder 文档](https://doc.qt.io/qt-6/qstringencoder.html) · 现代 Qt 6 编码转换方式
+[Qt 6 QString 类文档](https://doc.qt.io/qt-6/qstring.html) · QString 完整 API 参考
+
+[Qt 6 QByteArray 类文档](https://doc.qt.io/qt-6/qbytearray.html) · 字节数组处理，二进制数据必备
+
+[Qt 6 QStringView 类文档](https://doc.qt.io/qt-6/qstringview.html) · 零拷贝字符串视图
+
+[Qt 6 字符串处理概述](https://doc.qt.io/qt-6/string-processing.html) · 字符串体系全景图
+
+[Qt 6 QStringEncoder/QStringDecoder 文档](https://doc.qt.io/qt-6/qstringencoder.html) · 现代 Qt 6 编码转换方式
 
 *（链接已验证，2026-03-17 可访问）*
 
 ---
 
-**到这里你就掌握了 Qt 字符串处理的基础**。编码转换这事儿说难不难，但一定要搞清楚每个环节的编码是什么，不然就是满天飞乱码。下一篇我们来讲 Qt 的容器类，和字符串配合使用非常频繁。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+到这里你就掌握了 Qt 字符串处理的基础。编码转换这事儿说难不难，但一定要搞清楚每个环节的编码是什么，不然就是满天飞乱码。下一篇我们来讲 Qt 的容器类，和字符串配合使用非常频繁。

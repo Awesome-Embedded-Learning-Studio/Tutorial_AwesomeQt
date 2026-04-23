@@ -3,3 +3,6 @@ AWESOMEQT_GUIDE.md
 .claude
 
 reference/
+
+# Build artifacts
+build/
