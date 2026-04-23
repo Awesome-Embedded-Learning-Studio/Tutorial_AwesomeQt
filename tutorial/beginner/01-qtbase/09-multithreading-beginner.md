@@ -10,12 +10,7 @@
 
 ## 2. 环境说明
 
-本教程基于 Qt 6.9.1，适用于以下平台：
-- Windows 10/11（MSVC 2019+ 或 MinGW 11.2+）
-- Linux（GCC 11+）
-- WSL2 + WSLg（GUI 支持）
-
-所有示例代码均使用 C++17 标准和 CMake 3.26+ 构建系统。
+本教程基于 Qt 6.9.1，适用于 Windows 10/11（MSVC 2019+ 或 MinGW 11.2+）、Linux（GCC 11+）、WSL2 + WSLg（GUI 支持）。所有示例代码均使用 C++17 标准和 CMake 3.26+ 构建系统。
 
 ## 3. 核心概念讲解
 
@@ -31,7 +26,7 @@
 
 QThread 是 Qt 中最基本的线程类，但说实话，它有两个用法，而且其中一个特别容易误导人。
 
-**错误但很常见的用法——继承 QThread：**
+先看错误但很常见的用法——继承 QThread：
 
 ```cpp
 class WorkerThread : public QThread
@@ -53,7 +48,7 @@ thread->start();  // 启动线程，run() 会在新线程中执行
 
 这个用法的问题在于，你把整个类都和 QThread 绑死了，而且很容易搞混哪些代码在哪个线程运行。
 
-**推荐的用法——使用 moveToThread：**
+推荐的做法是使用 moveToThread：
 
 ```cpp
 class Worker : public QObject
@@ -91,21 +86,9 @@ connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 thread->start();  // 启动线程
 ```
 
-第二种方式的优势很明显：
-- Worker 是个独立的类，职责清晰
-- 通过信号槽机制通信，线程安全
-- 线程生命周期管理更清晰
+第二种方式的优势很明显：Worker 是个独立的类，职责清晰；通过信号槽机制通信，线程安全；线程生命周期管理也更清晰。
 
-> 📝 **随堂测验：口述回答**
-> 用自己的话说说：为什么 moveToThread 后，worker 的槽函数会在新线程执行？
->
-> *(请先自己想一下，再往下滑看答案)*
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> moveToThread 改变了对象的线程依附性，之后发给该对象的信号（如果使用 Qt::AutoConnection 或 Qt::QueuedConnection）会以队列方式投递，在对象所依附的线程中执行槽函数。
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+你可能会问：为什么 `moveToThread` 之后，worker 的槽函数会在新线程执行？原因在于 `moveToThread` 改变了对象的线程依附性（thread affinity），之后发给该对象的信号（如果使用 `Qt::AutoConnection` 或 `Qt::QueuedConnection`）会以队列方式投递，在对象所依附的线程中执行槽函数。这就是为什么信号槽能安全地实现跨线程通信——Qt 在底层帮你做了线程切换。
 
 ### 3.3 QThreadPool 线程池
 
@@ -132,12 +115,7 @@ private:
 QThreadPool::globalInstance()->start(new Task("some data"));
 ```
 
-QThreadPool 的优点：
-- 线程复用，减少创建开销
-- 可以限制最大线程数，避免资源耗尽
-- API 简单，适合短暂的、独立的任务
-
-但要注意，QRunnable 不是 QObject，不能发送信号。如果你需要结果通知，还是得用 QObject + moveToThread 的方式。
+QThreadPool 的优点在于线程复用、减少创建开销，可以限制最大线程数避免资源耗尽，API 也简单，适合短暂的、独立的任务。但要注意，QRunnable 不是 QObject，不能发送信号。如果你需要结果通知，还是得用 QObject + moveToThread 的方式。
 
 ### 3.4 QtConcurrent 便捷 API
 
@@ -162,10 +140,7 @@ connect(watcher, &QFutureWatcher<int>::finished, [watcher]() {
 watcher->setFuture(future);
 ```
 
-QtConcurrent 还提供了一些常用算法的并发版本：
-- `QtConcurrent::mapped()`：对容器中每个元素应用函数
-- `QtConcurrent::filtered()`：过滤容器元素
-- `QtConcurrent::reduce()`：归约操作
+QtConcurrent 还提供了一些常用算法的并发版本：`QtConcurrent::mapped()` 对容器中每个元素应用函数，`QtConcurrent::filtered()` 过滤容器元素，`QtConcurrent::reduce()` 做归约操作。
 
 ```cpp
 QList<int> numbers = {1, 2, 3, 4, 5};
@@ -221,23 +196,7 @@ connect(watcher, &QFutureWatcher<int>::progressValueChanged,
 watcher->setFuture(future);
 ```
 
-> ⚠️ **坑 #1：主线程阻塞**
-> ❌ 错误做法：在主线程调用 `future.result()` 或 `future.waitForFinished()`
-> ```cpp
-> QFuture<int> future = QtConcurrent::run(heavyCalculation);
-> int result = future.result();  // 主线程阻塞等待！
-> ```
-> ✅ 正确做法：使用 QFutureWatcher 监听完成信号
-> ```cpp
-> QFutureWatcher<int> *watcher = new QFutureWatcher<int>(this);
-> connect(watcher, &QFutureWatcher<int>::finished, [watcher]() {
->     int result = watcher->result();  // 在槽中获取结果
->     updateUI(result);
-> });
-> watcher->setFuture(future);
-> ```
-> 💥 后果：界面卡死，用户体验极差，和没用多线程一样
-> 💡 一句话记住：永远不要在主线程阻塞等待异步结果，用信号槽通知
+这里有个坑真的坑了我半天：在主线程调用 `future.result()` 或 `future.waitForFinished()` 会阻塞主线程，界面直接卡死，和没用多线程一样。正确做法是使用 QFutureWatcher 监听完成信号，在槽函数里获取结果。永远不要在主线程阻塞等待异步结果，用信号槽通知——这条规则和"GUI 操作必须在主线程"一样重要。
 
 ### 3.6 跨线程信号槽的线程安全
 
@@ -271,26 +230,7 @@ connect(worker, &Worker::workFinished,
 
 但要注意，如果你通过引用传递参数（比如 `const Result&`），Qt 会强制拷贝。如果想避免拷贝，确保类型是可共享的，或者显式注册为元类型。
 
-> ⚠️ **坑 #2：直接操作跨线程的 GUI 对象**
-> ❌ 错误做法：在后台线程直接更新 GUI
-> ```cpp
-> void Worker::doWork() {
->     // 错误！这里在后台线程
->     label->setText("Processing...");  // 危险操作
-> }
-> ```
-> ✅ 正确做法：通过信号槽让主线程更新 GUI
-> ```cpp
-> void Worker::doWork() {
->     emit updateText("Processing...");  // 发送信号
-> }
->
-> // 主线程连接
-> connect(worker, &Worker::updateText,
->         label, &QLabel::setText);  // 安全！
-> ```
-> 💥 后果：程序崩溃、界面闪烁、数据竞争、各种奇怪的行为
-> 💡 一句话记住：GUI 操作永远在主线程，用信号槽跨线程通信
+另一个必须强调的坑：绝对不能在后台线程直接操作 GUI 对象。比如你在后台线程的 `doWork()` 里写了 `label->setText("Processing...")`，这就是危险操作——程序可能崩溃、界面闪烁、出现数据竞争和各种奇怪的行为。GUI 操作永远在主线程，跨线程通信用信号槽，没有任何例外。
 
 ### 3.7 QMutex 基础保护
 
@@ -319,159 +259,90 @@ private:
 
 QMutexLocker 是 RAII 风格的锁管理器，构造时加锁，析构时解锁，即使发生异常也能正确释放锁。比你手动 lock/unlock 安全得多。
 
-> ⚠️ **坑 #3：忘记解锁导致死锁**
-> ❌ 错误做法：手动 lock 但忘记 unlock
-> ```cpp
-> void processData() {
->     m_mutex.lock();
->     if (someCondition) {
->         return;  // 忘记解锁！
->     }
->     // ...
->     m_mutex.unlock();
-> }
-> ```
-> ✅ 正确做法：使用 QMutexLocker 或 QMutexLockerer
-> ```cpp
-> void processData() {
->     QMutexLocker locker(&m_mutex);  // 自动管理
->     if (someCondition) {
->         return;  // 析构时自动解锁
->     }
-> }
-> ```
-> 💥 后果：死锁，程序永远卡在锁上
-> 💡 一句话记住：优先用 QMutexLocker，让编译器帮你管理锁的生命周期
+说到手动 lock/unlock，这真的是一个经典死锁来源——你手动调了 `m_mutex.lock()`，然后在某个 `if` 分支里直接 `return` 了，忘了 `unlock()`，结果锁就永远卡在那了。优先用 QMutexLocker，让编译器帮你管理锁的生命周期，`return` 也好、异常也好，析构函数都会帮你解锁。
 
-> 🔲 **随堂测验：代码填空**
-> 补全以下代码，实现一个安全的计数器类，可以被多线程并发调用：
->
-> ```cpp
-> class SafeCounter {
-> public:
->     void increment() {
->         QMutexLocker ______(&m_mutex);
->         ++m_count;
->     }
->
->     int value() const {
->         QMutexLocker ______(&m_mutex);
->         return m_count;
->     }
->
-> private:
->     mutable QMutex m_mutex;
->     int m_count = 0;
-> };
-> ```
->
-> *(提示：两个空都填 locker)*
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> ```cpp
-> class SafeCounter {
-> public:
->     void increment() {
->         QMutexLocker locker(&m_mutex);
->         ++m_count;
->     }
->
->     int value() const {
->         QMutexLocker locker(&m_mutex);
->         return m_count;
->     }
->
-> private:
->     mutable QMutex m_mutex;
->     int m_count = 0;
-> };
-> ```
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+你可以试着想一下：下面这个安全的计数器类，两个空应该填什么？
 
-> 🐛 **随堂测验：调试挑战**
->
-> 以下代码有什么问题？会导致什么后果？
->
-> ```cpp
-> class MyWidget : public QWidget {
->     Q_OBJECT
-> public:
->     MyWidget() {
->         QPushButton *btn = new QPushButton("Process", this);
->         connect(btn, &QPushButton::clicked, this, &MyWidget::onProcess);
->     }
->
->     void onProcess() {
->         QThread *thread = QThread::create([&]() {
->             heavyOperation();
->             label->setText("Done");  // label 是成员变量
->         });
->         thread->start();
->     }
->
-> private:
->     QLabel *label = new QLabel(this);
-> };
-> ```
->
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
->
-> **答案参考**：
-> - 问题：在后台线程（lambda）中直接操作 GUI 对象（label->setText）
-> - 后果：程序可能崩溃或出现不可预测的行为，因为 GUI 必须在主线程操作
-> - 解决：通过信号槽通知主线程更新，或使用 QMetaObject::invokeMethod
-> ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```cpp
+class SafeCounter {
+public:
+    void increment() {
+        QMutexLocker ______(&m_mutex);
+        ++m_count;
+    }
+
+    int value() const {
+        QMutexLocker ______(&m_mutex);
+        return m_count;
+    }
+
+private:
+    mutable QMutex m_mutex;
+    int m_count = 0;
+};
+```
+
+两个空都填 `locker` 就对了——`QMutexLocker locker(&m_mutex);` 是标准写法，作用域结束时自动解锁。
+
+再看一个更有意思的调试场景。下面这段代码有什么问题？
+
+```cpp
+class MyWidget : public QWidget {
+    Q_OBJECT
+public:
+    MyWidget() {
+        QPushButton *btn = new QPushButton("Process", this);
+        connect(btn, &QPushButton::clicked, this, &MyWidget::onProcess);
+    }
+
+    void onProcess() {
+        QThread *thread = QThread::create([&]() {
+            heavyOperation();
+            label->setText("Done");  // label 是成员变量
+        });
+        thread->start();
+    }
+
+private:
+    QLabel *label = new QLabel(this);
+};
+```
+
+问题出在 lambda 里直接操作了 GUI 对象——`label->setText("Done")` 是在后台线程执行的，而 label 是一个 GUI 控件，必须在主线程操作。后果是程序可能崩溃或出现不可预测的行为。解决办法是通过信号槽通知主线程更新，或者用 `QMetaObject::invokeMethod` 把调用安全地投递到主线程。
 
 ## 4. 多线程方案选择指南
 
-到这里你可能会有点晕——这么多方案，到底该用哪个？这里给你一个简单的选择指南：
+到这里你可能会有点晕——这么多方案，到底该用哪个？我们简单梳理一下：单个长期运行的后台任务推荐用 `QObject + moveToThread`，因为你能完整控制线程生命周期，信号槽通信也很方便；多个短期的独立任务推荐用 `QRunnable + QThreadPool`，线程复用效率高，API 也简单；并发处理容器数据用 `QtConcurrent::mapped/filtered`，高层 API 代码最简洁；简单异步函数调用用 `QtConcurrent::run`，一行搞定；需要取消或暂停的任务用 `QFuture + QFutureWatcher`，提供完整的异步控制；简单的数据共享用 `QMutex/QMutexLocker`，保证原子操作。
 
-| 场景 | 推荐方案 | 理由 |
-|------|---------|------|
-| 单个长期运行的后台任务 | QObject + moveToThread | 完整控制，信号槽通信 |
-| 多个短期的独立任务 | QRunnable + QThreadPool | 线程复用，API 简单 |
-| 并发处理容器数据 | QtConcurrent::mapped/filtered | 高层 API，代码简洁 |
-| 简单异步函数调用 | QtConcurrent::run | 一行搞定 |
-| 需要取消/暂停的任务 | QFuture + QFutureWatcher | 完整的异步控制 |
-| 简单的数据共享 | QMutex/QMutexLocker | 原子操作保证 |
-
-记住：从简单的开始。QtConcurrent::run 能解决的问题，就不要搞复杂的 moveToThread。
+记住一个原则：从简单的开始。`QtConcurrent::run` 能解决的问题，就不要搞复杂的 `moveToThread`。
 
 ## 5. 练习项目
 
-🎯 **练习项目：多线程图片加载器**
+练习项目：多线程图片加载器。
 
-📋 **功能描述**：
-创建一个图片浏览程序，支持从本地加载大量图片。加载过程必须在后台线程进行，主线程显示加载进度，加载完成后更新缩略图。如果用户点击了"取消"按钮，能够中断加载过程。
+我们要创建一个图片浏览程序，支持从本地加载大量图片。加载过程必须在后台线程进行，主线程显示加载进度，加载完成后更新缩略图。如果用户点击了"取消"按钮，能够中断加载过程。
 
-✅ **完成标准**：
-- 使用 QThreadPool 或 QtConcurrent 实现后台加载
-- 主界面有进度条显示当前加载进度
-- 缩略图加载完成后自动刷新显示
-- 取消按钮能正确中断加载过程
-- 程序运行流畅，界面不卡顿
+完成标准是这样的：使用 QThreadPool 或 QtConcurrent 实现后台加载；主界面有进度条显示当前加载进度；缩略图加载完成后自动刷新显示；取消按钮能正确中断加载过程；程序运行流畅，界面不卡顿。
 
-💡 **提示**：
-- 可以用 QtConcurrent::run 配合 QFutureWatcher 实现可取消的任务
-- 图片加载用 QImage::load()，然后用 QPixmap::fromImage() 转换（在主线程）
-- 进度更新可以通过自定义信号槽实现
-- 取消操作使用 QFuture::cancel()
+几个实现提示：可以用 `QtConcurrent::run` 配合 `QFutureWatcher` 实现可取消的任务；图片加载用 `QImage::load()`，然后用 `QPixmap::fromImage()` 转换（这个转换必须在主线程）；进度更新可以通过自定义信号槽实现；取消操作使用 `QFuture::cancel()`。
 
 ## 6. 官方文档参考
 
-📎 [Qt 6 Thread Support](https://doc.qt.io/qt-6/thread.html) · Qt 多线程编程概述，必读基础
-📎 [QThreadPool Class](https://doc.qt.io/qt-6/qthreadpool.html) · 线程池管理类文档
-📎 [Qt Concurrent Module](https://doc.qt.io/qt-6/qtconcurrent-index.html) · QtConcurrent 高层 API 详解
-📎 [QFuture Class](https://doc.qt.io/qt-6/qfuture.html) · 异步结果处理类文档
-📎 [QMutex Class](https://doc.qt.io/qt-6/qmutex.html) · 互斥锁文档，包含 QMutexLocker 说明
+[Qt 6 Thread Support](https://doc.qt.io/qt-6/thread.html) -- Qt 多线程编程概述，必读基础
+
+[QThreadPool Class](https://doc.qt.io/qt-6/qthreadpool.html) -- 线程池管理类文档
+
+[Qt Concurrent Module](https://doc.qt.io/qt-6/qtconcurrent-index.html) -- QtConcurrent 高层 API 详解
+
+[QFuture Class](https://doc.qt.io/qt-6/qfuture.html) -- 异步结果处理类文档
+
+[QMutex Class](https://doc.qt.io/qt-6/qmutex.html) -- 互斥锁文档，包含 QMutexLocker 说明
 
 *（链接已验证，2026-03-17 可访问）*
 
 ---
 
-**到这里就大功告成了！** 多线程是个大话题，入门篇我们先掌握这些核心概念和正确用法。实际工程中你还会遇到更多问题——比如线程池调优、死锁排查、性能分析等，那些我们留到进阶层再深入。
+到这里就大功告成了！多线程是个大话题，入门篇我们先掌握这些核心概念和正确用法。实际工程中你还会遇到更多问题——比如线程池调优、死锁排查、性能分析等，那些我们留到进阶层再深入。
 
 记住最关键的两条铁律：GUI 必须在主线程操作，跨线程通信用信号槽。遵守这两条，你的多线程 Qt 程序就已经成功了一半。
 

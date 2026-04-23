@@ -73,6 +73,8 @@ void MyLabel::mousePressEvent(QMouseEvent *event) {
 }
 ```
 
+说到这里，你可以想一想：Qt 的事件系统和信号槽机制有什么本质区别？什么时候该用事件，什么时候该用信号槽？其实答案就藏在前面的分析里——事件是 Qt 内部的分发机制，处理的是底层输入（鼠标、键盘、定时器），而信号槽是对象间的高层通信。自定义控件需要处理底层输入时重写事件处理函数，组件之间需要通信时用信号槽。两者并不冲突，信号槽的很多底层实现本身就依赖事件系统。
+
 ### 3.3 事件过滤器
 
 事件过滤器是个很强大的机制——它让你可以在一个对象身上监听另一个对象的事件。这比继承更灵活，因为你可以动态安装和卸载过滤器。
@@ -98,6 +100,8 @@ bool MyDialog::eventFilter(QObject *watched, QEvent *event) {
 
 `eventFilter()` 返回 `true` 表示事件被拦截，返回 `false` 表示继续正常传播。事件过滤器链是有顺序的，后安装的过滤器先执行。
 
+这里有个非常容易踩的坑：`eventFilter()` 的返回值一定要想清楚再写。返回 `true` 是拦截，事件到此为止；返回 `false` 是放行，事件继续传播。如果你总是无脑返回 `false`，或者干脆忘了写 `return` 语句，结果就是事件要么被意外拦截导致功能失效，要么继续传播触发了不该触发的行为。正确的做法是，想拦截时返回 `true`，否则返回基类的 `eventFilter()` 结果，让 Qt 的默认处理逻辑继续工作。
+
 ### 3.4 postEvent vs sendEvent
 
 这是新手最容易混淆的两个函数。`QCoreApplication::postEvent()` 和 `sendEvent()` 都能发送事件，但行为完全不同。
@@ -118,11 +122,7 @@ QCoreApplication::sendEvent(receiver, &keyEvent);  // 同步，不会删除
 
 简单记：`postEvent()` 是「发个消息就走」，`sendEvent()` 是「等着对方处理完」。跨线程必须用 `postEvent()`，同线程内如果需要立即处理结果用 `sendEvent()`。
 
----
-
-📝 口述回答：用自己的话说说，Qt 的事件系统和信号槽机制有什么本质区别？什么时候该用事件，什么时候该用信号槽？
-
----
+这里要特别提醒一下：如果你在工作线程中用 `sendEvent()` 向主线程的 widget 发送事件，轻则事件处理函数在错误的线程中执行导致崩溃，重则数据竞争引发各种诡异 bug。跨线程别用 `sendEvent()`，老老实实用 `postEvent()` 或者用信号槽。
 
 ### 3.5 常见事件类型
 
@@ -140,9 +140,7 @@ Qt 定义了几十种事件类型，这里列出几个最常用的：
 
 可以通过重写对应的事件处理函数来响应这些事件。需要注意的是，`QPaintEvent` 比较特殊，不能直接用 `postEvent()` 或 `sendEvent()` 发送，只能通过 `update()` 或 `repaint()` 触发。
 
----
-
-🔲 代码填空：下面是一个自定义按钮的事件过滤器实现，请填空：
+你可以试着填一下下面这个练习：下面是一个自定义按钮的事件过滤器实现，看看你能不能把空填上——双击事件类型对应的枚举是什么？强制转换的目标类型是什么？左键枚举值怎么写？返回值应该填什么才能拦截事件、或者继续传播？
 
 ```cpp
 bool MyFilter::eventFilter(QObject *watched, QEvent *event) {
@@ -157,39 +155,17 @@ bool MyFilter::eventFilter(QObject *watched, QEvent *event) {
 }
 ```
 
-*提示：双击事件类型、强制转换的目标类型、左键枚举值、返回值含义*
-
----
+答案依次是：`MouseButtonDblClick`、`QMouseEvent`、`Left`、`true`、基类的返回值（比如 `QObject::eventFilter(watched, event)`）。
 
 ## 4. 踩坑清单
 
-> ⚠️ 坑 #1：忘记在 eventFilter 中正确返回值
-> ❌ 错误做法：总是返回 `false`，或者忘记 `return` 语句
-> ✅ 正确做法：想拦截事件时返回 `true`，否则返回基类的 `eventFilter()` 结果
-> 💥 后果：事件要么被意外拦截导致功能失效，要么继续传播导致触发不应该触发的行为
-> 💡 一句话记住：`true` 是拦截，`false` 是放行，想清楚再返回
+除了前面提到的 `eventFilter()` 返回值问题，还有几个常见的坑值得说一说。
 
-> ⚠️ 坑 #2：在事件处理函数中忘记调用基类实现
-> ❌ 错误做法：在 `mousePressEvent()` 中处理完后直接返回
-> ✅ 正确做法：处理后调用 `QWidget::mousePressEvent(event)`
-> 💥 后果：某些默认行为会失效，比如焦点切换、右键菜单等，排查起来非常困惑
-> 💡 一句话记住：自定义事件处理后，记得让基类也处理一下
+第一个是在事件处理函数中忘记调用基类实现。很多人在 `mousePressEvent()` 里处理完自己的逻辑就直接返回了，没有调用 `QWidget::mousePressEvent(event)`。后果是某些默认行为会失效，比如焦点切换、右键菜单等，而且排查起来非常困惑，因为表面上代码并没有写错。养成习惯就好：自定义事件处理完成后，记得让基类也处理一下。
 
-> ⚠️ 坑 #3：用 sendEvent 跨线程发送事件
-> ❌ 错误做法：在工作线程中用 `sendEvent()` 向主线程的 widget 发送事件
-> ✅ 正确做法：跨线程必须用 `postEvent()` 或者用信号槽
-> 💥 后果：轻则事件处理函数在错误的线程中执行导致崩溃，重则数据竞争引发各种诡异 bug
-> 💡 一句话记住：跨线程别用 `sendEvent()`，老老实实用 `postEvent()` 或信号槽
+第二个坑是事件过滤器安装后忘记卸载。给临时对象安装了事件过滤器，结果过滤器对象的生命周期结束了也没卸载。事件循环会尝试调用已经销毁的对象的 `eventFilter()`，直接导致崩溃或内存访问错误。安装和卸载要成对出现，确保在过滤器对象销毁前调用 `removeEventFilter()`。
 
-> ⚠️ 坑 #4：事件过滤器安装后忘记卸载
-> ❌ 错误做法：给临时对象安装事件过滤器后，过滤器对象生命周期结束了也没卸载
-> ✅ 正确做法：确保在过滤器对象销毁前调用 `removeEventFilter()`
-> 💥 后果：事件循环会调用已销毁对象的 `eventFilter()`，导致崩溃或内存访问错误
-> 💡 一句话记住：安装和卸载要成对，对象销毁前先卸载
-
----
-
-🐛 调试挑战：下面这段代码有什么问题？它想实现一个点击计数器，但点击没反应。
+接下来看一段有点意思的调试代码。下面这段代码想实现一个点击计数器，但点击没反应，你可以想想问题出在哪里：
 
 ```cpp
 class ClickCounter : public QWidget {
@@ -219,40 +195,29 @@ private:
 };
 ```
 
-*提示：思考 `installEventFilter(this)` 之后事件流向发生了什么变化*
-
----
+问题出在 `installEventFilter(this)` 上——一个对象给自己安装事件过滤器，这意味着所有事件在到达 `event()` 之前都会先经过 `eventFilter()`。在这段代码里 `eventFilter()` 拦截了鼠标事件并返回 `true`，所以 `event()` 和后续的 `mousePressEvent()` 都不会被执行。表面上看这没问题，但 `return false` 分支没有调用基类的 `eventFilter()`，会导致其他事件也失去默认处理。更好的做法是不要让一个对象过滤自己的事件，或者在 `return false` 的地方改为 `return QWidget::eventFilter(watched, event)`。
 
 ## 5. 本层级练习项目
 
-🎯 练习项目：事件拦截调试面板
+练习项目：事件拦截调试面板。
 
-📋 功能描述：创建一个简单的调试面板，包含一个 `QLineEdit`、一个 `QTextEdit`、几个按钮。实现一个事件过滤器，能够记录并显示所有发生在这些控件上的键盘和鼠标事件。面板上显示事件的类型、时间戳、以及相关的详细信息（如按键码、鼠标坐标）。
+我们要创建一个简单的调试面板，包含一个 `QLineEdit`、一个 `QTextEdit`、几个按钮。核心任务是实现一个事件过滤器，能够记录并显示所有发生在这些控件上的键盘和鼠标事件。面板上需要显示事件的类型、时间戳、以及相关的详细信息（如按键码、鼠标坐标）。
 
-✅ 完成标准：
-- 实现一个 `DebugEventFilter` 类，继承自 `QObject`
-- 过滤器能够捕获 `KeyPress`、`KeyRelease`、`MouseButtonPress`、`MouseButtonRelease` 事件
-- 在 `QTextEdit` 中实时显示捕获到的事件信息，格式为 `[HH:mm:ss.sss] EventType: Details`
-- 提供一个「启用/禁用过滤」的复选框，动态安装/卸载事件过滤器
-- 验证当过滤器禁用时，控件行为恢复正常
+完成标准是这样的：实现一个 `DebugEventFilter` 类，继承自 `QObject`；过滤器能够捕获 `KeyPress`、`KeyRelease`、`MouseButtonPress`、`MouseButtonRelease` 事件；在 `QTextEdit` 中实时显示捕获到的事件信息，格式为 `[HH:mm:ss.sss] EventType: Details`；提供一个启用/禁用过滤的复选框，动态安装/卸载事件过滤器；验证当过滤器禁用时，控件行为恢复正常。
 
-💡 提示：
-- 用 `QElapsedTimer` 或 `QTime::currentTime()` 获取时间戳
-- `QKeyEvent` 的 `text()` 可以获取按键对应的字符，`key()` 获取虚拟键码
-- 动态卸载事件过滤器用 `removeEventFilter()`
-- 记得在过滤时根据需要决定返回 `true` 还是 `false`
+几个实现提示：用 `QElapsedTimer` 或 `QTime::currentTime()` 获取时间戳；`QKeyEvent` 的 `text()` 可以获取按键对应的字符，`key()` 获取虚拟键码；动态卸载事件过滤器用 `removeEventFilter()`；记得在过滤时根据需要决定返回 `true` 还是 `false`。
 
 ## 6. 官方文档参考链接
 
-📎 [Qt 文档 · The Event System](https://doc.qt.io/qt-6/eventsandfilters.html) · Qt 事件与过滤器完整文档，必读
+[Qt 文档 · The Event System](https://doc.qt.io/qt-6/eventsandfilters.html) -- Qt 事件与过滤器完整文档，必读
 
-📎 [Qt 文档 · QEvent Class](https://doc.qt.io/qt-6/qevent.html) · QEvent 类参考，包含所有事件类型枚举
+[Qt 文档 · QEvent Class](https://doc.qt.io/qt-6/qevent.html) -- QEvent 类参考，包含所有事件类型枚举
 
-📎 [Qt 文档 · QEventLoop Class](https://doc.qt.io/qt-6/qeventloop.html) · 事件循环类文档，理解 exec() 机制
+[Qt 文档 · QEventLoop Class](https://doc.qt.io/qt-6/qeventloop.html) -- 事件循环类文档，理解 exec() 机制
 
-📎 [Qt 文档 · QCoreApplication::postEvent](https://doc.qt.io/qt-6/qcoreapplication.html#postEvent) · postEvent 官方说明
+[Qt 文档 · QCoreApplication::postEvent](https://doc.qt.io/qt-6/qcoreapplication.html#postEvent) -- postEvent 官方说明
 
-📎 [Qt 文档 · QCoreApplication::sendEvent](https://doc.qt.io/qt-6/qcoreapplication.html#sendEvent) · sendEvent 官方说明
+[Qt 文档 · QCoreApplication::sendEvent](https://doc.qt.io/qt-6/qcoreapplication.html#sendEvent) -- sendEvent 官方说明
 
 ---
 *本文档版本：v1.0 · 生成于 2026-03-17*

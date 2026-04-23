@@ -16,7 +16,7 @@
 
 ### 3.1 从 QRegExp 到 QRegularExpression
 
-先说清楚这个历史包袱。QRegExp 是 Qt 时代的产物，它的正则引擎自己实现的一套，功能和性能都有限。QRegularExpression 从 Qt5 引入，底层用的是 PCRE（Perl Compatible Regular Expressions）库，功能更强大，语法更标准，性能也更好。
+先说清楚这个历史包袱。QRegExp 是 Qt 早期的产物，它的正则引擎自己实现了一套，功能和性能都有限。QRegularExpression 从 Qt5 引入，底层用的是 PCRE（Perl Compatible Regular Expressions）库，功能更强大，语法更标准，性能也更好。
 
 Qt6 之后，官方直接把 QRegExp 踢出了核心模块。如果你还在用：
 
@@ -55,24 +55,19 @@ if (match.hasMatch()) {
 QRegularExpression re(R"(\d+)");  // 原始字符串，不需要转义反斜杠
 ```
 
-📝 口述回答：用自己的话说说，QRegularExpression 和 QRegExp 有什么区别？为什么 Qt6 推荐使用前者？
+说到 QRegularExpression 和 QRegExp 的区别，核心在于两点：底层引擎不同，QRegExp 用的是 Qt 自研引擎，QRegularExpression 用的是 PCRE，后者的语法更标准、功能更完整（比如支持命名捕获组、向前/向后断言等），性能也更好。Qt6 把 QRegExp 移出核心模块已经是很明确的信号了。
 
 ### 3.3 匹配模式
 
-match() 方法默认是从字符串开头开始匹配的，但你可以指定不同的匹配类型：
+`match()` 方法默认是从字符串开头开始查找第一个匹配项，`globalMatch()` 则会找出字符串中所有匹配项。
 
 ```cpp
 QString text = "abc123def456";
 QRegularExpression re("\\d+");
 
-// NormalMatch - 从任意位置开始匹配
+// 单次匹配
 QRegularExpressionMatch match1 = re.match(text);
 qDebug() << match1.captured(0);  // "123"，第一个匹配
-
-// PrefaceMatch - 必须从字符串开头匹配
-QRegularExpressionMatch match2 = re.match(text, 0, QRegularExpression::NormalMatch, QRegularExpression::MatchNoOptions);
-// 等等，PrefaceMatch 是什么？这里有个更简单的理解：
-// PartialMatch 或 NormalMatch 只是语义上的区分，实际行为相同
 
 // 全局匹配 - 找所有匹配项
 QRegularExpressionMatchIterator it = re.globalMatch(text);
@@ -84,17 +79,19 @@ while (it.hasNext()) {
 
 `globalMatch()` 这个方法特别有用，比如从日志里提取所有时间戳、所有 IP 地址这类场景。
 
-🔲 代码填空：下面的代码想从文本中提取所有邮箱地址，请补充空白处。
+我们看一个实际的练习：从文本中提取所有邮箱地址。
 
 ```cpp
 QString text = "联系我：alice@example.com 或 bob@test.org";
 QRegularExpression emailRe(R"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})");
-QRegularExpressionMatchIterator it = emailRe.______(text);
-while (it.______) {
+QRegularExpressionMatchIterator it = emailRe.globalMatch(text);
+while (it.hasNext()) {
     QRegularExpressionMatch match = it.next();
-    qDebug() << "找到邮箱:" << match.______(0);
+    qDebug() << "找到邮箱:" << match.captured(0);
 }
 ```
+
+关键方法就是 `globalMatch()` 做全局迭代、`it.hasNext()` 判断是否还有下一个匹配、`match.captured(0)` 取完整的匹配文本。
 
 ### 3.4 捕获组
 
@@ -160,88 +157,17 @@ QRegularExpression quotedStringRe(R"("([^"\\]|\\.)*")");
 
 这些模式覆盖了大部分日常文本处理需求。但记住：正则表达式不是万能的，比如解析 HTML/XML 这种结构化文本，用专门的解析器更好。
 
-## 4. 踩坑预防清单
+## 4. 踩坑预防
 
-> ⚠️ 坑 #1：忘记检查正则表达式有效性
->
-> ❌ 错误做法：
-> ```cpp
-> QRegularExpression re("[abc");  // 括号不匹配
-> QRegularExpressionMatch match = re.match("test");
-> // 直接用 match，完全不知道正则已经无效了
-> ```
->
-> ✅ 正确做法：
-> ```cpp
-> QRegularExpression re("[abc");
-> if (!re.isValid()) {
->     qWarning() << "正则表达式错误:" << re.errorString();
->     qWarning() << "错误位置:" << re.errorOffset();
->     return;
-> }
-> QRegularExpressionMatch match = re.match("test");
-> ```
->
-> 💥 后果：无效的正则表达式会匹配失败，但没有明显错误信息，调试时浪费大量时间。
->
-> 💡 一句话记住：每次创建正则对象后，特别是模式来自用户输入时，务必检查 isValid()。
+正则表达式有几个经典的坑，新手几乎都会踩一遍。
 
-> ⚠️ 坑 #2：混淆 match() 和 exactMatch()
->
-> ❌ 错误做法：
-> ```cpp
-> QRegularExpression re(R"(\d{3}-\d{4})");  // 匹配 123-4567 格式
-> QString phone = "我的电话是123-4567，谢谢";
-> if (re.match(phone).hasMatch()) {
->     // 这会匹配成功，因为字符串包含这个模式
-> }
-> ```
->
-> ✅ 正确做法：
-> ```cpp
-> QRegularExpression re(R"(\d{3}-\d{4})");
-> QString phone = "123-4567";
-> if (re.match(phone).hasMatch()) {
->     // match() 检查字符串是否包含匹配
-> }
->
-> // 或者用 anchored pattern 确保全字符串匹配
-> QRegularExpression exactRe(R"(^\d{3}-\d{4}$)");
-> if (exactRe.match(phone).hasMatch()) {
->     // 只有全字符串符合格式才算匹配
-> }
-> ```
->
-> 💥 后果：当需要验证整个字符串格式时，match() 可能给出假阳性结果。
->
-> 💡 一句话记住：验证完整格式用 `^...$`，查找子串用普通 match()。
+第一个是忘记检查正则表达式有效性。`QRegularExpression` 的构造函数不会抛异常——如果你的正则语法写错了（比如括号不匹配），它只是默默变成一个无效对象，后续的匹配全部失败，没有任何明显错误信息。调试的时候你会一脸懵，以为是数据的问题，结果是正则本身就坏了。所以每次创建正则对象后，特别是模式来自用户输入的场景，务必检查 `isValid()`，有问题的话用 `errorString()` 和 `errorOffset()` 拿到具体的错误描述和位置。
 
-> ⚠️ 坑 #3：贪婪匹配导致过度捕获
->
-> ❌ 错误做法：
-> ```cpp
-> QString html = "<div>内容1</div><div>内容2</div>";
-> QRegularExpression re(R"(<div>.*</div>)");  // 贪婪匹配
-> QRegularExpressionMatch match = re.match(html);
-> qDebug() << match.captured(0);
-> // 输出整个 "<div>内容1</div><div>内容2</div>"，而不是两个独立匹配
-> ```
->
-> ✅ 正确做法：
-> ```cpp
-> QRegularExpression re(R"(<div>.*?</div>)");  // 非贪婪匹配
-> QRegularExpressionMatchIterator it = re.globalMatch(html);
-> while (it.hasNext()) {
->     qDebug() << it.next().captured(0);
-> }
-> // 分别输出 "<div>内容1</div>" 和 "<div>内容2</div>"
-> ```
->
-> 💥 后果：贪婪匹配会捕获尽可能多的内容，导致一个匹配"吞掉"多个应该独立匹配的内容。
->
-> 💡 一句话记住：需要精确控制匹配范围时，优先用非贪婪量词 `*?`、`+?`、`??`。
+第二个坑是混淆「子串匹配」和「全字符串匹配」。`match()` 检查的是字符串中是否包含匹配模式的内容，而不是整个字符串是否完全符合模式。比如你用 `\d{3}-\d{4}` 匹配电话号码，`"我的电话是123-4567，谢谢"` 也会匹配成功，因为字符串里确实包含了这个模式。如果你要验证整个字符串的格式，需要用 `^...$` 锚定首尾，写成 `^\d{3}-\d{4}$`，这样只有全字符串符合格式才算匹配。
 
-🐛 调试挑战：下面的代码有什么问题？
+第三个坑是贪婪匹配。正则默认是贪婪的，会尽可能多地匹配内容。比如用 `<div>.*</div>` 匹配 `"<div>内容1</div><div>内容2</div>"`，贪婪模式下 `.*` 会一直吃到最后一个 `</div>`，结果一个匹配就把两段 div 都吞进去了。解决方法是在量词后面加 `?` 变成非贪婪模式：`<div>.*?</div>`，这样匹配到第一个 `</div>` 就停下来。需要精确控制匹配范围时，优先用非贪婪量词 `*?`、`+?`、`??`。
+
+我们再看一个调试场景。下面这段代码，程序输出"密码格式错误"，但开发者困惑为什么：
 
 ```cpp
 QString password = "abc123";
@@ -251,35 +177,19 @@ if (passwordRe.match(password).hasMatch()) {
 } else {
     qDebug() << "密码格式错误";
 }
-// 程序输出"密码格式错误"，但开发者困惑为什么
 ```
 
-## 5. 随堂测验
+问题出在 `match()` 是子串匹配。`"abc123"` 虽然只有 6 个字符不满足 `{8,}`，但如果你仔细看——实际上 `match()` 在这里确实找不到 8 个连续的字母数字字符，所以返回"格式错误"是正确的行为。但真正的坑在于：如果你把密码换成 `"abc123456789"`（13 个字符），即使外面加了别的字符比如 `"abc123456789!!!"`，`match()` 也会返回成功。这又回到了前面说的：验证完整格式要用 `^...$` 锚定。正则写成 `^[A-Za-z0-9]{8,}$` 才能保证整个密码字符串都符合要求。
 
-我们穿插了几个小测验，现在检查一下你的理解：
+## 5. 练习项目
 
-**📝 口述回答**（前面）：用自己的话说说，QRegularExpression 和 QRegExp 有什么区别？为什么 Qt6 推荐使用前者？
+做一个日志分析工具——实现一个简单的命令行程序，可以从日志文件中提取特定信息。功能包括提取所有时间戳、提取所有 IP 地址、统计错误日志数量、根据正则表达式过滤日志行。
 
-**🔲 代码填空**（前面）：从文本中提取所有邮箱地址的代码。
+完成标准：程序能够读取一个文本格式的日志文件，使用 QRegularExpression 实现上述提取功能，将结果打印到控制台。时间戳格式至少支持两种常见格式（如 `[2025-03-17 10:30:00]` 和 `17/Mar/2025:10:30:00`），IP 地址提取能够识别 IPv4 格式，错误日志通过包含 "ERROR" 或 "WARN" 关键字来识别。
 
-**🐛 调试挑战**（前面）：密码验证正则为什么失败了？
+几个提示：用 QFile 和 QTextStream 逐行读取日志文件，为每种格式创建专门的 QRegularExpression 对象，`globalMatch()` 配合循环处理每一行中的多个匹配项，可以用 `QHash<QString, int>` 统计不同错误类型的出现次数，记得检查每个正则对象的 `isValid()`。
 
-## 6. 练习项目
+## 6. 官方文档参考链接
 
-🎯 练习项目：日志分析工具
-
-📋 功能描述：实现一个简单的命令行日志分析工具，可以从日志文件中提取特定信息。功能包括：提取所有时间戳、提取所有 IP 地址、统计错误日志数量、根据正则表达式过滤日志行。
-
-✅ 完成标准：程序能够读取一个文本格式的日志文件，使用 QRegularExpression 实现上述提取功能，将结果打印到控制台。时间戳格式至少支持两种常见格式（如 `[2025-03-17 10:30:00]` 和 `17/Mar/2025:10:30:00`）。IP 地址提取能够识别 IPv4 格式。错误日志通过包含 "ERROR" 或 "WARN" 关键字来识别。
-
-💡 提示：
-- 用 QFile 和 QTextStream 逐行读取日志文件
-- 为每种格式创建专门的 QRegularExpression 对象
-- globalMatch() 配合循环处理每一行中的多个匹配项
-- 可以用 QHash<QString, int> 统计不同错误类型的出现次数
-- 记得检查每个正则对象的 isValid()
-
-## 7. 官方文档参考链接
-
-📎 [Qt 文档 · QRegularExpression Class](https://doc.qt.io/qt-6/qregularexpression.html) · QRegularExpression 完整 API 参考，包含所有匹配选项和枚举类型
-📎 [Qt 文档 · QRegularExpressionMatch Class](https://doc.qt.io/qt-6/qregularexpressionmatch.html) · 匹配结果类，讲解如何访问捕获组和匹配位置
+- [Qt 文档 · QRegularExpression Class](https://doc.qt.io/qt-6/qregularexpression.html) —— QRegularExpression 完整 API 参考，包含所有匹配选项和枚举类型
+- [Qt 文档 · QRegularExpressionMatch Class](https://doc.qt.io/qt-6/qregularexpressionmatch.html) —— 匹配结果类，讲解如何访问捕获组和匹配位置
