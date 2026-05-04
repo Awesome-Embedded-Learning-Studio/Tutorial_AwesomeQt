@@ -20,7 +20,10 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui)
 
 # 生成可执行文件
 qt_add_executable(${PROJECT_NAME}
-    main.cpp  # 示例源代码
+    main.cpp
+    myeventhandler.h
+    keylogger.h
+    eventreceiver.h
 )
 
 # 链接 Qt 库

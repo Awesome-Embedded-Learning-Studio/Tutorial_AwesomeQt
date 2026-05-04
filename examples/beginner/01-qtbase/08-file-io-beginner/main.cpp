@@ -59,17 +59,18 @@ void demonstrateQFileBasic()
         readFile.close();
 
         // 方式二：重新打开，逐行读取
-        readFile.open(QIODevice::ReadOnly | QIODevice::Text);
-        qDebug() << "\n--- 逐行读取 ---";
+        if (readFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            qDebug() << "\n--- 逐行读取 ---";
 
-        int lineNum = 0;
-        while (!readFile.atEnd()) {
-            QByteArray line = readFile.readLine();
-            lineNum++;
-            qDebug() << "行" << lineNum << ":" << line.trimmed();  // trimmed() 去掉换行符
+            int lineNum = 0;
+            while (!readFile.atEnd()) {
+                QByteArray line = readFile.readLine();
+                lineNum++;
+                qDebug() << "行" << lineNum << ":" << line.trimmed();  // trimmed() 去掉换行符
+            }
+
+            readFile.close();
         }
-
-        readFile.close();
     }
 }
 

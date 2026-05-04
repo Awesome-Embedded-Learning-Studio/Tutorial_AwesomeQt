@@ -16,6 +16,8 @@
 #include <QThread>                // 线程类
 #include <QEventLoop>             // 事件循环类
 
+#include "stopwatch.h"
+
 // ========== 示例 1: 基础重复定时器 ==========
 void basicTimerExample() {
     qDebug() << "\n--- 示例 1: 基础重复定时器 ---";
@@ -189,55 +191,6 @@ void timerStateExample() {
     qDebug() << "[状态查询] 停止后剩余时间:" << timer.remainingTime();  // -1
 }
 
-// ========== 示例 6: 模拟秒表 ==========
-class Stopwatch : public QObject {
-    Q_OBJECT
-
-public:
-    Stopwatch(QObject *parent = nullptr) : QObject(parent), m_seconds(0), m_running(false) {}
-
-    void start() {
-        if (!m_running) {
-            m_running = true;
-            m_timer.start(1000);  // 每秒触发一次
-            qDebug() << "[秒表] 启动";
-        }
-    }
-
-    void pause() {
-        if (m_running) {
-            m_running = false;
-            m_timer.stop();
-            qDebug() << "[秒表] 暂停";
-        }
-    }
-
-    void reset() {
-        m_running = false;
-        m_timer.stop();
-        m_seconds = 0;
-        qDebug() << "[秒表] 重置: 00:00";
-    }
-
-private slots:
-    void onTick() {
-        m_seconds++;
-        int minutes = m_seconds / 60;
-        int seconds = m_seconds % 60;
-        qDebug() << "[秒表]" << QString("%1:%2")
-                    .arg(minutes, 2, 10, QChar('0'))
-                    .arg(seconds, 2, 10, QChar('0'));
-    }
-
-private:
-    QTimer m_timer;
-    int m_seconds;
-    bool m_running;
-
-    // 连接定时器信号
-    friend void stopwatchExample();
-};
-
 void stopwatchExample() {
     qDebug() << "\n--- 示例 6: 模拟秒表 ---";
 
@@ -329,6 +282,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-// 包含 MOC 生成的代码（因为我们使用了 Q_OBJECT）
-#include "main.moc"

@@ -22,7 +22,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core Concurrent)
 
 # 创建可执行文件
 qt_add_executable(${PROJECT_NAME}
-    main.cpp  # 主程序源文件
+    main.cpp
+    worker.h
 )
 
 # 链接 Qt 库到目标
@@ -40,11 +41,6 @@ if(WIN32)
         WIN32_EXECUTABLE FALSE
     )
 endif()
-
-# 设置输出目录
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
 
 # 编译选项：启用所有警告
 if(MSVC)

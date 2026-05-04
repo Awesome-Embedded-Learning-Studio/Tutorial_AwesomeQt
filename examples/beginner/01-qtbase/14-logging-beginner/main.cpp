@@ -21,23 +21,16 @@
 #include <QMutexLocker>          // 互斥锁保护器
 #include <QCommandLineParser>    // 命令行解析
 #include <QElapsedTimer>         // 计时器
+#include <QStringList>
 
-// ========== 声明日志类别 ==========
-// Q_LOGGING_CATEGORY(变量名, "类别字符串标识")
-// 类别名建议使用点号分层，如 "app.module"
-// 注意：避免使用 "debug"、"info"、"warning"、"critical" 等保留名
-// 注意：避免使用 "qt" 前缀，这是为 Qt 内部保留的
+#include "networkmanager.h"
+#include "databasemanager.h"
+#include "workerthread.h"
 
-// 主应用日志类别
+// ========== 定义日志类别 ==========
 Q_LOGGING_CATEGORY(mainLog, "app.main")
-
-// 网络模块日志类别
 Q_LOGGING_CATEGORY(networkLog, "app.network")
-
-// 数据库模块日志类别
 Q_LOGGING_CATEGORY(databaseLog, "app.database")
-
-// 性能分析日志类别
 Q_LOGGING_CATEGORY(perfLog, "app.performance")
 
 // ========== 全局变量（用于文件日志） ==========
@@ -112,146 +105,6 @@ void customMessageHandler(QtMsgType type, const QMessageLogContext &context, con
         abort();
     }
 }
-
-// ========== 示例类 ==========
-
-/**
- * 网络管理器类：演示分类日志的使用
- */
-class NetworkManager : public QObject {
-    Q_OBJECT
-
-public:
-    NetworkManager(QObject *parent = nullptr) : QObject(parent), m_retryCount(0) {}
-
-    /**
-     * 模拟连接服务器
-     * @param url 服务器地址
-     */
-    void connectToServer(const QString &url) {
-        qCDebug(networkLog) << "开始连接服务器:" << url;
-
-        // 模拟连接过程
-        bool success = doConnect(url);
-
-        if (success) {
-            qCInfo(networkLog) << "连接成功";
-        } else {
-            m_retryCount++;
-            qCWarning(networkLog) << "连接失败，这是第" << m_retryCount << "次重试";
-
-            if (m_retryCount >= 3) {
-                qCCritical(networkLog) << "连接失败超过最大重试次数";
-            }
-        }
-    }
-
-    /**
-     * 模拟下载数据
-     * @param dataSize 数据大小（字节）
-     */
-    void downloadData(int dataSize) {
-        QElapsedTimer timer;
-        timer.start();
-
-        qCDebug(networkLog) << "开始下载数据，大小:" << dataSize << "字节";
-
-        // 模拟下载
-        QThread::msleep(100);
-
-        qint64 elapsed = timer.elapsed();
-        qCInfo(networkLog) << "下载完成，耗时:" << elapsed << "毫秒";
-
-        // 性能日志：记录下载速度
-        qCDebug(perfLog) << "下载速度:"
-                         << (dataSize / 1024.0 / (elapsed / 1000.0))
-                         << "KB/s";
-    }
-
-private:
-    bool doConnect(const QString &url) {
-        Q_UNUSED(url)
-        // 模拟连接失败（前两次失败，第三次成功）
-        return m_retryCount >= 2;
-    }
-
-    int m_retryCount;
-};
-
-/**
- * 数据库管理器类：演示不同日志级别的使用
- */
-class DatabaseManager : public QObject {
-    Q_OBJECT
-
-public:
-    DatabaseManager(QObject *parent = nullptr) : QObject(parent) {}
-
-    /**
-     * 执行数据库查询
-     * @param query SQL 查询语句
-     */
-    void executeQuery(const QString &query) {
-        qCDebug(databaseLog) << "执行查询:" << query;
-
-        if (query.isEmpty()) {
-            qCWarning(databaseLog) << "查询语句为空";
-            return;
-        }
-
-        if (query.contains("DROP", Qt::CaseInsensitive)) {
-            qCCritical(databaseLog) << "检测到危险操作: DROP 语句";
-            return;
-        }
-
-        // 模拟查询执行
-        qCDebug(databaseLog) << "查询执行成功，返回 0 行";
-    }
-
-    /**
-     * 连接数据库
-     */
-    void connect() {
-        qCInfo(databaseLog) << "正在连接数据库...";
-
-        // 模拟连接
-        bool success = true;
-
-        if (success) {
-            qCInfo(databaseLog) << "数据库连接成功";
-        } else {
-            qCCritical(databaseLog) << "数据库连接失败";
-        }
-    }
-};
-
-/**
- * 工作线程类：演示线程安全的日志输出
- */
-class WorkerThread : public QThread {
-    Q_OBJECT
-
-public:
-    WorkerThread(const QString &name, QObject *parent = nullptr)
-        : QThread(parent), m_name(name) {}
-
-protected:
-    void run() override {
-        qCDebug(mainLog) << "工作线程" << m_name << "启动，线程ID:"
-                         << QString::number(quintptr(QThread::currentThreadId()), 16);
-
-        // 在循环中输出日志
-        for (int i = 0; i < 3; ++i) {
-            qCDebug(mainLog) << "[" << m_name << "] 处理任务" << (i + 1);
-            QThread::msleep(50);
-        }
-
-        qCDebug(mainLog) << "工作线程" << m_name << "完成";
-    }
-
-private:
-    QString m_name;
-};
 
 // ========== 主函数 ==========
 
@@ -443,6 +296,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-// 包含 MOC 生成的代码
-#include "main.moc"

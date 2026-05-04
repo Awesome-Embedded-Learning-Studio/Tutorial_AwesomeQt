@@ -1,0 +1,9 @@
+class SensorData
+{
+    PROP(double temperature);
+    PROP(double humidity);
+    PROP(QString status);
+    PROP(int updateCount = 0);
+
+    SLOT(void reset());
+};

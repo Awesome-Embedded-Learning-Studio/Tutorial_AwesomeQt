@@ -19,7 +19,11 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 
 # 创建可执行文件
 qt_add_executable(${PROJECT_NAME}
-    main.cpp    # 主程序源文件
+    main.cpp
+    counter.h
+    slotreceiver.h
+    worker.h
+    lambdademo.h
 )
 
 # 链接 Qt6::Core 库

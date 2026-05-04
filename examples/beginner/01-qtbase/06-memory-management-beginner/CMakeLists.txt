@@ -18,7 +18,13 @@ find_package(Qt6 REQUIRED COMPONENTS Core)              # Core 模块包含 QSha
 
 # 创建可执行文件
 qt_add_executable(${PROJECT_NAME}
-    main.cpp                                            # 示例源代码
+    main.cpp
+    task.h
+    objecttreedemo.h
+    sharedpointerdemo.h
+    weakpointerdemo.h
+    qpointerdemo.h
+    circularreferencedemo.h
 )
 
 # 链接 Qt 库

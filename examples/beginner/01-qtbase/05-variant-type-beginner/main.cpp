@@ -74,7 +74,7 @@ void demo2_TypeChecking() {
     qDebug() << "\"hello\" 转换为 int:" << unsafeNum2;  // 输出 0，这是错误的！
 
     // 安全的做法：先检查类型
-    if (v2.type() == QVariant::String) {
+    if (v2.typeId() == QMetaType::QString) {
         QString s = v2.toString();
         qDebug() << "正确做法：先检查类型，得到字符串:" << s;
     }
@@ -113,13 +113,13 @@ void demo3_Containers() {
     // 遍历并处理不同类型
     qDebug() << "遍历列表:";
     for (const QVariant &item : list) {
-        if (item.type() == QVariant::Int) {
+        if (item.typeId() == QMetaType::Int) {
             qDebug() << "  Int:" << item.toInt();
-        } else if (item.type() == QVariant::String) {
+        } else if (item.typeId() == QMetaType::QString) {
             qDebug() << "  String:" << item.toString();
-        } else if (item.type() == QVariant::Double) {
+        } else if (item.typeId() == QMetaType::Double) {
             qDebug() << "  Double:" << item.toDouble();
-        } else if (item.type() == QVariant::Bool) {
+        } else if (item.typeId() == QMetaType::Bool) {
             qDebug() << "  Bool:" << item.toBool();
         }
     }

@@ -19,7 +19,8 @@ find_package(Qt6 REQUIRED COMPONENTS
 
 # 创建可执行文件
 qt_add_executable(i18n-example
-    main.cpp                                # 示例主程序
+    main.cpp
+    i18nwindow.h
 )
 
 # 链接 Qt 库
@@ -38,8 +39,3 @@ target_link_libraries(i18n-example
 #
 # 本示例专注于演示 tr() 和 QTranslator 的基本用法，
 # 翻译文件的生成过程请参考 Qt 官方文档。
-
-# 设置输出目录
-set_target_properties(i18n-example PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)

@@ -15,111 +15,10 @@
 #include <QThread>               // 线程类
 #include <QMetaObject>           // 元对象类
 
-// 自定义计数器类：演示信号声明和发射
-class Counter : public QObject {
-    Q_OBJECT  // 必须有此宏才能使用信号槽
-
-public:
-    Counter(QObject *parent = nullptr) : QObject(parent), m_value(0) {}
-
-    // 增加计数值并发射信号
-    void increment() {
-        ++m_value;
-        // emit 关键字发射信号，传递新值
-        emit valueChanged(m_value);
-    }
-
-    // 重置计数值
-    void reset() {
-        m_value = 0;
-        emit valueChanged(m_value);
-    }
-
-    // 获取当前值
-    int value() const { return m_value; }
-
-signals:
-    // 信号声明：告诉系统这个类可能发出这个信号
-    // 信号只需要声明，不需要实现
-    void valueChanged(int newValue);  // 参数：新值
-
-    // 无参数信号示例
-    void resetSignal();
-
-private:
-    int m_value;  // 计数值
-};
-
-// 演示槽函数的普通成员函数
-class SlotReceiver : public QObject {
-    Q_OBJECT
-
-public:
-    SlotReceiver(QObject *parent = nullptr) : QObject(parent), m_callCount(0) {}
-
-public slots:
-    // 槽函数：可以被信号连接调用
-    void onValueChanged(int newValue) {
-        m_callCount++;
-        qDebug() << "[槽函数调用] 值改变为:" << newValue
-                 << "(第" << m_callCount << "次)";
-    }
-
-    void onReset() {
-        qDebug() << "[槽函数调用] 收到重置信号";
-    }
-
-    // 无参数槽函数
-    void simpleSlot() {
-        qDebug() << "[槽函数调用] 简单槽被调用";
-    }
-
-private:
-    int m_callCount;  // 调用计数
-};
-
-// 演示跨线程信号槽的工作类
-class Worker : public QObject {
-    Q_OBJECT
-
-public:
-    Worker(QObject *parent = nullptr) : QObject(parent) {}
-
-public slots:
-    void doWork() {
-        QThread *thread = QThread::currentThread();
-        qDebug() << "[工作线程] doWork 在线程" << thread << "中执行";
-        emit workFinished("工作完成！");
-    }
-
-signals:
-    void workFinished(const QString &result);
-};
-
-// 演示 Lambda 捕获上下文
-class LambdaDemo : public QObject {
-    Q_OBJECT
-
-public:
-    LambdaDemo(QObject *parent = nullptr) : QObject(parent), m_counter(0) {}
-
-    void setupConnections(QTimer *timer) {
-        // Lambda 作为槽：捕获 this 指针访问成员变量
-        connect(timer, &QTimer::timeout, this, [this]() {
-            m_counter++;
-            qDebug() << "[Lambda] 定时器触发，计数:" << m_counter;
-        });
-
-        // Lambda 捕获局部变量
-        QString prefix = "定时器";
-        connect(timer, &QTimer::timeout, [prefix]() {
-            qDebug() << "[Lambda]" << prefix << "持续运行中...";
-        });
-    }
-
-private:
-    int m_counter;
-};
+#include "counter.h"
+#include "slotreceiver.h"
+#include "worker.h"
+#include "lambdademo.h"
 
 int main(int argc, char *argv[]) {
     QCoreApplication app(argc, argv);  // 核心应用对象（非GUI）
@@ -272,6 +171,3 @@ int main(int argc, char *argv[]) {
 
     return 0;  // QCoreApplication 不需要事件循环持续运行
 }
-
-// 包含 MOC 生成的代码
-#include "main.moc"

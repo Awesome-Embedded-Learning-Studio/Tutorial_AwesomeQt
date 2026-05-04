@@ -25,15 +25,13 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 # main.cpp 是我们的源代码文件
 qt_add_executable(${PROJECT_NAME}
     main.cpp
+    simpleobject.h
+    taskitem.h
+    taskmanager.h
 )
 
 # 链接 Qt 库
 # PRIVATE 表示这些依赖只在内部使用，不暴露给其他项目
 target_link_libraries(${PROJECT_NAME}
     PRIVATE Qt6::Core
-)
-
-# 可选：设置输出目录
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )

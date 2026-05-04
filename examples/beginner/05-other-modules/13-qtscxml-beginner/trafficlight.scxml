@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scxml xmlns="http://www.w3.org/2005/07/scxml"
+       version="1.0"
+       initial="red"
+       name="TrafficLight">
+
+    <state id="red">
+        <onentry>
+            <log label="TrafficLight" expr="'红灯亮起 - 停车'"/>
+        </onentry>
+        <transition event="next" target="green"/>
+    </state>
+
+    <state id="green">
+        <onentry>
+            <log label="TrafficLight" expr="'绿灯亮起 - 通行'"/>
+        </onentry>
+        <transition event="next" target="yellow"/>
+    </state>
+
+    <state id="yellow">
+        <onentry>
+            <log label="TrafficLight" expr="'黄灯亮起 - 注意'"/>
+        </onentry>
+        <transition event="next" target="red"/>
+    </state>
+
+</scxml>
