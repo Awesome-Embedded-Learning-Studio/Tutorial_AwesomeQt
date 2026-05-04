@@ -2,106 +2,590 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/00-environment-setup/00-qt6-install-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/00-environment-setup/01-ide-setup-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/00-environment-setup/02-cmake-first-project-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/01-qobject-meta-system-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/02-signal-slot-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/03-string-encoding-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/04-container-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/05-variant-type-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/06-memory-management-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/07-event-system-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/08-file-io-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/09-multithreading-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/10-qprocess-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/11-timer-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/12-plugin-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/13-i18n-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/14-logging-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/15-regex-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/01-qtbase/16-json-xml-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/02-qtgui/01-qpainter-basic-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/02-qtgui/02-coordinate-transform-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/02-qtgui/03-image-pixmap-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/02-qtgui/04-font-text-rendering-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/02-qtgui/05-opengl-widget-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
     </url>
     <url>
          <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/02-qtgui/06-drag-drop-beginner/</loc>
-         <lastmod>2026-04-23</lastmod>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/01-layout-system-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/02-event-handling-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/03-model-view-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/04-qss-stylesheet-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/05-custom-widget-paint-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/06-dialog-system-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/07-main-window-system-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/08-graphics-view-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/09-animation-framework-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/10-mdi-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/11-qwidget-base-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/12-qabstractbutton-base-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/13-qframe-base-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/14-qabstractscrollarea-base-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/15-qabstractitemview-base-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/16-qabstractspinbox-base-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/17-qpushbutton-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/18-qtoolbutton-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/19-qradiobutton-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/20-qcheckbox-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/21-qcommandlinkbutton-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/22-qlineedit-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/23-qtextedit-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/24-qplaintextedit-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/25-qtextbrowser-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/26-qkeysequenceedit-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/27-qcombobox-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/28-qfontcombobox-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/29-qspinbox-doublespinbox-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/30-qdatetimeedit-dateedit-timeedit-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/31-qslider-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/32-qscrollbar-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/33-qdial-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/34-qlabel-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/35-qprogressbar-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/36-qlcdnumber-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/37-qcalendarwidget-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/38-qgroupbox-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/39-qtabwidget-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/40-qtabbar-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/41-qstackedwidget-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/42-qsplitter-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/43-qtoolbox-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/44-qscrollarea-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/45-qframe-separator-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/46-qlistwidget-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/47-qlistview-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/48-qtreewidget-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/49-qtreeview-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/50-qtablewidget-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/51-qtableview-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/52-qheaderview-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/53-qcolumnview-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/54-qundoview-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/55-qmainwindow-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/56-qmenubar-menu-action-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/57-qtoolbar-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/58-qstatusbar-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/59-qdockwidget-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/60-qdialog-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/61-qdialogbuttonbox-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/62-qmessagebox-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/63-qinputdialog-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/64-qcolordialog-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/65-qfontdialog-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/66-qfiledialog-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/67-qprogressdialog-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/68-qerrormessage-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/69-qwizard-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/70-qsplashscreen-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/71-qmdiarea-mdisubwindow-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/72-qprinter-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/73-qprintdialog-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/03-qtwidgets/74-qprintpreviewdialog-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/04-qtnetwork/01-tcp-socket-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/04-qtnetwork/02-udp-socket-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/04-qtnetwork/03-network-access-manager-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/04-qtnetwork/04-websocket-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/04-qtnetwork/05-ssl-tls-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/04-qtnetwork/06-serial-port-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/01-qtsql-database-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/02-qtsql-tablemodel-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/03-qtcharts-basic-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/04-qtmultimedia-player-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/05-qtmultimedia-camera-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/06-qtsvg-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/07-qtprintsupport-overview-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/08-qtserialbus-modbus-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/09-qtmqtt-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/10-qtbluetooth-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/11-qtnfc-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/12-qtstatemachine-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/13-qtscxml-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/14-qt3d-basic-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/15-qtquick3d-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/16-qtquick3d-physics-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/17-qtpdf-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/18-qthttpserver-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/19-qtwebsockets-server-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/20-qtwebchannel-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/21-qtwebengine-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/22-qtremoteobjects-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/23-qtspatial-audio-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/24-qttexttospeech-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/05-other-modules/25-qt5compat-migration-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/06-qml/01-qml-syntax-basics-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/06-qml/02-property-binding-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/06-qml/03-qtquick-controls-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/06-qml/04-cpp-qml-interop-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/06-qml/05-qml-animation-states-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/06-qml/06-qml-model-delegate-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/beginner/06-qml/07-qml-canvas-particles-beginner/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/engineering/session1/P1-status-led-practice/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/engineering/session1/P2-search-edit-practice/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/engineering/session1/P3-form-layout-practice/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/engineering/session1/P4-stopwatch-app-practice/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/engineering/session1/P5-confirm-dialog-practice/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/engineering/session1/P6-toggle-switch-practice/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/engineering/session1/P7-wizard-page-practice/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/engineering/session1/P8-base64-helper-practice/</loc>
+         <lastmod>2026-05-04</lastmod>
+    </url>
+    <url>
+         <loc>https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/engineering/session1/P9-hash-calculator-practice/</loc>
+         <lastmod>2026-05-04</lastmod>
     </url>
 </urlset>
