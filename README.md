@@ -2,7 +2,9 @@
 
 嘿！这里是Awesome Embedded Studio！我相信大家第一次接触 Qt 的时候，对着 `QObject::connect` 的四个参数发呆了整整一下午。后来又因为忘记加 `Q_OBJECT` 宏，收获了一个莫名其妙的 vtable 错误。再后来，在信号槽的跨线程调用上翻车，在对象树的内存管理上踩雷，在 MOC 生成的代码里迷失方向……
 
-这是一份会陪着你走完整条路的教程——从第一个 `QApplication` 到读懂 MOC 生成的那一刻。我们会吐槽，会叹气，会一起熬夜调试，但你绝对不会断层。
+笔者就是这样过来的——有时候博客不靠谱，对着Qt5看着Qt6代码抓耳挠腮，想理解底层原理发现要不然过时了，要不然看不懂。所以——这是一份会陪着你走完整条路的教程——从第一个 `QApplication` 到读懂 MOC 生成的那一刻。我们会吐槽，会叹气，会一起熬夜调试，但你绝对不会断层。
+
+希望这里的内容能让你Happy Qt Coding!
 
 ---
 
@@ -15,8 +17,6 @@
 进阶层 → 掌握高级用法，写出工程级代码
 专家层 → 读懂 Qt 源码，理解设计模式与实现原理
 ```
-
-这不是那种复制粘贴官方文档的教程。每一个知识点，都是实际工程项目中会用到的；每一个"坑"，都是真实遇到并花时间解决的。
 
 > 本项目隶属于组织 [Awesome-Embedded-Learning-Studio](https://github.com/Awesome-Embedded-Learning-Studio) 的文档教程
 
@@ -59,19 +59,13 @@ cd Tutorial_AwesomeQt
 专家层    ░░░░░░░░░░  0 / 142 篇
 ```
 
-### ✅ 已完成模块
+🚀🚀🚀 更加详细的进度：[tutorial/index.md](tutorial/index.md)
 
-| 模块 | 代码示例 | 教程文章 | 说明 |
-|------|----------|----------|------|
-| 环境搭建 | — | 3 篇 | Qt6 安装、IDE 配置、CMake 入门 |
-| QtBase 核心模块 | 16 个 ✅ | 16 篇 | QObject、信号槽、字符串、容器... |
-| QtGui | 6 个 ✅ | 6 篇 | 绘图、图像、坐标变换... |
-| QtWidgets | 74 个 ✅ | 74 篇 | 布局、控件、样式表... |
-| QtNetwork | 6 个 ✅ | 6 篇 | TCP/UDP、HTTP、WebSocket... |
-| 扩展模块 | 25 个 ✅ | 25 篇 | SQL、Charts、Multimedia、3D、SCXML... |
-| QML | 7 个 ✅ | 7 篇 | 现代界面、C++ 互操作... |
+---
 
-查看详细进度：[tutorial/index.md](tutorial/index.md)
+## 更新日志
+
+见 [changelogs/](changelogs/) 目录。
 
 ---
 
@@ -140,16 +134,31 @@ cd Tutorial_AwesomeQt
 
 ---
 
-## 项目规划
+## AwesomeQt Widgets — 通用控件库
 
-除了教程文档之外，项目还规划了完整的 **代码实例库**，目标覆盖 1000+ 个 QtWidgets 项目。详见 [`todo/`](todo/) 目录下的规划清单：
+项目包含一套可复用的自定义控件库，位于 [`widget/`](widget/) 目录。每个控件都是独立的、可编译的库组件，统一使用 `AwesomeQt::` 命名空间。
+
+**当前已实现：**
+
+| 控件 | 说明 |
+|------|------|
+| [`StatusLED`](widget/statusled/) | 状态指示灯，支持 4 种状态（Normal/Warning/Error/Offline）+ 闪烁动画 |
+
+**构建系统：** [`cmake/AwesomeQtWidgets.cmake`](cmake/AwesomeQtWidgets.cmake) 提供了 `awesomeqt_add_widget()` 等函数，支持 INDIVIDUAL（每个控件独立 `.so`）和 MERGED（合并为单一库）两种构建模式。
+
+---
+
+## 代码实例库规划
+
+除了教程和控件库之外，项目还规划了完整的**代码实例库**。详见 [`todo/catalogs/`](todo/catalogs/) 目录下的规划清单：
 
 | 清单 | 内容 | 条目数 |
 |------|------|--------|
-| [`todo/01-widget.md`](todo/01-widget.md) | 单个自定义控件（按钮/标签/输入/进度条/仪表盘/图表/表格/树/列表等） | 500+ |
-| [`todo/02-app.md`](todo/02-app.md) | 完整应用 Demo（开发工具/网络工具/文件工具/系统工具/图像工具/多媒体/办公/游戏等） | 190+ |
-| [`todo/03-model.md`](todo/03-model.md) | 控件组合与设计模式（窗口框架/导航布局/主题系统/表单/属性编辑器/拖拽/命令模式等） | 300+ |
-| [`todo/04-qml.md`](todo/04-qml.md) | QML 专项项目 | 50+ |
+| [`todo/catalogs/01-widget.md`](todo/catalogs/01-widget.md) | 单个自定义控件（按钮/标签/输入/进度条/仪表盘/图表/表格/树/列表等，22 个分类） | 500+ |
+| [`todo/catalogs/02-app.md`](todo/catalogs/02-app.md) | 完整应用 Demo（开发工具/网络工具/文件工具/系统工具/图像工具/多媒体/办公/游戏等） | 200+ |
+| [`todo/catalogs/03-model.md`](todo/catalogs/03-model.md) | 控件组合与设计模式（窗口框架/导航布局/主题系统/表单/属性编辑器/拖拽/命令模式等） | 300+ |
+| [`todo/catalogs/04-qml.md`](todo/catalogs/04-qml.md) | QML 专项项目 | 100+ |
+| [`todo/catalogs/05-industrial.md`](todo/catalogs/05-industrial.md) | 工业级项目模板（HMI 仪表盘/SCADA 监控/车载中控等） | 规划中 |
 
 代码实例统一使用 **Qt 6 + CMake** 构建，第三方依赖通过 CMake FetchContent 自动管理。
 

@@ -6,3 +6,8 @@ reference/
 
 # Build artifacts
 build/
+**/build/
+
+# IDE / tooling cache
+.cache/
+**/.cache/

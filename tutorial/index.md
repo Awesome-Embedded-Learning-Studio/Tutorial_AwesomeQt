@@ -2,7 +2,7 @@
 
 > **一份陪你从零到精通 Qt 6 的踩坑实录**
 >
-> 这不是官方文档的翻译，也不是 API 手册的堆砌——这是一位在 Qt 底层摸爬滚打多年的工程师，把所有踩过的坑、熬过的夜、调试过的 segfault，写成了能陪你走完整条路的教程。
+> 这不是官方文档的翻译，也不是 API 手册的堆砌——这是一位在 Qt 底层摸爬滚打多年的工程师（好吧，其实就3年（逃）），把所有踩过的坑、熬过的夜、调试过的 segfault，写成了能陪你走完整条路的教程。
 
 ---
 
@@ -30,13 +30,13 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  入门层 (Beginner)  →  能跑起来，理解核心概念，初步使用 API  │
-│                         知其然                               │
+│                         知其然              ✅ 已完成        │
 ├─────────────────────────────────────────────────────────────┤
 │  进阶层 (Advanced)   →  掌握高级用法，写出工程级代码          │
-│                         知其然且知所以然                     │
+│                         知其然且知所以然（在写了在写了）      │
 ├─────────────────────────────────────────────────────────────┤
 │  专家层 (Expert)     →  读懂 Qt 源码，理解设计模式           │
-│                         知其所以然并能举一反三               │
+│                         知其所以然并能举一反三 （在写了在写了）│
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -116,7 +116,7 @@
 
 ## 当前进度
 
-### 入门层 (19 / 预估 130 篇)
+### 入门层 (137 / 137 篇 · 134 个代码示例)
 
 #### ✅ 00 · 环境搭建 (已完成 3/3)
 
@@ -143,54 +143,181 @@
 - [x] [QRegularExpression 正则表达式基础](beginner/01-qtbase/15-regex-beginner.md)
 - [x] [QJsonDocument 与 QXmlStreamReader 解析基础](beginner/01-qtbase/16-json-xml-beginner.md)
 
-#### ⏳ 02 · QtGui (待完成 0/6)
+#### ✅ 02 · QtGui (已完成 6/6)
 
-- [ ] QPainter 绘图基础
-- [ ] 坐标系与 QTransform 变换基础
-- [ ] QImage、QPixmap、QIcon 图像处理基础
-- [ ] QFont 与文本渲染基础
-- [ ] QOpenGLWidget 嵌入 OpenGL 基础
-- [ ] 拖放系统基础
+- [x] [QPainter 绘图基础](beginner/02-qtgui/01-qpainter-basic-beginner.md)
+- [x] [坐标系与 QTransform 变换基础](beginner/02-qtgui/02-coordinate-transform-beginner.md)
+- [x] [QImage、QPixmap、QIcon 图像处理基础](beginner/02-qtgui/03-image-pixmap-beginner.md)
+- [x] [QFont 与文本渲染基础](beginner/02-qtgui/04-font-text-rendering-beginner.md)
+- [x] [QOpenGLWidget 嵌入 OpenGL 基础](beginner/02-qtgui/05-opengl-widget-beginner.md)
+- [x] [拖放系统基础](beginner/02-qtgui/06-drag-drop-beginner.md)
 
-#### ⏳ 03 · QtWidgets — 主题能力篇 (待完成 0/10)
+#### ✅ 03 · QtWidgets — 主题能力篇 (已完成 10/10)
 
-- [ ] 布局系统基础（五大布局管理器）
-- [ ] 事件处理与传播基础
-- [ ] Model/View 架构入门
-- [ ] 样式表 QSS 基础
-- [ ] 自定义绘制 Widget 基础
-- [ ] 对话框体系基础
-- [ ] QMainWindow 主窗口体系基础
-- [ ] 图形视图框架基础
-- [ ] 属性动画框架基础
-- [ ] QMdiArea 多文档界面基础
+- [x] [布局系统基础](beginner/03-qtwidgets/01-layout-system-beginner.md)
+- [x] [事件处理与传播基础](beginner/03-qtwidgets/02-event-handling-beginner.md)
+- [x] [Model/View 架构入门](beginner/03-qtwidgets/03-model-view-beginner.md)
+- [x] [样式表 QSS 基础](beginner/03-qtwidgets/04-qss-stylesheet-beginner.md)
+- [x] [自定义绘制 Widget 基础](beginner/03-qtwidgets/05-custom-widget-paint-beginner.md)
+- [x] [对话框体系基础](beginner/03-qtwidgets/06-dialog-system-beginner.md)
+- [x] [QMainWindow 主窗口体系基础](beginner/03-qtwidgets/07-main-window-system-beginner.md)
+- [x] [图形视图框架基础](beginner/03-qtwidgets/08-graphics-view-beginner.md)
+- [x] [属性动画框架基础](beginner/03-qtwidgets/09-animation-framework-beginner.md)
+- [x] [QMdiArea 多文档界面基础](beginner/03-qtwidgets/10-mdi-beginner.md)
 
-#### ⏳ 03 · QtWidgets — 控件速查篇 (待完成 0/16)
+#### ✅ 03 · QtWidgets — 控件速查篇 (已完成 64/64)
 
-包括按钮类、输入类、显示类、容器类、列表/树/表格视图等所有标准 Widget 的详细讲解。
+**基类与抽象类：**
 
-#### ⏳ 04 · QtNetwork (待完成 0/6)
+- [x] [QWidget 基类](beginner/03-qtwidgets/11-qwidget-base-beginner.md)
+- [x] [QAbstractButton 抽象按钮](beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md)
+- [x] [QFrame 帧控件](beginner/03-qtwidgets/13-qframe-base-beginner.md)
+- [x] [QAbstractScrollArea 滚动区域](beginner/03-qtwidgets/14-qabstractscrollarea-base-beginner.md)
+- [x] [QAbstractItemView 视图基类](beginner/03-qtwidgets/15-qabstractitemview-base-beginner.md)
+- [x] [QAbstractSpinBox 微调框基类](beginner/03-qtwidgets/16-qabstractspinbox-base-beginner.md)
 
-- [ ] TCP 通信
-- [ ] UDP 通信
-- [ ] HTTP 请求
-- [ ] WebSocket
-- [ ] SSL/TLS
-- [ ] 串口通信 QtSerialPort
+**按钮类：**
 
-#### ⏳ 05 · 其他扩展模块 (待完成 0/8)
+- [x] [QPushButton](beginner/03-qtwidgets/17-qpushbutton-beginner.md)
+- [x] [QToolButton](beginner/03-qtwidgets/18-qtoolbutton-beginner.md)
+- [x] [QRadioButton](beginner/03-qtwidgets/19-qradiobutton-beginner.md)
+- [x] [QCheckBox](beginner/03-qtwidgets/20-qcheckbox-beginner.md)
+- [x] [QCommandLinkButton](beginner/03-qtwidgets/21-qcommandlinkbutton-beginner.md)
 
-QtSql、QtCharts、QtMultimedia、QtBluetooth、Qt3D、QtPdf、Modbus、MQTT。
+**输入类：**
 
-#### ⏳ 06 · QML 独立教程 (待完成 0/9)
+- [x] [QLineEdit](beginner/03-qtwidgets/22-qlineedit-beginner.md)
+- [x] [QTextEdit](beginner/03-qtwidgets/23-qtextedit-beginner.md)
+- [x] [QPlainTextEdit](beginner/03-qtwidgets/24-qplaintextedit-beginner.md)
+- [x] [QTextBrowser](beginner/03-qtwidgets/25-qtextbrowser-beginner.md)
+- [x] [QKeySequenceEdit](beginner/03-qtwidgets/26-qkeysequenceedit-beginner.md)
+- [x] [QComboBox](beginner/03-qtwidgets/27-qcombobox-beginner.md)
+- [x] [QFontComboBox](beginner/03-qtwidgets/28-qfontcombobox-beginner.md)
+- [x] [QSpinBox / QDoubleSpinBox](beginner/03-qtwidgets/29-qspinbox-doublespinbox-beginner.md)
+- [x] [QDateTimeEdit / QDateEdit / QTimeEdit](beginner/03-qtwidgets/30-qdatetimeedit-dateedit-timeedit-beginner.md)
+- [x] [QSlider](beginner/03-qtwidgets/31-qslider-beginner.md)
+- [x] [QScrollBar](beginner/03-qtwidgets/32-qscrollbar-beginner.md)
+- [x] [QDial](beginner/03-qtwidgets/33-qdial-beginner.md)
 
-前置要求：已学完 QtWidgets。三层均有，独立成册。
+**显示类：**
 
-### 进阶层 (0 / 预估 130 篇)
+- [x] [QLabel](beginner/03-qtwidgets/34-qlabel-beginner.md)
+- [x] [QProgressBar](beginner/03-qtwidgets/35-qprogressbar-beginner.md)
+- [x] [QLCDNumber](beginner/03-qtwidgets/36-qlcdnumber-beginner.md)
+- [x] [QCalendarWidget](beginner/03-qtwidgets/37-qcalendarwidget-beginner.md)
+
+**容器类：**
+
+- [x] [QGroupBox](beginner/03-qtwidgets/38-qgroupbox-beginner.md)
+- [x] [QTabWidget](beginner/03-qtwidgets/39-qtabwidget-beginner.md)
+- [x] [QTabBar](beginner/03-qtwidgets/40-qtabbar-beginner.md)
+- [x] [QStackedWidget](beginner/03-qtwidgets/41-qstackedwidget-beginner.md)
+- [x] [QSplitter](beginner/03-qtwidgets/42-qsplitter-beginner.md)
+- [x] [QToolBox](beginner/03-qtwidgets/43-qtoolbox-beginner.md)
+- [x] [QScrollArea](beginner/03-qtwidgets/44-qscrollarea-beginner.md)
+- [x] [QFrame 分隔线](beginner/03-qtwidgets/45-qframe-separator-beginner.md)
+
+**列表 / 树 / 表格：**
+
+- [x] [QListWidget](beginner/03-qtwidgets/46-qlistwidget-beginner.md)
+- [x] [QListView](beginner/03-qtwidgets/47-qlistview-beginner.md)
+- [x] [QTreeWidget](beginner/03-qtwidgets/48-qtreewidget-beginner.md)
+- [x] [QTreeView](beginner/03-qtwidgets/49-qtreeview-beginner.md)
+- [x] [QTableWidget](beginner/03-qtwidgets/50-qtablewidget-beginner.md)
+- [x] [QTableView](beginner/03-qtwidgets/51-qtableview-beginner.md)
+- [x] [QHeaderView](beginner/03-qtwidgets/52-qheaderview-beginner.md)
+- [x] [QColumnView](beginner/03-qtwidgets/53-qcolumnview-beginner.md)
+- [x] [QUndoView](beginner/03-qtwidgets/54-qundoview-beginner.md)
+
+**主窗口与对话框：**
+
+- [x] [QMainWindow](beginner/03-qtwidgets/55-qmainwindow-beginner.md)
+- [x] [QMenuBar / QAction](beginner/03-qtwidgets/56-qmenubar-menu-action-beginner.md)
+- [x] [QToolBar](beginner/03-qtwidgets/57-qtoolbar-beginner.md)
+- [x] [QStatusBar](beginner/03-qtwidgets/58-qstatusbar-beginner.md)
+- [x] [QDockWidget](beginner/03-qtwidgets/59-qdockwidget-beginner.md)
+- [x] [QDialog](beginner/03-qtwidgets/60-qdialog-beginner.md)
+- [x] [QDialogButtonBox](beginner/03-qtwidgets/61-qdialogbuttonbox-beginner.md)
+- [x] [QMessageBox](beginner/03-qtwidgets/62-qmessagebox-beginner.md)
+- [x] [QInputDialog](beginner/03-qtwidgets/63-qinputdialog-beginner.md)
+- [x] [QColorDialog](beginner/03-qtwidgets/64-qcolordialog-beginner.md)
+- [x] [QFontDialog](beginner/03-qtwidgets/65-qfontdialog-beginner.md)
+- [x] [QFileDialog](beginner/03-qtwidgets/66-qfiledialog-beginner.md)
+- [x] [QProgressDialog](beginner/03-qtwidgets/67-qprogressdialog-beginner.md)
+- [x] [QErrorMessage](beginner/03-qtwidgets/68-qerrormessage-beginner.md)
+- [x] [QWizard](beginner/03-qtwidgets/69-qwizard-beginner.md)
+- [x] [QSplashScreen](beginner/03-qtwidgets/70-qsplashscreen-beginner.md)
+- [x] [QMdiArea / QMdiSubWindow](beginner/03-qtwidgets/71-qmdiarea-mdisubwindow-beginner.md)
+- [x] [QPrinter](beginner/03-qtwidgets/72-qprinter-beginner.md)
+- [x] [QPrintDialog](beginner/03-qtwidgets/73-qprintdialog-beginner.md)
+- [x] [QPrintPreviewDialog](beginner/03-qtwidgets/74-qprintpreviewdialog-beginner.md)
+
+#### ✅ 04 · QtNetwork (已完成 6/6)
+
+- [x] [TCP 通信](beginner/04-qtnetwork/01-tcp-socket-beginner.md)
+- [x] [UDP 通信](beginner/04-qtnetwork/02-udp-socket-beginner.md)
+- [x] [HTTP 请求 (QNetworkAccessManager)](beginner/04-qtnetwork/03-network-access-manager-beginner.md)
+- [x] [WebSocket](beginner/04-qtnetwork/04-websocket-beginner.md)
+- [x] [SSL/TLS](beginner/04-qtnetwork/05-ssl-tls-beginner.md)
+- [x] [串口通信 QtSerialPort](beginner/04-qtnetwork/06-serial-port-beginner.md)
+
+#### ✅ 05 · 其他扩展模块 (已完成 25/25)
+
+- [x] [QtSql 数据库基础](beginner/05-other-modules/01-qtsql-database-beginner.md)
+- [x] [QtSql 表格模型](beginner/05-other-modules/02-qtsql-tablemodel-beginner.md)
+- [x] [QtCharts 图表基础](beginner/05-other-modules/03-qtcharts-basic-beginner.md)
+- [x] [QtMultimedia 播放器](beginner/05-other-modules/04-qtmultimedia-player-beginner.md)
+- [x] [QtMultimedia 相机](beginner/05-other-modules/05-qtmultimedia-camera-beginner.md)
+- [x] [QtSVG 矢量图形](beginner/05-other-modules/06-qtsvg-beginner.md)
+- [x] [QtPrintSupport 打印支持](beginner/05-other-modules/07-qtprintsupport-overview-beginner.md)
+- [x] [QtSerialBus / Modbus](beginner/05-other-modules/08-qtserialbus-modbus-beginner.md)
+- [x] [QtMQTT](beginner/05-other-modules/09-qtmqtt-beginner.md)
+- [x] [QtBluetooth](beginner/05-other-modules/10-qtbluetooth-beginner.md)
+- [x] [QtNFC](beginner/05-other-modules/11-qtnfc-beginner.md)
+- [x] [QtStateMachine 状态机](beginner/05-other-modules/12-qtstatemachine-beginner.md)
+- [x] [QtSCXML 状态图表](beginner/05-other-modules/13-qtscxml-beginner.md)
+- [x] [Qt3D 基础](beginner/05-other-modules/14-qt3d-basic-beginner.md)
+- [x] [QtQuick3D](beginner/05-other-modules/15-qtquick3d-beginner.md)
+- [x] [QtQuick3D Physics](beginner/05-other-modules/16-qtquick3d-physics-beginner.md)
+- [x] [QtPdf](beginner/05-other-modules/17-qtpdf-beginner.md)
+- [x] [QtHttpServer](beginner/05-other-modules/18-qthttpserver-beginner.md)
+- [x] [QtWebSockets Server](beginner/05-other-modules/19-qtwebsockets-server-beginner.md)
+- [x] [QtWebChannel](beginner/05-other-modules/20-qtwebchannel-beginner.md)
+- [x] [QtWebEngine](beginner/05-other-modules/21-qtwebengine-beginner.md)
+- [x] [QtRemoteObjects](beginner/05-other-modules/22-qtremoteobjects-beginner.md)
+- [x] [QtSpatialAudio 空间音频](beginner/05-other-modules/23-qtspatial-audio-beginner.md)
+- [x] [QtTextToSpeech 语音合成](beginner/05-other-modules/24-qttexttospeech-beginner.md)
+- [x] [Qt5Compat 迁移指南](beginner/05-other-modules/25-qt5compat-migration-beginner.md)
+
+#### ✅ 06 · QML 现代界面 (已完成 7/7)
+
+前置要求：已学完 QtWidgets。
+
+- [x] [QML 语法基础](beginner/06-qml/01-qml-syntax-basics-beginner.md)
+- [x] [属性绑定与信号处理](beginner/06-qml/02-property-binding-beginner.md)
+- [x] [QtQuick Controls 控件集](beginner/06-qml/03-qtquick-controls-beginner.md)
+- [x] [C++ 与 QML 互操作](beginner/06-qml/04-cpp-qml-interop-beginner.md)
+- [x] [QML 动画与状态](beginner/06-qml/05-qml-animation-states-beginner.md)
+- [x] [QML Model/Delegate 模式](beginner/06-qml/06-qml-model-delegate-beginner.md)
+- [x] [QML Canvas 与粒子系统](beginner/06-qml/07-qml-canvas-particles-beginner.md)
+
+### 🎯 项目实战 · Session 1 (9 篇)
+
+- [x] [P1: 状态指示灯](engineering/session1/P1-status-led-practice.md)
+- [x] [P2: 搜索编辑框](engineering/session1/P2-search-edit-practice.md)
+- [x] [P3: 表单布局](engineering/session1/P3-form-layout-practice.md)
+- [x] [P4: 秒表应用](engineering/session1/P4-stopwatch-app-practice.md)
+- [x] [P5: 确认对话框](engineering/session1/P5-confirm-dialog-practice.md)
+- [x] [P6: 拨动开关](engineering/session1/P6-toggle-switch-practice.md)
+- [x] [P7: 向导页](engineering/session1/P7-wizard-page-practice.md)
+- [x] [P8: Base64 编解码工具](engineering/session1/P8-base64-helper-practice.md)
+- [x] [P9: 哈希计算器](engineering/session1/P9-hash-calculator-practice.md)
+
+### 进阶层 (0 / 预估 137 篇)
 
 待开始...
 
-### 专家层 (0 / 预估 145 篇)
+### 专家层 (0 / 预估 142 篇)
 
 待开始...（含 MOC 原理、信号槽源码、内存模型、事件循环源码等专属章节）
 
@@ -231,27 +358,18 @@ QtSql、QtCharts、QtMultimedia、QtBluetooth、Qt3D、QtPdf、Modbus、MQTT。
 
 ## 贡献与反馈
 
-这个教程是**动态生成**的，由 AI 根据严格指南持续产出。
+这个教程是**动态生成**的，有部分内容AI参与（笔者工作会有些忙，其他开源项目笔者也有在负责），如果你发现：
 
-如果你发现：
 - 错误或不准确的内容
 - 链接失效
 - 可以改进的表达方式
 
-欢迎提出 Issue 或 Pull Request。
+直接提出 Issue 或 Pull Request开喷就好，我第一时间响应之！
+
+PS：这里采取的License也是MIT协议。你懂的，随便改，随便用，随意fork!
 
 ---
 
-## 许可协议
-
-本教程内容遵循 CC BY-NC-SA 4.0 协议：
-- ✅ 可以分享、转载、演绎
-- ✅ 必须署名原作者
-- ❌ 不得商用
-- ⚠️ 演绎作品需采用相同协议
-
----
-
-**现在你已经知道了如何使用这个教程，让我们开始吧！**
+**这么有耐心！好，让我们开始吧！**
 
 建议从 [00 · Qt6 安装踩坑指南](beginner/00-environment-setup/00-qt6-install-beginner.md) 开始你的 Qt 之旅。
