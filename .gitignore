@@ -11,3 +11,10 @@ build/
 # IDE / tooling cache
 .cache/
 **/.cache/
+
+# VitePress
+node_modules/
+site/.vitepress/dist/
+site/.vitepress/cache/
+site/.vitepress/.build-cache/
+site/.vitepress/.build-tmp/
