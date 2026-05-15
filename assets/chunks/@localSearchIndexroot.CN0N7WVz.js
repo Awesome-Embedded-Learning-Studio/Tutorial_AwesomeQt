@@ -1,1 +1,1 @@
-export{default}from"./@localSearchIndexroot.5y1mhh8u.js";
+export{default}from"./@localSearchIndexroot.BRIDmDmR.js";
