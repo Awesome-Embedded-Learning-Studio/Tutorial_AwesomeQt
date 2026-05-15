@@ -1,3 +1,8 @@
+---
+title: "现代Qt开发教程（新手篇）5.22--Qt Remote Objects 进程间对象共享"
+description: "我们在 Qt 里写久了，迟早会碰到进程间通信的需求。传统做法无非那几样：QLocalSocket / QTcpSocket 手动收发字节流，D-Bus 做系统级消息总线，或者共享内存配上一套同步机制。"
+---
+
 # 现代Qt开发教程（新手篇）5.22--Qt Remote Objects 进程间对象共享
 
 ## 1. 前言：进程间共享 QObject，不用自己搓序列化了

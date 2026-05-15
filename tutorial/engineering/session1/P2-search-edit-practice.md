@@ -1,3 +1,8 @@
+---
+title: "SearchEdit"
+description: "上一篇 StatusLed 我们走的是\"自绘\"路线——继承 QWidget，重写 paintEvent，用 QPainter 一笔一笔画。这条路很强大，但说实话，不是每个自定义控件都需要从零画起。"
+---
+
 # 实战练习 · SearchEdit — 用"组合"而不是"自绘"造控件
 
 ## 前言：换个姿势造轮子

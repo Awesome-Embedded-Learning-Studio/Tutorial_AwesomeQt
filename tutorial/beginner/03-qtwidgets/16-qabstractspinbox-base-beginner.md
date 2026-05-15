@@ -1,3 +1,8 @@
+---
+title: "3.16 QAbstractSpinBox：数字输入基类"
+description: "我们在 Qt 开发中处理数值输入的时候，QSpinBox、QDoubleSpinBox、QDateTimeEdit 这三个控件几乎是标配。"
+---
+
 # 现代Qt开发教程（新手篇）3.16——QAbstractSpinBox：数字输入基类
 
 ## 1. 前言 / 为什么你需要搞懂 QAbstractSpinBox

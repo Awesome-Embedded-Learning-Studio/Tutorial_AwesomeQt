@@ -1,3 +1,8 @@
+---
+title: "3.48 QTreeWidget：便捷树形控件"
+description: "前面两篇我们聊了 QListWidget 和 QListView，它们处理的是一维的线性列表数据。"
+---
+
 # 现代Qt开发教程（新手篇）3.48——QTreeWidget：便捷树形控件
 
 ## 1. 前言 / 当你需要一个层级结构的时候

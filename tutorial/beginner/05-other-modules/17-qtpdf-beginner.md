@@ -1,3 +1,8 @@
+---
+title: "现代Qt开发教程（新手篇）5.17--QtPdf PDF 渲染基础"
+description: "说到在 Qt 应用里显示 PDF，我见过最多的做法是 QProcess 启动系统自带的 PDF 阅读器——Windows 下调 AcroRd32.exe，Linux 下调 evince 或者 okular，macOS 下调 open 命令。"
+---
+
 # 现代Qt开发教程（新手篇）5.17--QtPdf PDF 渲染基础
 
 ## 1. 前言：别再用 QProcess 调外部阅读器了

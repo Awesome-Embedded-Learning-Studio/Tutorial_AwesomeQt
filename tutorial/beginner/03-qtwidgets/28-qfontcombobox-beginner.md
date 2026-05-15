@@ -1,3 +1,8 @@
+---
+title: "3.28 QFontComboBox：字体选择下拉框"
+description: "我们在上一篇把 QComboBox 的基本能力全部过了一遍——addItem、currentData、setEditable、setModel，该覆盖的都覆盖了。"
+---
+
 # 现代Qt开发教程（新手篇）3.28——QFontComboBox：字体选择下拉框
 
 ## 1. 前言 / 为什么需要一个专门的字体选择控件

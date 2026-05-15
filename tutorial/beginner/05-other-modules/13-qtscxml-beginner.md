@@ -1,3 +1,8 @@
+---
+title: "5.13 Qt SCXML 状态图基础"
+description: "上一篇我们用 Qt StateMachine 手工搭建了一个任务管理器的状态机——定义 QState、连接 addTransition、配置 assignProperty，代码量不小，但逻辑清晰。"
+---
+
 # 现代Qt开发教程（新手篇）5.13——Qt SCXML 状态图基础
 
 ## 1. 前言：从手写状态机到声明式状态图

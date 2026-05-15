@@ -1,3 +1,8 @@
+---
+title: "3.17 QPushButton：最常用的按钮"
+description: "QPushButton 大概是所有 Qt 开发者接触的第一个控件——新建一个 Qt 项目，往界面上拖一个按钮，连接一个 clicked 信号，跑起来看到 \"Hello World\" 弹窗，Qt 开发之旅就这么开始了。"
+---
+
 # 现代Qt开发教程（新手篇）3.17——QPushButton：最常用的按钮
 
 ## 1. 前言 / 为什么 QPushButton 值得单独一篇

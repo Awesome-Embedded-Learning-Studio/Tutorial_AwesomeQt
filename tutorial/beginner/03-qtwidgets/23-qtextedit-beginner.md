@@ -1,3 +1,8 @@
+---
+title: "3.23 QTextEdit：富文本多行编辑器"
+description: "如果你认为 QTextEdit 就是\"可以输入多行文字的 QLineEdit\"，那你的认知需要大幅更新了。QLineEdit 是一个纯文本单行输入控件，它的内部数据模型非常简单——就是一个 QString。"
+---
+
 # 现代Qt开发教程（新手篇）3.23——QTextEdit：富文本多行编辑器
 
 ## 1. 前言 / QTextEdit 不只是"多行的 QLineEdit"

@@ -1,3 +1,8 @@
+---
+title: "现代Qt开发教程（新手篇）5.18--QtHttpServer 嵌入式 HTTP 服务器"
+description: "说到 HTTP 服务器，大多数人第一反应是 Nginx、Apache、Express、Spring Boot 这些重量级方案。"
+---
+
 # 现代Qt开发教程（新手篇）5.18--QtHttpServer 嵌入式 HTTP 服务器
 
 ## 1. 前言：Qt 应用里跑个 HTTP 服务，真的好用

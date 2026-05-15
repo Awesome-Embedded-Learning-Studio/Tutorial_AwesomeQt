@@ -1,3 +1,8 @@
+---
+title: "3.10 QMdiArea 多文档界面基础"
+description: "如果你用过 GIMP、Excel 早期版本、或者某些老式的 CAD 软件，你应该对\"一个主窗口里面套着好几个子窗口\"这种界面布局不陌生。这就是 MDI（Multiple Document Interface）——多文档界面。"
+---
+
 # 现代Qt开发教程（新手篇）3.10——QMdiArea 多文档界面基础
 
 ## 1. 前言 / 什么时候需要 MDI

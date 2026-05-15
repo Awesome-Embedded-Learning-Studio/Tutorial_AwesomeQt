@@ -1,3 +1,8 @@
+---
+title: "3.70 QSplashScreen：启动画面"
+description: "随便打开一个体量稍微大一点的桌面应用——Visual Studio、Blender、LibreOffice——你会发现它们有一个共同的行为：双击图标后不会直接弹出主窗口，而是先闪出一个带 Logo 的启动画面，"
+---
+
 # 现代Qt开发教程（新手篇）3.70——QSplashScreen：启动画面
 
 ## 1. 前言 / 双击图标然后盯着空白桌面发呆的体验谁都不想要

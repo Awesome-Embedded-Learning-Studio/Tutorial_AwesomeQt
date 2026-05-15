@@ -22,10 +22,17 @@ const HTML_TAGS = new Set([
   'title','desc','image','pattern','mask','marker','symbol','foreignobject',
 ])
 
+const VUE_COMPONENTS = new Set([
+  'HomeRoadmap', 'HomeMeta', 'CardGrid', 'CardLink',
+])
+
 function looksLikeCppTag(inner: string): boolean {
   const trimmed = inner.trim()
   if (!trimmed) return false
   if (HTML_TAGS.has(trimmed.toLowerCase())) return false
+  // Skip known Vue component tags (opening, closing, self-closing, with props)
+  const tagName = trimmed.replace(/^\/+/, '').split(/[\s/]/)[0]
+  if (VUE_COMPONENTS.has(tagName)) return false
   // Covers: QWidget, QLabel, QPdfDocument, std::vector, int, char16_t, etc.
   return /^[A-Za-z_][A-Za-z0-9_:,\s*&.<>]*(?:\.\.\.)?$/.test(trimmed)
 }

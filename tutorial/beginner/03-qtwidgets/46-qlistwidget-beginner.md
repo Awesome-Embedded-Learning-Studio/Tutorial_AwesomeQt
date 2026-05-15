@@ -1,3 +1,8 @@
+---
+title: "3.46 QListWidget：便捷列表控件"
+description: "Qt 的 Model/View 架构把数据和显示分离得很好，但不可否认，当你只是想快速搞一个列表出来——显示几个选项、让用户点选、显示一些图标——直接上手 QStringListModel 加 QListView 那套东西确实有点重。"
+---
+
 # 现代Qt开发教程（新手篇）3.46——QListWidget：便捷列表控件
 
 ## 1. 前言 / 最快上手列表的方案

@@ -1,3 +1,8 @@
+---
+title: "3.52 QHeaderView：表头控件"
+description: "前面几篇我们在用 QTableWidget、QTableView、QTreeView 的时候已经频繁接触到了 QHeaderView——horizontalHeader() 和 verticalHeader() 返回的就是它。"
+---
+
 # 现代Qt开发教程（新手篇）3.52——QHeaderView：表头控件
 
 ## 1. 前言 / 表头远不止一行文字

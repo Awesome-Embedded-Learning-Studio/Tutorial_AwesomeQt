@@ -1,3 +1,8 @@
+---
+title: "5.14 Qt 3D 基础场景搭建"
+description: "说到 Qt 里的 3D 渲染，大部分人的第一反应是 QtQuick3D —— 那个在 QML 里写 View3D + Model 的方案。"
+---
+
 # 现代Qt开发教程（新手篇）5.14——Qt 3D 基础场景搭建
 
 ## 1. 前言：Qt 的 C++ 3D 渲染框架

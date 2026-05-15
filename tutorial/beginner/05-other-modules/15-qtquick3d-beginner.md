@@ -1,3 +1,8 @@
+---
+title: "5.15 QtQuick3D QML 3D 场景基础"
+description: "上一篇我们用纯 C++ 的 Qt 3D 搭建了一个 3D 场景——创建 Entity、挂载 Component、配置 Mesh/Transform/Material、手动设置相机和光源，代码量不算少。"
+---
+
 # 现代Qt开发教程（新手篇）5.15——QtQuick3D QML 3D 场景基础
 
 ## 1. 前言：在 QML 里写 3D，真的就这么简单

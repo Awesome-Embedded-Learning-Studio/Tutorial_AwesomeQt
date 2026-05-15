@@ -1,3 +1,8 @@
+---
+title: "3.55 QMainWindow：主窗口完整配置"
+description: "写 Qt 桌面应用写到一定程度，你会发现绝大多数项目的主窗口都是 QMainWindow。"
+---
+
 # 现代Qt开发教程（新手篇）3.55——QMainWindow：主窗口完整配置
 
 ## 1. 前言 / 为什么 QMainWindow 是桌面应用的骨架

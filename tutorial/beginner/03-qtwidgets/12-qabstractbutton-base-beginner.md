@@ -1,3 +1,8 @@
+---
+title: "3.12 QAbstractButton：按钮基类机制"
+description: "我们在 Qt 开发中几乎每天都要跟按钮打交道——QPushButton、QCheckBox、QRadioButton、QToolButton，这些控件看起来各不相同，但它们全部继承自同一个基类：QAbstractButton。"
+---
+
 # 现代Qt开发教程（新手篇）3.12——QAbstractButton：按钮基类机制
 
 ## 1. 前言 / 为什么你需要搞懂 QAbstractButton

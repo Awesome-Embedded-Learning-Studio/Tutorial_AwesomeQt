@@ -1,3 +1,8 @@
+---
+title: "3.63 QInputDialog：输入对话框"
+description: "我们在前一篇讲 QMessageBox 的时候说过，对话框的本质是应用和用户之间的一次短暂交互。QMessageBox 负责的是\"应用告诉用户一些事情\"，而 QInputDialog 负责的是\"应用问用户要一些数据\"。"
+---
+
 # 现代Qt开发教程（新手篇）3.63——QInputDialog：输入对话框
 
 ## 1. 前言 / 每个应用都需要问用户要一点数据

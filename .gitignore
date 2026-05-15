@@ -1,12 +1,15 @@
 # AI helps
-AWESOMEQT_GUIDE.md
-.claude
+.claude/
+CLAUDE.md
 
 reference/
 
 # Build artifacts
 build/
 **/build/
+
+# Python cache
+__pycache__/
 
 # IDE / tooling cache
 .cache/

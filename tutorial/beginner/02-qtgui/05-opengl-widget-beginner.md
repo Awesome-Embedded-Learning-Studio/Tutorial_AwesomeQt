@@ -1,3 +1,8 @@
+---
+title: "2.5 QOpenGLWidget 嵌入 OpenGL 基础"
+description: "说实话，我一开始对在 Qt 里写 OpenGL 是有抵触心理的。QPainter 画各种图形不好吗，为什么要折腾 GPU？"
+---
+
 # 现代Qt开发教程（新手篇）2.5——QOpenGLWidget 嵌入 OpenGL 基础
 
 ## 1. 前言 / 为什么要在 Qt 里用 OpenGL

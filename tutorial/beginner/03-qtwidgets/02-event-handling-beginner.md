@@ -1,3 +1,8 @@
+---
+title: "3.2 事件处理与传播基础"
+description: "在 Qt 中，几乎所有的用户交互和系统通知都是通过事件来传递的——鼠标点击是 QMouseEvent，键盘按下是 QKeyEvent，窗口大小改变是 QResizeEvent，定时器触发是 QTimerEvent。"
+---
+
 # 现代Qt开发教程（新手篇）3.2——事件处理与传播基础
 
 ## 1. 前言 / 理解 Qt 的事件驱动模型

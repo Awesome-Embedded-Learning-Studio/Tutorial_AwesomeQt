@@ -1,3 +1,8 @@
+---
+title: "3.18 QToolButton：工具栏专用按钮"
+description: "上一篇文章我们刚把 QPushButton 的默认按钮机制、下拉菜单、图标用法和 QSS 美化全部过了一遍。"
+---
+
 # 现代Qt开发教程（新手篇）3.18——QToolButton：工具栏专用按钮
 
 ## 1. 前言 / 为什么 QToolButton 跟 QPushButton 不一样

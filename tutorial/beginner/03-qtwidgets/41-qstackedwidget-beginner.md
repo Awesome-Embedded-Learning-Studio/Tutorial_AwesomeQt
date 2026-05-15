@@ -1,3 +1,8 @@
+---
+title: "3.41 QStackedWidget：堆叠页面控件"
+description: "QStackedWidget 大概是 Qt 里最\"低调\"的多页容器。它不像 QTabWidget 那样自带一排醒目的标签栏，也不像 QToolBox 那样有可折叠的分区标题——它什么导航控件都没有，就只是一堆 QWidget 叠在一起，"
+---
+
 # 现代Qt开发教程（新手篇）3.41——QStackedWidget：堆叠页面控件
 
 ## 1. 前言 / 那个没有标签头却撑起了半个 Qt 导航体系的控件

@@ -1,3 +1,8 @@
+---
+title: "3.57 QToolBar：工具栏"
+description: "工具栏这个东西，新手写 Qt 的时候往往对它缺乏敬畏心——往 addToolBar 里塞几个 QAction 就完事了，和菜单栏操作一回事嘛。"
+---
+
 # 现代Qt开发教程（新手篇）3.57——QToolBar：工具栏
 
 ## 1. 前言 / 工具栏不是菜单的翻版

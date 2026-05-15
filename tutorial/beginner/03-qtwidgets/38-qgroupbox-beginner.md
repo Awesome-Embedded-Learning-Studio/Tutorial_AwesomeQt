@@ -1,3 +1,8 @@
+---
+title: "3.38 QGroupBox：分组框"
+description: "在 Qt 的控件体系里，QGroupBox 大概是最容易被忽视的一个。它不像 QPushButton 那样有点击交互，不像 QTableView 那样承载复杂的数据展示，也不像 QProgressBar 那样有动感的视觉效果。"
+---
+
 # 现代Qt开发教程（新手篇）3.38——QGroupBox：分组框
 
 ## 1. 前言 / 最不起眼但使用频率最高的容器

@@ -1,3 +1,8 @@
+---
+title: "3.66 QFileDialog：文件选择对话框"
+description: "到目前为止我们聊了很多对话框——QMessageBox 弹提示、QInputDialog 要输入、QColorDialog 选颜色、QFontDialog 选字体。这些对话框的共同特点是：它们操作的都是内存中的数据，不涉及文件系统。"
+---
+
 # 现代Qt开发教程（新手篇）3.66——QFileDialog：文件选择对话框
 
 ## 1. 前言 / 每个桌面应用都绕不开的文件操作

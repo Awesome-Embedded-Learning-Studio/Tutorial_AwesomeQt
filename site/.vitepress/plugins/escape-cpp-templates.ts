@@ -27,12 +27,16 @@ const HTML_TAGS = new Set([
   'title','desc','image','pattern','mask','marker','symbol','foreignobject',
 ])
 
+const VUE_COMPONENTS = new Set([
+  'HomeRoadmap', 'HomeMeta', 'CardGrid', 'CardLink',
+])
+
 function looksLikeCppTemplate(inner: string): boolean {
   const trimmed = inner.trim()
   if (!trimmed) return false
   if (HTML_TAGS.has(trimmed.toLowerCase())) return false
-  // Vue components use PascalCase (e.g. <ChapterNav>); C++ templates are lowercase
-  if (/^[A-Z][a-zA-Z0-9]+$/.test(trimmed)) return false
+  const tagName = trimmed.replace(/^\/+/, '').split(/[\s/]/)[0]
+  if (VUE_COMPONENTS.has(tagName)) return false
   return /^[A-Za-z_][A-Za-z0-9_:,\s*&.]*(?:\.\.\.)?$/.test(trimmed)
 }
 

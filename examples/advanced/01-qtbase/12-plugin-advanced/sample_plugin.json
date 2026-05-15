@@ -1,0 +1,6 @@
+{
+    "name": "SamplePlugin",
+    "description": "示例插件 - 演示 Qt 插件系统的接口实现",
+    "version": 1,
+    "author": "Tutorial AwesomeQt"
+}

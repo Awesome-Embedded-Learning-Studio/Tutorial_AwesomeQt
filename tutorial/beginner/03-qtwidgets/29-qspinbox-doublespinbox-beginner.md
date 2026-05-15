@@ -1,3 +1,8 @@
+---
+title: "3.29 QSpinBox / QDoubleSpinBox：数字步进框"
+description: "我们在前面两篇分别讲了 QComboBox（下拉选择框）和 QFontComboBox（字体选择下拉框）。这两个控件解决的是\"从有限候选集中选一个\"的问题。"
+---
+
 # 现代Qt开发教程（新手篇）3.29——QSpinBox / QDoubleSpinBox：数字步进框
 
 ## 1. 前言 / 当你需要用户输入一个精确的数字

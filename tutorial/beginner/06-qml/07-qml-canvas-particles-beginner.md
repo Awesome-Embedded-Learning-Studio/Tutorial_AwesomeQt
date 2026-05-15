@@ -1,3 +1,8 @@
+---
+title: "6.7 QML Canvas 绘图与粒子系统"
+description: "前面六篇教程我们用的都是 QML 内置的视觉元素——Rectangle 画方块、Text 显示文字、Image 加载图片。组合这些元素已经能搭建绝大多数常规 UI 了。"
+---
+
 # 现代Qt开发教程（新手篇）6.7——QML Canvas 绘图与粒子系统
 
 ## 1. 当 QML 需要自定义绘制能力

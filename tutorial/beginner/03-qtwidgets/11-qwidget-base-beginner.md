@@ -1,3 +1,8 @@
+---
+title: "3.11 QWidget 基类：所有控件的根"
+description: "如果你翻开 Qt 的类继承图，你会发现几乎所有的界面控件——QPushButton、QLabel、QLineEdit、QTextEdit、QComboBox——全部直接或间接继承自 QWidget。"
+---
+
 # 现代Qt开发教程（新手篇）3.11——QWidget 基类：所有控件的根
 
 ## 1. 前言 / 为什么你需要搞懂 QWidget 基类

@@ -1,3 +1,8 @@
+---
+title: "4.3 HTTP 通信"
+description: "到目前为止我们讲了 TCP 和 UDP，它们是传输层的协议，属于网络编程的底层操作。但在实际项目中，你大概率不需要直接操作 Socket——你需要的是更高层的协议，比如 HTTP。"
+---
+
 # 现代Qt开发教程（新手篇）4.3——HTTP 通信
 
 ## 1. 前言：为什么需要 QNetworkAccessManager

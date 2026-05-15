@@ -1,3 +1,8 @@
+---
+title: "3.25 QTextBrowser：只读富文本浏览器"
+description: "我们刚刚在前两篇文章中分别拆解了 QTextEdit 和 QPlainTextEdit。QTextEdit 是完整的富文本编辑器，QPlainTextEdit 是纯文本性能优先的轻量替代。"
+---
+
 # 现代Qt开发教程（新手篇）3.25——QTextBrowser：只读富文本浏览器
 
 ## 1. 前言 / 当 QTextEdit 变成只读，它还能做什么

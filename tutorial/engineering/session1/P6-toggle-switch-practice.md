@@ -1,3 +1,8 @@
+---
+title: "ToggleSwitch"
+description: "前面我们做的 StatusLed 用了 paintEvent 自绘，但没有动画——状态切换是瞬间完成的。SearchEdit 用了组合而不是自绘。"
+---
+
 # 实战练习 · ToggleSwitch — 把 paintEvent 和动画玩到一起
 
 ## 前言：开始上难度了
