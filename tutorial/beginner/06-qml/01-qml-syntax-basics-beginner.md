@@ -1,3 +1,8 @@
+---
+title: "6.1 QML 语法基础与类型系统"
+description: "如果你跟我一样，是从 QtWidgets 开始接触 Qt 的，那你大概率写过不少这样的代码：先在 C++ 里 new 一个 QPushButton，再 new 一个 QVBoxLayout，"
+---
+
 # 现代Qt开发教程（新手篇）6.1——QML 语法基础与类型系统
 
 ## 1. 为什么我们需要 QML

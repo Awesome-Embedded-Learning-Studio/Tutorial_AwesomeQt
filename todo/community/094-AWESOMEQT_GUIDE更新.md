@@ -3,7 +3,7 @@ id: 094
 title: "AWESOMEQT_GUIDE.md 更新"
 category: community
 priority: P0
-status: pending
+status: completed
 created: 2026-04-15
 assignee: charliechen
 depends_on: []

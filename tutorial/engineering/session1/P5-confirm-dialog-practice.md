@@ -1,3 +1,8 @@
+---
+title: "ConfirmDialog"
+description: "Qt 给我们提供了 QMessageBox，一行代码就能弹一个确认对话框，方便是真方便。但方便的代价就是千篇一律——它用的是系统原生风格，你改不了按钮文字的样式、改不了图标大小、改不了整体配色。"
+---
+
 # 实战练习 · ConfirmDialog — 做一个比 QMessageBox 好看的确认弹窗
 
 ## 前言：QMessageBox 够用，但不体面

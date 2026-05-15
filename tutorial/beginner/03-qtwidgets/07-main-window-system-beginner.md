@@ -1,3 +1,8 @@
+---
+title: "3.7 QMainWindow 主窗口体系基础"
+description: "前面我们写的所有示例都是继承 QWidget 做主窗口，拉几个控件上去就完事了。对于一个只有两三个按钮的小工具来说，QWidget 完全够用。"
+---
+
 # 现代Qt开发教程（新手篇）3.7——QMainWindow 主窗口体系基础
 
 ## 1. 前言 / 为什么 QMainWindow 是"正经应用"的骨架

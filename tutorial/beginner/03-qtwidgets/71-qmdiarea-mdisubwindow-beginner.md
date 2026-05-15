@@ -1,3 +1,8 @@
+---
+title: "3.71 QMdiArea / QMdiSubWindow：多文档界面"
+description: "如果你用过早期的 Windows 应用——Visual Studio 6.0、Microsoft Office 2003、Photoshop CS2——你一定记得那种多窗口的工作方式：主窗口里面嵌套着一堆子窗口，每个子窗口是一个独立的文档，"
+---
+
 # 现代Qt开发教程（新手篇）3.71——QMdiArea / QMdiSubWindow：多文档界面
 
 ## 1. 前言 / 当你的应用需要同时打开十几个文档时

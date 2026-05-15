@@ -1,3 +1,8 @@
+---
+title: "5.7 QtPrintSupport 打印体系概览"
+description: "在桌面应用开发里，打印功能经常被当成\"最后再加\"的需求。很多人的做法是——用 QTextDocument 或者 QTextEdit 自带的 print() 方法凑合一下，跑通了就算完事。"
+---
+
 # 现代Qt开发教程（新手篇）5.7——QtPrintSupport 打印体系概览
 
 ## 1. 前言：打印这件事，比你想象的要通用

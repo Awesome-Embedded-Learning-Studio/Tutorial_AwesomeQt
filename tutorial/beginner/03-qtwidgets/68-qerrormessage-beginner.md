@@ -1,3 +1,8 @@
+---
+title: "3.68 QErrorMessage：错误消息对话框"
+description: "上两节我们聊了 QFileDialog 和 QProgressDialog，一个是文件操作的标准入口，一个是长任务的标准反馈。这一节轮到 QErrorMessage——Qt 提供的一个专门的错误消息展示对话框。"
+---
+
 # 现代Qt开发教程（新手篇）3.68——QErrorMessage：错误消息对话框
 
 ## 1. 前言 / 不是所有错误都需要弹窗轰炸用户

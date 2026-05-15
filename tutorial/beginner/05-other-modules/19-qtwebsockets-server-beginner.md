@@ -1,3 +1,8 @@
+---
+title: "现代Qt开发教程（新手篇）5.19--QtWebSockets 服务端实战"
+description: "上一篇文章我们用 QtHttpServer 搭了一个 REST API，那套东西处理请求-响应模型绰绰有余。"
+---
+
 # 现代Qt开发教程（新手篇）5.19--QtWebSockets 服务端实战
 
 ## 1. 前言：为什么要在 Qt 里直接起一个 WebSocket 服务

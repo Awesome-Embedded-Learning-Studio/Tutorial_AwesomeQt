@@ -1,3 +1,8 @@
+---
+title: "3.15 QAbstractItemView：视图基类"
+description: "我们在 Qt 的 Model/View 架构里已经摸过好几回了——QListView、QTableView、QTreeView 这三个视图控件你大概率都用过。"
+---
+
 # 现代Qt开发教程（新手篇）3.15——QAbstractItemView：视图基类
 
 ## 1. 前言 / 为什么你需要搞懂 QAbstractItemView

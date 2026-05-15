@@ -1,3 +1,8 @@
+---
+title: "3.20 QCheckBox：复选框"
+description: "如果你觉得 QCheckBox 就是\"可以同时选多个的 QRadioButton\"，那只能说你对了一半。"
+---
+
 # 现代Qt开发教程（新手篇）3.20——QCheckBox：复选框
 
 ## 1. 前言 / 为什么 QCheckBox 比 QRadioButton 复杂

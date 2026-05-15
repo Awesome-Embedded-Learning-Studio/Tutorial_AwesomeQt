@@ -1,3 +1,8 @@
+---
+title: "3.59 QDockWidget：可停靠浮动面板"
+description: "如果你用过 Qt Creator、Visual Studio、Eclipse 这类 IDE，或者 GIMP、Blender 这类专业工具，"
+---
+
 # 现代Qt开发教程（新手篇）3.59——QDockWidget：可停靠浮动面板
 
 ## 1. 前言 / Dock 面板是专业级应用的标配

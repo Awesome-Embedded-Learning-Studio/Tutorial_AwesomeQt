@@ -1,3 +1,8 @@
+---
+title: "3.51 QTableView：Model 驱动表格视图"
+description: "上一篇我们聊了 QTableWidget，一个把 Model 和 View 合二为一的便捷表格控件。如果你只是想快速搞一个成绩单、配置参数表或者 CSV 预览面板，它确实够用。"
+---
+
 # 现代Qt开发教程（新手篇）3.51——QTableView：Model 驱动表格视图
 
 ## 1. 前言 / 当 QTableWidget 不够用时

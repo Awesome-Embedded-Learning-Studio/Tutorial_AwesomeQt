@@ -1,3 +1,8 @@
+---
+title: "3.35 QProgressBar：进度条"
+description: "如果你问我 Qt 里哪个控件看起来最简单但实际用起来最容易踩坑，QProgressBar 绝对排前三。"
+---
+
 # 现代Qt开发教程（新手篇）3.35——QProgressBar：进度条
 
 ## 1. 前言 / 进度条比你想象的要复杂

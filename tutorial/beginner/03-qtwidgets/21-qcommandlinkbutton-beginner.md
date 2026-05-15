@@ -1,3 +1,8 @@
+---
+title: "3.21 QCommandLinkButton：命令链接按钮"
+description: "如果你用过 Windows Vista 之后的系统对话框，你一定见过这种控件：一个扁平的蓝色文字链接，下面跟了一行灰色的小字作为描述说明，点击之后触发某个操作。"
+---
+
 # 现代Qt开发教程（新手篇）3.21——QCommandLinkButton：命令链接按钮
 
 ## 1. 前言 / 为什么会有这样一个按钮

@@ -1,3 +1,8 @@
+---
+title: "2.1 QPainter 绘图基础"
+description: "Qt是一个GUI框架，对吧。如果您是从一个标准路径（我是指，对着Console那个默认的控制台程序走过来的朋友），咱们以前学 C++ 的控制台程序，输出文字就 printf 搞定了。"
+---
+
 # 现代Qt开发教程（新手篇）2.1——QPainter 绘图基础
 
 ## 1. 前言 / 为什么需要 QPainter

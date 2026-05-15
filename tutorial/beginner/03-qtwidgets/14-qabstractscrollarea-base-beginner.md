@@ -1,3 +1,8 @@
+---
+title: "3.14 QAbstractScrollArea：滚动区域基类"
+description: "我们在 Qt 开发中遇到的\"可以滚动\"的控件——QTextEdit、QPlainTextEdit、QTableWidget、QTreeWidget、QListWidget、QGraphicsView，"
+---
+
 # 现代Qt开发教程（新手篇）3.14——QAbstractScrollArea：滚动区域基类
 
 ## 1. 前言 / 为什么你需要搞懂 QAbstractScrollArea

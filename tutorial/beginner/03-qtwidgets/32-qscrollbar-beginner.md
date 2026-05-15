@@ -1,3 +1,8 @@
+---
+title: "3.32 QScrollBar：滚动条"
+description: "我们在讲 QAbstractScrollArea 的时候提到过，QScrollArea 内部自动管理了一对 QScrollBar——当内容超出可视区域时，滚动条自动出现，用户拖动滚动条就能滚动内容。这套机制在绝大多数场景下够用了。"
+---
+
 # 现代Qt开发教程（新手篇）3.32——QScrollBar：滚动条
 
 ## 1. 前言 / 当你需要自己控制滚动逻辑

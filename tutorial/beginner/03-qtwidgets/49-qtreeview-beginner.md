@@ -1,3 +1,8 @@
+---
+title: "3.49 QTreeView：Model 驱动树视图"
+description: "上一篇我们聊了 QTreeWidget——一个把 Model 和 View 合二为一的便捷树形控件。"
+---
+
 # 现代Qt开发教程（新手篇）3.49——QTreeView：Model 驱动树视图
 
 ## 1. 前言 / 当 QTreeWidget 不够用时

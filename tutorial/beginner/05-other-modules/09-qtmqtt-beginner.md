@@ -1,3 +1,8 @@
+---
+title: "5.9 Qt MQTT 客户端基础"
+description: "MQTT（Message Queuing Telemetry Transport）最初是 IBM 在 1999 年为油管远程监控设计的协议，设计目标是\"在不可靠网络上用最少的带宽传输最关键的数据\"。"
+---
+
 # 现代Qt开发教程（新手篇）5.9——Qt MQTT 客户端基础
 
 ## 1. 前言：万物互联时代的消息总线

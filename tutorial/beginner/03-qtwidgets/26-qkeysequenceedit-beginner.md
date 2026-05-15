@@ -1,3 +1,8 @@
+---
+title: "3.26 QKeySequenceEdit：快捷键录入控件"
+description: "我们在做桌面应用的时候，快捷键几乎是标配功能——Ctrl+S 保存、Ctrl+Z 撤销、Ctrl+C 复制，这些是所有桌面用户闭着眼都能按出来的肌肉记忆。"
+---
+
 # 现代Qt开发教程（新手篇）3.26——QKeySequenceEdit：快捷键录入控件
 
 ## 1. 前言 / 快捷键配置不能让用户去背按键码

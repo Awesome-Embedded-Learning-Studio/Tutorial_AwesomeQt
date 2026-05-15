@@ -19,13 +19,13 @@ estimated_effort: small
 
 - [ ] 确认 qt_src/ 在 .gitignore 中
 - [ ] 创建 scripts/fetch_qt_source.sh 可按需下载
-- [ ] AWESOMEQT_GUIDE.md 中记录 qt_src 的使用方法
+- [ ] CLAUDE.md 中记录 qt_src 的使用方法
 
 ## 实施说明
 
 1. 检查 .gitignore 中是否已包含 qt_src/，若未包含则添加
 2. 创建 scripts/fetch_qt_source.sh 脚本，支持按需下载 Qt 源码
-3. 在 AWESOMEQT_GUIDE.md 中补充 qt_src 目录的使用说明
+3. 在 CLAUDE.md 中补充 qt_src 目录的使用说明
 
 ## 涉及文件
 

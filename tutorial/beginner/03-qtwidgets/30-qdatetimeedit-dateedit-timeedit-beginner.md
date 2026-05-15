@@ -1,3 +1,8 @@
+---
+title: "3.30 QDateEdit / QTimeEdit / QDateTimeEdit：日期时间输入三件套"
+description: "我们在上一篇刚讲完 QSpinBox 和 QDoubleSpinBox，这两个控件解决的是\"用户输入一个数字\"的问题。但有一类数字输入场景非常特殊——日期和时间。"
+---
+
 # 现代Qt开发教程（新手篇）3.30——QDateEdit / QTimeEdit / QDateTimeEdit：日期时间输入三件套
 
 ## 1. 前言 / 当你需要用户选一个日期或时间

@@ -1,3 +1,8 @@
+---
+title: "6.3 Qt Quick Controls 组件基础"
+description: "前两篇文章我们一直在用 Rectangle、Text、MouseArea 这些基础元素手搓 UI。"
+---
+
 # 现代Qt开发教程（新手篇）6.3——Qt Quick Controls 组件基础
 
 ## 1. 从零开始认识 Qt Quick Controls

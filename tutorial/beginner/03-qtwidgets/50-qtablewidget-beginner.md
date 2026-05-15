@@ -1,3 +1,8 @@
+---
+title: "3.50 QTableWidget：便捷表格控件"
+description: "前面我们聊了列表控件（QListWidget/QListView）和树形控件（QTreeWidget/QTreeView），它们分别处理一维线性数据和层级树形数据。"
+---
+
 # 现代Qt开发教程（新手篇）3.50——QTableWidget：便捷表格控件
 
 ## 1. 前言 / 二维数据的便捷容器

@@ -10,9 +10,9 @@
 
 ```
 入门层    ██████████  118 / 118 篇（代码示例 134 个全部验证通过）
-进阶层    ░░░░░░░░░░  0 / 137 篇
+进阶层    █████░░░░░  62 / 134 篇
 专家层    ░░░░░░░░░░  0 / 142 篇
-合计      ██░░░░░░░░  118 / 397 篇
+合计      ███░░░░░░░  155 / 397 篇
 ```
 
 ---
@@ -23,237 +23,24 @@
 
 > **代码示例状态**：134 个示例全部构建通过，验证通过率 120/134（90%）。14 个未通过均为 WSL2 环境限制（QtWebEngine EGL、TTS 引擎缺失等），代码本身无问题。
 
----
-
-## 🔵 进阶层
-
 <details>
-<summary><strong>00 · 环境搭建</strong>（3 篇）</summary>
+<summary><strong>01 · QtBase</strong>（16 篇 · ✅ 全部完成）</summary>
 
-- [ ] 🔴 `00-qt6-install-advanced.md` — 多平台进阶配置：多版本共存与 Qt 模块裁剪
-  - Qt 多版本共存管理，`qtchooser` / 手动切换
-  - 仅安装必要模块减少磁盘占用
-  - 自定义安装路径与 `CMAKE_PREFIX_PATH` 配置
-  - Windows 下 MSVC vs MinGW 工具链选择与陷阱
-
-- [ ] 🔴 `01-ide-advanced.md` — IDE 进阶配置：调试器、静态分析、代码格式化
-  - VS Code clangd 静态分析 + `compile_commands.json` 生成
-  - CLion Sanitizer（ASan/UBSan）集成调试内存问题
-  - Qt Creator 分析器（Valgrind / Heaptrack）使用
-  - `.clang-format` 统一代码风格配置
-
-- [ ] 🔴 `02-cmake-advanced.md` — CMake 进阶：多目标、共享库、CMakePresets
-  - `add_library(SHARED)` 构建共享库并被主程序链接
-  - `target_include_directories` / `target_compile_definitions` 精准传递配置
-  - `CMakePresets.json` 多平台 Preset 统一构建命令
-  - `FetchContent` 引入第三方依赖（如 spdlog / nlohmann-json）
+全部完成（16/16），归档于 [todo/archive/advanced-01-qtbase-completed.md](todo/archive/advanced-01-qtbase-completed.md)
 
 </details>
 
 <details>
-<summary><strong>01 · QtBase</strong>（16 篇）</summary>
+<summary><strong>02 · QtGui（进阶）</strong>（6 篇 · ✅ 全部完成）</summary>
 
-- [ ] 🔴 `01-qobject-property-system-advanced.md` — QObject 属性系统进阶：Q_PROPERTY 与动态属性
-  - `Q_PROPERTY` 完整语法：READ/WRITE/NOTIFY/RESET/STORED
-  - `setProperty()` / `property()` 动态属性（运行时添加）
-  - 属性变化通知 NOTIFY 信号的最佳实践
-  - `QMetaObject::propertyCount()` 反射枚举所有属性
-
-- [ ] 🔴 `02-signal-slot-advanced.md` — 信号槽进阶：连接类型、Lambda 陷阱、跨线程
-  - `Qt::BlockingQueuedConnection` 使用场景与死锁风险
-  - Lambda 捕获对象指针的生命周期陷阱
-  - `QObject::connect` 返回 `QMetaObject::Connection` 手动管理
-  - `QSignalSpy` 单元测试中验证信号触发
-
-- [ ] 🔴 `03-qstring-advanced.md` — QString 进阶：编码陷阱、QStringView、性能优化
-  - Latin-1 / UTF-8 / UTF-16 隐式转换陷阱
-  - `QStringView` 零拷贝字符串视图减少内存分配
-  - `QString::arg()` 多参数替换的正确顺序
-  - `QStringBuilder` (`%` 操作符) 拼接性能优化
-
-- [ ] 🔴 `04-containers-advanced.md` — 容器进阶：隐式共享、算法、STL 互操作
-  - COW（写时复制）何时触发拷贝，如何避免意外深拷贝
-  - `<QtAlgorithms>` / `std::` 算法在 Qt 容器上的使用
-  - `QList` ↔ `std::vector` 互转的零拷贝技巧
-  - `QHash` 自定义键类型：重载 `operator==` 与 `qHash`
-
-- [ ] 🟡 `05-qvariant-metatype-advanced.md` — QVariant 进阶：自定义类型注册
-  - `Q_DECLARE_METATYPE(T)` + `qRegisterMetaType<T>()` 完整流程
-  - 自定义类型在信号槽跨线程传递的注册要求
-  - `QVariant::fromValue<T>` / `qvariant_cast<T>` 类型安全存取
-  - `QMetaType` 反射能力：构造/析构/比较自定义类型
-
-- [ ] 🔴 `06-memory-management-advanced.md` — 内存管理进阶：智能指针与循环引用
-  - `QSharedPointer` + `QWeakPointer` 打破循环引用
-  - `QPointer<T>` 弱指针自动置空于对象销毁（Qt 专属）
-  - `QScopedPointer` vs `std::unique_ptr` 的互操作
-  - 内存泄漏检测：Valgrind / AddressSanitizer 实战
-
-- [ ] 🔴 `07-event-system-advanced.md` — 事件系统进阶：自定义事件与过滤器
-  - 自定义事件类：继承 `QEvent` + `QEvent::registerEventType()`
-  - `QCoreApplication::postEvent()` 跨线程安全投递自定义事件
-  - `eventFilter()` 全局鼠标/键盘监听
-  - `QAbstractNativeEventFilter` 截获原生系统消息
-
-- [ ] 🔴 `08-file-io-advanced.md` — 文件 IO 进阶：序列化与文件监控
-  - `QDataStream` 二进制序列化：版本兼容策略
-  - `QFileSystemWatcher` 监控文件/目录变化
-  - `QSaveFile` 原子写入防止数据损坏
-  - 内存映射文件 `QFile::map()` 大文件处理
-
-- [ ] 🔴 `09-qthread-advanced.md` — 多线程进阶：线程池与 QtConcurrent
-  - `QThreadPool` + `QRunnable` 任务队列
-  - `QtConcurrent::run()` 将函数异步提交线程池
-  - `QFuture<T>` + `QFutureWatcher<T>` 异步结果监控
-  - `QReadWriteLock` 读写锁优化多读少写场景
-
-- [ ] 🟡 `10-qprocess-advanced.md` — QProcess 进阶：异步读写与进程间通信
-  - `setProcessChannelMode(MergedChannels)` 合并 stdout/stderr
-  - `readyReadStandardOutput` 异步流式读取大输出
-  - 管道通信：将一个进程输出作为另一个的输入
-  - 进程崩溃检测与退出码分析
-
-- [ ] 🟡 `11-qtimer-advanced.md` — 定时器进阶：高精度计时与性能分析
-  - `QTimer::timerType()` 三种精度级别选择
-  - `QElapsedTimer` 纳秒级性能计时
-  - 定时器聚合：避免大量小定时器的性能问题
-  - `QDeadlineTimer` 超时控制在异步 API 中的应用
-
-- [ ] 🟡 `12-plugin-advanced.md` — 插件系统进阶：版本管理与热加载
-  - 插件接口版本控制防二进制不兼容
-  - `QPluginLoader::unload()` 热卸载与资源释放顺序
-  - `QDir::entryList()` 自动发现插件目录
-  - 插件依赖链管理（插件 A 依赖插件 B）
-
-- [ ] 🟡 `13-i18n-advanced.md` — 国际化进阶：复数规则与动态语言切换
-  - 复数形式 `%n` 与各语言规则差异
-  - 运行时动态切换语言（`QTranslator` 重新安装）
-  - `QLocale` 数字/日期/货币的本地化格式
-  - `lupdate` 扫描范围配置与过期字符串清理
-
-- [ ] 🟡 `14-logging-advanced.md` — 日志进阶：自定义处理器与分类过滤
-  - `qInstallMessageHandler` 自定义日志输出到文件
-  - `QLoggingCategory` 多模块独立日志开关
-  - Release 构建保留 qWarning 但禁用 qDebug
-  - 结合 spdlog 构建工程级日志系统
-
-- [ ] 🟡 `15-regex-advanced.md` — 正则进阶：命名捕获与性能分析
-  - 命名捕获组 `(?P<name>...)` 提高可读性
-  - `QRegularExpression::optimize()` JIT 预编译
-  - 全局匹配 `QRegularExpression::globalMatch()` 迭代所有匹配
-  - 灾难性回溯（Catastrophic Backtracking）预防
-
-- [ ] 🟡 `16-json-xml-advanced.md` — JSON/XML 进阶：流式处理大文件
-  - `QJsonDocument` 解析大 JSON 的内存开销分析
-  - 流式 JSON 构建：手动拼接 vs `QJsonDocument` 性能对比
-  - `QXmlStreamWriter` 生成格式化 XML
-  - `QXmlStreamReader` 状态机解析嵌套 XML 结构
+全部完成（6/6），归档于 [todo/archive/advanced-02-qtgui-completed.md](todo/archive/advanced-02-qtgui-completed.md)
 
 </details>
 
 <details>
-<summary><strong>02 · QtGui（进阶）</strong>（6 篇）</summary>
+<summary><strong>03 · QtWidgets 进阶 · 主题能力篇</strong>（10 篇 · ✅ 全部完成）</summary>
 
-- [ ] 🔴 `01-qpainter-advanced.md` — QPainter 进阶：双缓冲、合成模式、抗锯齿
-  - `setRenderHint(QPainter::Antialiasing)` 开启抗锯齿
-  - `QPixmap` 离屏缓冲消除闪烁（双缓冲原理）
-  - `setCompositionMode` 图层合成模式（正片叠底/滤色/叠加）
-  - `QPainterPath` 复杂路径绘制与裁剪
-
-- [ ] 🟡 `02-coordinate-transform-advanced.md` — 坐标变换进阶：矩阵组合与逆变换
-  - `QTransform` 矩阵乘法组合多个变换
-  - `QTransform::inverted()` 求逆变换（鼠标坐标映射回场景坐标）
-  - 仿射变换 vs 投影变换的区别
-  - `QPainter::worldTransform()` 在复杂绘制中保存/恢复
-
-- [ ] 🔴 `03-image-processing-advanced.md` — 图像处理进阶：像素操作与格式转换
-  - `QImage::pixel()` / `setPixel()` 逐像素操作
-  - `QImage::Format` 格式转换与内存布局
-  - `QImageReader` 支持的格式与流式加载大图
-  - `Qt::SmoothTransformation` vs `FastTransformation` 缩放质量
-
-- [ ] 🟡 `04-font-text-advanced.md` — 字体进阶：富文本与 QTextDocument
-  - `QTextDocument` 完整文档模型（段落/表格/图片）
-  - `QTextCursor` 程序化构建富文本内容
-  - `QTextCharFormat` / `QTextBlockFormat` 格式控制
-  - `QTextDocument::toHtml()` / `toMarkdown()` 格式导出
-
-- [ ] 🟡 `05-opengl-advanced.md` — OpenGL 进阶：着色器与 VAO/VBO
-  - `QOpenGLShaderProgram` 编译链接顶点/片段着色器
-  - VAO / VBO 创建绑定与顶点属性布局
-  - 纹理加载：`QOpenGLTexture` 封装
-  - `QOpenGLFramebufferObject` 离屏渲染
-
-- [ ] 🟡 `06-drag-drop-advanced.md` — 拖放进阶：自定义 MIME 与跨应用拖放
-  - 自定义 MIME 类型定义与序列化
-  - `dropMimeData()` 在 Model/View 中支持拖放重排
-  - 跨应用文件拖放（从 Explorer/Finder 拖文件到 Qt 应用）
-  - `Qt::DropAction` 区分复制/移动/链接操作
-
-</details>
-
-<details>
-<summary><strong>03 · QtWidgets 进阶（篇幅等同入门层，此处只列主题能力篇，控件速查层内容与入门层相同）</strong>（10 篇）</summary>
-
-- [ ] 🔴 `01-layout-system-advanced.md` — 布局进阶：尺寸策略与动态布局切换
-  - `QSizePolicy` 六种策略（Fixed/Minimum/Maximum/Preferred/Expanding/Ignored）
-  - 布局内插入/删除控件并刷新
-  - `QStackedLayout` 实现动画页面切换
-  - 嵌套布局性能优化与 `layout()` 调试
-
-- [ ] 🔴 `02-event-handling-advanced.md` — 事件处理进阶：键盘修饰键与原生事件
-  - `grabMouse()` / `grabKeyboard()` 强制捕获输入
-  - `QApplication::keyboardModifiers()` 获取修饰键状态
-  - `QWheelEvent::angleDelta()` 滚轮精细处理
-  - `nativeEvent()` 处理平台原生窗口消息
-
-- [ ] 🔴 `03-model-view-advanced.md` — Model/View 进阶：自定义 Model 与 Delegate
-  - 继承 `QAbstractTableModel` 实现完整 Model
-  - `QSortFilterProxyModel` 代理模型实现搜索过滤与排序
-  - 自定义 `QStyledItemDelegate` 实现单元格编辑器
-  - `QAbstractItemModel::beginInsertRows()` 数据增删的正确通知方式
-
-- [ ] 🔴 `04-qss-advanced.md` — QSS 进阶：动态主题切换与复杂选择器
-  - `setObjectName` 配合 `#id` 选择器精准定位
-  - `QStyle::polish()` 结合 QSS 动态皮肤系统
-  - `qproperty-*` 通过 QSS 设置 Q_PROPERTY 值
-  - 高 DPI 下 QSS 像素值的缩放处理
-
-- [ ] 🔴 `05-custom-widget-advanced.md` — 自定义控件进阶：子控件与 QStyle
-  - `QStyleOption` + `QStylePainter` 跟随系统风格绘制
-  - `QStyle::subControlRect()` 子控件矩形计算
-  - `QSizePolicy::HeightForWidth` 保持宽高比
-  - 发布自定义控件到 Qt Designer 插件
-
-- [ ] 🔴 `06-dialog-advanced.md` — 对话框进阶：模态策略与数据验证
-  - `Qt::ApplicationModal` vs `Qt::WindowModal` 模态范围
-  - 输入验证失败阻止 `accept()` 的正确姿势
-  - 多步骤向导对话框数据流管理
-  - 对话框记忆上次位置与尺寸
-
-- [ ] 🔴 `07-main-window-advanced.md` — 主窗口进阶：Dock 管理与状态持久化
-  - `saveState()` / `restoreState()` 持久化整个主窗口布局
-  - `QSettings` 保存/恢复窗口几何信息
-  - 动态显示/隐藏 Dock 的菜单同步
-  - `QMainWindow::setCorner()` 角落 Dock 区域归属
-
-- [ ] 🟡 `08-graphics-view-advanced.md` — 图形视图进阶：自定义 Item 与碰撞检测
-  - 继承 `QGraphicsItem` 实现完整自定义图元
-  - `QGraphicsScene::collidingItems()` 碰撞检测
-  - `itemChange()` 拦截位置/状态变化
-  - `QGraphicsEffect` 给 Item 加模糊/阴影/颜色效果
-
-- [ ] 🟡 `09-animation-advanced.md` — 动画进阶：状态机驱动与并行动画组
-  - `QStateMachine` + 动画 `addTransition` 状态切换动画
-  - `QParallelAnimationGroup` 多属性同时动画
-  - `QAbstractAnimation::updateCurrentValue()` 自定义插值动画
-  - 动画在 QML 与 Widgets 混合界面中的协调
-
-- [ ] ⚪ `10-mdi-advanced.md` — MDI 进阶：子窗口策略与文档管理
-  - 子窗口关闭前保存确认（拦截 `QCloseEvent`）
-  - `QMdiArea::SubWindowActivated` 同步菜单状态
-  - MDI vs 多标签（`QTabWidget`）的场景选择
-  - 最大化子窗口时菜单栏合并处理
+全部完成（10/10），归档于 [todo/archive/advanced-03-qtwidgets-thematic-completed.md](todo/archive/advanced-03-qtwidgets-thematic-completed.md)
 
 </details>
 
@@ -262,36 +49,36 @@
 
 > 文件命名规则：将入门层文件名中的 `-beginner` 替换为 `-advanced`，共 60 篇，内容深入至高级 API、性能优化、自定义扩展与工程实践。此处仅列出每篇的进阶重点方向，不再逐条展开知识点（与入门层结构对应）：
 
-- [ ] 🔴 `11-qwidget-base-advanced.md` — 窗口属性进阶：WA_* 属性、透明背景、无边框窗口拖移
-- [ ] 🔴 `12-qabstractbutton-base-advanced.md` — 自定义按钮状态机与三态按钮完整实现
-- [ ] 🟡 `13-qframe-base-advanced.md` — QFrame 作为自定义带阴影容器的绘制实现
-- [ ] 🟡 `14-qabstractscrollarea-base-advanced.md` — 手动同步双 ScrollArea 与视口坐标计算
-- [ ] 🔴 `15-qabstractitemview-base-advanced.md` — 视图基类拖放重排、持久化编辑器、虚拟列表
-- [ ] 🟡 `16-qabstractspinbox-base-advanced.md` — 自定义 SpinBox 子类实现非数字步进（如货币/角度）
-- [ ] 🔴 `17-qpushbutton-advanced.md` — QPushButton 带动画的自定义 QSS 交互效果
-- [ ] 🔴 `18-qtoolbutton-advanced.md` — QToolButton 动态切换图标与文字的工具栏适配
-- [ ] 🔴 `19-qradiobutton-advanced.md` — QRadioButton 跨容器互斥与动态分组策略
-- [ ] 🔴 `20-qcheckbox-advanced.md` — QCheckBox 树形全选/半选逻辑实现
-- [ ] ⚪ `21-qcommandlinkbutton-advanced.md` — QCommandLinkButton 跨平台样式统一
-- [ ] 🔴 `22-qlineedit-advanced.md` — QLineEdit 自定义内嵌图标按钮与实时补全
-- [ ] 🔴 `23-qtextedit-advanced.md` — QTextEdit 语法高亮（QSyntaxHighlighter）实现
-- [ ] 🟡 `24-qplaintextedit-advanced.md` — QPlainTextEdit 行号区域绘制与代码折叠
-- [ ] 🟡 `25-qtextbrowser-advanced.md` — QTextBrowser 自定义资源加载（图片/CSS）
-- [ ] ⚪ `26-qkeysequenceedit-advanced.md` — QKeySequenceEdit 冲突检测与全局热键注册
-- [ ] 🔴 `27-qcombobox-advanced.md` — QComboBox 自定义 ItemDelegate 实现复杂下拉项
-- [ ] 🟡 `28-qfontcombobox-advanced.md` — QFontComboBox 自定义预览与字体分类
-- [ ] 🔴 `29-qspinbox-advanced.md` — QSpinBox 自定义 textFromValue / valueFromText
-- [ ] 🟡 `30-qdatetimeedit-advanced.md` — QDateTimeEdit 时区感知与自定义日期范围显示
-- [ ] 🔴 `31-qslider-advanced.md` — QSlider 多档位刻度标注与区间选择双滑块实现
-- [ ] 🟡 `32-qscrollbar-advanced.md` — QScrollBar 驱动大画布局部视口同步
-- [ ] 🟡 `33-qdial-advanced.md` — QDial 自定义刻度绘制与角度映射
-- [ ] 🔴 `34-qlabel-advanced.md` — QLabel 动态 GIF 播放控制与高 DPI 图像适配
-- [ ] 🔴 `35-qprogressbar-advanced.md` — QProgressBar 自定义绘制（圆形进度、渐变色）
-- [ ] 🟡 `36-qlcdnumber-advanced.md` — QLCDNumber 自定义七段数码管外观
-- [ ] 🟡 `37-qcalendarwidget-advanced.md` — QCalendarWidget 标记特殊日期与自定义单元格
-- [ ] 🔴 `38-qgroupbox-advanced.md` — QGroupBox 动态折叠面板动画实现
-- [ ] 🔴 `39-qtabwidget-advanced.md` — QTabWidget 可关闭/可拖动/自定义标签页实现
-- [ ] 🟡 `40-qtabbar-advanced.md` — QTabBar 自定义绘制标签与角落按钮
+- [x] 🔴 `11-qwidget-base-advanced.md` — 窗口属性进阶：WA_* 属性、透明背景、无边框窗口拖移 ✅ 2026-05-10
+- [x] 🔴 `12-qabstractbutton-base-advanced.md` — 自定义按钮状态机与三态按钮完整实现 ✅ 2026-05-10
+- [x] 🟡 `13-qframe-base-advanced.md` — QFrame 作为自定义带阴影容器的绘制实现 ✅ 2026-05-10
+- [x] 🟡 `14-qabstractscrollarea-base-advanced.md` — 手动同步双 ScrollArea 与视口坐标计算 ✅ 2026-05-10
+- [x] 🔴 `15-qabstractitemview-base-advanced.md` — 视图基类拖放重排、持久化编辑器、虚拟列表 ✅ 2026-05-10
+- [x] 🟡 `16-qabstractspinbox-base-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `17-qpushbutton-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `18-qtoolbutton-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `19-qradiobutton-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `20-qcheckbox-advanced.md` ✅ 2026-05-10
+- [x] ⚪ `21-qcommandlinkbutton-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `22-qlineedit-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `23-qtextedit-advanced.md` ✅ 2026-05-10
+- [x] 🟡 `24-qplaintextedit-advanced.md` ✅ 2026-05-10
+- [x] 🟡 `25-qtextbrowser-advanced.md` ✅ 2026-05-10
+- [x] ⚪ `26-qkeysequenceedit-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `27-qcombobox-advanced.md` ✅ 2026-05-10
+- [x] 🟡 `28-qfontcombobox-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `29-qspinbox-advanced.md` ✅ 2026-05-10
+- [x] 🟡 `30-qdatetimeedit-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `31-qslider-advanced.md` ✅ 2026-05-10
+- [x] 🟡 `32-qscrollbar-advanced.md` ✅ 2026-05-10
+- [x] 🟡 `33-qdial-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `34-qlabel-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `35-qprogressbar-advanced.md` ✅ 2026-05-10
+- [x] 🟡 `36-qlcdnumber-advanced.md` ✅ 2026-05-10
+- [x] 🟡 `37-qcalendarwidget-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `38-qgroupbox-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `39-qtabwidget-advanced.md` ✅ 2026-05-10
+- [x] 🟡 `40-qtabbar-advanced.md` ✅ 2026-05-10
 - [ ] 🔴 `41-qstackedwidget-advanced.md` — QStackedWidget 滑动切换动画实现
 - [ ] 🔴 `42-qsplitter-advanced.md` — QSplitter 自定义拖动手柄外观与最小宽度约束
 - [ ] 🟡 `43-qtoolbox-advanced.md` — QToolBox 自定义标题栏样式与动画展开
@@ -912,9 +699,9 @@
 | 层级 | 总篇数 | 已完成 | 进行中 | 未开始 |
 |------|--------|--------|--------|--------|
 | 入门 | 118 | 118 | 0 | 0 |
-| 进阶 | 137 | 0 | 0 | 137 |
+| 进阶 | 134 | 32 | 0 | 102 |
 | 专家 | 142 | 0 | 0 | 142 |
-| **合计** | **397** | **118** | **0** | **279** |
+| **合计** | **397** | **150** | **0** | **247** |
 
 ---
 

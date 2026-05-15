@@ -1,3 +1,8 @@
+---
+title: "3.3 Model/View 架构入门"
+description: "我最早写 Qt 界面的时候，展示一列数据的方式特别粗暴——直接往 QListWidget 里面 addItem()，一个个塞字符串。如果数据源变了，就手动清空列表再重新塞一遍。"
+---
+
 # 现代Qt开发教程（新手篇）3.3——Model/View 架构入门
 
 ## 1. 前言 / 为什么需要 Model/View

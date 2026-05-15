@@ -20,7 +20,7 @@ estimated_effort: medium
 ## 验收标准
 
 - [ ] CONTRIBUTING.md 包含目录结构说明
-- [ ] 教程编写规范参考 AWESOMEQT_GUIDE.md
+- [ ] 教程编写规范参考 `CLAUDE.md` 和 `.claude/writting_style.md`
 - [ ] 代码风格规范已定义
 - [ ] PR 检查清单已包含
 - [ ] 提交信息格式规范已定义
@@ -33,7 +33,7 @@ estimated_effort: medium
    - 说明各目录的作用和约定
 
 2. **教程编写规范**：
-   - 引用 AWESOMEQT_GUIDE.md 作为 AI 辅助生成规范
+   - 引用 `CLAUDE.md` 和 `.claude/writting_style.md` 作为 AI 辅助生成规范
    - 定义手动编写教程的格式要求
    - 说明 front matter 元数据字段
 
@@ -55,4 +55,5 @@ estimated_effort: medium
 
 - [GitHub CONTRIBUTING.md 指南](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/setting-guidelines-for-repository-contributors)
 - [Conventional Commits](https://www.conventionalcommits.org/)
-- `AWESOMEQT_GUIDE.md`（项目内部规范）
+- `CLAUDE.md`（项目主指令）
+- `.claude/writting_style.md`（写作风格规则）

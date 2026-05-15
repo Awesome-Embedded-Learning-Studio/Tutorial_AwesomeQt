@@ -1,3 +1,8 @@
+---
+title: "3.22 QLineEdit：单行文本输入"
+description: "QLineEdit 大概是 Qt 里仅次于 QPushButton 的高频控件。任何需要用户输入一行文字的地方——登录框、搜索栏、IP 地址配置、密码输入——背后都是 QLineEdit 在工作。"
+---
+
 # 现代Qt开发教程（新手篇）3.22——QLineEdit：单行文本输入
 
 ## 1. 前言 / QLineEdit 远不止一个输入框

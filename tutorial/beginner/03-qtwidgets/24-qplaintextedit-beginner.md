@@ -1,3 +1,8 @@
+---
+title: "3.24 QPlainTextEdit：纯文本高性能编辑器"
+description: "上一篇我们花了整篇文章来拆解 QTextEdit 的富文本能力——QTextDocument 四层结构、QTextCursor 的光标操作、字符格式和段落格式。QTextEdit 确实强大，但它有一个绕不开的软肋：性能。"
+---
+
 # 现代Qt开发教程（新手篇）3.24——QPlainTextEdit：纯文本高性能编辑器
 
 ## 1. 前言 / 为什么 QTextEdit 不是万能的

@@ -1,3 +1,8 @@
+---
+title: "3.13 QFrame：可视框架基类"
+description: "QFrame 在 Qt 控件体系中的定位很特殊——它既是 QWidget 的直接子类，也是 QLabel、QListView、QTableWidget、QTextEdit 等一大批常用控件的祖先类。"
+---
+
 # 现代Qt开发教程（新手篇）3.13——QFrame：可视框架基类
 
 ## 1. 前言 / 为什么你需要搞懂 QFrame

@@ -1,3 +1,8 @@
+---
+title: "6.6 QML Model/Delegate 数据驱动视图"
+description: "我们前面几篇一直在手写 QML 界面——每个 Text、每个 Rectangle 都是显式声明的，数据也是直接写在属性里的。这种做法写 demo 没问题，但做实际项目就会遇到一个根本性的矛盾：你的数据是动态的。"
+---
+
 # 现代Qt开发教程（新手篇）6.6——QML Model/Delegate 数据驱动视图
 
 ## 1. 数据驱动 UI 的思路转变

@@ -1,3 +1,8 @@
+---
+title: "现代Qt开发教程（新手篇）5.20--QtWebChannel Web 与 Qt 双向互通"
+description: "上一篇我们用 QWebSocketServer 搭了个聊天室，客户端用 JavaScript 通过 WebSocket 协议和服务端通信。"
+---
+
 # 现代Qt开发教程（新手篇）5.20--QtWebChannel Web 与 Qt 双向互通
 
 ## 1. 前言：让浏览器里的 JavaScript 直接调用你的 C++ 对象

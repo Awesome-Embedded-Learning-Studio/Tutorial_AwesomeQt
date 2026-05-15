@@ -1,3 +1,8 @@
+---
+title: "Base64Helper"
+description: "如果你做过 Web 开发、接触过邮件附件、或者看过 JWT token，你一定见过 Base64 编码——那串 SGVsbG8gV29ybGQ= 看起来像乱码但其实是 \"Hello World\"。"
+---
+
 # 实战练习 · Base64Helper — 一个真正有用的编码工具
 
 ## 前言：Base64 无处不在，不如自己写一个

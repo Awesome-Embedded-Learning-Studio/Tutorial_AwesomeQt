@@ -1,3 +1,8 @@
+---
+title: "现代Qt开发教程（新手篇）5.21--QtWebEngine 内嵌 Chromium 浏览器"
+description: "上一篇我们用 QWebEngineView 作为 QWebChannel 的前端容器，但当时没有深入讲 WebEngine 本身。"
+---
+
 # 现代Qt开发教程（新手篇）5.21--QtWebEngine 内嵌 Chromium 浏览器
 
 ## 1. 前言：在 Qt 窗口里塞一个完整的浏览器引擎

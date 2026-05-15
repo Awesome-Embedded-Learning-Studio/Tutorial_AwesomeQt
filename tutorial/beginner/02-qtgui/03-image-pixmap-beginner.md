@@ -1,3 +1,8 @@
+---
+title: "2.3 QImage、QPixmap、QIcon 图像处理基础"
+description: "我第一次在 Qt 里加载一张图片显示到界面上的时候，直接面对了三个长得差不多的类：QImage、QPixmap、QIcon。"
+---
+
 # 现代Qt开发教程（新手篇）2.3——QImage、QPixmap、QIcon 图像处理基础
 
 ## 1. 前言 / 为什么需要搞清楚这几个类

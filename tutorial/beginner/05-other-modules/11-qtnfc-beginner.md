@@ -1,3 +1,8 @@
+---
+title: "5.11 QtNFC 近场通信基础"
+description: "NFC（Near Field Communication，近场通信）在日常生活中出现的频率比很多人意识到的要高——门禁卡、公交卡、银行卡闪付、Android Beam（虽然已经废弃了）、NFC 标签贴纸，全都用的这套协议。"
+---
+
 # 现代Qt开发教程（新手篇）5.11——QtNFC 近场通信基础
 
 ## 1. 前言：NFC 的尴尬定位

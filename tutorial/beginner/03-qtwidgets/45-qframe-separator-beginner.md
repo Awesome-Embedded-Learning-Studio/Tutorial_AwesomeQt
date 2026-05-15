@@ -1,3 +1,8 @@
+---
+title: "3.45 QFrame 作为分隔线的用法"
+description: "我们在前面第 13 篇已经系统地拆解过 QFrame 的边框系统——Shape、Shadow、lineWidth、midLineWidth 那一套。这篇不再讲理论，而是聚焦于 QFrame 在实际界面开发中最频繁的一个用途：充当分隔线。"
+---
+
 # 现代Qt开发教程（新手篇）3.45——QFrame 作为分隔线的用法
 
 ## 1. 前言 / 那条被低估的视觉分界线
