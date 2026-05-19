@@ -196,7 +196,7 @@ for (auto w : widgets) {
 widgets.clear();  // 这行有必要吗？
 ```
 
-提示一下：`clear()` 之后列表里存的是已被 delete 的指针值，但 `delete` 不会把指针置空，所以 dangling pointer 的问题需要考虑。另外 `for (auto w : ...)` 这里是值拷贝，每次循环都拷贝了一个指针，用 `const auto&` 会更高效。
+提示一下：`clear()` 之后列表里存的是已被 delete 的指针值，但 `delete` 不会把指针置空，所以 dangling pointer 的问题需要考虑。另外 `for (auto w : ...)` 这里是值拷贝。对于指针类型拷贝成本极低（8 字节），性能上与 `const auto&` 几乎没有差别；但养成使用 `for (const auto& w : ...)` 的习惯是个好主意——当容器元素是 `QString` 等较大对象时，`const auto&` 可以避免不必要的拷贝开销。
 
 ## 5. 随堂测验回顾
 
