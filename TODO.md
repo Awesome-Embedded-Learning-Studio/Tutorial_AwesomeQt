@@ -12,7 +12,7 @@
 入门层    ██████████  118 / 118 篇（代码示例 134 个全部验证通过）
 进阶层    █████░░░░░  62 / 134 篇
 专家层    ░░░░░░░░░░  0 / 142 篇
-合计      ███░░░░░░░  155 / 397 篇
+合计      █████░░░░░  180 / 394 篇
 ```
 
 ---
@@ -38,47 +38,58 @@
 </details>
 
 <details>
-<summary><strong>03 · QtWidgets 进阶 · 主题能力篇</strong>（10 篇 · ✅ 全部完成）</summary>
+<summary><strong>03 · QtWidgets 进阶 · 主题能力篇</strong>（10 篇 · 🔄 重写中）</summary>
 
-全部完成（10/10），归档于 [todo/archive/advanced-03-qtwidgets-thematic-completed.md](todo/archive/advanced-03-qtwidgets-thematic-completed.md)
+> 原版本因质量回退（深度不足/风格偏差/内容重复），2026-05-18 起重写。
+
+- [x] 🔴 `01-layout-system-advanced.md` — 布局进阶：尺寸策略与动态布局切换 ✅ 2026-05-18
+- [x] 🔴 `02-event-handling-advanced.md` — 事件处理进阶：键盘修饰键与原生事件 ✅ 2026-05-18
+- [x] 🔴 `03-model-view-advanced.md` — Model/View 进阶：自定义 Model 与 Delegate ✅ 2026-05-18
+- [x] 🔴 `04-qss-advanced.md` — QSS 进阶：动态主题切换与复杂选择器 ✅ 2026-05-18
+- [x] 🔴 `05-custom-widget-advanced.md` — 自定义控件进阶：子控件与 QStyle ✅ 2026-05-18
+- [x] 🔴 `06-dialog-advanced.md` — 对话框进阶：模态策略与数据验证 ✅ 2026-05-18
+- [x] 🔴 `07-main-window-advanced.md` — 主窗口进阶：Dock 管理与状态持久化 ✅ 2026-05-18
+- [x] 🟡 `08-graphics-view-advanced.md` — 图形视图进阶：自定义 Item 与碰撞检测 ✅ 2026-05-18
+- [x] 🟡 `09-animation-advanced.md` — 动画进阶：状态机驱动与并行动画组 ✅ 2026-05-18
+- [x] ⚪ `10-mdi-advanced.md` — MDI 进阶：子窗口策略与文档管理 ✅ 2026-05-18
 
 </details>
 
 <details>
-<summary><strong>03 · QtWidgets 进阶 — 控件速查篇</strong>（与入门层一一对应，共 60 篇）</summary>
+<summary><strong>03 · QtWidgets 进阶 — 控件速查篇</strong>（与入门层一一对应，共 64 篇）</summary>
 
-> 文件命名规则：将入门层文件名中的 `-beginner` 替换为 `-advanced`，共 60 篇，内容深入至高级 API、性能优化、自定义扩展与工程实践。此处仅列出每篇的进阶重点方向，不再逐条展开知识点（与入门层结构对应）：
+> 文件命名规则：将入门层文件名中的 `-beginner` 替换为 `-advanced`，共 64 篇，内容深入至高级 API、性能优化、自定义扩展与工程实践。此处仅列出每篇的进阶重点方向，不再逐条展开知识点（与入门层结构对应）：
 
-- [x] 🔴 `11-qwidget-base-advanced.md` — 窗口属性进阶：WA_* 属性、透明背景、无边框窗口拖移 ✅ 2026-05-10
-- [x] 🔴 `12-qabstractbutton-base-advanced.md` — 自定义按钮状态机与三态按钮完整实现 ✅ 2026-05-10
-- [x] 🟡 `13-qframe-base-advanced.md` — QFrame 作为自定义带阴影容器的绘制实现 ✅ 2026-05-10
-- [x] 🟡 `14-qabstractscrollarea-base-advanced.md` — 手动同步双 ScrollArea 与视口坐标计算 ✅ 2026-05-10
-- [x] 🔴 `15-qabstractitemview-base-advanced.md` — 视图基类拖放重排、持久化编辑器、虚拟列表 ✅ 2026-05-10
-- [x] 🟡 `16-qabstractspinbox-base-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `17-qpushbutton-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `18-qtoolbutton-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `19-qradiobutton-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `20-qcheckbox-advanced.md` ✅ 2026-05-10
-- [x] ⚪ `21-qcommandlinkbutton-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `22-qlineedit-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `23-qtextedit-advanced.md` ✅ 2026-05-10
-- [x] 🟡 `24-qplaintextedit-advanced.md` ✅ 2026-05-10
-- [x] 🟡 `25-qtextbrowser-advanced.md` ✅ 2026-05-10
-- [x] ⚪ `26-qkeysequenceedit-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `27-qcombobox-advanced.md` ✅ 2026-05-10
-- [x] 🟡 `28-qfontcombobox-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `29-qspinbox-advanced.md` ✅ 2026-05-10
-- [x] 🟡 `30-qdatetimeedit-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `31-qslider-advanced.md` ✅ 2026-05-10
-- [x] 🟡 `32-qscrollbar-advanced.md` ✅ 2026-05-10
-- [x] 🟡 `33-qdial-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `34-qlabel-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `35-qprogressbar-advanced.md` ✅ 2026-05-10
-- [x] 🟡 `36-qlcdnumber-advanced.md` ✅ 2026-05-10
-- [x] 🟡 `37-qcalendarwidget-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `38-qgroupbox-advanced.md` ✅ 2026-05-10
-- [x] 🔴 `39-qtabwidget-advanced.md` ✅ 2026-05-10
-- [x] 🟡 `40-qtabbar-advanced.md` ✅ 2026-05-10
+- [x] 🔴 `11-qwidget-base-advanced.md` — 窗口属性进阶：WA_* 属性、透明背景、无边框窗口拖移 ✅ 2026-05-18
+- [x] 🔴 `12-qabstractbutton-base-advanced.md` — 自定义按钮状态机与三态按钮完整实现 ✅ 2026-05-18
+- [x] 🟡 `13-qframe-base-advanced.md` — QFrame 作为自定义带阴影容器的绘制实现 ✅ 2026-05-18
+- [x] 🟡 `14-qabstractscrollarea-base-advanced.md` — 手动同步双 ScrollArea 与视口坐标计算 ✅ 2026-05-18
+- [x] 🔴 `15-qabstractitemview-base-advanced.md` — 视图基类拖放重排、持久化编辑器、虚拟列表 ✅ 2026-05-18
+- [x] 🟡 `16-qabstractspinbox-base-advanced.md` — 自定义步进行为、输入验证状态机 ✅ 2026-05-18
+- [x] 🔴 `17-qpushbutton-advanced.md` — Default/AutoDefault 键盘处理、带菜单按钮信号抑制 ✅ 2026-05-18
+- [x] 🔴 `18-qtoolbutton-advanced.md` — ArrowType 弹出模式时序、工具栏集成 ✅ 2026-05-18
+- [x] 🔴 `19-qradiobutton-advanced.md` — QButtonGroup 互斥边界、动态单选组 ✅ 2026-05-18
+- [x] 🔴 `20-qcheckbox-advanced.md` — 三态 checkState 传播、PartiallyChecked 树传播 ✅ 2026-05-18
+- [x] ⚪ `21-qcommandlinkbutton-advanced.md` — 平台样式适配、描述文本布局 ✅ 2026-05-18
+- [x] 🔴 `22-qlineedit-advanced.md` — QValidator 自定义、输入掩码、补全器集成 ✅ 2026-05-18
+- [x] 🔴 `23-qtextedit-advanced.md` — QTextDocument 底层、富文本操作、QTextCursor 高级导航 ✅ 2026-05-18
+- [x] 🟡 `24-qplaintextedit-advanced.md` — 块级布局、行号边栏实现、最大块计数性能 ✅ 2026-05-18
+- [x] 🟡 `25-qtextbrowser-advanced.md` — 资源加载覆写、历史栈导航 ✅ 2026-05-18
+- [x] ⚪ `26-qkeysequenceedit-advanced.md` — 按键序列捕获、冲突检测 ✅ 2026-05-18
+- [x] 🔴 `27-qcombobox-advanced.md` — 弹出定位计算、自定义委托、Model 驱动 ✅ 2026-05-18
+- [x] 🟡 `28-qfontcombobox-advanced.md` — 字体枚举过滤、预览委托 ✅ 2026-05-18
+- [x] 🔴 `29-qspinbox-advanced.md` — textFromValue/valueFromText 自定义、步进控制 ✅ 2026-05-18
+- [x] 🟡 `30-qdatetimeedit-advanced.md` — Section 编辑状态机、时区感知 ✅ 2026-05-18
+- [x] 🔴 `31-qslider-advanced.md` — 鼠标到值映射覆写、自定义刻度绘制 ✅ 2026-05-18
+- [x] 🟡 `32-qscrollbar-advanced.md` — 滑块尺寸公式、range 与 step 交互 ✅ 2026-05-18
+- [x] 🟡 `33-qdial-advanced.md` — 角度到值非线性映射、包装模式 ✅ 2026-05-18
+- [x] 🔴 `34-qlabel-advanced.md` — 富文本懒解析、buddy 快捷键、省略模式 ✅ 2026-05-18
+- [x] 🔴 `35-qprogressbar-advanced.md` — 无限动画集成、自定义文本覆写 ✅ 2026-05-18
+- [x] 🟡 `36-qlcdnumber-advanced.md` — 七段字形映射、自定义段样式 ✅ 2026-05-18
+- [x] 🟡 `37-qcalendarwidget-advanced.md` — 日期格式化、单元格自定义、日期范围限制 ✅ 2026-05-18
+- [x] 🔴 `38-qgroupbox-advanced.md` — 标题绘制覆写、checkable 子树禁用传播 ✅ 2026-05-18
+- [x] 🔴 `39-qtabwidget-advanced.md` — QTabBar + QStackedWidget 协调、可关闭标签 ✅ 2026-05-18
+- [x] 🟡 `40-qtabbar-advanced.md` — 标签拖拽重排鼠标事件、关闭按钮自定义 ✅ 2026-05-18
 - [ ] 🔴 `41-qstackedwidget-advanced.md` — QStackedWidget 滑动切换动画实现
 - [ ] 🔴 `42-qsplitter-advanced.md` — QSplitter 自定义拖动手柄外观与最小宽度约束
 - [ ] 🟡 `43-qtoolbox-advanced.md` — QToolBox 自定义标题栏样式与动画展开
@@ -699,9 +710,9 @@
 | 层级 | 总篇数 | 已完成 | 进行中 | 未开始 |
 |------|--------|--------|--------|--------|
 | 入门 | 118 | 118 | 0 | 0 |
-| 进阶 | 134 | 32 | 0 | 102 |
+| 进阶 | 134 | 62 | 0 | 72 |
 | 专家 | 142 | 0 | 0 | 142 |
-| **合计** | **397** | **150** | **0** | **247** |
+| **合计** | **394** | **180** | **0** | **214** |
 
 ---
 

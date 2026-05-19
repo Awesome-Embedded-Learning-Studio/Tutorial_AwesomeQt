@@ -1,0 +1,160 @@
+---
+title: "3.2 事件处理进阶"
+description: "入门篇我们学了重写 paintEvent/mousePressEvent 这些基本操作，但 Qt 的事件系统远不止于此。当你的应用需要拦截全局输入、处理平台原生消息、或者精确控制事件传播链时，基础篇那点知识就不够用了。"
+---
+
+# 现代Qt开发教程（进阶篇）3.2——事件处理进阶
+
+## 1. 前言 / 为什么要重新审视事件处理
+
+入门篇我们把 mousePressEvent、keyPressEvent、eventFilter 这些基本的event handling 过了一遍，知道了 accept/ignore 控制传播方向，也学会了用 installEventFilter 拦截子控件事件。说实话，大部分场景下这些知识确实够用了。但如果你写过稍微复杂一点的应用——比如一个需要全局快捷键的编辑器、一个要处理触控板高精度滚动的图片浏览器、或者一个需要拦截 Windows 原生消息的自定义标题栏——你很快就会发现基础篇的那套东西捉襟见肘。
+
+举个例子吧！咱们需要在画面上实现橡皮筋选区（就是鼠标按住拖出一个矩形框）。听起来很简单对吧？但问题是用户拖拽的时候鼠标经常会移出控件边界，一旦出了边界 mouseMoveEvent 就收不到了，选区直接断掉。后来用了 grabMouse() 才搞定，但 grabMouse 又带来了一堆新问题——忘记 release 的话整个应用鼠标直接锁死，测试的时候只能强杀进程，那段经历真的让我对事件传播链的理解上了一个台阶。这篇文章我们就把事件系统的进阶内容展开：传播链的完整优先级、强制捕获输入的机制、平台原生消息处理、以及高精度滚轮事件的处理。
+
+## 2. 环境说明
+
+本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。核心内容分布在 QtWidgets（QWidget 的事件相关方法）和 QtGui（QMouseEvent、QKeyEvent、QWheelEvent 等事件类）模块中。nativeEvent 部分涉及平台特定头文件，Windows 下需要 `<windows.h>`，X11 下需要 `<X11/Xlib.h>`。所有示例在对应平台上编译运行。
+
+## 3. 核心概念讲解
+
+### 3.1 事件传播链完整优先级——event()、eventFilter()、specific handler 谁先谁后
+
+入门篇我们讲了 eventFilter 比具体的 handler 先执行，但没有把完整的调用链画出来。现在我们把整条链路搞清楚。当一个事件到达一个 QObject 时，Qt 的分发逻辑是这样走的：
+
+第一步，检查这个对象上有没有安装 eventFilter。如果有，先调用所有 eventFilter 的 eventFilter() 方法，按照后安装先调用的栈式顺序依次执行。任何一个 eventFilter 返回 true，事件就被消费掉了，后面的步骤全部跳过。
+
+第二步，如果所有 eventFilter 都返回了 false，Qt 调用对象自身的 `event()` 方法。event() 是事件分发的总入口，它根据事件类型把事件路由到具体的 handler。比如收到 QEvent::KeyPress 就调用 keyPressEvent，收到 QEvent::MouseButtonPress 就调用 mousePressEvent。如果你重写了 event() 并且返回 true，具体的 handler 就不会被调用。
+
+第三步，如果 event() 没有消费事件（调用了基类的 event 实现），具体的 handler 被调用。handler 内部通过 accept/ignore 决定事件是否继续向父控件传播。
+
+所以完整的优先级是：eventFilter > event() > specific handler（mousePressEvent 等）。这意味着如果你在 event() 里拦截了某个事件，你的 mousePressEvent 根本不会被调用——这个细节在很多调试场景下会让人抓狂。
+
+现在有一道调试题给大家。看下面这段代码，假设我们有一个 MyWidget，它的父窗口给它安装了 eventFilter。用户按下 Ctrl+S，但 MyWidget 的 keyPressEvent 始终没有收到这个事件。为什么？
+
+```cpp
+// 父窗口中的 eventFilter
+bool MainWindow::eventFilter(QObject *watched, QEvent *event) override
+{
+    if (watched == m_myWidget && event->type() == QEvent::KeyPress) {
+        auto *keyEvent = static_cast<QKeyEvent *>(event);
+        if (keyEvent->modifiers() & Qt::ControlModifier) {
+            qDebug() << "捕获到 Ctrl 组合键";
+            return false;  // 期望放行，但实际上...
+        }
+    }
+    return QWidget::eventFilter(watched, event);
+}
+```
+
+问题出在 QWidget::eventFilter 的默认实现上。默认的 eventFilter 本身也会处理某些快捷键事件（比如 Ctrl 组合键可能触发 QAction 的快捷键匹配），如果你在判断条件匹配后只是 qDebug 然后返回 false，但 QWidget::eventFilter 的默认实现可能已经在别处消费了这个事件。更常见的陷阱是：eventFilter 里对某些条件的分支返回了 true（吞掉事件），但你的判断逻辑有漏洞，导致本应放行的按键被误拦截。比如上面代码如果有一个 `return true` 的分支条件写错了，Ctrl+S 就会被吞掉。
+
+### 3.2 grabMouse() / grabKeyboard()——强制捕获输入
+
+回到前面说的橡皮筋选区场景。正常的 mouseMoveEvent 只在鼠标位于控件内部时才触发（或者 mouseTracking 开启后无论是否按下都会触发）。但用户拖拽的时候鼠标经常会跑到控件外面，这时候控件就收不到鼠标事件了。grabMouse() 就是解决这个问题的：调用之后，所有的鼠标事件都会被强制路由到调用 grabMouse 的控件，无论鼠标实际在屏幕的哪个位置。
+
+```cpp
+void RubberBandWidget::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        m_origin = event->pos();
+        grabMouse();  // 强制捕获，之后所有鼠标事件都发到这里
+    }
+}
+
+void RubberBandWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        releaseMouse();  // 必须释放！
+        // 计算选区...
+    }
+}
+```
+
+grabKeyboard() 的行为完全类似，调用后所有键盘事件强制路由到指定控件。使用场景比较少，通常用在需要临时接管键盘输入的控件上，比如一个自定义的快捷键录制组件。
+
+这里有一个极其关键的规则：grab 之后必须 release。而且 release 的时机必须和 grab 严格配对。如果你在 mousePressEvent 里 grab 了但 mouseReleaseEvent 里因为某个条件分支忘了 release，那整个应用的鼠标就彻底锁死了——不光你的控件收不到事件（因为它已经被你 grab 了但你的逻辑有 bug），其他所有窗口也收不到鼠标事件。用户唯一的出路就是 Alt+Tab 切到终端强杀进程（顺手可能会问候你的祖宗十八代，所以千万小心。。。）。grabMouse 还有一个带 QCursor 参数的重载，可以在 grab 的同时改变光标形状，适合在拖拽操作时显示十字光标之类的视觉提示。
+
+### 3.3 nativeEvent()——处理平台原生窗口消息
+
+Qt 的事件系统是对平台底层窗口系统的抽象，但有时候你需要直接处理操作系统的原始消息。比如在 Windows 上你想自定义窗口的标题栏行为（拖拽区域、系统菜单），或者你想拦截 WM_DEVICECHANGE 处理 USB 设备插拔。nativeEvent() 就是干这个的。
+
+```cpp
+bool MyWidget::nativeEvent(const QByteArray &eventType, void *message, qintptr *result) override
+{
+    if (eventType == "windows_generic_MSG") {
+        auto *msg = static_cast<MSG *>(message);
+        if (msg->message == WM_NCHITTEST) {
+            // 自定义标题栏的拖拽区域
+            *result = HTCAPTION;
+            return true;
+        }
+    }
+    return QWidget::nativeEvent(eventType, message, result);
+}
+```
+
+在 X11 平台上，eventType 是 "xcb_generic_event_t"，message 指向 XCB 事件结构体。macOS 上是 "mac_generic_NSEvent"，message 指向 NSEvent。注意 Qt 6 中 nativeEvent 的第三个参数类型从 Qt 5 的 `long*` 变成了 `qintptr*`，如果你从 Qt 5 迁移代码记得改这个。
+
+nativeEvent 的返回值语义和 eventFilter 类似：返回 true 表示你已经处理了这个消息，Qt 不会再做默认处理；返回 false 表示让 Qt 继续正常处理。但这里有一个大坑：如果你返回 true 但没有正确设置 `*result`，窗口管理器会收到一个未定义的返回值，导致窗口行为异常——比如拖动不了、缩放没反应、鼠标点击穿透等。所以返回 true 之前一定要想清楚 result 应该设什么值。
+
+### 3.4 滚轮精度——angleDelta() 与 pixelDelta()
+
+QWheelEvent 提供了两个方法获取滚动量：angleDelta() 返回的是以"八分之一度"为单位的角位移，pixelDelta() 返回的是以屏幕像素为单位的位移。为什么要两个？因为输入设备不一样。
+
+传统鼠标的滚轮是"段落式"的，每滚一格产生一个固定的角度增量（通常是 120 个八分之一度，即 15 度）。这种设备用 angleDelta() 就够了。但触控板和高精度滚轮（比如罗技的无极滚轮）产生的是连续的微小位移，这种位移更适合用像素来描述——pixelDelta() 在这类设备上会返回非零值。
+
+正确的处理方式是优先检查 pixelDelta，如果它非零就用像素值做滚动，否则退回到 angleDelta 做基于角度的滚动。这样做可以同时兼容传统鼠标和触控板，触控板用户会得到更平滑的滚动体验。
+
+```cpp
+void ScrollView::wheelEvent(QWheelEvent *event) override
+{
+    QPoint delta = event->pixelDelta();
+    if (delta.isNull()) {
+        // 传统鼠标：angleDelta / 120 得到"格数"，再乘以每格滚动像素
+        delta = event->angleDelta();
+        scroll_by(delta.y() / 120.0 * kLineHeight);
+    } else {
+        // 触控板：直接用像素值
+        scroll_by(delta.y());
+    }
+    event->accept();
+}
+```
+
+如果你只用 angleDelta 而忽略 pixelDelta，触控板用户在支持高精度滚动的系统上会得到非常粗糙的滚动效果——因为触控板的 angleDelta 值非常小且不规律，你按传统方式除以 120 可能永远得到 0。反过来，如果你只用 pixelDelta，传统鼠标用户在大多数平台上 pixelDelta 永远是 (0,0)，完全不滚动。所以"先 pixel 后 angle"这个优先级顺序不能搞反。
+
+## 4. 踩坑预防
+
+第一个坑是 grabMouse() 之后忘记 releaseMouse()。这个前面已经反复强调过了，这里再补充一下后果的严重程度。grabMouse 是操作系统级别的鼠标捕获，一旦你的控件 grab 了鼠标且没有 release，整个桌面环境下所有窗口都无法接收鼠标事件。你的应用里其他窗口收不到，别的应用也收不到。用户看到的表象就是鼠标能动但点什么都不响应，唯一的出路是键盘 Alt+F4 或者切到终端强杀。解决方案是确保 grab 和 release 严格配对，最好用 RAII 的思想——在 grab 的同一个代码路径中保证 release 一定会被执行，即使在异常分支中也不要遗漏。如果你的控件可能被销毁（比如 tab 页切换导致控件隐藏），在 hideEvent 中也应该检查并 release。
+
+第二个坑是 eventFilter 返回值语义搞反。eventFilter 返回 true 的意思是"事件已经被我处理了，不要再往下传播"，返回 false 的意思是"我不处理，让事件继续正常走"。这和很多人的直觉是反的——不少人以为返回 true 表示"我确认了，继续传播"。后果就是本应到达控件的事件被吞掉了，控件的 keyPressEvent、mousePressEvent 收不到事件，界面看起来完全不响应操作。排查的时候如果你不知道这个语义，可能花半天都找不到原因，因为代码没有报错，事件就是静默消失了。
+
+第三个坑是 nativeEvent 中修改了平台消息但忘记设置 result。比如你在 Windows 上处理 WM_NCHITTEST 返回 true 告诉 Qt "我已经处理了这个消息"，但 *result 没有赋值或者赋了一个错误的值。窗口管理器拿到的 result 可能是栈上的随机值，导致窗口行为完全不可预测——可能拖动不了，可能点击穿透，可能系统菜单弹不出来。正确做法是在返回 true 之前，一定要查阅 MSDN 文档确认当前消息类型期望的 result 值是什么，然后显式赋值。
+
+## 5. 练习项目
+
+练习项目：全局快捷键管理器。我们要实现一个 HotkeyManager 类，能够注册和注销应用级别的快捷键组合，当用户按下已注册的组合键时触发对应的回调函数。
+
+完成标准是：HotkeyManager 继承 QObject，内部维护一个注册表（QMap 或 QHash，键是 QKeySequence，值是回调），通过 installEventFilter 在 QApplication 上安装全局过滤器拦截所有 KeyPress 事件，匹配到已注册的组合键时调用对应回调并消费事件，未匹配的组合键正常放行。支持动态注册和注销快捷键，注销后该组合键不再被拦截。多个快捷键可以同时生效，按键顺序无关。
+
+提示几个关键点：在 QApplication 实例上安装 eventFilter 可以拦截所有控件的所有事件，这就是"全局"的含义；匹配按键时需要同时检查 key() 和 modifiers()，QKeyCombination（Qt 6 新增）可以帮你做这件事；注意区分 KeyPress 和 KeyRelease，只在 Press 时触发回调；回调函数建议用 std::function<void()> 存储，注册接口返回一个 ID 便于注销时使用。
+
+## 6. 官方文档参考链接
+
+[Qt 文档 · The Event System](https://doc.qt.io/qt-6/eventsandfilters.html) -- Qt 事件系统完整概述，涵盖事件分发、传播、过滤的全部机制
+
+[Qt 文档 · QWidget](https://doc.qt.io/qt-6/qwidget.html) -- QWidget 类参考，包含 grabMouse/releaseMouse/nativeEvent 等方法
+
+[Qt 文档 · QObject::installEventFilter](https://doc.qt.io/qt-6/qobject.html#installEventFilter) -- 事件过滤器安装方法和 eventFilter 返回值语义
+
+[Qt 文档 · QWheelEvent](https://doc.qt.io/qt-6/qwheelevent.html) -- 滚轮事件文档，包含 angleDelta 和 pixelDelta 的详细说明
+
+[Qt 文档 · QKeyEvent](https://doc.qt.io/qt-6/qkeyevent.html) -- 键盘事件文档，包含 key、modifiers、QKeyCombination
+
+[Qt 文档 · QCoreApplication](https://doc.qt.io/qt-6/qcoreapplication.html) -- 事件循环核心，sendEvent 和 postEvent 的完整说明
+
+[Qt 文档 · QEvent](https://doc.qt.io/qt-6/qevent.html) -- 事件基类，包含 type() 和 accept()/ignore() 方法
+
+---
+
+到这里，事件系统的进阶内容就过了一遍。事件传播链的完整优先级（eventFilter > event > specific handler）搞清楚了，以后遇到"为什么我的 handler 没被调用"就不会抓瞎。grabMouse 的强制捕获机制是橡皮筋选区和拖拽绘制的必备武器，但必须和 release 严格配对。nativeEvent 打通了 Qt 和平台底层之间的桥梁，在自定义窗口行为时不可替代。滚轮精度的那点事看着简单，但处理好 pixelDelta 和 angleDelta 的优先级，触控板用户的体验会好很多。下一篇我们来看 Model/View 架构——那才是 Qt 数据展示和编辑的核心设计模式。
