@@ -10,9 +10,9 @@
 
 ```
 入门层    ██████████  118 / 118 篇（代码示例 134 个全部验证通过）
-进阶层    █████░░░░░  62 / 134 篇
+进阶层    ████████░░  96 / 134 篇
 专家层    ░░░░░░░░░░  0 / 142 篇
-合计      █████░░░░░  180 / 394 篇
+合计      ███████░░░  214 / 394 篇
 ```
 
 ---
@@ -90,40 +90,40 @@
 - [x] 🔴 `38-qgroupbox-advanced.md` — 标题绘制覆写、checkable 子树禁用传播 ✅ 2026-05-18
 - [x] 🔴 `39-qtabwidget-advanced.md` — QTabBar + QStackedWidget 协调、可关闭标签 ✅ 2026-05-18
 - [x] 🟡 `40-qtabbar-advanced.md` — 标签拖拽重排鼠标事件、关闭按钮自定义 ✅ 2026-05-18
-- [ ] 🔴 `41-qstackedwidget-advanced.md` — QStackedWidget 滑动切换动画实现
-- [ ] 🔴 `42-qsplitter-advanced.md` — QSplitter 自定义拖动手柄外观与最小宽度约束
-- [ ] 🟡 `43-qtoolbox-advanced.md` — QToolBox 自定义标题栏样式与动画展开
-- [ ] 🔴 `44-qscrollarea-advanced.md` — QScrollArea 平滑滚动动画与触控板手势支持
-- [ ] 🔴 `45-qframe-advanced.md` — QFrame 自定义圆角阴影边框绘制
-- [ ] 🔴 `46-qlistwidget-advanced.md` — QListWidget 拖放排序与自定义 ItemWidget
-- [ ] 🔴 `47-qlistview-advanced.md` — QListView 大数据虚拟列表优化
-- [ ] 🔴 `48-qtreewidget-advanced.md` — QTreeWidget 延迟加载子节点（懒加载）
-- [ ] 🔴 `49-qtreeview-advanced.md` — QTreeView 自定义展开图标与整行选中
-- [ ] 🔴 `50-qtablewidget-advanced.md` — QTableWidget 单元格合并与冻结首行首列
-- [ ] 🔴 `51-qtableview-advanced.md` — QTableView 百万行数据虚拟滚动性能优化
-- [ ] 🟡 `52-qheaderview-advanced.md` — QHeaderView 双级表头与自定义排序逻辑
-- [ ] ⚪ `53-qcolumnview-advanced.md` — QColumnView 自定义列宽与预览组件
-- [ ] ⚪ `54-qundoview-advanced.md` — QUndoView 与 QUndoStack 完整撤销重做系统
-- [ ] 🔴 `55-qmainwindow-advanced.md` — QMainWindow 多显示器适配与全屏模式切换
-- [ ] 🔴 `56-qmenubar-advanced.md` — QMenuBar 动态构建菜单与最近文件列表
-- [ ] 🔴 `57-qtoolbar-advanced.md` — QToolBar 响应式工具栏（宽度不足时折叠）
-- [ ] 🔴 `58-qstatusbar-advanced.md` — QStatusBar 多区域复杂状态显示
-- [ ] 🔴 `59-qdockwidget-advanced.md` — QDockWidget 多文档编辑器布局持久化
-- [ ] 🔴 `60-qdialog-advanced.md` — QDialog 异步对话框（非阻塞）与结果回调
-- [ ] 🔴 `61-qdialogbuttonbox-advanced.md` — QDialogButtonBox 自定义帮助按钮与提示
-- [ ] 🔴 `62-qmessagebox-advanced.md` — QMessageBox 自定义图标与详情区域
-- [ ] 🟡 `63-qinputdialog-advanced.md` — QInputDialog 自定义验证器与输入范围
-- [ ] 🟡 `64-qcolordialog-advanced.md` — QColorDialog 集成到自定义颜色选择器面板
-- [ ] 🟡 `65-qfontdialog-advanced.md` — QFontDialog 过滤字体并预览效果
-- [ ] 🔴 `66-qfiledialog-advanced.md` — QFileDialog 自定义预览面板与文件类型图标
-- [ ] 🟡 `67-qprogressdialog-advanced.md` — QProgressDialog 异步任务取消与进度精确同步
-- [ ] ⚪ `68-qerrormessage-advanced.md` — QErrorMessage 持久化抑制状态到 QSettings
-- [ ] 🟡 `69-qwizard-advanced.md` — QWizard 非线性跳转与动态页面生成
-- [ ] 🟡 `70-qsplashscreen-advanced.md` — QSplashScreen 渐变消隐动画与最小显示时长保证
-- [ ] 🟡 `71-qmdiarea-advanced.md` — QMdiArea 标签页模式与子窗口菜单集成
-- [ ] 🟡 `72-qprinter-advanced.md` — QPrinter 自定义页眉页脚与分页逻辑
-- [ ] 🟡 `73-qprintdialog-advanced.md` — QPrintDialog 集成预览与打印范围选择
-- [ ] ⚪ `74-qprintpreviewdialog-advanced.md` — QPrintPreviewDialog 自定义工具栏操作
+- [x] 🔴 `41-qstackedwidget-advanced.md` — QStackedWidget 滑动切换动画实现 ✅ 2026-05-27
+- [x] 🔴 `42-qsplitter-advanced.md` — QSplitter 自定义拖动手柄外观与最小宽度约束 ✅ 2026-05-27
+- [x] 🟡 `43-qtoolbox-advanced.md` — QToolBox 自定义标题栏样式与动画展开 ✅ 2026-05-27
+- [x] 🔴 `44-qscrollarea-advanced.md` — QScrollArea 平滑滚动动画与触控板手势支持 ✅ 2026-05-27
+- [x] 🔴 `45-qframe-advanced.md` — QFrame 自定义圆角阴影边框绘制 ✅ 2026-05-27
+- [x] 🔴 `46-qlistwidget-advanced.md` — QListWidget 拖放排序与自定义 ItemWidget ✅ 2026-05-27
+- [x] 🔴 `47-qlistview-advanced.md` — QListView 大数据虚拟列表优化 ✅ 2026-05-27
+- [x] 🔴 `48-qtreewidget-advanced.md` — QTreeWidget 延迟加载子节点（懒加载） ✅ 2026-05-27
+- [x] 🔴 `49-qtreeview-advanced.md` — QTreeView 自定义展开图标与整行选中 ✅ 2026-05-27
+- [x] 🔴 `50-qtablewidget-advanced.md` — QTableWidget 单元格合并与冻结首行首列 ✅ 2026-05-27
+- [x] 🔴 `51-qtableview-advanced.md` — QTableView 百万行数据虚拟滚动性能优化 ✅ 2026-05-27
+- [x] 🟡 `52-qheaderview-advanced.md` — QHeaderView 双级表头与自定义排序逻辑 ✅ 2026-05-27
+- [x] ⚪ `53-qcolumnview-advanced.md` — QColumnView 自定义列宽与预览组件 ✅ 2026-05-27
+- [x] ⚪ `54-qundoview-advanced.md` — QUndoView 与 QUndoStack 完整撤销重做系统 ✅ 2026-05-27
+- [x] 🔴 `55-qmainwindow-advanced.md` — QMainWindow 多显示器适配与全屏模式切换 ✅ 2026-05-27
+- [x] 🔴 `56-qmenubar-advanced.md` — QMenuBar 动态构建菜单与最近文件列表 ✅ 2026-05-27
+- [x] 🔴 `57-qtoolbar-advanced.md` — QToolBar 响应式工具栏（宽度不足时折叠） ✅ 2026-05-27
+- [x] 🔴 `58-qstatusbar-advanced.md` — QStatusBar 多区域复杂状态显示 ✅ 2026-05-27
+- [x] 🔴 `59-qdockwidget-advanced.md` — QDockWidget 多文档编辑器布局持久化 ✅ 2026-05-27
+- [x] 🔴 `60-qdialog-advanced.md` — QDialog 异步对话框（非阻塞）与结果回调 ✅ 2026-05-27
+- [x] 🔴 `61-qdialogbuttonbox-advanced.md` — QDialogButtonBox 自定义帮助按钮与提示 ✅ 2026-05-27
+- [x] 🔴 `62-qmessagebox-advanced.md` — QMessageBox 自定义图标与详情区域 ✅ 2026-05-27
+- [x] 🟡 `63-qinputdialog-advanced.md` — QInputDialog 自定义验证器与输入范围 ✅ 2026-05-27
+- [x] 🟡 `64-qcolordialog-advanced.md` — QColorDialog 集成到自定义颜色选择器面板 ✅ 2026-05-27
+- [x] 🟡 `65-qfontdialog-advanced.md` — QFontDialog 过滤字体并预览效果 ✅ 2026-05-27
+- [x] 🔴 `66-qfiledialog-advanced.md` — QFileDialog 自定义预览面板与文件类型图标 ✅ 2026-05-27
+- [x] 🟡 `67-qprogressdialog-advanced.md` — QProgressDialog 异步任务取消与进度精确同步 ✅ 2026-05-27
+- [x] ⚪ `68-qerrormessage-advanced.md` — QErrorMessage 持久化抑制状态到 QSettings ✅ 2026-05-27
+- [x] 🟡 `69-qwizard-advanced.md` — QWizard 非线性跳转与动态页面生成 ✅ 2026-05-27
+- [x] 🟡 `70-qsplashscreen-advanced.md` — QSplashScreen 渐变消隐动画与最小显示时长保证 ✅ 2026-05-27
+- [x] 🟡 `71-qmdiarea-advanced.md` — QMdiArea 标签页模式与子窗口菜单集成 ✅ 2026-05-27
+- [x] 🟡 `72-qprinter-advanced.md` — QPrinter 自定义页眉页脚与分页逻辑 ✅ 2026-05-27
+- [x] 🟡 `73-qprintdialog-advanced.md` — QPrintDialog 集成预览与打印范围选择 ✅ 2026-05-27
+- [x] ⚪ `74-qprintpreviewdialog-advanced.md` — QPrintPreviewDialog 自定义工具栏操作 ✅ 2026-05-27
 
 </details>
 
@@ -710,9 +710,9 @@
 | 层级 | 总篇数 | 已完成 | 进行中 | 未开始 |
 |------|--------|--------|--------|--------|
 | 入门 | 118 | 118 | 0 | 0 |
-| 进阶 | 134 | 62 | 0 | 72 |
+| 进阶 | 134 | 96 | 0 | 38 |
 | 专家 | 142 | 0 | 0 | 142 |
-| **合计** | **394** | **180** | **0** | **214** |
+| **合计** | **394** | **214** | **0** | **180** |
 
 ---
 
