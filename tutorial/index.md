@@ -16,10 +16,10 @@ features:
     details: 137 篇教程 · 134 个代码示例 · 覆盖 QtBase、QtGui、QtWidgets、QtNetwork、QML 等全部核心模块
     link: /beginner/
   - title: 进阶层
-    details: 22 篇教程 · 覆盖 QtBase、QtGui 高级用法 · 性能优化与工程实践
+    details: 134 篇教程 · 134 个代码示例 · 覆盖 QtBase、QtGui、QtWidgets、QtNetwork、QML 及 25 个扩展模块
     link: /advanced/
   - title: 专家层
-    details: 源码解析 · MOC 原理 · 信号槽底层 · 编写中
+    details: 142 篇规划中 · 源码解析 · MOC 原理 · 信号槽底层 · 事件循环
     link: /expert/
   - title: 项目实战
     details: Session 1 · 9 个完整工程项目 · 从状态指示灯到哈希计算器

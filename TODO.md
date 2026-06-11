@@ -9,17 +9,17 @@
 ## 🔢 总体进度
 
 ```
-入门层    ██████████  118 / 118 篇（代码示例 134 个全部验证通过）
-进阶层    ████████░░  96 / 134 篇
+入门层    ██████████  137 / 137 篇（代码示例 134 个全部验证通过）✅ 全部完成
+进阶层    ██████████  134 / 134 篇 ✅ 全部完成
 专家层    ░░░░░░░░░░  0 / 142 篇
-合计      ███████░░░  214 / 394 篇
+合计      ██████░░░░  271 / 413 篇
 ```
 
 ---
 
 ## 🟢 入门层
 
-全部完成（118 篇），归档于 [todo/archive/beginner-completed.md](todo/archive/beginner-completed.md)
+全部完成（137 篇），归档于 [todo/archive/beginner-completed.md](todo/archive/beginner-completed.md)
 
 > **代码示例状态**：134 个示例全部构建通过，验证通过率 120/134（90%）。14 个未通过均为 WSL2 环境限制（QtWebEngine EGL、TTS 引擎缺失等），代码本身无问题。
 
@@ -128,39 +128,39 @@
 </details>
 
 <details>
-<summary><strong>04 · QtNetwork（进阶）</strong>（6 篇）</summary>
+<summary><strong>04 · QtNetwork（进阶）</strong>（6 篇 · ✅ 全部完成）</summary>
 
-- [ ] 🔴 `01-tcp-advanced.md` — TCP 进阶：多客户端、粘包处理、心跳机制
+- [x] 🔴 `01-tcp-advanced.md` — TCP 进阶：多客户端、粘包处理、心跳机制 ✅ 2026-06-11
   - 多客户端连接管理（连接表 / ID 映射）
   - 自定义协议帧：包头长度字段解决粘包/拆包
   - 心跳包超时检测与断线重连自动机
   - `QTcpServer::setMaxPendingConnections` 控制连接队列
 
-- [ ] 🟡 `02-udp-advanced.md` — UDP 进阶：多播、大数据分片重组
+- [x] 🟡 `02-udp-advanced.md` — UDP 进阶：多播、大数据分片重组 ✅ 2026-06-11
   - `QUdpSocket::joinMulticastGroup()` 加入多播组
   - UDP 大数据手动分片与序号重组
   - `QNetworkDatagram` 携带发送方信息
   - UDP 可靠传输的简单 ARQ 机制实现
 
-- [ ] 🔴 `03-http-advanced.md` — HTTP 进阶：请求队列、拦截器、Cookie
+- [x] 🔴 `03-http-advanced.md` — HTTP 进阶：请求队列、拦截器、Cookie ✅ 2026-06-11
   - 并发请求限流与优先级队列
   - `QNetworkAccessManager` 全局请求拦截（鉴权头注入）
   - `QNetworkCookieJar` 管理 Session Cookie
   - 断点续传：`Range` 头 + 本地进度记录
 
-- [ ] 🟡 `04-websocket-advanced.md` — WebSocket 进阶：断线重连与心跳保活
+- [x] 🟡 `04-websocket-advanced.md` — WebSocket 进阶：断线重连与心跳保活 ✅ 2026-06-11
   - 指数退避重连策略实现
   - Ping/Pong 心跳帧发送与超时检测
   - 大消息分帧发送（`sendBinaryMessage` 超大 payload）
   - WSS 证书配置与自签名证书信任
 
-- [ ] 🟡 `05-ssl-advanced.md` — SSL 进阶：双向认证与证书链验证
+- [x] 🟡 `05-ssl-advanced.md` — SSL 进阶：双向认证与证书链验证 ✅ 2026-06-11
   - 客户端证书（mTLS）配置流程
   - `QSslCertificate` 证书解析与有效期检查
   - `QSslError` 白名单忽略特定错误（仅开发调试）
   - Let's Encrypt 证书在 Qt 应用中的信任配置
 
-- [ ] 🔴 `06-serialport-advanced.md` — 串口进阶：自定义协议封装与超时处理
+- [x] 🔴 `06-serialport-advanced.md` — 串口进阶：自定义协议封装与超时处理 ✅ 2026-06-11
   - 自定义帧格式：帧头/长度/数据/校验和解析状态机
   - 接收缓冲区管理：不完整帧的暂存策略
   - `QSerialPort::WaitForReadyRead` 同步等待 vs 异步 `readyRead`
@@ -169,76 +169,76 @@
 </details>
 
 <details>
-<summary><strong>05 · 其他模块（进阶，与入门层一一对应）</strong>（25 篇）</summary>
+<summary><strong>05 · 其他模块（进阶，与入门层一一对应）</strong>（25 篇 · ✅ 全部完成）</summary>
 
-- [ ] 🔴 `01-qtsql-advanced.md` — QtSql 进阶：事务、连接池、ORM 封装
-- [ ] 🟡 `02-qtsql-tablemodel-advanced.md` — QSqlRelationalTableModel 关联表视图
-- [ ] 🔴 `03-qtcharts-advanced.md` — QtCharts/QtGraphs 进阶：实时数据更新与自定义 Axis
-- [ ] 🔴 `04-qtmultimedia-player-advanced.md` — 媒体播放进阶：播放列表、媒体元数据、字幕
-- [ ] 🟡 `05-qtmultimedia-camera-advanced.md` — 摄像头进阶：视频录制、帧处理、滤镜
-- [ ] 🟡 `06-qtsvg-advanced.md` — QtSvg 进阶：动态修改 SVG 元素属性
-- [ ] 🟡 `07-qtprintsupport-advanced.md` — 打印进阶：复杂报表生成与多页面布局
-- [ ] 🔴 `08-modbus-advanced.md` — Modbus 进阶：RTU/TCP 切换、寄存器映射表管理
-- [ ] 🟡 `09-mqtt-advanced.md` — MQTT 进阶：QoS 1/2、遗嘱消息、TLS 加密连接
-- [ ] 🟡 `10-qtbluetooth-advanced.md` — 蓝牙进阶：GATT Profile 读写 Characteristic
-- [ ] ⚪ `11-qtnfc-advanced.md` — NFC 进阶：NDEF 记录类型详解与写入标签
-- [ ] 🟡 `12-qtstatemachine-advanced.md` — 状态机进阶：层次状态机、历史状态、并行状态
-- [ ] ⚪ `13-qtscxml-advanced.md` — SCXML 进阶：数据模型与延迟事件
-- [ ] 🟡 `14-qt3d-advanced.md` — Qt3D 进阶：自定义 Material、Framegraph 配置
-- [ ] 🟡 `15-qtquick3d-advanced.md` — QtQuick3D 进阶：PBR 材质、环境光遮蔽、阴影
-- [ ] ⚪ `16-qtquick3d-physics-advanced.md` — 物理进阶：关节约束、力与冲量、射线检测
-- [ ] 🟡 `17-qtpdf-advanced.md` — QtPdf 进阶：文本搜索、选中复制、书签导航
-- [ ] 🟡 `18-qthttpserver-advanced.md` — HttpServer 进阶：中间件链、静态文件服务、身份验证
-- [ ] 🟡 `19-qtwebsockets-advanced.md` — WebSocket 服务端进阶：房间广播、消息队列
-- [ ] ⚪ `20-qtwebchannel-advanced.md` — WebChannel 进阶：自定义传输层（非 WebEngine）
-- [ ] ⚪ `21-qtwebengine-advanced.md` — WebEngine 进阶：自定义 URL Scheme、安全策略
-- [ ] ⚪ `22-qtremoteobjects-advanced.md` — Remote Objects 进阶：自定义序列化与网络传输
-- [ ] ⚪ `23-qtspatial-audio-advanced.md` — 空间音频进阶：混响、距离衰减、头部追踪
-- [ ] ⚪ `24-qttexttospeech-advanced.md` — TTS 进阶：SSML 标记语言与语音合成控制
-- [ ] 🟡 `25-qt5compat-advanced.md` — Qt5Compat 进阶：批量迁移策略与自动化检测工具
+- [x] 🔴 `01-qtsql-advanced.md` — QtSql 进阶：事务、连接池、ORM 封装 ✅ 2026-06-11
+- [x] 🟡 `02-qtsql-tablemodel-advanced.md` — QSqlRelationalTableModel 关联表视图 ✅ 2026-06-11
+- [x] 🔴 `03-qtcharts-advanced.md` — QtCharts/QtGraphs 进阶：实时数据更新与自定义 Axis ✅ 2026-06-11
+- [x] 🔴 `04-qtmultimedia-player-advanced.md` — 媒体播放进阶：播放列表、媒体元数据、字幕 ✅ 2026-06-11
+- [x] 🟡 `05-qtmultimedia-camera-advanced.md` — 摄像头进阶：视频录制、帧处理、滤镜 ✅ 2026-06-11
+- [x] 🟡 `06-qtsvg-advanced.md` — QtSvg 进阶：动态修改 SVG 元素属性 ✅ 2026-06-11
+- [x] 🟡 `07-qtprintsupport-advanced.md` — 打印进阶：复杂报表生成与多页面布局 ✅ 2026-06-11
+- [x] 🔴 `08-modbus-advanced.md` — Modbus 进阶：RTU/TCP 切换、寄存器映射表管理 ✅ 2026-06-11
+- [x] 🟡 `09-mqtt-advanced.md` — MQTT 进阶：QoS 1/2、遗嘱消息、TLS 加密连接 ✅ 2026-06-11
+- [x] 🟡 `10-qtbluetooth-advanced.md` — 蓝牙进阶：GATT Profile 读写 Characteristic ✅ 2026-06-11
+- [x] ⚪ `11-qtnfc-advanced.md` — NFC 进阶：NDEF 记录类型详解与写入标签 ✅ 2026-06-11
+- [x] 🟡 `12-qtstatemachine-advanced.md` — 状态机进阶：层次状态机、历史状态、并行状态 ✅ 2026-06-11
+- [x] ⚪ `13-qtscxml-advanced.md` — SCXML 进阶：数据模型与延迟事件 ✅ 2026-06-11
+- [x] 🟡 `14-qt3d-advanced.md` — Qt3D 进阶：自定义 Material、Framegraph 配置 ✅ 2026-06-11
+- [x] 🟡 `15-qtquick3d-advanced.md` — QtQuick3D 进阶：PBR 材质、环境光遮蔽、阴影 ✅ 2026-06-11
+- [x] ⚪ `16-qtquick3d-physics-advanced.md` — 物理进阶：关节约束、力与冲量、射线检测 ✅ 2026-06-11
+- [x] 🟡 `17-qtpdf-advanced.md` — QtPdf 进阶：文本搜索、选中复制、书签导航 ✅ 2026-06-11
+- [x] 🟡 `18-qthttpserver-advanced.md` — HttpServer 进阶：中间件链、静态文件服务、身份验证 ✅ 2026-06-11
+- [x] 🟡 `19-qtwebsockets-advanced.md` — WebSocket 服务端进阶：房间广播、消息队列 ✅ 2026-06-11
+- [x] ⚪ `20-qtwebchannel-advanced.md` — WebChannel 进阶：自定义传输层（非 WebEngine） ✅ 2026-06-11
+- [x] ⚪ `21-qtwebengine-advanced.md` — WebEngine 进阶：自定义 URL Scheme、安全策略 ✅ 2026-06-11
+- [x] ⚪ `22-qtremoteobjects-advanced.md` — Remote Objects 进阶：自定义序列化与网络传输 ✅ 2026-06-11
+- [x] ⚪ `23-qtspatial-audio-advanced.md` — 空间音频进阶：混响、距离衰减、头部追踪 ✅ 2026-06-11
+- [x] ⚪ `24-qttexttospeech-advanced.md` — TTS 进阶：SSML 标记语言与语音合成控制 ✅ 2026-06-11
+- [x] 🟡 `25-qt5compat-advanced.md` — Qt5Compat 进阶：批量迁移策略与自动化检测工具 ✅ 2026-06-11
 
 </details>
 
 <details>
-<summary><strong>06 · QML 独立教程（进阶）</strong>（7 篇）</summary>
+<summary><strong>06 · QML 独立教程（进阶）</strong>（7 篇 · ✅ 全部完成）</summary>
 
-- [ ] 🔴 `01-qml-syntax-advanced.md` — QML 语法进阶：绑定陷阱、`required` 属性、`readonly`
+- [x] 🔴 `01-qml-syntax-advanced.md` — QML 语法进阶：绑定陷阱、`required` 属性、`readonly` ✅ 2026-06-11
   - 绑定断裂（命令式赋值覆盖绑定）的排查与修复
   - `required property` 强制父级传值
   - `readonly property` 只读属性的正确用法
   - 延迟初始化与 `Component.onCompleted`
 
-- [ ] 🔴 `02-property-binding-advanced.md` — 属性绑定进阶：`Binding` 元素与条件绑定
+- [x] 🔴 `02-property-binding-advanced.md` — 属性绑定进阶：`Binding` 元素与条件绑定 ✅ 2026-06-11
   - `Binding { target; property; value; when }` 条件绑定
   - `Qt.binding()` 在命令式代码中重建绑定
   - 双向绑定的正确实现（避免绑定循环）
   - 属性别名 `property alias` 与性能分析
 
-- [ ] 🔴 `03-qtquick-controls-advanced.md` — Qt Quick Controls 进阶：自定义样式
+- [x] 🔴 `03-qtquick-controls-advanced.md` — Qt Quick Controls 进阶：自定义样式 ✅ 2026-06-11
   - `Material` / `Fusion` / `Universal` 样式切换
   - 自定义 Control 模板（`background` / `contentItem` / `indicator`）
   - `Palette` 主题色统一管理
   - `ToolTip` / `ToolTipAttached` 全局提示配置
 
-- [ ] 🔴 `04-cpp-qml-interop-advanced.md` — C++/QML 进阶：类型系统与 QML 模块注册
+- [x] 🔴 `04-cpp-qml-interop-advanced.md` — C++/QML 进阶：类型系统与 QML 模块注册 ✅ 2026-06-11
   - `QML_ELEMENT` / `QML_SINGLETON` 宏的区别与用法
   - `qmlRegisterUncreatableType` 只暴露枚举/常量
   - C++ `QAbstractListModel` 完整实现供 QML ListView 驱动
   - Q_INVOKABLE 方法的线程安全注意事项
 
-- [ ] 🔴 `05-qml-animation-advanced.md` — QML 动画进阶：路径动画与 Animator
+- [x] 🔴 `05-qml-animation-advanced.md` — QML 动画进阶：路径动画与 Animator ✅ 2026-06-11
   - `PathAnimation` 沿路径运动
   - `Animator`（在渲染线程运行，比 Animation 更流畅）
   - `SmoothedAnimation` / `SpringAnimation` 物理感动画
   - 动画性能分析：避免 JavaScript 在动画帧中执行
 
-- [ ] 🔴 `06-qml-model-view-advanced.md` — QML 模型视图进阶：DelegateModel 与 section
+- [x] 🔴 `06-qml-model-view-advanced.md` — QML 模型视图进阶：DelegateModel 与 section ✅ 2026-06-11
   - `DelegateModel` 分组与排序
   - `ListView::section` 分节标题
   - `QSortFilterProxyModel` 在 QML 中的使用
   - 大数据列表性能：`cacheBuffer`、`displayMarginBeginning`
 
-- [ ] 🟡 `07-qml-async-workerscript-advanced.md` — QML 异步进阶：WorkerScript 线程模型
+- [x] 🟡 `07-qml-async-workerscript-advanced.md` — QML 异步进阶：WorkerScript 线程模型 ✅ 2026-06-11
   - `WorkerScript` 在后台线程执行 JS 计算
   - `sendMessage` / `onMessage` 线程间通信
   - `XMLHttpRequest` 在 QML 中的异步 HTTP 请求
@@ -709,12 +709,13 @@
 
 | 层级 | 总篇数 | 已完成 | 进行中 | 未开始 |
 |------|--------|--------|--------|--------|
-| 入门 | 118 | 118 | 0 | 0 |
-| 进阶 | 134 | 96 | 0 | 38 |
+| 入门 | 137 | 137 | 0 | 0 |
+| 进阶 | 134 | 134 | 0 | 0 |
 | 专家 | 142 | 0 | 0 | 142 |
-| **合计** | **394** | **214** | **0** | **180** |
+| **合计** | **413** | **271** | **0** | **142** |
 
 ---
 
-*TODO 版本：v2.0（百科全书版）· 生成于 2026-03-17*
+*TODO 版本：v2.1（百科全书版）· 更新于 2026-06-11*
 *每次完成一篇请立即更新对应条目（`[ ]` → `[x] 完成于 YYYY-MM-DD`）并更新上方统计表*
+*注：入门层 118→137 系档案中 00/01 节使用「全部完成」批量标记未计入逐条统计，实际磁盘文档 137 篇已全部完成*

@@ -1,0 +1,15 @@
+// SensorSource API definition for Qt Remote Objects code generator (repc).
+// This file defines the properties and methods that are available on both
+// the source and replica sides of the remote object connection.
+//
+// PROP with READWRITE automatically generates a NOTIFY signal named
+// <propName>Changed. Do NOT duplicate them in the SIGNAL section —
+// repc would generate two overloads with the same signature.
+
+class SensorSource
+{
+    PROP(double temperature READWRITE);
+    PROP(double humidity READWRITE);
+    PROP(QString status);
+    SLOT(void updateSensorData());
+};

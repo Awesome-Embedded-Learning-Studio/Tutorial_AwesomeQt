@@ -14,10 +14,10 @@ const layers = [
   {
     id: 'advanced',
     title: '进阶层',
-    status: 'progress',
-    statusText: '编写中',
-    count: '22 篇已完成',
-    desc: '高级用法、性能优化、工程实践',
+    status: 'done',
+    statusText: '已完成',
+    count: '134 篇 · 134 示例',
+    desc: '覆盖 QtBase、QtGui、QtWidgets、QtNetwork、QML 及 25 个扩展模块的高级用法',
     link: '/advanced/',
   },
   {
@@ -25,7 +25,7 @@ const layers = [
     title: '专家层',
     status: 'progress',
     statusText: '规划中',
-    count: '预估 142 篇',
+    count: '规划 142 篇',
     desc: 'MOC 原理、信号槽源码、内存模型、事件循环源码',
     link: '/expert/',
   },
