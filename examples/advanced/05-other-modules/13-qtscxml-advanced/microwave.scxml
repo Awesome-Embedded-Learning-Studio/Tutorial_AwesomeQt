@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    @file    microwave.scxml
+    @brief   SCXML state machine definition for a microwave oven.
+
+    Demonstrates: data model, conditional transitions, and delayed events.
+    States: idle, doorOpen, cooking, paused, done.
+    Data model uses ECMAScript expressions for conditions and assignments.
+-->
+<scxml
+    xmlns="http://www.w3.org/2005/07/scxml"
+    xmlns:qt="http://www.qt.io/2015/07/scxml"
+    version="1.0"
+    name="MicrowaveStateMachine"
+    initial="idle"
+    datamodel="ecmascript">
+
+    <!-- Data model: cooking timer (seconds) and power level (watts) -->
+    <datamodel>
+        <data id="timer" expr="0"/>
+        <data id="powerLevel" expr="0"/>
+    </datamodel>
+
+    <!-- Idle state: microwave is ready, door is closed -->
+    <state id="idle">
+        <onentry>
+            <log expr="'Entering idle state'" label="info"/>
+        </onentry>
+        <transition event="openDoor" target="doorOpen"/>
+        <!-- Can only start cooking if timer > 0 (door is closed in this state) -->
+        <transition event="start" cond="timer > 0" target="cooking"/>
+        <!-- Ignored if timer is 0: log and stay in idle -->
+        <transition event="start" cond="timer == 0" target="idle">
+            <log expr="'Cannot start: timer is 0'" label="warning"/>
+        </transition>
+    </state>
+
+    <!-- Door open state: cannot cook while door is open -->
+    <state id="doorOpen">
+        <onentry>
+            <log expr="'Door opened'" label="info"/>
+        </onentry>
+        <transition event="closeDoor" target="idle"/>
+        <!-- Cannot start cooking with door open -->
+        <transition event="start" target="doorOpen">
+            <log expr="'Cannot start: door is open!'" label="warning"/>
+        </transition>
+    </state>
+
+    <!-- Cooking state: active heating with delayed timerDone event -->
+    <state id="cooking">
+        <onentry>
+            <log expr="'Cooking started: timer=' + timer + 's, power=' + powerLevel + 'W'" label="info"/>
+            <!-- Send a delayed timerDone event after the cooking time elapses -->
+            <send event="timerDone" delayexpr="timer + 's'" id="cookingTimer"/>
+        </onentry>
+        <onexit>
+            <!-- Cancel the delayed timer if we leave cooking prematurely -->
+            <cancel sendid="cookingTimer"/>
+        </onexit>
+        <transition event="timerDone" target="done"/>
+        <transition event="stop" target="paused"/>
+        <transition event="openDoor" target="doorOpen"/>
+    </state>
+
+    <!-- Paused state: cooking suspended -->
+    <state id="paused">
+        <onentry>
+            <log expr="'Cooking paused'" label="info"/>
+        </onentry>
+        <transition event="start" cond="timer > 0" target="cooking"/>
+        <transition event="openDoor" target="doorOpen"/>
+        <transition event="stop" target="idle"/>
+    </state>
+
+    <!-- Done state: cooking completed -->
+    <state id="done">
+        <onentry>
+            <log expr="'Cooking finished!'" label="info"/>
+        </onentry>
+        <transition event="openDoor" target="doorOpen"/>
+        <transition event="stop" target="idle"/>
+    </state>
+
+</scxml>

@@ -1,0 +1,10 @@
+/// @file    scxml_source_path.h.in
+/// @brief   CMake-configured header that provides the SCXML source directory path.
+///
+/// This file is processed by configure_file() to produce scxml_source_path.h
+/// with the SCXML_SOURCE_DIR macro set to the source tree path. main.cpp
+/// uses this as a fallback to locate the .scxml file at runtime.
+
+#pragma once
+
+#define SCXML_SOURCE_DIR "@SCXML_SOURCE_DIR@"
