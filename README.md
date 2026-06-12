@@ -10,15 +10,15 @@
 
 ## 这是什么
 
-**AwesomeQt** 是一份面向 C++ 开发者的 Qt 6 全栈教程，采用三层分级结构：
+**AwesomeQt** 是一套 Qt 6 中文深度教程，隶属 [Awesome-Embedded-Learning-Studio](https://github.com/Awesome-Embedded-Learning-Studio)。
+
+采用三层分级结构：
 
 ```
-入门层 → 能跑起来，理解核心概念，初步使用 API
-进阶层 → 掌握高级用法，写出工程级代码
-专家层 → 读懂 Qt 源码，理解设计模式与实现原理
+入门层 → 能跑起来，理解核心概念，知其然
+进阶层 → 懂原理，写出工程级稳健代码
+专家层 → 读懂 Qt 源码，每条结论带 文件:行号 证据
 ```
-
-> 本项目隶属于组织 [Awesome-Embedded-Learning-Studio](https://github.com/Awesome-Embedded-Learning-Studio) 的文档教程
 
 ---
 
@@ -56,8 +56,8 @@ cd Tutorial_AwesomeQt
 ```
 入门层    ██████████  137 / 137 篇教程 · 134 个代码示例
 进阶层    ██████████  134 / 134 篇教程 · 134 个代码示例
-专家层    ░░░░░░░░░░  0 / 142 篇（规划中）
-合计      ██████░░░░  271 / 413 篇
+专家层    ░░░░░░░░░░  0 / ~101-108 篇（主力规划中，精确清单待定）
+合计      ██████░░░░  271 / ~372-379 篇
 ```
 
 🚀🚀🚀 更加详细的进度：[tutorial/index.md](tutorial/index.md)
@@ -149,22 +149,6 @@ cd Tutorial_AwesomeQt
 
 ---
 
-## 代码实例库规划
-
-除了教程和控件库之外，项目还规划了完整的**代码实例库**。详见 [`todo/catalogs/`](todo/catalogs/) 目录下的规划清单：
-
-| 清单 | 内容 | 条目数 |
-|------|------|--------|
-| [`todo/catalogs/01-widget.md`](todo/catalogs/01-widget.md) | 单个自定义控件（按钮/标签/输入/进度条/仪表盘/图表/表格/树/列表等，22 个分类） | 500+ |
-| [`todo/catalogs/02-app.md`](todo/catalogs/02-app.md) | 完整应用 Demo（开发工具/网络工具/文件工具/系统工具/图像工具/多媒体/办公/游戏等） | 200+ |
-| [`todo/catalogs/03-model.md`](todo/catalogs/03-model.md) | 控件组合与设计模式（窗口框架/导航布局/主题系统/表单/属性编辑器/拖拽/命令模式等） | 300+ |
-| [`todo/catalogs/04-qml.md`](todo/catalogs/04-qml.md) | QML 专项项目 | 100+ |
-| [`todo/catalogs/05-industrial.md`](todo/catalogs/05-industrial.md) | 工业级项目模板（HMI 仪表盘/SCADA 监控/车载中控等） | 规划中 |
-
-代码实例统一使用 **Qt 6 + CMake** 构建，第三方依赖通过 CMake FetchContent 自动管理。
-
----
-
 ## 致谢
 
 本项目的代码实例规划大量参考了以下开源项目和社区资源，在此致以诚挚的感谢：
@@ -216,7 +200,7 @@ cd Tutorial_AwesomeQt
 
 ## 贡献与反馈
 
-这个教程是**动态生成**的，持续更新中。
+这个教程持续更新中。
 
 如果你发现：
 - 错误或不准确的内容
