@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 import { navZh } from './nav'
 import { buildSidebar } from './sidebar'
 import { cppTemplateEscapePlugin } from '../plugins/escape-cpp-templates'
+import { mermaidPlugin } from '../plugins/mermaid-plugin'
 import { viteCppEscape } from '../plugins/vite-escape-cpp'
 
 export default defineConfig({
@@ -41,6 +42,7 @@ export default defineConfig({
     },
     config(md) {
       cppTemplateEscapePlugin(md)
+      md.use(mermaidPlugin)
     },
   },
 

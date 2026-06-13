@@ -4,10 +4,21 @@
   font-size: 0.82rem;
 }
 
-.vp-doc h1 { line-height: 1.4; }
-.vp-doc h2 { line-height: 1.45; }
-.vp-doc h3 { line-height: 1.5; }
-.vp-doc h4 { line-height: 1.55; }
+.vp-doc h1 {
+  line-height: 1.4;
+}
+
+.vp-doc h2 {
+  line-height: 1.45;
+}
+
+.vp-doc h3 {
+  line-height: 1.5;
+}
+
+.vp-doc h4 {
+  line-height: 1.55;
+}
 
 .vp-doc p {
   margin-bottom: 1.2em;
@@ -29,7 +40,7 @@
   font-size: 0.75rem;
 }
 
-.vp-doc :not(pre) > code {
+.vp-doc :not(pre)>code {
   font-size: 0.78em;
   padding: 0.15em 0.35em;
   border-radius: 4px;
@@ -106,23 +117,19 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(
-    135deg,
-    var(--vp-c-brand-soft) 0%,
-    transparent 50%,
-    var(--vp-c-indigo-soft) 100%
-  );
+  background: linear-gradient(135deg,
+      var(--vp-c-brand-soft) 0%,
+      transparent 50%,
+      var(--vp-c-indigo-soft) 100%);
   opacity: 0.5;
   pointer-events: none;
 }
 
 .VPHero .name.clip {
-  background: linear-gradient(
-    135deg,
-    var(--vp-c-brand-1) 0%,
-    var(--vp-c-indigo-1) 50%,
-    var(--vp-c-purple-1) 100%
-  );
+  background: linear-gradient(135deg,
+      var(--vp-c-brand-1) 0%,
+      var(--vp-c-indigo-1) 50%,
+      var(--vp-c-purple-1) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -140,25 +147,64 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.VPFeatures .item { animation: feature-fade-up 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
-.VPFeatures .item:nth-child(1)  { animation-delay: 0ms; }
-.VPFeatures .item:nth-child(2)  { animation-delay: 78ms; }
-.VPFeatures .item:nth-child(3)  { animation-delay: 156ms; }
-.VPFeatures .item:nth-child(4)  { animation-delay: 234ms; }
-.VPFeatures .item:nth-child(5)  { animation-delay: 312ms; }
-.VPFeatures .item:nth-child(6)  { animation-delay: 390ms; }
-.VPFeatures .item:nth-child(7)  { animation-delay: 468ms; }
-.VPFeatures .item:nth-child(8)  { animation-delay: 546ms; }
-.VPFeatures .item:nth-child(9)  { animation-delay: 624ms; }
-.VPFeatures .item:nth-child(10) { animation-delay: 702ms; }
-.VPFeatures .item:nth-child(11) { animation-delay: 780ms; }
-.VPFeatures .item:nth-child(12) { animation-delay: 858ms; }
+.VPFeatures .item {
+  animation: feature-fade-up 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.VPFeatures .item:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.VPFeatures .item:nth-child(2) {
+  animation-delay: 78ms;
+}
+
+.VPFeatures .item:nth-child(3) {
+  animation-delay: 156ms;
+}
+
+.VPFeatures .item:nth-child(4) {
+  animation-delay: 234ms;
+}
+
+.VPFeatures .item:nth-child(5) {
+  animation-delay: 312ms;
+}
+
+.VPFeatures .item:nth-child(6) {
+  animation-delay: 390ms;
+}
+
+.VPFeatures .item:nth-child(7) {
+  animation-delay: 468ms;
+}
+
+.VPFeatures .item:nth-child(8) {
+  animation-delay: 546ms;
+}
+
+.VPFeatures .item:nth-child(9) {
+  animation-delay: 624ms;
+}
+
+.VPFeatures .item:nth-child(10) {
+  animation-delay: 702ms;
+}
+
+.VPFeatures .item:nth-child(11) {
+  animation-delay: 780ms;
+}
+
+.VPFeatures .item:nth-child(12) {
+  animation-delay: 858ms;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .VPFeatures .item {
@@ -180,16 +226,16 @@
   border-radius: 14px !important;
   background-color: var(--vp-c-bg) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04),
-              0 1px 2px rgba(0, 0, 0, 0.06);
+    0 1px 2px rgba(0, 0, 0, 0.06);
   transition: border-color 0.39s ease,
-              box-shadow 0.39s ease,
-              transform 0.39s ease;
+    box-shadow 0.39s ease,
+    transform 0.39s ease;
 }
 
 .VPFeature.link:hover {
   border-color: var(--vp-c-brand-1) !important;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1),
-              0 4px 8px rgba(0, 0, 0, 0.06);
+    0 4px 8px rgba(0, 0, 0, 0.06);
   transform: translateY(-4px);
 }
 
@@ -203,16 +249,14 @@
   width: 48px !important;
   height: 48px !important;
   border-radius: 12px !important;
-  background: linear-gradient(
-    135deg,
-    var(--vp-c-brand-soft) 0%,
-    var(--vp-c-indigo-soft) 100%
-  ) !important;
+  background: linear-gradient(135deg,
+      var(--vp-c-brand-soft) 0%,
+      var(--vp-c-indigo-soft) 100%) !important;
   color: var(--vp-c-brand-1) !important;
   font-size: 22px !important;
   transition: background 0.39s ease,
-              color 0.39s ease,
-              transform 0.39s ease;
+    color 0.39s ease,
+    transform 0.39s ease;
 }
 
 .VPFeature.link:hover .icon {
@@ -310,12 +354,12 @@
   background-color: var(--vp-c-bg-elv) !important;
   border-color: var(--vp-c-border) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2),
-              0 1px 2px rgba(0, 0, 0, 0.15);
+    0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .dark .VPFeature.link:hover {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3),
-              0 4px 8px rgba(0, 0, 0, 0.2);
+    0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* ── Responsive ──────────────────────────────────────────────── */
@@ -482,4 +526,112 @@
 
 .dark .vp-doc img {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* ================================================================
+   Mermaid Diagrams
+   ================================================================ */
+
+.vp-doc .mermaid-diagram {
+  margin: 1.5em 0;
+  text-align: center;
+  /* 小图居中；与 svg 的 max-width:100% 配合实现响应式 */
+  overflow-x: hidden;
+  /* 图已按比例缩放进容器宽度，永远不出现横向滚动条 */
+  /* 关键：在容器层压低行高，隔离 .vp-doc 全局的 line-height:1.85（见文首）。
+     mermaid 在 dagre 布局阶段按默认行高（约 1.2）预算每个节点的 foreignObject 高度，
+     但渲染时标签的行高会从 .vp-doc 继承到 1.85，把三行文本撑得比节点框高，
+     第三行（如 fetch_add / fetch_sub）就被 foreignObject 裁掉。
+     这里在容器层降到 1.2，行高会级联进 mermaid 的 inline-block 包裹 div，
+     渲染高度才能与 mermaid 的预算对齐。（只在 .nodeLabel 上设无效：行高由包裹 div 决定。）*/
+  line-height: 1.2;
+}
+
+.vp-doc .mermaid-diagram svg {
+  display: inline-block;
+  /* 配合容器 text-align:center 实现居中 */
+  max-width: 100%;
+  /* 响应式：超宽图按比例缩小到容器宽度，不再出现横向滚动条 */
+  height: auto;
+  /* 与 max-width 联动保持比例，连带高度同缩，绝不裁剪 */
+  /* mermaid 渲染的 SVG 内部默认 overflow:hidden，多行/中文标签算宽不准时会被节点框裁掉；
+     强制 visible，保证节点与边标签的文字永不遮挡 */
+  overflow: visible !important;
+}
+
+/*
+ * 节点 / 边标签。
+ * 行高真正生效的是上面 .mermaid-diagram 容器层那条 line-height:1.2（会级联进 mermaid
+ * 的 inline-block 包裹 div）；这里再设一次是双保险，并显式覆盖 mermaid 自身注入的样式。
+ * white-space:nowrap：mermaid 的包裹 div 本就带 nowrap，这里显式钉死，保证行内 token
+ * （如 fetch_add / fetch_sub）不会被节点框宽度误差折行。
+ */
+.vp-doc .mermaid-diagram .nodeLabel,
+.vp-doc .mermaid-diagram .edgeLabel {
+  overflow: visible !important;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+/* 加载中：骨架占位，避免空白跳动 */
+.vp-doc .mermaid-diagram[data-rendered='false'] {
+  min-height: 80px;
+  align-items: center;
+  background: linear-gradient(90deg,
+      var(--vp-c-bg-soft) 25%,
+      var(--vp-c-divider) 37%,
+      var(--vp-c-bg-soft) 63%);
+  background-size: 400% 100%;
+  border-radius: 8px;
+  animation: mermaid-shimmer 1.4s ease infinite;
+}
+
+@keyframes mermaid-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vp-doc .mermaid-diagram[data-rendered='false'] {
+    animation: none;
+  }
+}
+
+/* 渲染失败：把源码以代码块形式兜底显示 */
+.vp-doc .mermaid-diagram[data-rendered='error'] {
+  display: block;
+}
+
+.vp-doc .mermaid-error {
+  margin: 0;
+  padding: 12px 16px;
+  text-align: left;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 让本地搜索能索引到图表源码，但视觉上不可见 */
+.vp-doc .mermaid-search-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

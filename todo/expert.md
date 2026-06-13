@@ -4,8 +4,11 @@
 
 ## 前置
 
-- ⚠ **01 篇落盘待核实**：2026-06-12 核查 `tutorial/expert/01-qtbase/` 仅 index.md、git 无记录。01 是后续篇的引用基石，状态确认前不推进后续。需补则重做。
-- **code-index（源码索引资产）待决策**：是否建 `tutorial/expert/code-index/`（按模块分子目录，供读者对照源码自行验证）。暂不落地。落地时改 4 处：paradigm §2.5/2.6/2.8 + 01 篇删交接单/加链接 + 新建 `code-index/qtbase/01-*.md` + `site/sidebar.ts`。
+- ✅ **01 COW 隐式共享篇已落盘**：2026-06-13 产出到 `tutorial/expert/01-qtbase/01-cow-implicit-sharing-expert.md`。A 取证 25 claims + B 复核（0 打回 / 2 有疑 / 23 通过）。K03/L04 已作者拍板。
+- ✅ **02 COW 容器实战篇已落盘**：2026-06-13 产出到 `tutorial/expert/01-qtbase/02-cow-container-practice-expert.md`。复用篇 1 证据 + 补验，17 claims 全通过。
+- ✅ **code-index 已落地**：`tutorial/expert/code-index/qtbase/` 按源码机制分 5 文件（atomic-operations / qarraydata / qarraydatapointer / qshareddata / cow-edge-cases），进 VitePress 构建。COW 两篇 42 条 claims 已归档。
+- ✅ **claims-registry 已落地**：`.claude/claims-registry.yaml`，append-only，AI 写新篇时先查此表复用已查证结论。
+- ✅ **.audit/ 已落地**：`tutorial/expert/.audit/`，交接单存此，不进 VitePress。
 - [ ] **建 `.claims-registry.yaml`**（`tutorial/expert/.claims-registry.yaml`，按模块分片·append-only·canonical/superseded，防已查证结论被后续篇引用扩散）｜ paradigm§2.9 ｜ 前台配套 ｜ 待产 ｜ 前置：**第 2 篇专家篇开工前**，未建好前靠交接单人工对账
 
 ## 建议顺序

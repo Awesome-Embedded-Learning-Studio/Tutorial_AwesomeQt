@@ -5,14 +5,14 @@
 ## 速览
 
 ```
-入门 137✅ · 进阶 134✅ · 专家 0/102（见 expert.md）· 实例库 1·~1075（首波39见 instance-library.md）· examples 271✅
+入门 137✅ · 进阶 134✅ · 专家 2/102（COW机制原理✅ + COW容器实战✅，见 expert.md）· 实例库 1·~1075（首波39见 instance-library.md）· examples 271✅
 ```
 
 ## 工作区 → 文件
 
 | 工作区 | 文件 | 内容 | 当下 |
 |---|---|---|---|
-| 专家层 | [expert.md](expert.md) | 102 篇源码拆解（每篇带 qt_src 行号证据） | ⚠ 01 篇落盘待核实 |
+| 专家层 | [expert.md](expert.md) | 102 篇源码拆解（每篇带 qt_src 行号证据） | ✅ 01 COW 落盘待作者审 |
 | 实例库 | [instance-library.md](instance-library.md) | widget/app/model/industrial 成品 + 两套文档 | ✅ 首波39 可产 |
 | 基建 | [infra.md](infra.md) | P0/P0.5/P1/P4 + widget 化简 + 地基债 | ✅ 能开干 |
 | embedded | [embedded.md](embedded.md) | Layer1 公共基础 + Layer2 板级 | ⚠ 生产方式待定 |
