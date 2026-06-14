@@ -10,7 +10,7 @@ hero:
       link: /beginner/
     - theme: alt
       text: 项目实战
-      link: /engineering/session1/
+      link: /engineering/
 features:
   - title: 入门层
     details: 137 篇教程 · 134 个代码示例 · 覆盖 QtBase、QtGui、QtWidgets、QtNetwork、QML 等全部核心模块
@@ -22,8 +22,8 @@ features:
     details: 142 篇规划中 · 源码解析 · MOC 原理 · 信号槽底层 · 事件循环
     link: /expert/
   - title: 项目实战
-    details: Session 1 · 9 个完整工程项目 · 从状态指示灯到哈希计算器
-    link: /engineering/session1/
+    details: 实例库 · 真成品（非片段）· 配成品导览 + 手搓手册两套文档
+    link: /engineering/
 ---
 
 <HomeMeta />

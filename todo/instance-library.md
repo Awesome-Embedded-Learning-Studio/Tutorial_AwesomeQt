@@ -13,7 +13,7 @@
 ## 首波 39 件（已定 2026-06-12）
 
 ### 6 项已拍板
-1. statusled 降回 C++17（现 statusled/CMakeLists.txt:6 是 C++23 临时偏差）
+1. ✅ statusled 降回 C++17（widget 化简时已落，C++17 全局设在 widget/CMakeLists.txt）
 2. 控件命名统一 kebab：`widget/statusled/` → `widget/status-led/`
 3. model 先打穿 undo-redo-framework 作 reference，定范式再放量其余 17
 4. automotive-cluster 走纯 QtWidgets 自绘（不碰 QML，否则延后 QML Part6）
@@ -21,7 +21,7 @@
 6. industrial 链接 widget 库 .so 复用（speed-meter/circle-progress/line-chart 先落地）
 
 ### widget 栏（13·每族代表·自绘递进链）
-路径 `widget/<家族>/<控件名>/`。①status-led✅已落地 ②toggle-switch ③circle-progress ④speed-meter ⑤range-slider ⑥line-chart(纯QPainter) ⑦editable-table ⑧checkbox-tree ⑨checkbox-list ⑩log-viewer ⑪password-edit ⑫ip-edit(P1) ⑬fade-animation(P1)。未覆盖9族首波不碰：calendar/datetime/opengl/specialized/network-widget/data-display/multimedia/map/print。
+路径 `widget/<家族>/<控件名>/`。①status-led✅中等档标杆(颜色过渡+呼吸+Q_PROPERTY全+双文档pilot待验格式) ②toggle-switch ③circle-progress ④speed-meter ⑤range-slider ⑥line-chart(纯QPainter) ⑦editable-table ⑧checkbox-tree ⑨checkbox-list ⑩log-viewer ⑪password-edit ⑫ip-edit(P1) ⑬fade-animation(P1)。未覆盖9族首波不碰：calendar/datetime/opengl/specialized/network-widget/data-display/multimedia/map/print。
 
 ### app 栏（7旗舰+1拉伸·撑「真库不是片段」）
 路径 `app/<类目>/<应用名>/`。image-viewer★5 / sqlite-browser★5 / json-editor★4 / network-tool★4-5 / cpu-memory-monitor★4 / serial-tool★4-5(补入·嵌入式最高频) / tetris★4-5 / ~~audio-visualizer~~(拉伸·须先做模拟数据发生器)。
@@ -39,9 +39,9 @@
 
 ### 产出优先序（分批）
 
-> **[格式 gate]** status-led 改造时**同时产 Full + Handbook 两份样板** → 作者验过格式再放量（pilot 纪律，同专家道 01）｜ paradigm§3
+> **[格式 gate]** ✅ status-led 已产 Full 导览 + Handbook（入口+01/02/03+troubleshooting）两套样板（2026-06-14，落 `tutorial/engineering/instances/widget/status-led/`）→ 待作者验格式放量后续
 
-①阻断前置：status-led 改造(降C++17+重命名) + 确认 awesomeqt_add_widget 模板可批量抄
+①✅已完成：status-led 基建化简(降C++17+重命名+STATIC库) + 深度改造(中等档：颜色过渡 QPropertyAnimation + 呼吸 QVariantAnimation + Q_PROPERTY 全 + minimumSizeHint) + 双文档 pilot(成品导览 + 手搓手册 5 文件) → 作者验过格式再放量
 ②撑场批：status-led→toggle→circle→speed-meter→line-chart + image-viewer/sqlite-browser/serial-tool
 ③覆盖批：password/ip/range-slider/editable-table/checkbox-tree/list/log-viewer/fade + json-editor/network-tool/cpu-mem
 ④model reference：undo-redo-framework 1个→定范式→其余17放量

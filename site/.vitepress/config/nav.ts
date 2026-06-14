@@ -25,5 +25,5 @@ export const navZh: DefaultTheme.NavItem[] = [
       { text: '06 · QML 现代界面', link: '/advanced/06-qml/' },
     ],
   },
-  { text: '项目实战', link: '/engineering/session1/' },
+  { text: '项目实战', link: '/engineering/' },
 ]
