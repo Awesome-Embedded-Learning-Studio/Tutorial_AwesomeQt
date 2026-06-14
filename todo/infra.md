@@ -2,20 +2,27 @@
 
 > 单点细节批量处理：扫出清单 → 逐个修。
 
-## widget/ 构建化简（主活·决策已定·未落盘）
+## widget/ 构建化简（✅ 已落盘 2026-06-14 · cmake 验证通过）
 
-把 widget/ 从「发布库式」瘦身为「教学最小形态」。9 步（A4 须先于 A3，其余可调序）：
-1. **A4** 移 demo 子目录+重命名：`StatusLEDWindow.{h,cpp}`→`demo/status_led_window.{h,cpp}`、`main.cpp`→`demo/main.cpp`，改 include（类名不动）
-2. **A5** `src/status_led.cpp` 补 `#include <algorithm>`（真隐患·换发行版编不过）
-3. **A3** `statusled/CMakeLists.txt` 换 STATIC 库+demo+子目录自洽 AUTOMOC
-4. **A2** 根 `widget/CMakeLists.txt` 换 root-owns-config（砍 MERGE_MODE/install/cache 变量）
-5. **A1** 删 `cmake/AwesomeQtWidgets.cmake`(9.5k)+空 cmake/ 目录
-6. **B1** `.claude/example_style.md:110` 成员命名改尾下划线（`m_timer`→`led_size_`，代码零改动只改文档）
-7. **B2** 文件头统一 `@file`/`@brief`（禁 @author/@version/@date）
-8. **C1** 新增 `widget/README.md`（无「专门样本」提法）
-9. `.gitignore` 上移 widget/ 根 + 清旧产物 → **E1** `cd widget && cmake -B build && cmake --build build` 一次成功（/tmp 两轮实测过）
+把 widget/ 从「发布库式」瘦身为「教学最小形态」。9 步（A4 须先于 A3）已全部落盘：
 
-边界：不做 SHARED/install/MERGE_MODE/双.so；不迁移 cmake 模块为专门样本；不改局部变量（camelCase 维持）。
+1. ✅ **A4** demo 子目录迁移：`StatusLEDWindow.{h,cpp}`→`demo/status_led_window.{h,cpp}`、`main.cpp`→`demo/main.cpp`，改 include（类名不动）
+2. ✅ **A5** `src/status_led.cpp` 补 `#include <algorithm>`
+3. ✅ **A3** `status-led/CMakeLists.txt` 换 STATIC 库 + `add_subdirectory(demo)`
+4. ✅ **A2** 根 `widget/CMakeLists.txt` 换 root-owns-config（砍 MERGE_MODE/install/cache）
+5. ✅ **A1** 删 `cmake/AwesomeQtWidgets.cmake` + 空 `cmake/` 目录
+6. ✅ **B1** `.claude/example_style.md` 成员命名改尾下划线（⚠ 见遗留①）
+7. ✅ **B2** 文件头统一 `@file`/`@brief`（删 @author/@version/@date）
+8. ✅ **C1** 新增 `widget/README.md`
+9. ✅ **E1** `cd widget && cmake -B build && cmake --build build` 一次成功（2026-06-14 实测）
+
+外加：目录重命名 `statusled`→`status-led`（instance-library kebab 拍板）；删冗余 `status-led/.gitignore`（根 `**/build/`·`**/.cache/` 已覆盖）。
+
+边界遵守：无 SHARED/install/MERGE_MODE/双.so；cmake 模块未迁为专门样本；局部变量 camelCase 未动。
+
+### 遗留（待作者定夺）
+
+- **①B1 命名规范与存量矛盾**：✅ 已决（2026-06-14）——采纳 (a) 维持现状。`example_style.md` 规范前瞻用尾下划线，`examples/` 存量 ~7674 处 `m_` 前缀不动（迁移收益低风险高）；新 example / 实例库按尾下划线生成。
 
 ## P0 清债
 - [ ] 死链校验（全库）

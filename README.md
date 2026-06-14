@@ -143,9 +143,9 @@ cd Tutorial_AwesomeQt
 
 | 控件 | 说明 |
 |------|------|
-| [`StatusLED`](widget/statusled/) | 状态指示灯，支持 4 种状态（Normal/Warning/Error/Offline）+ 闪烁动画 |
+| [`StatusLED`](widget/status-led/) | 状态指示灯，支持 4 种状态（Normal/Warning/Error/Offline）+ 闪烁动画 |
 
-**构建系统：** [`cmake/AwesomeQtWidgets.cmake`](cmake/AwesomeQtWidgets.cmake) 提供了 `awesomeqt_add_widget()` 等函数，支持 INDIVIDUAL（每个控件独立 `.so`）和 MERGED（合并为单一库）两种构建模式。
+**构建方式：** 每个控件是 STATIC 库 + 独立 demo，根 [`widget/CMakeLists.txt`](widget/CMakeLists.txt) 统一配置（C++17 / AUTOMOC / find_package Qt6）。`cd widget && cmake -B build && cmake --build build` 即可构建。
 
 ---
 

@@ -21,7 +21,7 @@ V4 引擎(JIT/GC) · QQmlEngine 类型桥接。维护者非 QML 方向。revisit
 远超产能，靠广度做发现。首波39见 [instance-library.md](instance-library.md)。revisit：流水账判定持续运作后看有效存量。
 
 ## instances 实战栏目 + 桌面工程化（CI/单测/部署·P3 暂缓）
-原 engineering/session1 已废。桌面 CI/单测/部署 跟 instances 一起往后放。revisit：专家层主力推进到一定阶段。
+原 engineering/session1 已废，2026-06-14 已删（含 nav/build/tutorial-index/engineering-index 引用清理，build volume 改指 instances）。桌面 CI/单测/部署 跟 instances 一起往后放。revisit：专家层主力推进到一定阶段。
 
 ## 专家层 CI（构建/用词/死链/结构检查·暂不落地）
 落地前作者本地 cmake 验示例。revisit：量上来后。

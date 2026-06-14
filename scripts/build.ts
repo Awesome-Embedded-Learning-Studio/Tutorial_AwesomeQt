@@ -30,7 +30,7 @@ const VOLUMES: Volume[] = [
   { name: 'beginner-04-network', srcDir: 'beginner/04-qtnetwork', urlPrefix: '/beginner/04-qtnetwork' },
   { name: 'beginner-05-other', srcDir: 'beginner/05-other-modules', urlPrefix: '/beginner/05-other-modules' },
   { name: 'beginner-06-qml', srcDir: 'beginner/06-qml', urlPrefix: '/beginner/06-qml' },
-  { name: 'engineering-s1', srcDir: 'engineering/session1', urlPrefix: '/engineering/session1' },
+  { name: 'engineering-instances', srcDir: 'engineering/instances', urlPrefix: '/engineering/instances' },
   { name: 'advanced', srcDir: 'advanced', urlPrefix: '/advanced' },
   { name: 'expert', srcDir: 'expert', urlPrefix: '/expert' },
 ]
