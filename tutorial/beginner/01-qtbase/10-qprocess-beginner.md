@@ -109,7 +109,7 @@ process.start("some-command");
 bool success = QProcess::startDetached("some-command");
 ```
 
-`startDetached()` 返回一个 bool，表示启动是否成功。但它不会给你一个 QProcess 对象，因为你无法控制一个已经脱离的进程。这个方法适合启动那些完全独立运行的程序，比如打开浏览器、打开记事本等。需要注意的是，`startDetached()` 之后你没法再读取输出，因为 detached 进程已经和你的程序断开了连接。简单来说：需要交互用 `start()`，只需要启动用 `startDetached()`。
+`startDetached()` 返回一个 bool，表示启动是否成功。但它不会给你一个 QProcess 对象，因为你无法控制一个已经脱离的进程。这个方法适合启动那些完全独立运行的程序，比如打开浏览器、打开记事本等。`startDetached()` 之后你没法再读取输出，因为 detached 进程已经和你的程序断开了连接。简单来说：需要交互用 `start()`，只需要启动用 `startDetached()`。
 
 ### 3.5 环境变量和工作目录
 

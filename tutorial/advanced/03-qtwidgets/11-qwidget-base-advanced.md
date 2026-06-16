@@ -49,7 +49,7 @@ void paintEvent(QPaintEvent*) override
 
 入门篇我们提到了 `Qt::FramelessWindowHint` 去掉标题栏和边框。但去掉标题栏的代价是：窗口不能拖动了。这在实际项目中是个必须解决的问题。
 
-拖动的实现思路很直接：在 mousePressEvent 中记录鼠标按下时的全局坐标和窗口位置，然后在 mouseMoveEvent 中计算鼠标移动的偏移量，用 move() 更新窗口位置。需要注意的是，mouseMoveEvent 默认只在鼠标按键按住时触发（如果没有开启 mouseTracking），所以不需要额外判断按键状态。
+拖动的实现思路很直接：在 mousePressEvent 中记录鼠标按下时的全局坐标和窗口位置，然后在 mouseMoveEvent 中计算鼠标移动的偏移量，用 move() 更新窗口位置。mouseMoveEvent 默认只在鼠标按键按住时触发（如果没有开启 mouseTracking），所以不需要额外判断按键状态。
 
 ```cpp
 void mousePressEvent(QMouseEvent* event) override
@@ -72,7 +72,7 @@ void mouseMoveEvent(QMouseEvent* event) override
 
 这里用 `globalPosition().toPoint()` 而不是 `pos()`，因为我们需要的是鼠标在屏幕上的绝对坐标，而 `pos()` 返回的是相对于控件的坐标。`frameGeometry().topLeft()` 是窗口（含边框）左上角的屏幕坐标——虽然无边框窗口没有可见边框，但 frameGeometry 和 geometry 在无边框窗口上是相等的，所以用哪个都行。减去这个偏移是为了保持鼠标点击位置和窗口左上角的相对距离不变，否则窗口会"跳"到鼠标位置。
 
-接下来还有一个进阶技巧：`Qt::WA_TransparentForMouseEvents`。这个属性让鼠标事件穿透控件，直接传递给它下面的控件。这在做覆盖层（overlay）时非常有用——比如你有一个半透明的信息提示浮在主界面上方，但又不希望它拦截鼠标点击。设置 `setAttribute(Qt::WA_TransparentForMouseEvents)` 后，所有鼠标事件都会穿透这个控件，仿佛它不存在一样。需要注意的是，这个属性只对顶级窗口和有 parent 的子控件有效，而且它不影响键盘事件。
+接下来还有一个进阶技巧：`Qt::WA_TransparentForMouseEvents`。这个属性让鼠标事件穿透控件，直接传递给它下面的控件。这在做覆盖层（overlay）时非常有用——比如你有一个半透明的信息提示浮在主界面上方，但又不希望它拦截鼠标点击。设置 `setAttribute(Qt::WA_TransparentForMouseEvents)` 后，所有鼠标事件都会穿透这个控件，仿佛它不存在一样。这个属性只对顶级窗口和有 parent 的子控件有效，而且它不影响键盘事件。
 
 ### 3.3 setAttribute 的性能影响——频繁切换属性的开销
 

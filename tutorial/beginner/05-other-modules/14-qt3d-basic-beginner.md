@@ -24,7 +24,7 @@ find_package(Qt6 REQUIRED COMPONENTS
 
 Qt3DCore 是 ECS 架构的基础类（QEntity、QComponent），Qt3DExtras 提供了预置的几何体（球体、立方体、平面等）、材质和 Qt3DWindow 便利类，Qt3DInput 处理鼠标/键盘的 3D 场景交互（轨道控制器等）。
 
-在 Qt Installer 中需要确保勾选 Qt 3D 组件。部分发行版中包名可能是 qt6-3d，Debian/Ubuntu 系列可以尝试 apt install qt6-3d-dev。值得注意的是 Qt 3D 在 Qt 6 中的维护状态——它仍然可用，但 Qt 官方的重心已经向 QtQuick3D 倾斜。如果你的项目不需要 C++ API 层面的 3D 控制，直接用下一篇讲的 QtQuick3D 可能是更好的选择。不过理解 Qt 3D 的 ECS 架构对掌握 QtQuick3D 的底层机制也很有帮助，因为 QtQuick3D 内部也是类似的场景图模型。
+在 Qt Installer 中需要确保勾选 Qt 3D 组件。部分发行版中包名可能是 qt6-3d，Debian/Ubuntu 系列可以尝试 apt install qt6-3d-dev。这里有个前提：Qt 3D 在 Qt 6 中的维护状态——它仍然可用，但 Qt 官方的重心已经向 QtQuick3D 倾斜。如果你的项目不需要 C++ API 层面的 3D 控制，直接用下一篇讲的 QtQuick3D 可能是更好的选择。不过理解 Qt 3D 的 ECS 架构对掌握 QtQuick3D 的底层机制也很有帮助，因为 QtQuick3D 内部也是类似的场景图模型。
 
 工具链方面：MSVC 2019+、GCC 11+、Clang 14+，C++17 标准，CMake 3.26+ 构建系统。Qt 3D 底层使用 OpenGL 或 Vulkan 进行渲染，需要确保系统有对应的图形驱动。
 

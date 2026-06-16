@@ -13,7 +13,7 @@ description: "我们在 Qt 开发中几乎每天都要跟按钮打交道——QP
 
 ## 2. 环境说明
 
-本篇代码基于 Qt 6.9.1，CMake 3.26+，C++17 标准。QAbstractButton 属于 QtWidgets 模块，链接 Qt6::Widgets 即可。QAbstractButton 的行为在所有桌面平台上基本一致，唯一需要注意的是自动重复（autoRepeat）的触发间隔受系统定时器精度影响——在 Windows 上默认精度约为 15ms，Linux 上取决于内核配置，macOS 上约为 1ms。大部分应用场景下这个差异可以忽略，但如果你在做高频触发的按钮（比如游戏手柄模拟），可能需要考虑平台差异。
+本篇代码基于 Qt 6.9.1，CMake 3.26+，C++17 标准。QAbstractButton 属于 QtWidgets 模块，链接 Qt6::Widgets 即可。QAbstractButton 的行为在所有桌面平台上基本一致，唯一要留意的是自动重复（autoRepeat）的触发间隔受系统定时器精度影响——在 Windows 上默认精度约为 15ms，Linux 上取决于内核配置，macOS 上约为 1ms。大部分应用场景下这个差异可以忽略，但如果你在做高频触发的按钮（比如游戏手柄模拟），可能需要考虑平台差异。
 
 ## 3. 核心概念讲解
 
@@ -30,7 +30,7 @@ toggleBtn->setCheckable(true);
 // 第二次点击：按钮弹起，checked = false
 ```
 
-`setChecked(bool)` 直接设置按钮的选中状态。这个方法在程序初始化时特别常用——比如你需要让一个单选按钮默认被选中，或者根据配置文件恢复一组复选框的状态。需要注意的是，调用 `setChecked()` 会触发 `toggled(bool)` 信号，但不会触发 `clicked()` 信号——因为用户没有"点击"按钮，只是程序改变了状态。如果你不希望初始化时触发 `toggled` 信号的业务逻辑，可以在连接信号之前调用 `setChecked()`，或者用一个 bool 标志位在槽函数里跳过初始化阶段。
+`setChecked(bool)` 直接设置按钮的选中状态。这个方法在程序初始化时特别常用——比如你需要让一个单选按钮默认被选中，或者根据配置文件恢复一组复选框的状态。调用 `setChecked()` 会触发 `toggled(bool)` 信号，但不会触发 `clicked()` 信号——因为用户没有"点击"按钮，只是程序改变了状态。如果你不希望初始化时触发 `toggled` 信号的业务逻辑，可以在连接信号之前调用 `setChecked()`，或者用一个 bool 标志位在槽函数里跳过初始化阶段。
 
 ```cpp
 auto *radioMale = new QRadioButton("男");

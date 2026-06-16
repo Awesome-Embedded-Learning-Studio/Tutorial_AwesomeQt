@@ -60,7 +60,7 @@ qDebug() << "可用区域:" << page.width() << "x"
          << page.height() << "mm";
 ```
 
-需要注意的是，setPageSize 和 setOrientation 必须在 QPainter 开始绘制之前调用。一旦 QPainter 以 QPrinter 为 paint device 开始了 begin()，页面参数就被锁定了——中途修改不会生效。如果你需要每一页用不同的纸张尺寸或方向，需要在每页结束后调用 QPainter::end()，修改参数，再重新 begin()。
+setPageSize 和 setOrientation 必须在 QPainter 开始绘制之前调用。一旦 QPainter 以 QPrinter 为 paint device 开始了 begin()，页面参数就被锁定了——中途修改不会生效。如果你需要每一页用不同的纸张尺寸或方向，需要在每页结束后调用 QPainter::end()，修改参数，再重新 begin()。
 
 ### 3.2 QPainter + QPrinter：自定义内容的打印流程
 
@@ -182,7 +182,7 @@ void MainWindow::paintDocument(QPrinter *printer)
 
 QPrintPreviewDialog 的工具栏上提供了翻页、缩放、页面切换等操作按钮。用户可以用鼠标滚轮或者按钮在页面间导航，也可以通过缩放查看细节。你不需要写任何额外代码来支持这些交互——Qt 全部帮你处理好了。你唯一要做的事情就是在 paintRequested 的槽函数里把内容画正确。
 
-需要注意的是，QPrintPreviewDialog 每次需要更新预览时都会发射 paintRequested。比如用户在预览窗口中改变缩放比例时，对话框会重新请求绘制。这意味着你的 paintDocument() 可能被调用多次。如果你的绘制逻辑很重（比如需要从数据库加载大量数据），建议在调用 dialog.exec() 之前把数据准备好存到成员变量中，paintDocument() 只负责绘制，不做数据加载。
+QPrintPreviewDialog 每次需要更新预览时都会发射 paintRequested。比如用户在预览窗口中改变缩放比例时，对话框会重新请求绘制。这意味着你的 paintDocument() 可能被调用多次。如果你的绘制逻辑很重（比如需要从数据库加载大量数据），建议在调用 dialog.exec() 之前把数据准备好存到成员变量中，paintDocument() 只负责绘制，不做数据加载。
 
 ### 3.4 导出 PDF：QPrinter 的 PdfFormat 模式
 

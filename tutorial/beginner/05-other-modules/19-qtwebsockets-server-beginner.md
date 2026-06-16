@@ -23,7 +23,7 @@ find_package(Qt6 REQUIRED COMPONENTS WebSockets)
 
 QtWebSockets 从 Qt 5.3 开始提供，在 Qt 6 中属于附加模块（Qt Add-On）。它在协议层面完整实现了 RFC 6455（WebSocket 协议）和 RFC 7692（permessage-deflate 压缩扩展），支持文本帧和二进制帧，支持 ping/pong 心跳检测。底层传输层可以选择普通的 ws://（明文 TCP）或加密的 wss://（TLS over TCP）。
 
-工具链方面没有特殊要求：MSVC 2019+、GCC 11+、Clang 14+，C++17 标准，CMake 3.26+。纯 CPU 运算，不依赖 GPU 或其他硬件。唯一需要注意的是 WSS 模式需要 SSL 证书文件，开发阶段可以用自签名证书，生产环境需要正规 CA 签发的证书。
+工具链方面没有特殊要求：MSVC 2019+、GCC 11+、Clang 14+，C++17 标准，CMake 3.26+。纯 CPU 运算，不依赖 GPU 或其他硬件。唯一要留意的是 WSS 模式需要 SSL 证书文件，开发阶段可以用自签名证书，生产环境需要正规 CA 签发的证书。
 
 ## 3. 核心概念讲解
 

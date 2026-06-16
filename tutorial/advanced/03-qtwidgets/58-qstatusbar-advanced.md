@@ -116,7 +116,7 @@ movie->stop();
 sync_label->setText("已同步");
 ```
 
-最后说自定义 Widget。如果你需要一个状态栏控件同时显示多种信息——比如一个网络状态指示器包含一个颜色圆点和文字——可以继承 QWidget 自己画。QStatusBar 对嵌入的控件没有任何类型限制，只要它是 QWidget 的子类就行。唯一需要注意的是控件的高度：QStatusBar 会根据内部所有控件的最大 sizeHint().height() 来决定自身高度，如果你的自定义控件 sizeHint 返回了一个很大的值，状态栏就会被撑高。
+最后说自定义 Widget。如果你需要一个状态栏控件同时显示多种信息——比如一个网络状态指示器包含一个颜色圆点和文字——可以继承 QWidget 自己画。QStatusBar 对嵌入的控件没有任何类型限制，只要它是 QWidget 的子类就行。唯一要留意的是控件的高度：QStatusBar 会根据内部所有控件的最大 sizeHint().height() 来决定自身高度，如果你的自定义控件 sizeHint 返回了一个很大的值，状态栏就会被撑高。
 
 ### 3.4 setSizeGripEnabled 与状态栏高度控制
 

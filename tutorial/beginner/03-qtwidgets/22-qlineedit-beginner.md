@@ -1,13 +1,13 @@
 ---
 title: "3.22 QLineEdit：单行文本输入"
-description: "QLineEdit 大概是 Qt 里仅次于 QPushButton 的高频控件。任何需要用户输入一行文字的地方——登录框、搜索栏、IP 地址配置、密码输入——背后都是 QLineEdit 在工作。"
+description: "QLineEdit 是 Qt 里仅次于 QPushButton 的高频控件。任何需要用户输入一行文字的地方——登录框、搜索栏、IP 地址配置、密码输入——背后都是 QLineEdit 在工作。"
 ---
 
 # 现代Qt开发教程（新手篇）3.22——QLineEdit：单行文本输入
 
 ## 1. 前言 / QLineEdit 远不止一个输入框
 
-QLineEdit 大概是 Qt 里仅次于 QPushButton 的高频控件。任何需要用户输入一行文字的地方——登录框、搜索栏、IP 地址配置、密码输入——背后都是 QLineEdit 在工作。也正因为它的使用频率太高，很多开发者把它当作"拖上去、连个信号、取个 text"就完事的控件，从来没有系统了解过 QLineEdit 的完整能力集。
+QLineEdit 是 Qt 里仅次于 QPushButton 的高频控件。任何需要用户输入一行文字的地方——登录框、搜索栏、IP 地址配置、密码输入——背后都是 QLineEdit 在工作。也正因为它的使用频率太高，很多开发者把它当作"拖上去、连个信号、取个 text"就完事的控件，从来没有系统了解过 QLineEdit 的完整能力集。
 
 但实际上 QLineEdit 有不少被低估的功能：`setPlaceholderText` 的灰字提示、`setEchoMode` 做密码框和无回显、`setValidator` 配合 QIntValidator 和 QRegularExpressionValidator 做输入限制、以及三个容易混淆的信号 textChanged / textEdited / editingFinished 各自的触发时机和适用场景。其中信号的区别是一个让很多开发者踩过坑的地方——你明明只是想"用户输入完之后做点什么"，结果选错了信号，要么在每次按键时都触发了一遍，要么在程序自己 setText 的时候也跟着触发了。这篇文章我们就把 QLineEdit 的四个核心维度讲透：基础输入控制、回显模式与密码框、输入验证器、以及信号机制的区别。
 
@@ -31,7 +31,7 @@ auto *emailEdit = new QLineEdit();
 emailEdit->setPlaceholderText("example@domain.com");
 ```
 
-`setMaxLength(int)` 限制用户能输入的最大字符数。当输入的字符数达到上限后，用户继续按键不会有任何效果——既不会追加字符也不会有错误提示。需要注意的是，这个限制是"字符数"而不是"字节数"，一个中文字符和一个英文字母都算一个字符。如果你没有调用 `setMaxLength()`，QLineEdit 的默认最大长度是 32767 个字符——这在实际使用中等同于"无限制"，因为单行输入框里输入 32767 个字符本身就是一件很极端的事情。
+`setMaxLength(int)` 限制用户能输入的最大字符数。当输入的字符数达到上限后，用户继续按键不会有任何效果——既不会追加字符也不会有错误提示。这个限制是"字符数"而不是"字节数"，一个中文字符和一个英文字母都算一个字符。如果你没有调用 `setMaxLength()`，QLineEdit 的默认最大长度是 32767 个字符——这在实际使用中等同于"无限制"，因为单行输入框里输入 32767 个字符本身就是一件很极端的事情。
 
 ```cpp
 auto *usernameEdit = new QLineEdit();

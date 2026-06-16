@@ -1,13 +1,13 @@
 ---
 title: "3.41 QStackedWidget：堆叠页面控件"
-description: "QStackedWidget 大概是 Qt 里最\"低调\"的多页容器。它不像 QTabWidget 那样自带一排醒目的标签栏，也不像 QToolBox 那样有可折叠的分区标题——它什么导航控件都没有，就只是一堆 QWidget 叠在一起，"
+description: "QStackedWidget 是 Qt 里最\"低调\"的多页容器。它不像 QTabWidget 那样自带一排醒目的标签栏，也不像 QToolBox 那样有可折叠的分区标题——它什么导航控件都没有，就只是一堆 QWidget 叠在一起，"
 ---
 
 # 现代Qt开发教程（新手篇）3.41——QStackedWidget：堆叠页面控件
 
 ## 1. 前言 / 那个没有标签头却撑起了半个 Qt 导航体系的控件
 
-QStackedWidget 大概是 Qt 里最"低调"的多页容器。它不像 QTabWidget 那样自带一排醒目的标签栏，也不像 QToolBox 那样有可折叠的分区标题——它什么导航控件都没有，就只是一堆 QWidget 叠在一起，你在代码里通过索引切换当前显示哪一个，其余的全部隐藏。听起来简陋得不像话，但 QStackedWidget 的出场频率远比你想象的高。QTabWidget 内部的页面区域就是它，QWizard（向导对话框）的页面管理也靠它，各种设置界面中左侧是导航列表、右侧是切换页面的经典布局还是它。它之所以被广泛使用，恰恰是因为它不绑定任何导航 UI——你可以自由选择用 QComboBox、QListWidget、QTreeWidget、按钮组甚至自定义的手势操作来充当导航，QStackedWidget 只负责页面的显示和隐藏。
+QStackedWidget 是 Qt 里最"低调"的多页容器。它不像 QTabWidget 那样自带一排醒目的标签栏，也不像 QToolBox 那样有可折叠的分区标题——它什么导航控件都没有，就只是一堆 QWidget 叠在一起，你在代码里通过索引切换当前显示哪一个，其余的全部隐藏。听起来简陋得不像话，但 QStackedWidget 的出场频率远比你想象的高。QTabWidget 内部的页面区域就是它，QWizard（向导对话框）的页面管理也靠它，各种设置界面中左侧是导航列表、右侧是切换页面的经典布局还是它。它之所以被广泛使用，恰恰是因为它不绑定任何导航 UI——你可以自由选择用 QComboBox、QListWidget、QTreeWidget、按钮组甚至自定义的手势操作来充当导航，QStackedWidget 只负责页面的显示和隐藏。
 
 今天的内容分四个部分：addWidget 添加页面和 setCurrentIndex 切换页面的基本用法，QStackedWidget 与 QComboBox 或 QListWidget 组合构建导航菜单的实战模式，currentChanged 信号的响应机制，以及它和 QTabWidget 的根本区别与各自的适用场景。
 

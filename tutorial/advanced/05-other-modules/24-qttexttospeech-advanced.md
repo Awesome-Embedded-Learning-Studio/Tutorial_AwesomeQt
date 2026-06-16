@@ -148,7 +148,7 @@ void ssml_examples(QTextToSpeech* tts)
 
 `<say-as>` 标签非常有用——它能告诉 TTS 引擎如何解读特定文本。比如电话号码 `138-0013-8000`，不加标记的话引擎可能把它当作普通数字来读；加了 `interpret-as="telephone"` 后引擎会逐位读出每个数字。
 
-需要注意的是，不是所有 TTS 引擎都完整支持 SSML。Windows SAPI 对 SSML 的支持比较好，Linux speech-dispatcher 的 SSML 支持则取决于后端引擎（espeak-ng 支持基本的 SSML，但某些高级标签可能被忽略）。如果你的应用依赖 SSML 的特定功能，需要在不同平台上测试兼容性。
+不是所有 TTS 引擎都完整支持 SSML。Windows SAPI 对 SSML 的支持比较好，Linux speech-dispatcher 的 SSML 支持则取决于后端引擎（espeak-ng 支持基本的 SSML，但某些高级标签可能被忽略）。如果你的应用依赖 SSML 的特定功能，需要在不同平台上测试兼容性。
 
 ### 3.3 异步状态追踪——synthesize 信号
 

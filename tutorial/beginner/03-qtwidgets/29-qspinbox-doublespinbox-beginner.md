@@ -240,7 +240,7 @@ connect(m_widthSpin, &QSpinBox::valueChanged,
 
 [Qt 文档 · QSpinBox](https://doc.qt.io/qt-6/qspinbox.html) -- 整数步进框
 
-[Qt 文档 · QDoubleSpinBox](https://doc.qt.io/qt-6/qdoubleSpinbox.html) -- 浮点数步进框
+[Qt 文档 · QDoubleSpinBox](https://doc.qt.io/qt-6/qdoublespinbox.html) -- 浮点数步进框
 
 [Qt 文档 · QAbstractSpinBox](https://doc.qt.io/qt-6/qabstractspinbox.html) -- 步进框基类（共享 API）
 

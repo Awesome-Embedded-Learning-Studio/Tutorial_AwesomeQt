@@ -21,6 +21,7 @@ widget/
 | 控件 | 说明 |
 |------|------|
 | [status-led](status-led/) | 状态指示灯，4 种状态（Normal/Warning/Error/Offline）+ 闪烁动画 |
+| [toggle-switch](toggle-switch/) | 滑动开关，点击/拖动切换 + 滑块滑动动画 + 轨道变色 + 自定义配色 |
 
 ## 构建
 
