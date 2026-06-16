@@ -26,8 +26,8 @@
 ### app 栏（7旗舰+1拉伸·撑「真库不是片段」）
 路径 `app/<类目>/<应用名>/`。image-viewer★5 / sqlite-browser★5 / json-editor★4 / network-tool★4-5 / cpu-memory-monitor★4 / serial-tool★4-5(补入·嵌入式最高频) / tetris★4-5 / ~~audio-visualizer~~(拉伸·须先做模拟数据发生器)。
 
-### model 栏（18·先打穿 undo-redo-framework）
-⚠ model 目录零参考——先打穿 undo-redo-framework 定范式（目录布局/是否进 AwesomeQt 命名空间/demo 形态待定），其余放量。
+### model 栏（18·范式已定 2026-06-16）
+✅ 三范式已定（undo-redo-framework 骨架打穿）：目录布局 `model/<NN-类目>/<名>/include|src|demo`（与 widget 同构）/ 库类进 `AwesomeQt::` / demo 形态 = 库式 STATIC + 独立 demo。undo-redo 骨架已落（`move_command` STATIC + QUndoStack/QUndoView demo，构建门+冒烟通），深度成品待 D2 放量，其余 17 照范式复刻。
 - MV链(3)：proxy-model · custom-model · tree-drag-move
 - 设计模式链(15)：undo-redo-framework⭐ref · pimpl-pattern · shared-data-pattern · observer-pattern · sidebar-navigation · theme-system · animation-stack · ide-layout · window-single-instance · config-manager · pdf-export · variant-property-editor(降级·先手写轻量) · state-machine · frameless-window · toast-notification
 - 边界：pimpl/shared-data/observer/state-machine 对齐专家层源码——文档须明确「练手实例 vs 专家源码行号」边界，别和 [expert.md](expert.md) 03/04/19 篇重复。
@@ -44,9 +44,10 @@
 ①✅已完成：status-led 基建化简(降C++17+重命名+STATIC库) + 深度改造(中等档：颜色过渡 QPropertyAnimation + 呼吸 QVariantAnimation + Q_PROPERTY 全 + minimumSizeHint) + 双文档 pilot(成品导览 + 手搓手册 5 文件) → 作者验过格式再放量
 ②✅toggle-switch 已落(2026-06-16，代码+构建门+冒烟+Full+Handbook双文档) → 撑场批续：circle→speed-meter→line-chart + image-viewer/sqlite-browser/serial-tool
 ③覆盖批：password/ip/range-slider/editable-table/checkbox-tree/list/log-viewer/fade + json-editor/network-tool/cpu-mem
-④model reference：undo-redo-framework 1个→定范式→其余17放量
+④✅model reference 骨架已落(2026-06-16)：undo-redo-framework 库式骨架(`move_command` STATIC + demo) + 三范式已定 → 其余 17 照范式放量
 ⑤收尾：tetris；audio-visualizer(须先模拟数据发生器)
-⑥industrial pilot：widget 链落地后→hmi-dashboard 一个
+⑥industrial pilot：widget 链落地后→hmi-dashboard 成品化（骨架已立，复用契约见下）
+⑦✅三栏架构骨架已落(2026-06-16)：app/model/industrial 顶层 CMake + README + 各 1 种子(image-viewer / undo-redo-framework / hmi-dashboard)，构建门 + offscreen 冒烟全通；industrial 跨栏复用契约写明（骨架零依赖，成品期待 widget 链 speed-meter/circle-progress/line-chart 就位再接 link）
 
 ## 规模（参考）
 ~1075 = widget 500 + app 200 + model 317 + qml 52 + industrial 6。全量清单见 [registries/](registries/)（选下一波时查）。qml(52) 已延后。
