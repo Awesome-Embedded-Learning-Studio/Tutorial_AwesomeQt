@@ -50,7 +50,7 @@ window->setWindowTitle("我的第一个 Qt 应用");
 window->setWindowIcon(QIcon(":/icons/app.png"));
 ```
 
-这四个方法经常在 `main()` 函数或者主窗口的构造函数中一起调用。需要注意的是，对于顶级窗口，你可以在 `show()` 之前设置所有属性，`show()` 之后属性会立即生效。
+这四个方法经常在 `main()` 函数或者主窗口的构造函数中一起调用。对于顶级窗口，你可以在 `show()` 之前设置所有属性，`show()` 之后属性会立即生效。
 
 ### 3.2 show() / hide() / setVisible() / raise() / lower()
 

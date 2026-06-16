@@ -56,7 +56,7 @@ QPrintDialog::PrintToFile 选项允许用户选择"打印到文件"（PDF 或 PS
 
 QPrintDialog 把用户的配置写入了 QPrinter 对象，所以我们通过 QPrinter 的接口来读取这些参数。
 
-打印份数通过 copyCount() 获取。这个值就是用户在对话框中设置的"打印份数"——如果用户设了 3 份，copyCount() 返回 3。默认值是 1。需要注意的是，有些打印驱动自身支持多份打印（硬件级多份），这时 QPrinter::supportsMultipleCopies() 返回 true，驱动会负责打印多份；如果不支持，你的应用需要自己循环多次绘制。不过在大多数场景下，你不需要关心这个区别——QPainter 内部会处理 copyCount 的逻辑。
+打印份数通过 copyCount() 获取。这个值就是用户在对话框中设置的"打印份数"——如果用户设了 3 份，copyCount() 返回 3。默认值是 1。有些打印驱动自身支持多份打印（硬件级多份），这时 QPrinter::supportsMultipleCopies() 返回 true，驱动会负责打印多份；如果不支持，你的应用需要自己循环多次绘制。不过在大多数场景下，你不需要关心这个区别——QPainter 内部会处理 copyCount 的逻辑。
 
 ```cpp
 int copies = printer.copyCount();

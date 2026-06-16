@@ -44,7 +44,7 @@ toolbox->setCurrentIndex(0);  // 展开第 1 个面板（画笔工具）
 int current = toolbox->currentIndex();  // 返回 0
 ```
 
-每个面板的内容区域就是一个普通的 QWidget，你可以在里面放任何布局和控件。需要注意的是，QToolBox 在面板折叠时会对该面板的 QWidget 调用 hide()，展开时调用 show()。如果你的面板内有需要在每次展开时刷新的数据（比如从数据库重新读取列表），不能依赖构造函数里的一次性初始化——需要监听 currentChanged 信号在面板展开时执行刷新。
+每个面板的内容区域就是一个普通的 QWidget，你可以在里面放任何布局和控件。QToolBox 在面板折叠时会对该面板的 QWidget 调用 hide()，展开时调用 show()。如果你的面板内有需要在每次展开时刷新的数据（比如从数据库重新读取列表），不能依赖构造函数里的一次性初始化——需要监听 currentChanged 信号在面板展开时执行刷新。
 
 removeItem(int index) 从 QToolBox 中移除指定面板。和 QTabWidget 的 removeTab 一样，removeItem 只是从 QToolBox 的管理中移除面板控件，不会 delete 它。你需要自己管理被移除面板的生命周期。
 

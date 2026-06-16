@@ -53,7 +53,7 @@ dial->setSingleStep(1);
 dial->setNotchesVisible(true);   // 每 1 个单位一根刻度线
 ```
 
-如果你觉得刻度线太密集或者太稀疏，可以通过 setSingleStep 来间接调整——因为 notchSize() 默认跟随 singleStep()。需要注意的是，QDial 的刻度不像 QSlider 那样有独立的 setTickInterval 接口，刻度间距完全由 singleStep 决定。
+如果你觉得刻度线太密集或者太稀疏，可以通过 setSingleStep 来间接调整——因为 notchSize() 默认跟随 singleStep()。QDial 的刻度不像 QSlider 那样有独立的 setTickInterval 接口，刻度间距完全由 singleStep 决定。
 
 还有一个视觉上的细节：setNotchesVisible 打开后，QDial 的圆盘尺寸会自动缩小一圈来给刻度线腾出空间。如果你发现旋钮变小了，这不是你的布局出了问题，而是 QDial 内部的尺寸计算把刻度线的空间纳入了考量。如果刻度线太密集导致几乎看不清每根线，说明你的 range 相对于 singleStep 来说太大了——要么增大 singleStep 来减少刻度数量，要么干脆关掉刻度显示，用旁边的 QLabel 来展示精确数值。
 

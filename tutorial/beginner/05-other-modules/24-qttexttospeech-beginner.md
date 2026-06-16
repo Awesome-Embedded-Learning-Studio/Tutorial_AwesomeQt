@@ -99,7 +99,7 @@ if (!voices.isEmpty()) {
 }
 ```
 
-QVoice 对象包含几个属性：name() 是声音的人类可读名称（比如 "Microsoft Huihui" 或者 "Ting-Ting"），gender() 返回 QVoice::Male 或 QVoice::Female，age() 返回 QVoice::Child、QVoice::Adult、QVoice::Senior 等枚举值。需要注意的是，不是所有平台后端都能准确提供 gender 和 age 信息——有些后端会返回 QVoice::Unknown。
+QVoice 对象包含几个属性：name() 是声音的人类可读名称（比如 "Microsoft Huihui" 或者 "Ting-Ting"），gender() 返回 QVoice::Male 或 QVoice::Female，age() 返回 QVoice::Child、QVoice::Adult、QVoice::Senior 等枚举值。不是所有平台后端都能准确提供 gender 和 age 信息——有些后端会返回 QVoice::Unknown。
 
 一个容易踩的坑是：setLocale() 之后必须重新调用 availableVoices()，因为声音列表是和语言绑定的。如果你在 setLocale() 之前获取了 voices 列表，然后 setLocale() 切换了语言，之前的 voices 列表就作废了——对那些属于其他语言的 voice 调用 setVoice() 会被引擎忽略。
 

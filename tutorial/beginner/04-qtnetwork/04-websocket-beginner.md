@@ -156,7 +156,7 @@ connect(ws, &QWebSocket::pong, [](const QByteArray &payload) {
 
 `ping()` 可以携带一个可选的 payload（QByteArray），对端在回复 pong 时会原样回传这个 payload。你可以利用这个特性来计算往返延迟——在 payload 里放一个时间戳，收到 pong 时算差值。
 
-需要注意的是，如果你的应用运行在反向代理（比如 Nginx）后面，反向代理通常有自己的超时配置。Nginx 默认的 proxy_read_timeout 是 60 秒，如果你的心跳间隔超过这个值，Nginx 会主动断开连接。所以心跳间隔通常设置在 20-30 秒之间。
+如果你的应用运行在反向代理（比如 Nginx）后面，反向代理通常有自己的超时配置。Nginx 默认的 proxy_read_timeout 是 60 秒，如果你的心跳间隔超过这个值，Nginx 会主动断开连接。所以心跳间隔通常设置在 20-30 秒之间。
 
 ## 4. 踩坑预防清单
 
@@ -245,7 +245,7 @@ connect(&server, &QWebSocketServer::newConnection, [&]() {
 - [Qt 文档 · QWebSocket 类](https://doc.qt.io/qt-6/qwebsocket.html) -- WebSocket 客户端的完整 API，包含连接、收发、心跳相关方法
 - [Qt 文档 · QWebSocketServer 类](https://doc.qt.io/qt-6/qwebsocketserver.html) -- WebSocket 服务端的 API，包含监听和连接管理
 - [Qt 文档 · QtWebSockets 模块概述](https://doc.qt.io/qt-6/qtwebsockets-index.html) -- 模块总览和编程指南
-- [RFC 6455 · The WebSocket Protocol](https://tools.ietf.org/html/rfc6455) -- WebSocket 协议的完整规范文档
+- [RFC 6455 · The WebSocket Protocol](https://datatracker.ietf.org/doc/html/rfc6455) -- WebSocket 协议的完整规范文档
 
 *（链接已验证，2026-04-23 可访问）*
 

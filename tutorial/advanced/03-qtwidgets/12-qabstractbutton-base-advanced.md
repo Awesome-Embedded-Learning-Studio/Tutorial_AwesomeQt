@@ -27,7 +27,7 @@ QAbstractButton 内部维护了两个独立的状态维度：`checked`（bool）
 
 `down` 状态还有一个不太显眼的行为：autoRepeat。当 autoRepeat 开启时，QAbstractButton 会在 `down` 为 true 的期间启动一个内部定时器，按照 autoRepeatDelay 和 autoRepeatInterval 的参数持续触发 clicked()。这个定时器的生命周期完全绑定在 `down` 上——用户松开鼠标时 `down` 变为 false，定时器立刻停止。所以如果你在 mouseReleaseEvent 里拦截了事件但忘了调基类，autoRepeat 也会跟着停不下来，因为 `down` 永远不会被清零。
 
-对于三态按钮（tristate），状态维度从 bool 升级为 `Qt::CheckState` 枚举，包含 `Unchecked`、`PartiallyChecked`、`Checked` 三个值。三态切换的循环路径是 `Unchecked -> PartiallyChecked -> Checked -> Unchecked`，但这个循环只在用户点击时生效。程序化调用 `setCheckState()` 可以直接跳到任意状态，不受循环路径限制。需要注意的是，QAbstractButton 层面并没有 tristate 的概念——三态是 QCheckBox 在 QAbstractButton 的 checked bool 之上又加了一层包装。QCheckBox 内部维护了一个 `Qt::CheckState` 类型的成员变量，当 tristate 关闭时它只使用 Unchecked 和 Checked 两个值；开启后才允许 PartiallyChecked 出现。这就是为什么 setTristate(true) 必须显式调用——因为 QAbstractButton 的 checked 本身只有 true/false，没有第三态的位置。
+对于三态按钮（tristate），状态维度从 bool 升级为 `Qt::CheckState` 枚举，包含 `Unchecked`、`PartiallyChecked`、`Checked` 三个值。三态切换的循环路径是 `Unchecked -> PartiallyChecked -> Checked -> Unchecked`，但这个循环只在用户点击时生效。程序化调用 `setCheckState()` 可以直接跳到任意状态，不受循环路径限制。QAbstractButton 层面并没有 tristate 的概念——三态是 QCheckBox 在 QAbstractButton 的 checked bool 之上又加了一层包装。QCheckBox 内部维护了一个 `Qt::CheckState` 类型的成员变量，当 tristate 关闭时它只使用 Unchecked 和 Checked 两个值；开启后才允许 PartiallyChecked 出现。这就是为什么 setTristate(true) 必须显式调用——因为 QAbstractButton 的 checked 本身只有 true/false，没有第三态的位置。
 
 ### 3.2 QStyleOptionButton——按钮绘制的数据包
 

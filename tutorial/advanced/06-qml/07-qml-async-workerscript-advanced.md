@@ -164,7 +164,7 @@ Loader {
 
 `asynchronous: true` 特别适合应用启动时按需加载的功能模块——比如设置面板、数据报表页面、复杂的对话框。这些页面不需要在启动时就存在，等到用户第一次点击对应的入口时再异步加载，既减少了启动时间，又避免了加载过程中的 UI 卡顿。
 
-需要注意的是，异步 Loader 在加载完成之前 `item` 属性是 `null`。如果你在其他地方引用了 `heavyLoader.item.someProperty`，在加载完成之前会报 `Cannot read property of null` 错误。解决方案是所有对 `item` 的访问都加上 `if (item)` 守卫，或者通过 `onLoaded` 信号触发后续操作。
+异步 Loader 在加载完成之前 `item` 属性是 `null`。如果你在其他地方引用了 `heavyLoader.item.someProperty`，在加载完成之前会报 `Cannot read property of null` 错误。解决方案是所有对 `item` 的访问都加上 `if (item)` 守卫，或者通过 `onLoaded` 信号触发后续操作。
 
 ## 4. 踩坑预防
 

@@ -96,7 +96,7 @@ ListView {
 
 `section.criteria` 有两个值：`ViewSection.FullString`（精确匹配整个字符串）和 `ViewSection.FirstCharacter`（只取第一个字符来分组）。后者特别适合按首字母分组展示联系人列表的场景——你不需要在模型中额外加一个「首字母」字段，直接用 `section.criteria: ViewSection.FirstCharacter` 就行。
 
-需要注意的是 section 是基于**连续相同值**来分组的，不是全局去重。如果你的模型数据是 `[A, A, B, A]`，那会出现两个 A 节（中间夹了一个 B）。所以如果你的数据需要全局按首字母分组，必须先排好序。
+section 是基于**连续相同值**来分组的，不是全局去重。如果你的模型数据是 `[A, A, B, A]`，那会出现两个 A 节（中间夹了一个 B）。所以如果你的数据需要全局按首字母分组，必须先排好序。
 
 ### 3.3 QSortFilterProxyModel 在 QML 中注册和使用
 

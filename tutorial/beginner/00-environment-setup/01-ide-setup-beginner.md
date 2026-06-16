@@ -206,7 +206,7 @@ QLoggingCategory::setFilterRules("qt.core.qobject.connect=true");
 
 [Qt Creator 手册](https://doc.qt.io/qtcreator/) · 官方 IDE 的完整文档
 [VS Code C++ 教程](https://code.visualstudio.com/docs/cpp/config-mingw) · 微软官方配置指南
-[CLion CMake 教程](https://www.jetbrains.com/help/clion/cmake-support.html) · JetBrains CMake 支持
+[CLion CMake 教程](https://www.jetbrains.com/help/clion/quick-cmake-tutorial.html) · JetBrains CMake 支持
 
 *（链接已验证，2026-03-17 可访问）*
 
