@@ -1,13 +1,13 @@
 ---
 title: "3.17 QPushButton：最常用的按钮"
-description: "QPushButton 大概是所有 Qt 开发者接触的第一个控件——新建一个 Qt 项目，往界面上拖一个按钮，连接一个 clicked 信号，跑起来看到 \"Hello World\" 弹窗，Qt 开发之旅就这么开始了。"
+description: "QPushButton 是所有 Qt 开发者接触的第一个控件——新建一个 Qt 项目，往界面上拖一个按钮，连接一个 clicked 信号，跑起来看到 \"Hello World\" 弹窗，Qt 开发之旅就这么开始了。"
 ---
 
 # 现代Qt开发教程（新手篇）3.17——QPushButton：最常用的按钮
 
 ## 1. 前言 / 为什么 QPushButton 值得单独一篇
 
-QPushButton 大概是所有 Qt 开发者接触的第一个控件——新建一个 Qt 项目，往界面上拖一个按钮，连接一个 clicked 信号，跑起来看到 "Hello World" 弹窗，Qt 开发之旅就这么开始了。正因为它的使用门槛几乎为零，很多开发者对 QPushButton 的认知停留在"创建、设文字、连 clicked 信号"这个层面就止步了。但 QPushButton 实际上有不少被低估的能力：对话框中的默认按钮与回车键关联、带下拉菜单的按钮、图标按钮的尺寸与对齐、扁平按钮与 QSS 美化——这些都是你在实际项目中会高频使用但可能从来没系统了解过的功能。
+QPushButton 是所有 Qt 开发者接触的第一个控件——新建一个 Qt 项目，往界面上拖一个按钮，连接一个 clicked 信号，跑起来看到 "Hello World" 弹窗，Qt 开发之旅就这么开始了。正因为它的使用门槛几乎为零，很多开发者对 QPushButton 的认知停留在"创建、设文字、连 clicked 信号"这个层面就止步了。但 QPushButton 实际上有不少被低估的能力：对话框中的默认按钮与回车键关联、带下拉菜单的按钮、图标按钮的尺寸与对齐、扁平按钮与 QSS 美化——这些都是你在实际项目中会高频使用但可能从来没系统了解过的功能。
 
 说实话，QPushButton 在 Qt 的按钮家族里算是最"通用"的一个。它不像 QToolButton 那样跟工具栏绑定，不像 QCheckBox / QRadioButton 那样专注于选中状态，也不像 QCommandLinkButton 那样是 Vista 时代的遗留产物。QPushButton 就是那个最朴素的"按一下触发一个动作"的按钮，但它能做的事情比你想象的丰富。这篇文章我们就把 QPushButton 的四个核心维度讲清楚：默认按钮机制、带菜单的下拉按钮、图标按钮的使用技巧、以及扁平按钮与 QSS 美化。
 

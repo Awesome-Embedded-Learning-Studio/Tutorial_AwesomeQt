@@ -233,7 +233,7 @@ if (renderer.elementExists("arrow-left")) {
 
 这个功能在 SVG sprite sheet 中特别有用。你可以把多个图标放在同一个 SVG 文件中，每个图标用 `<g id="icon-name">` 分组，然后通过 `elementId` 单独渲染每一个。这样做的好处是只需要加载和解析一次 SVG 文件，就能获取里面所有图标，减少了文件 I/O 和解析开销。
 
-SVG 文件的结构大概是这样：
+SVG 文件的结构如下：
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
