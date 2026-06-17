@@ -135,6 +135,7 @@ function generateVolumeConfig(vol: Volume, absSiteDir: string, absSrcDir: string
 
   return `import { defineConfig } from 'vitepress'
 import { cppTemplateEscapePlugin } from '${relPlugins}/escape-cpp-templates'
+import { mermaidPlugin } from '${relPlugins}/mermaid-plugin'
 import { viteCppEscape } from '${relPlugins}/vite-escape-cpp'
 
 export default defineConfig({
@@ -166,7 +167,7 @@ export default defineConfig({
   markdown: {
     lineNumbers: true,
     theme: { light: 'github-light', dark: 'github-dark' },
-    config(md) { cppTemplateEscapePlugin(md) },
+    config(md) { cppTemplateEscapePlugin(md); md.use(mermaidPlugin) },
   },
 
   themeConfig: {
@@ -194,6 +195,7 @@ function generateRootConfig(absSiteDir: string, absSrcDir: string): string {
 import { navZh } from '${relNav}'
 import { buildSidebar } from '${relSidebar}'
 import { cppTemplateEscapePlugin } from '${relPlugins}/escape-cpp-templates'
+import { mermaidPlugin } from '${relPlugins}/mermaid-plugin'
 import { viteCppEscape } from '${relPlugins}/vite-escape-cpp'
 
 export default defineConfig({
@@ -225,7 +227,7 @@ export default defineConfig({
   markdown: {
     lineNumbers: true,
     theme: { light: 'github-light', dark: 'github-dark' },
-    config(md) { cppTemplateEscapePlugin(md) },
+    config(md) { cppTemplateEscapePlugin(md); md.use(mermaidPlugin) },
   },
 
   themeConfig: {
