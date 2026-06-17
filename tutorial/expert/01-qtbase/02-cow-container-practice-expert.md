@@ -292,25 +292,16 @@ const 版本不触发：
 
 ### 3.5 const 正确性——你的性能就藏在这里
 
-我们前面看了三个容器的源码，它们遵循完全一样的模式：非 const 方法调 detach()，const 方法不调。这意味着 `const` 不只是一个编译器检查——它在运行时直接决定了你的代码会不会触发一次深拷贝。先看一张总结图：
+我们前面看了三个容器的源码，它们遵循完全一样的模式：非 const 方法调 detach()，const 方法不调。这意味着 `const` 不只是一个编译器检查——它在运行时直接决定了你的代码会不会触发一次深拷贝。先看一张总结表：
 
-```mermaid
-flowchart LR
-    subgraph 安全["✓ 不触发 detach"]
-        S1["constData()"]
-        S2["data() const"]
-        S3["at(i)"]
-        S4["begin() const\nend() const"]
-        S5["cbegin()\ncend()"]
-        S6["operator[] const"]
-    end
-    subgraph 危险["✗ 触发 detach（共享时）"]
-        D1["data() 非const"]
-        D2["begin() / end()"]
-        D3["operator[] 非const"]
-        D4["range-for\n(auto& x : c)"]
-    end
-```
+| ✓ 不触发 detach | ✗ 触发 detach（共享时） |
+|---|---|
+| `constData()` | `data()`（非 const） |
+| `data()` const | `begin()` / `end()` |
+| `at(i)` | `operator[]`（非 const） |
+| `begin()` const / `end()` const | range-for（`auto& x : c`） |
+| `cbegin()` / `cend()` | |
+| `operator[]` const | |
 
 左边这些是安全的——不会触发 detach，零额外开销。右边这些在容器被共享时会触发一次完整的深拷贝。几个实际场景：
 
