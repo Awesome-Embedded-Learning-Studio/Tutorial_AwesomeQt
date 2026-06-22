@@ -13,28 +13,28 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    img: '/Tutorial_AwesomeQt/carousel/status-led.gif',
+    img: '/Tutorial_AwesomeQt/carousel/status-led.webp',
     title: '实例库 · StatusLED',
     subtitle: '状态指示灯，4 种状态 + 闪烁动画',
     link: '/widget/status-led/',
     icon: '💡',
   },
   {
-    img: '/Tutorial_AwesomeQt/carousel/toggle-switch.gif',
+    img: '/Tutorial_AwesomeQt/carousel/toggle-switch.webp',
     title: '实例库 · 自定义开关',
     subtitle: 'toggle-switch 控件，开箱即用的 AwesomeQt:: 组件',
     link: '/widget/toggle-switch/',
     icon: '🎚️',
   },
   {
-    img: '/Tutorial_AwesomeQt/carousel/tutorial.png',
+    img: '/Tutorial_AwesomeQt/carousel/tutorial.webp',
     title: '三层递进教程',
     subtitle: '入门 137 · 进阶 134 · 专家进行中',
     link: '/beginner/',
     icon: '📚',
   },
   {
-    img: '/Tutorial_AwesomeQt/carousel/expert.png',
+    img: '/Tutorial_AwesomeQt/carousel/expert.webp',
     title: '专家层 · 源码可核对',
     subtitle: '每条结论带 文件:行号 证据，读懂 Qt 源码',
     link: '/expert/',
