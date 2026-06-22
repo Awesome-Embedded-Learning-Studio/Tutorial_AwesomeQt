@@ -216,4 +216,4 @@ cd Tutorial_AwesomeQt
 
 ---
 
-**现在你已经知道这是什么了，准备好了吗？从 [教程索引](tutorial/index.md) 开始你的 Qt 之旅吧！**
+**下一步：** 从 [教程索引](tutorial/index.md) 选择适合你的起点，或查看 [更新日志](changelogs/) 了解最新进展。问题与建议欢迎提 [Issue](https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/issues)。
