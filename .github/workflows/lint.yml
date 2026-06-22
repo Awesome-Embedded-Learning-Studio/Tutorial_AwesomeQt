@@ -1,0 +1,26 @@
+# 文章格式检查。存量 316 篇里有约 122 处历史违规（集中在专家层 + code-index 取证产物），
+# 所以这一步暂时「只报告不拦截」（continue-on-error: true）；清理完存量后删掉 continue-on-error 转为强制。
+name: Lint Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  markdown-lint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v17
+        continue-on-error: true   # 存量清理完之前先只报告；之后删掉这行转为强制拦截
+        with:
+          config: '.markdownlint.json'
+          globs: |
+            tutorial/**/*.md
+            !tutorial/**/index.md

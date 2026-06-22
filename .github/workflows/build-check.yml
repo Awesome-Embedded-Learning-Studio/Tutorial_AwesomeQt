@@ -1,0 +1,45 @@
+# 合入前检查门：PR 到 main 时先跑一遍完整构建，把"改坏配置/构建到发布才炸"堵在合入前。
+# 与 deploy.yml 共用同一套构建逻辑（install frozen → restore cache → build），只是不部署。
+name: Build Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 用独立命名空间（check- 前缀），避免和 deploy 的缓存互相覆盖。
+      - name: Restore build cache
+        uses: actions/cache@v4
+        with:
+          path: site/.vitepress/.build-cache
+          key: check-vp-build-${{ runner.os }}-${{ hashFiles('tutorial/**', 'site/.vitepress/config/**', 'site/.vitepress/plugins/**', 'site/.vitepress/theme/**', 'scripts/build.ts', 'package.json', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            check-vp-build-${{ runner.os }}-
+
+      - name: Build
+        run: pnpm build
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
+          BUILD_CONCURRENCY: 8
