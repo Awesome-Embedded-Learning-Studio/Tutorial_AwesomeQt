@@ -1,10 +1,6 @@
-# AwesomeQt — 陪你从第一行代码到读懂源码
+# AwesomeQt — Qt 6 中文深度教程
 
-嘿！这里是Awesome Embedded Studio！我相信大家第一次接触 Qt 的时候，对着 `QObject::connect` 的四个参数发呆了整整一下午。后来又因为忘记加 `Q_OBJECT` 宏，收获了一个莫名其妙的 vtable 错误。再后来，在信号槽的跨线程调用上翻车，在对象树的内存管理上踩雷，在 MOC 生成的代码里迷失方向……
-
-笔者就是这样过来的——有时候博客不靠谱，对着Qt5看着Qt6代码抓耳挠腮，想理解底层原理发现要不然过时了，要不然看不懂。所以——这是一份会陪着你走完整条路的教程——从第一个 `QApplication` 到读懂 MOC 生成的那一刻。我们会吐槽，会叹气，会一起熬夜调试，但你绝对不会断层。
-
-希望这里的内容能让你Happy Qt Coding!
+> 一套聚焦 C++ / QtWidgets 的 Qt 6 中文深度教程：三层递进（入门 → 进阶 → 读源码）+ 可复用实例库，把「学会 Qt」送到「做出东西」。隶属 [Awesome-Embedded-Learning-Studio](https://github.com/Awesome-Embedded-Learning-Studio)。
 
 ---
 
