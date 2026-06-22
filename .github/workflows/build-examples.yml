@@ -1,0 +1,56 @@
+# 示例编译门：PR 改动示例/实例库代码时，CI 真实编译所有 Qt6 CMake 工程，
+# 兑现「克隆即跑」承诺。S3 砍掉的 8 个小众模块示例由 build_examples.py 自动排除（CI 不装这些模块）。
+name: Build Examples
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'examples/**'
+      - 'widget/**'
+      - 'app/**'
+      - 'model/**'
+      - 'industrial/**'
+      - 'scripts/build_examples.py'
+      - '.github/workflows/build-examples.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'examples/**'
+      - 'widget/**'
+      - 'app/**'
+      - 'model/**'
+      - 'industrial/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt6 + build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build ccache \
+            qt6-base-dev qt6-base-dev-tools qt6-tools-dev \
+            qt6-declarative-dev \
+            qt6-charts-dev qt6-multimedia-dev qt6-svg-dev qt6-svgwidgets-dev \
+            qt6-serialport-dev qt6-serialbus-dev qt6-websockets-dev \
+            qt6-3d-dev qt6-quick3d-dev \
+            qt6-connectivity-dev qt6-mqtt-dev qt6-pdf-dev \
+            qt6-core5compat-dev qt6-statemachine-dev \
+            libgl1-mesa-dev
+          # 个别 Qt6 addon 在不同 Ubuntu 版本包名可能缺失，best-effort 装一下，失败不中断。
+          sudo apt-get install -y qt6-httpserver-dev 2>/dev/null || true
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-qt-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: ccache-qt-${{ runner.os }}-
+
+      - name: Build all examples
+        run: |
+          export CCACHE_DIR="$HOME/.cache/ccache"
+          python3 scripts/build_examples.py --workers 6
