@@ -13,14 +13,14 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    img: '/Tutorial_AwesomeQt/carousel/status-led.png',
+    img: '/Tutorial_AwesomeQt/carousel/status-led.gif',
     title: '实例库 · StatusLED',
     subtitle: '状态指示灯，4 种状态 + 闪烁动画',
     link: '/widget/status-led/',
     icon: '💡',
   },
   {
-    img: '/Tutorial_AwesomeQt/carousel/toggle-switch.png',
+    img: '/Tutorial_AwesomeQt/carousel/toggle-switch.gif',
     title: '实例库 · 自定义开关',
     subtitle: 'toggle-switch 控件，开箱即用的 AwesomeQt:: 组件',
     link: '/widget/toggle-switch/',
