@@ -14,6 +14,7 @@ repos:
         exclude: '^tutorial/.*\bindex\.md$'
 
   # C/C++ 源码格式（复用根 .clang-format：LLVM / 4 空格 / 100 列）
+  # 专家层源码引用核对（本地有 qt_src 才核对，CI/无 qt_src 时脚本自动跳过 exit 0）
   - repo: local
     hooks:
       - id: clang-format
@@ -21,6 +22,12 @@ repos:
         entry: clang-format -i
         language: system
         files: '\.(c|cc|cpp|cxx|h|hh|hpp|hxx)$'
+      - id: verify-source-refs
+        name: Verify expert source refs (qt_src)
+        entry: python3 scripts/document/verify_source_refs.py
+        language: system
+        pass_filenames: false
+        files: '^tutorial/expert/.*\.md$'
 
   # 基础文件卫生 + 防 5.5G 的 qt_src 误漏进 git 历史
   - repo: https://github.com/pre-commit/pre-commit-hooks

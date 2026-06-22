@@ -124,6 +124,11 @@ def main():
     )
     parser.add_argument("--timeout", type=int, default=10, help="HTTP timeout in seconds (default: 10)")
     parser.add_argument("--workers", type=int, default=8, help="Concurrent HTTP workers (default: 8)")
+    parser.add_argument(
+        "--internal-only",
+        action="store_true",
+        help="只验证相对路径（内链），跳过外部 URL 检查。CI 用，避免外链限流误报。",
+    )
     args = parser.parse_args()
 
     root = Path(args.path)
@@ -151,6 +156,10 @@ def main():
     print(f"  External URLs  : {len(external)}")
     print(f"  Relative paths : {len(relative)}")
     print()
+
+    if args.internal_only:
+        print(f"{YELLOW}  (--internal-only: 跳过 {len(external)} 个外链检查，只验证相对路径){RESET}")
+        external = []
 
     failures: list[tuple[Path, str, str, str]] = []
 

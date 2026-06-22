@@ -1,0 +1,26 @@
+# 内容质量检查：PR 改动教程内容时，跑内链可达性检查。
+# 只查内链（相对路径），避免外链（doc.qt.io 等）在 CI 里被限流误报；外链检查走本地手动或未来的定时任务。
+name: Content Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tutorial/**/*.md'
+      - 'scripts/document/check_links.py'
+      - '.github/workflows/content-quality.yml'
+
+jobs:
+  link-check:
+    name: Internal Link Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check internal links
+        # check_links.py 纯标准库（urllib/ssl/re/argparse），无需 pip install。
+        run: python3 scripts/document/check_links.py --internal-only
