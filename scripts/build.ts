@@ -440,6 +440,14 @@ async function main() {
     }
   }
 
+  // 拷公共静态资源（favicon 等）。VitePress 的 public 目录是 <srcDir>/public；多卷构建里
+  // 根构建的 srcDir=rootSrcDir，把 tutorial/public 复制进来，根产物就带上 favicon，合并进 dist
+  // 后全站可访问 /Tutorial_AwesomeQt/favicon.ico（dev 与 build:single 则原生认 tutorial/public）。
+  const publicSrc = join(DOCUMENTS, 'public')
+  if (existsSync(publicSrc)) {
+    cpSync(publicSrc, join(rootSrcDir, 'public'), { recursive: true })
+  }
+
   const rootTmpSite = join(BUILD_TMP, 'site-root')
   mkdirSync(join(rootTmpSite, '.vitepress'), { recursive: true })
   writeFileSync(join(rootTmpSite, '.vitepress', 'config.ts'), generateRootConfig(rootTmpSite, rootSrcDir))

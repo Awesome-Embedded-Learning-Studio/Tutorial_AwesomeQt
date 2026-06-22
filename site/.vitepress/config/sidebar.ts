@@ -43,7 +43,8 @@ function scanDir(dir: string, urlPrefix: string, depth = 0): SidebarItem[] {
       e !== 'stylesheets' &&
       e !== 'hooks' &&
       e !== 'javascripts' &&
-      e !== 'images'
+      e !== 'images' &&
+      e !== 'public'
     )
   } catch { return [] }
 
