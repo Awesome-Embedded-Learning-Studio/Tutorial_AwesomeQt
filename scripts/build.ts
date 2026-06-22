@@ -131,54 +131,20 @@ function generateVolumeConfig(vol: Volume, absSiteDir: string, absSrcDir: string
   const relSrc = relative(absSiteDir, absSrcDir)
   const relOut = relative(absSiteDir, join(BUILD_TMP, 'output', vol.name))
   const vpDir = join(absSiteDir, '.vitepress')
-  const relPlugins = relative(vpDir, join(MAIN_VP, 'plugins')).replace(/\\/g, '/')
+  const relShared = relative(vpDir, join(MAIN_VP, 'config', 'shared')).replace(/\\/g, '/')
 
+  // 共享配置（base / markdown 插件 / head / vite / vue / 主题基础项）统一来自 config/shared.ts。
+  // 这里只挂分卷专属字段（srcDir / outDir / ignoreDeadLinks）。改 markdown 插件只改 shared.ts 一处。
   return `import { defineConfig } from 'vitepress'
-import { cppTemplateEscapePlugin } from '${relPlugins}/escape-cpp-templates'
-import { mermaidPlugin } from '${relPlugins}/mermaid-plugin'
-import { viteCppEscape } from '${relPlugins}/vite-escape-cpp'
+import { sharedBase, sharedMarkdown, sharedThemeBase } from '${relShared}'
 
 export default defineConfig({
   srcDir: '${relSrc.replace(/\\/g, '/')}',
   outDir: '${relOut.replace(/\\/g, '/')}',
   ignoreDeadLinks: true,
-  title: 'AwesomeQt 教程',
-  description: '系统化的现代 Qt 6 教程 — 从基础入门到源码解析',
-  lang: 'zh-CN',
-  base: '/Tutorial_AwesomeQt/',
-  cleanUrls: true,
-  lastUpdated: true,
-
-  vite: {
-    build: { chunkSizeWarningLimit: 5000 },
-    plugins: [viteCppEscape()],
-  },
-
-  vue: {
-    template: {
-      compilerOptions: {
-        isCustomElement: (tag) => tag.includes('-') || tag.includes('.'),
-      },
-    },
-  },
-
-  head: [['link', { rel: 'icon', href: '/Tutorial_AwesomeQt/favicon.ico' }]],
-
-  markdown: {
-    lineNumbers: true,
-    theme: { light: 'github-light', dark: 'github-dark' },
-    config(md) { cppTemplateEscapePlugin(md); md.use(mermaidPlugin) },
-  },
-
-  themeConfig: {
-    search: { provider: 'local' },
-    editLink: {
-      pattern: 'https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/edit/main/tutorial/:path',
-      text: '在 GitHub 上编辑此页',
-    },
-    footer: { message: '基于 VitePress 构建', copyright: 'Copyright 2025-2026 Charliechen' },
-    socialLinks: [{ icon: 'github', link: 'https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt' }],
-  },
+  ...sharedBase,
+  markdown: sharedMarkdown,
+  themeConfig: sharedThemeBase,
 })
 `
 }
@@ -189,58 +155,20 @@ function generateRootConfig(absSiteDir: string, absSrcDir: string): string {
   const vpDir = join(absSiteDir, '.vitepress')
   const relNav = relative(vpDir, join(MAIN_VP, 'config', 'nav')).replace(/\\/g, '/')
   const relSidebar = relative(vpDir, join(MAIN_VP, 'config', 'sidebar')).replace(/\\/g, '/')
-  const relPlugins = relative(vpDir, join(MAIN_VP, 'plugins')).replace(/\\/g, '/')
+  const relShared = relative(vpDir, join(MAIN_VP, 'config', 'shared')).replace(/\\/g, '/')
 
   return `import { defineConfig } from 'vitepress'
 import { navZh } from '${relNav}'
 import { buildSidebar } from '${relSidebar}'
-import { cppTemplateEscapePlugin } from '${relPlugins}/escape-cpp-templates'
-import { mermaidPlugin } from '${relPlugins}/mermaid-plugin'
-import { viteCppEscape } from '${relPlugins}/vite-escape-cpp'
+import { sharedBase, sharedMarkdown, sharedThemeBase } from '${relShared}'
 
 export default defineConfig({
   srcDir: '${relSrc.replace(/\\/g, '/')}',
   outDir: '${relOut.replace(/\\/g, '/')}',
   ignoreDeadLinks: true,
-  title: 'AwesomeQt 教程',
-  description: '系统化的现代 Qt 6 教程 — 从基础入门到源码解析',
-  lang: 'zh-CN',
-  base: '/Tutorial_AwesomeQt/',
-  cleanUrls: true,
-  lastUpdated: true,
-
-  vite: {
-    build: { chunkSizeWarningLimit: 5000 },
-    plugins: [viteCppEscape()],
-  },
-
-  vue: {
-    template: {
-      compilerOptions: {
-        isCustomElement: (tag) => tag.includes('-') || tag.includes('.'),
-      },
-    },
-  },
-
-  head: [['link', { rel: 'icon', href: '/Tutorial_AwesomeQt/favicon.ico' }]],
-
-  markdown: {
-    lineNumbers: true,
-    theme: { light: 'github-light', dark: 'github-dark' },
-    config(md) { cppTemplateEscapePlugin(md); md.use(mermaidPlugin) },
-  },
-
-  themeConfig: {
-    nav: navZh,
-    sidebar: buildSidebar(),
-    search: { provider: 'local' },
-    editLink: {
-      pattern: 'https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/edit/main/tutorial/:path',
-      text: '在 GitHub 上编辑此页',
-    },
-    footer: { message: '基于 VitePress 构建', copyright: 'Copyright 2025-2026 Charliechen' },
-    socialLinks: [{ icon: 'github', link: 'https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt' }],
-  },
+  ...sharedBase,
+  markdown: sharedMarkdown,
+  themeConfig: { ...sharedThemeBase, nav: navZh, sidebar: buildSidebar() },
 })
 `
 }
