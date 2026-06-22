@@ -206,6 +206,12 @@ cd Tutorial_AwesomeQt
 
 ---
 
+## 许可
+
+本仓库内容分档授权：示例与实例库代码（`examples/`、`widget/`、`app/`、`model/`、`industrial/`）为 [MIT](LICENSE)；教程文档（`tutorial/`）为 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.zh-hans)；专家层引用的 Qt 源码遵循 [The Qt Company 自身许可](https://www.qt.io/licensing/)。详见 [NOTICE.md](NOTICE.md)。
+
+---
+
 ## 联系方式
 
 - 作者：CharlieChen
