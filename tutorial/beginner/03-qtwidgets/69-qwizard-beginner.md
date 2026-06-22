@@ -216,7 +216,7 @@ private:
 
 注意看 "name*" 这个字段名末尾的星号。在 QWizard 的约定中，字段名以星号结尾表示这是一个 mandatory（必填）字段。对于 mandatory 字段，QWizard 会监控它的值——当值为空时，"下一步"按钮保持灰色不可点击；当值非空时，"下一步"按钮变为可用。这个约定省去了手动重写 isComplete 的麻烦。字段名在存储时星号会被去掉，所以 field("name") 就能读到对应的值，不需要带星号。
 
-registerField 的完整签名是 registerField(const QString &name, QWidget *widget, const char *property = nullptr, const char *changedSignal = nullptr)。property 指定要绑定到控件的哪个 Qt 属性。对于 QLineEdit，默认属性就是 "text"；对于 QComboBox，默认属性是 "currentText"；对于 QCheckBox，默认属性是 "checked"。所以大部分情况下不需要显式指定 property 和 changedSignal——QWizard 会根据控件类型自动选择合理的默认值。但如果你绑定的控件不是常见类型，或者想绑定一个非默认属性（比如 QSpinBox 的 value 而不是 text），就需要显式指定：
+registerField 的完整签名是 registerField(const QString &name, QWidget *widget, const char*property = nullptr, const char *changedSignal = nullptr)。property 指定要绑定到控件的哪个 Qt 属性。对于 QLineEdit，默认属性就是 "text"；对于 QComboBox，默认属性是 "currentText"；对于 QCheckBox，默认属性是 "checked"。所以大部分情况下不需要显式指定 property 和 changedSignal——QWizard 会根据控件类型自动选择合理的默认值。但如果你绑定的控件不是常见类型，或者想绑定一个非默认属性（比如 QSpinBox 的 value 而不是 text），就需要显式指定：
 
 ```cpp
 // QSpinBox 的 value 属性，通过 valueChanged 信号跟踪变化

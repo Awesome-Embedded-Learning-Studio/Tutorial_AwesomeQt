@@ -481,7 +481,7 @@ int main(int argc, char *argv[])
 
 项目结构：
 
-```
+```text
 01-qml-syntax-basics-beginner/
   CMakeLists.txt
   main.cpp

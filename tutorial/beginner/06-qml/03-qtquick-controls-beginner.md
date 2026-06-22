@@ -727,7 +727,7 @@ ApplicationWindow {
 
 项目结构：
 
-```
+```text
 03-qtquick-controls-beginner/
   CMakeLists.txt
   main.cpp

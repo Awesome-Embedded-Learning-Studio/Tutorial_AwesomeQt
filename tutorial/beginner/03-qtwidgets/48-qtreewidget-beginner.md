@@ -76,7 +76,7 @@ treeWidget->addTopLevelItem(newRoot);
 
 insertTopLevelItem(int index, QTreeWidgetItem *item) 和 addTopLevelItem 类似，但可以指定插入位置。addTopLevelItem 总是追加到顶层节点列表的末尾，而 insertTopLevelItem 可以在指定位置插入。index 从 0 开始，如果 index 等于 topLevelItemCount()，效果等同于 addTopLevelItem。
 
-在子节点层面，QTreeWidgetItem 提供了 addChild(QTreeWidgetItem *child) 和 insertChild(int index, QTreeWidgetItem *child) 两个方法。addChild 追加到子节点列表末尾，insertChild 可以指定插入位置。这两个方法和顶层的 addTopLevelItem/insertTopLevelItem 是完全对称的。
+在子节点层面，QTreeWidgetItem 提供了 addChild(QTreeWidgetItem *child) 和 insertChild(int index, QTreeWidgetItem*child) 两个方法。addChild 追加到子节点列表末尾，insertChild 可以指定插入位置。这两个方法和顶层的 addTopLevelItem/insertTopLevelItem 是完全对称的。
 
 ```cpp
 auto *parent = treeWidget->currentItem();
@@ -191,7 +191,7 @@ connect(treeWidget, &QTreeWidget::itemClicked,
 });
 ```
 
-除了这三个信号，QTreeWidget 还有 currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)——当前选中节点变化时发射，用法和 QListWidget 的同名信号完全一致。itemDoubleClicked(QTreeWidgetItem *item, int column) 在双击节点时发射。itemChanged(QTreeWidgetItem *item, int column) 在节点数据变化时发射（比如你调用了 setText、setCheckState 等方法），和 QListWidget 的 itemChanged 一样需要注意 blockSignals 防止递归。
+除了这三个信号，QTreeWidget 还有 currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem*previous)——当前选中节点变化时发射，用法和 QListWidget 的同名信号完全一致。itemDoubleClicked(QTreeWidgetItem *item, int column) 在双击节点时发射。itemChanged(QTreeWidgetItem*item, int column) 在节点数据变化时发射（比如你调用了 setText、setCheckState 等方法），和 QListWidget 的 itemChanged 一样需要注意 blockSignals 防止递归。
 
 ## 4. 踩坑预防
 

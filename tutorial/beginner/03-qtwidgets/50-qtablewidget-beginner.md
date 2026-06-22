@@ -184,7 +184,7 @@ connect(tableWidget, &QTableWidget::currentCellChanged,
 });
 ```
 
-除了这三个核心信号，QTableWidget 还有 cellDoubleClicked(int row, int column)——双击单元格时发射；cellActivated(int row, int column)——在单元格上按回车或双击时发射（取决于激活策略）；cellEntered(int row, int column)——鼠标移入单元格时发射（需要开启 MouseTracking）。currentItemChanged(QTableWidgetItem *current, QTableWidgetItem *previous) 也在当前 item 变化时发射，它传的是 item 指针而不是行列号。
+除了这三个核心信号，QTableWidget 还有 cellDoubleClicked(int row, int column)——双击单元格时发射；cellActivated(int row, int column)——在单元格上按回车或双击时发射（取决于激活策略）；cellEntered(int row, int column)——鼠标移入单元格时发射（需要开启 MouseTracking）。currentItemChanged(QTableWidgetItem *current, QTableWidgetItem*previous) 也在当前 item 变化时发射，它传的是 item 指针而不是行列号。
 
 ## 4. 踩坑预防
 

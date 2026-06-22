@@ -19,7 +19,7 @@ description: "入门篇我们用 QScrollBar 驱动了一个自定义时间轴控
 
 QScrollBar 的手柄（slider，也叫 thumb）大小不是随便画的——它的大小和内容比例直接相关。QStyle 在计算手柄大小时使用的核心公式是：
 
-```
+```text
 slider_size = pageStep / (max - min + pageStep) * available_length
 ```
 

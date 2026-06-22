@@ -107,7 +107,7 @@ for (const auto *item : selected) {
 
 有一个容易忽略的问题：当列表为空时，currentItem() 返回 nullptr，currentRow() 返回 -1。所以在使用返回值之前一定要做判空检查，否则对 nullptr 调用 text() 直接崩溃。
 
-还有一个相关的信号是 currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous)，它在当前条目变化时发射，参数分别是新的当前条目和之前的当前条目。这个信号在实现"选中条目变化时更新右侧详情面板"这种联动逻辑时非常有用。两个参数都可能为 nullptr——current 为 nullptr 表示没有条目被选中（比如列表被清空），previous 为 nullptr 表示之前没有选中任何条目。
+还有一个相关的信号是 currentItemChanged(QListWidgetItem *current, QListWidgetItem*previous)，它在当前条目变化时发射，参数分别是新的当前条目和之前的当前条目。这个信号在实现"选中条目变化时更新右侧详情面板"这种联动逻辑时非常有用。两个参数都可能为 nullptr——current 为 nullptr 表示没有条目被选中（比如列表被清空），previous 为 nullptr 表示之前没有选中任何条目。
 
 ### 3.3 QListWidgetItem 图标 / 复选框 / 自定义数据
 

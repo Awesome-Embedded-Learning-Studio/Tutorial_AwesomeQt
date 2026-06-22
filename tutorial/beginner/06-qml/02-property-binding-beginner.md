@@ -414,7 +414,7 @@ Item {
 
 项目结构：
 
-```
+```text
 02-property-binding-beginner/
   CMakeLists.txt
   main.cpp

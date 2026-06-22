@@ -36,7 +36,7 @@ QKeySequenceEdit 还会自动处理平台差异。在 Windows 和 Linux 上，Ct
 
 在布局上，QKeySequenceEdit 通常和一个 QLabel 配对使用——Label 说明"这个快捷键是干什么的"，后面跟着 QKeySequenceEdit 用于录入。在设置页面中，你可能会看到一排这样的组合：
 
-```
+```text
 保存:     [Ctrl+S      ]
 撤销:     [Ctrl+Z      ]
 全选:     [Ctrl+A      ]
