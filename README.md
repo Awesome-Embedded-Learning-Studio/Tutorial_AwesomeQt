@@ -196,15 +196,13 @@ cd Tutorial_AwesomeQt
 
 ## 贡献与反馈
 
-这个教程持续更新中。
+欢迎参与 AwesomeQt 的建设：修正错别字、改进示例、补充踩坑、新增章节都可以。
 
-如果你发现：
-- 错误或不准确的内容
-- 链接失效
-- 可以改进的表达方式
-- 想要补充的知识点
+- **贡献前**：请先读 [贡献指南](CONTRIBUTING.md)（文章五段结构、代码五件套、本地预览、提交前检查）。
+- **报错或建议**：用 [Issue 模板](https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/issues/new/choose)（勘误 / 示例构建 / 站点问题 / 内容提案）。
+- **用 AI 编程助手参与**：先读 [AGENTS.md](AGENTS.md)。
 
-欢迎提交 Issue 或 Pull Request。
+如果你发现错误内容、失效链接、可改进的表达，或想补充知识点，欢迎提 Issue 或 PR。
 
 ---
 

@@ -1,0 +1,76 @@
+name: "内容提案 / Content Proposal"
+description: "建议新增文章、改进现有内容、补充示例或实例库组件。"
+title: "[内容提案] "
+labels: ["documentation", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        这个入口适合讨论“要不要写、写到哪里、写到什么深度”。如果你已经有草稿，也可以在这里先说明主题。
+
+  - type: dropdown
+    id: proposal_type
+    attributes:
+      label: "提案类型"
+      multiple: true
+      options:
+        - "新增正式教程（入门/进阶/专家）"
+        - "改进现有文章"
+        - "新增代码示例（examples/）"
+        - "新增实例库组件（widget/app/model/industrial）"
+        - "其他"
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: "主题简介"
+      description: "请用几句话说明你想新增或改进什么。"
+      placeholder: "例如：希望新增一篇关于 QProperty 绑定的进阶文章。"
+    validations:
+      required: true
+
+  - type: textarea
+    id: audience
+    attributes:
+      label: "目标读者"
+      description: "这篇内容适合哪些读者？"
+      placeholder: "例如：有 QtWidgets 基础、想理解信号槽底层实现的读者。"
+
+  - type: textarea
+    id: placement
+    attributes:
+      label: "建议放置位置"
+      description: "如果你知道，可以写对应层级、模块或目录；不确定可以写“不确定”。"
+      placeholder: "例如：进阶层 QtWidgets / 03-qtwidgets，或实例库 widget/。"
+
+  - type: textarea
+    id: outline
+    attributes:
+      label: "建议结构"
+      description: "可以简单列出文章大纲、示例安排或核心问题。"
+      placeholder: |
+        - 背景和动机
+        - 核心概念
+        - 示例代码
+        - 踩坑预防
+        - 参考资料
+
+  - type: textarea
+    id: references
+    attributes:
+      label: "参考资料"
+      description: "可以附 Qt 官方文档、书籍、博客、源码、Issue 等。"
+      placeholder: "链接或书目信息。"
+
+  - type: dropdown
+    id: submission_plan
+    attributes:
+      label: "你是否计划提交 PR"
+      options:
+        - "是，我准备投稿"
+        - "是，但需要先讨论方向"
+        - "暂时只是建议"
+    validations:
+      required: true
