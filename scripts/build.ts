@@ -405,6 +405,37 @@ async function mergeSearchIndexes(outputDirs: string[], finalDist: string) {
   log(`  ✓ 1 canonical + ${allTargets.length - 1} stubs (saved ${savedMB} MB)`)
 }
 
+// ── Sitemap ────────────────────────────────────────────────
+// 多卷构建下 VitePress 内置 sitemap 会按卷碎片（11 份各覆盖一卷），所以扫 dist 全部 .html
+// 自己生成一份完整的 sitemap.xml。cleanUrls：index.html → 目录、foo.html → foo。
+function generateSitemap(distDir: string) {
+  const SITE = 'https://awesome-embedded-learning-studio.github.io'
+  const BASE = '/Tutorial_AwesomeQt/'
+  const htmlFiles: string[] = []
+  function walk(d: string) {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const full = join(d, e.name)
+      if (e.isDirectory()) walk(full)
+      else if (e.name.endsWith('.html') && e.name !== '404.html') htmlFiles.push(full)
+    }
+  }
+  walk(distDir)
+  const urls = htmlFiles.map(f => {
+    let rel = relative(distDir, f).replace(/\\/g, '/')
+    if (rel === 'index.html') rel = ''
+    else if (rel.endsWith('/index.html')) rel = rel.slice(0, -'index.html'.length)
+    else rel = rel.replace(/\.html$/, '')
+    return `${SITE}${BASE}${rel}`
+  }).sort()
+  const xml =
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    urls.map(u => `  <url><loc>${u}</loc></url>`).join('\n') + '\n' +
+    '</urlset>\n'
+  writeFileSync(join(distDir, 'sitemap.xml'), xml)
+  log(`  sitemap.xml generated: ${urls.length} URLs`)
+}
+
 // ── Main ────────────────────────────────────────────────────
 
 async function main() {
@@ -492,6 +523,9 @@ async function main() {
 
   // ── Step 3.5: Unify hash maps and site data ─────────────
   unifyCrossVolumeData(DIST_FINAL)
+
+  // ── Step 3.6: Generate sitemap (多卷合并后统一生成) ─────
+  generateSitemap(DIST_FINAL)
 
   // ── Step 4: Finalize ────────────────────────────────────
   logStep('Step 4/4: Finalizing')
