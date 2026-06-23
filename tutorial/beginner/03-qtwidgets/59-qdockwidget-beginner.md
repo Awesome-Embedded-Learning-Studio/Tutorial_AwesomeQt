@@ -172,7 +172,7 @@ tabifyDockWidget(outlineDock, bookmarksDock);
 outlineDock->raise();
 ```
 
-tabifyDockWidget(QDockWidget *first, QDockWidget *second) 把 second 作为一个新标签页添加到 first 所在的标签组中。如果 first 当前不是标签页形式（它独占一个位置），Qt 会自动把 first 转换成标签页模式，然后把 second 作为第二个标签页添加进去。tabifyDockWidget 可以被多次调用来添加更多标签页。
+tabifyDockWidget(QDockWidget *first, QDockWidget*second) 把 second 作为一个新标签页添加到 first 所在的标签组中。如果 first 当前不是标签页形式（它独占一个位置），Qt 会自动把 first 转换成标签页模式，然后把 second 作为第二个标签页添加进去。tabifyDockWidget 可以被多次调用来添加更多标签页。
 
 raise() 让指定的 Dock 成为当前活动标签页。这在初始化时确定默认显示哪个标签页很有用——如果你不调用 raise()，最后一个被 tabifyDockWidget 的 Dock 会自动成为活动标签页。
 

@@ -1,0 +1,24 @@
+# 文章格式检查。存量违规已清零（曾 122 处，已全部修复），现在强制拦截。
+name: Lint Documentation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  markdown-lint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@v17
+        with:
+          config: '.markdownlint.json'
+          globs: |
+            tutorial/**/*.md
+            !tutorial/**/index.md

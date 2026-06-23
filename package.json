@@ -1,13 +1,15 @@
 {
   "name": "awesomeqt-vitepress",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vitepress dev site",
     "build": "NODE_OPTIONS='--disable-warning=DEP0205' pnpm exec tsx scripts/build.ts",
     "build:single": "vitepress build site",
-    "preview": "vitepress preview site"
+    "preview": "vitepress preview site",
+    "check:links": "python3 scripts/document/check_links.py",
+    "hooks:install": "bash scripts/setup_precommit.sh"
   },
   "devDependencies": {
     "@types/node": "^25.6.2",

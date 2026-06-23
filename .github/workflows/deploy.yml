@@ -30,10 +30,24 @@ jobs:
           version: 10
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+
+      # 复用分卷构建的增量缓存（build.ts 写入 site/.vitepress/.build-cache），二次构建只重建改动卷。
+      # cache key 只含真正影响构建产物的路径——tutorial 内容 + 站点配置/插件/主题 + 构建脚本 + 依赖锁。
+      - name: Restore build cache
+        uses: actions/cache@v4
+        with:
+          path: site/.vitepress/.build-cache
+          key: deploy-vp-build-${{ runner.os }}-${{ hashFiles('tutorial/**', 'site/.vitepress/config/**', 'site/.vitepress/plugins/**', 'site/.vitepress/theme/**', 'scripts/build.ts', 'package.json', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            deploy-vp-build-${{ runner.os }}-
 
       - name: Build
         run: pnpm build
+        env:
+          # 专家层全量 102 篇构建内存峰值较高，放宽堆上限防 OOM；并发 8 卷。
+          NODE_OPTIONS: --max-old-space-size=6144
+          BUILD_CONCURRENCY: 8
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

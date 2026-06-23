@@ -1,0 +1,81 @@
+name: "示例或构建问题 / Example or Build Problem"
+description: "报告代码示例无法编译、CMake 问题、工具链问题。"
+title: "[构建问题] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈代码或构建问题。请提供命令、错误输出和环境信息，方便维护者复现。
+
+  - type: input
+    id: target
+    attributes:
+      label: "相关示例或文件"
+      description: "请粘贴代码示例路径、章节链接或文件路径。"
+      placeholder: "例如：examples/beginner/01-qtbase/02-signal-slot-beginner/ 或 widget/status-led/"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: problem_type
+    attributes:
+      label: "问题类型"
+      multiple: true
+      options:
+        - "示例代码无法编译"
+        - "CMake 配置问题"
+        - "工具链或编译器兼容问题"
+        - "实例库（widget/app/model/industrial）问题"
+        - "其他"
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: "你执行了什么命令"
+      description: "请贴出触发问题的命令。"
+      placeholder: "例如：cmake -B build && cmake --build build"
+    validations:
+      required: true
+
+  - type: textarea
+    id: error
+    attributes:
+      label: "错误输出"
+      description: "请粘贴关键错误信息。长日志可以只贴最相关部分。"
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: "环境信息"
+      description: "请填写与你的问题相关的环境。"
+      value: |
+        - 操作系统：Windows 10/11 / Linux / WSL2
+        - Qt 版本：6.x
+        - 编译器：MSVC 2019/2022 / MinGW 11.2+ / GCC 11+
+        - CMake 版本：≥ 3.26
+        - C++ 标准：17
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pr_willingness
+    attributes:
+      label: "你是否愿意提交 PR 修复"
+      options:
+        - "愿意"
+        - "可能可以"
+        - "暂时不方便"
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: "补充信息"
+      description: "可以附最小复现、相关截图、链接或你已经尝试过的修复方式。"

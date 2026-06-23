@@ -1,10 +1,6 @@
-# AwesomeQt — 陪你从第一行代码到读懂源码
+# AwesomeQt — Qt 6 中文深度教程
 
-嘿！这里是Awesome Embedded Studio！我相信大家第一次接触 Qt 的时候，对着 `QObject::connect` 的四个参数发呆了整整一下午。后来又因为忘记加 `Q_OBJECT` 宏，收获了一个莫名其妙的 vtable 错误。再后来，在信号槽的跨线程调用上翻车，在对象树的内存管理上踩雷，在 MOC 生成的代码里迷失方向……
-
-笔者就是这样过来的——有时候博客不靠谱，对着Qt5看着Qt6代码抓耳挠腮，想理解底层原理发现要不然过时了，要不然看不懂。所以——这是一份会陪着你走完整条路的教程——从第一个 `QApplication` 到读懂 MOC 生成的那一刻。我们会吐槽，会叹气，会一起熬夜调试，但你绝对不会断层。
-
-希望这里的内容能让你Happy Qt Coding!
+> 一套聚焦 C++ / QtWidgets 的 Qt 6 中文深度教程：三层递进（入门 → 进阶 → 读源码）+ 可复用实例库，把「学会 Qt」送到「做出东西」。隶属 [Awesome-Embedded-Learning-Studio](https://github.com/Awesome-Embedded-Learning-Studio)。
 
 ---
 
@@ -200,15 +196,19 @@ cd Tutorial_AwesomeQt
 
 ## 贡献与反馈
 
-这个教程持续更新中。
+欢迎参与 AwesomeQt 的建设：修正错别字、改进示例、补充踩坑、新增章节都可以。
 
-如果你发现：
-- 错误或不准确的内容
-- 链接失效
-- 可以改进的表达方式
-- 想要补充的知识点
+- **贡献前**：请先读 [贡献指南](CONTRIBUTING.md)（文章五段结构、代码五件套、本地预览、提交前检查）。
+- **报错或建议**：用 [Issue 模板](https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/issues/new/choose)（勘误 / 示例构建 / 站点问题 / 内容提案）。
+- **用 AI 编程助手参与**：先读 [AGENTS.md](AGENTS.md)。
 
-欢迎提交 Issue 或 Pull Request。
+如果你发现错误内容、失效链接、可改进的表达，或想补充知识点，欢迎提 Issue 或 PR。
+
+---
+
+## 许可
+
+本仓库内容分档授权：示例与实例库代码（`examples/`、`widget/`、`app/`、`model/`、`industrial/`）为 [MIT](LICENSE)；教程文档（`tutorial/`）为 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.zh-hans)；专家层引用的 Qt 源码遵循 [The Qt Company 自身许可](https://www.qt.io/licensing/)。详见 [NOTICE.md](NOTICE.md)。
 
 ---
 
@@ -220,4 +220,4 @@ cd Tutorial_AwesomeQt
 
 ---
 
-**现在你已经知道这是什么了，准备好了吗？从 [教程索引](tutorial/index.md) 开始你的 Qt 之旅吧！**
+**下一步：** 从 [教程索引](tutorial/index.md) 选择适合你的起点，或查看 [更新日志](changelogs/) 了解最新进展。问题与建议欢迎提 [Issue](https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/issues)。

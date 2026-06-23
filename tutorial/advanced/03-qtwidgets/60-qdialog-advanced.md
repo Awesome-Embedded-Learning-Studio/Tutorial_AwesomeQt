@@ -135,7 +135,7 @@ connect(dlg, &QDialog::finished, dlg, &QObject::deleteLater);
 dlg->open();
 ```
 
-open() 还有一个历史悠久的重载版本：open(QObject* receiver, const char* member)。这个版本会在对话框关闭时自动调用 receiver 的 member 槽函数，并且连接是自动断开的（一次性连接）。但在 Qt6 中，我们更推荐用函数指针连接 + lambda 的方式，可读性和类型安全性都更好。
+open() 还有一个历史悠久的重载版本：open(QObject*receiver, const char* member)。这个版本会在对话框关闭时自动调用 receiver 的 member 槽函数，并且连接是自动断开的（一次性连接）。但在 Qt6 中，我们更推荐用函数指针连接 + lambda 的方式，可读性和类型安全性都更好。
 
 ### 3.4 QDialogButtonBox 与 accept/reject 的集成
 

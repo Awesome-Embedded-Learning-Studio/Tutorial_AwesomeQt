@@ -78,7 +78,7 @@ uriRecord.setUri(QUrl("https://doc.qt.io"));
 message.append(uriRecord);
 ```
 
-QNdefNfcTextRecord 用于存储文本数据，支持多语言（通过 locale 字段）和两种编码（UTF-8 和 UTF-16）。QNdefNfcUriRecord 用于存储 URI，NFC Forum 为 URI 定义了缩写前缀——比如 0x00 表示无前缀，0x01 表示 "http://www."，0x04 表示 "https://"，这样可以节省标签存储空间。Qt 自动处理这些前缀。
+QNdefNfcTextRecord 用于存储文本数据，支持多语言（通过 locale 字段）和两种编码（UTF-8 和 UTF-16）。QNdefNfcUriRecord 用于存储 URI，NFC Forum 为 URI 定义了缩写前缀——比如 0x00 表示无前缀，0x01 表示 "<http://www."，0x04> 表示 "https://"，这样可以节省标签存储空间。Qt 自动处理这些前缀。
 
 写入 NDEF 消息到标签：
 

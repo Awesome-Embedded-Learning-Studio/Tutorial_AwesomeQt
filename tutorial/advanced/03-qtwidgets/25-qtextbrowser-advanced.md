@@ -143,7 +143,7 @@ connect(browser, &QTextBrowser::anchorClicked,
 
 练习项目：增强型文档浏览器。我们要实现一个支持自定义图片资源协议的 QTextBrowser，核心功能是从一个模拟的数据库（用 QMap 代替）加载图片并显示在文档中。
 
-具体要求是：继承 QTextBrowser 创建 CustomTextBrowser，覆写 loadResource 处理 "imgdb://" 协议的图片请求；准备若干张测试图片存入 QMap<QString, QImage> 作为模拟数据库；构建一个 HTML 文档，其中用 <img src="imgdb://image1"> 引用这些图片；实现安全的历史导航（后退、前进按钮在空栈时禁用）；所有外部链接通过 anchorClicked 在系统浏览器中打开，内部链接由 QTextBrowser 处理。完成标准是文档中的自定义协议图片能正确显示，历史导航不会崩溃，外部链接不会在 QTextBrowser 内部打开。
+具体要求是：继承 QTextBrowser 创建 CustomTextBrowser，覆写 loadResource 处理 "imgdb://" 协议的图片请求；准备若干张测试图片存入 QMap<QString, QImage> 作为模拟数据库；构建一个 HTML 文档，其中用 `<img src="imgdb://image1">` 引用这些图片；实现安全的历史导航（后退、前进按钮在空栈时禁用）；所有外部链接通过 anchorClicked 在系统浏览器中打开，内部链接由 QTextBrowser 处理。完成标准是文档中的自定义协议图片能正确显示，历史导航不会崩溃，外部链接不会在 QTextBrowser 内部打开。
 
 提示几个关键点：loadResource 的 type 参数为 QTextDocument::ImageResource 时表示图片资源；文档中的 imgdb:// 链接会被传入 loadResource 的 name 参数；setOpenLinks(false) 配合手动 anchorClicked 处理是最可控的方案。
 

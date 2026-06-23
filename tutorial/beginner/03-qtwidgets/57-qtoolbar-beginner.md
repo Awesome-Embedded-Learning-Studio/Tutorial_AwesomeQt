@@ -200,7 +200,7 @@ viewMenu->addAction(editBar->toggleViewAction());
 
 第四个坑是 macOS 上 QToolBar 的行为差异。macOS 的工具栏样式由系统统一管理，某些 QToolBar 的外观属性（比如分隔线的绘制方式、按钮的间距）在 macOS 上可能和其他平台不一致。如果你的应用需要跨平台，务必在 macOS 上做额外的视觉测试。
 
-第五个坑是多个工具栏停靠在同一侧时的顺序问题。当你通过多次 addToolBar 向同一侧添加多个工具栏时，它们的排列顺序默认是添加顺序——先添加的在上面（或左面），后添加的在下面（或右面）。用户可以通过拖拽来调整顺序，但程序化的顺序控制只能通过 insertToolBar(QToolBar *before, QToolBar *toolbar) 来实现——它把 toolbar 插入到 before 前面。
+第五个坑是多个工具栏停靠在同一侧时的顺序问题。当你通过多次 addToolBar 向同一侧添加多个工具栏时，它们的排列顺序默认是添加顺序——先添加的在上面（或左面），后添加的在下面（或右面）。用户可以通过拖拽来调整顺序，但程序化的顺序控制只能通过 insertToolBar(QToolBar *before, QToolBar*toolbar) 来实现——它把 toolbar 插入到 before 前面。
 
 ## 5. 练习项目
 

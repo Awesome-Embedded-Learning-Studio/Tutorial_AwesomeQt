@@ -150,7 +150,7 @@ CLion 默认对 QML 的支持有限，需要额外配置。安装插件：Settin
 
 Qt Creator 首次启动时会自动检测 Qt 安装，如果检测不到，打开 Edit → Preferences → Kits → Qt Versions，手动添加：
 
-```
+```text
 名称: Qt 6.9.1 (mingw_64)
 qmake 路径: C:/Qt/6.9.1/mingw_64/bin/qmake.exe
 ```

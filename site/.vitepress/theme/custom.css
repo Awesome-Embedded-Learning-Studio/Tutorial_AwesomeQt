@@ -635,3 +635,140 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* ================================================================
+   长代码折叠（.vp-code-fold）：构建期 code-fold-plugin 把 >30 行的代码块
+   包成 <div class="vp-code-fold"><details><summary/></details><代码/></div>。
+   - 收起 = 只显示 summary 条（代码完全隐藏）；展开 = 代码全部显示。二态干净。
+   - 代码在 <details> 外，靠纯 CSS :has(details[open]) 控制 display；零 JS、无 JS 也能展开。
+   - 内部 div.language-* 兄弟链（copy/lang/pre/line-numbers）不动，复制按钮不受影响。
+   ================================================================ */
+.vp-doc .vp-code-fold {
+  margin: 16px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--vp-code-block-bg);
+}
+
+.vp-doc .vp-code-fold > details > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--vp-c-text-2);
+  user-select: none;
+  background: var(--vp-code-block-bg);
+  transition: color 0.2s ease;
+}
+
+.vp-doc .vp-code-fold > details > summary:hover {
+  color: var(--vp-c-text-1);
+}
+
+.vp-doc .vp-code-fold > details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.vp-doc .vp-code-fold > details > summary::before {
+  content: '▶';
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--vp-c-text-3);
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.vp-doc .vp-code-fold > details > summary:hover::before {
+  color: var(--vp-c-brand-1);
+}
+
+.vp-doc .vp-code-fold:has(details[open]) > details > summary::before {
+  transform: rotate(90deg);
+}
+
+.vp-doc .vp-code-fold:not(:has(details[open])) .vp-cf-open {
+  display: none;
+}
+
+.vp-doc .vp-code-fold:has(details[open]) .vp-cf-closed {
+  display: none;
+}
+
+.vp-doc .vp-code-fold:has(details[open]) .vp-cf-open {
+  display: inline;
+}
+
+.vp-doc .vp-code-fold > details > summary em {
+  font-style: normal;
+  color: var(--vp-c-text-3);
+  margin-left: 4px;
+}
+
+.vp-doc .vp-code-fold > div[class*='language-'] {
+  margin: 0;
+  border-radius: 0;
+}
+
+.vp-doc .vp-code-fold:not(:has(details[open])) > div[class*='language-'] {
+  display: none;
+}
+
+@media print {
+  .vp-doc .vp-code-fold > div[class*='language-'] {
+    display: block !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vp-doc .vp-code-fold > details > summary,
+  .vp-doc .vp-code-fold > details > summary::before {
+    transition: none;
+  }
+}
+
+/* ================================================================
+   kbd 键盘按键样式（配合 kbd-plugin，++Ctrl+S++ → <kbd>Ctrl</kbd>+<kbd>S</kbd>）
+   ================================================================ */
+.vp-doc kbd,
+kbd {
+  display: inline-block;
+  padding: 0.15em 0.45em;
+  font-family: var(--vp-font-family-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 0.85em;
+  line-height: 1.4;
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-bg-alt);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 4px;
+  box-shadow: 0 1px 0 var(--vp-c-divider);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* ================================================================
+   正文字号五档（FontSizeSwitcher 切 documentElement 的 data-font-size，CSS zoom 整页缩放）。
+   默认 normal(zoom 1)；往下小/超小，往上大/超大。zoom 连尺寸间距一起按比例缩放（等同浏览器
+   Ctrl+/-），避免「只有正文跳动、组件不动」的割裂感。首屏由 shared.ts head 内联脚本提前设档防闪烁。
+   ================================================================ */
+html[data-font-size='xxsmall'] {
+  zoom: 0.85;
+}
+
+html[data-font-size='small'] {
+  zoom: 0.92;
+}
+
+html[data-font-size='normal'] {
+  zoom: 1;
+}
+
+html[data-font-size='large'] {
+  zoom: 1.08;
+}
+
+html[data-font-size='xxlarge'] {
+  zoom: 1.16;
+}

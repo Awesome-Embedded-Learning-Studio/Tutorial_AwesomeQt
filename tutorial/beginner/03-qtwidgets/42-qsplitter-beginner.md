@@ -39,7 +39,7 @@ vSplitter->addWidget(listWidget);
 vSplitter->addWidget(detailLabel);
 ```
 
-往 QSplitter 中添加子控件有两种方式。第一种是用 addWidget(QWidget *widget)，控件会被追加到末尾。第二种是用 insertWidget(int index, QWidget *widget)，在指定位置插入。如果 QSplitter 已经有了一个子控件 A，你 insertWidget(0, B)，B 会出现在 A 前面。和 QStackedWidget 不同，QSplitter 的子控件在添加时不需要预先设定大小——QSplitter 会根据自身的可用空间和各子控件的 sizeHint 来分配初始比例。
+往 QSplitter 中添加子控件有两种方式。第一种是用 addWidget(QWidget *widget)，控件会被追加到末尾。第二种是用 insertWidget(int index, QWidget*widget)，在指定位置插入。如果 QSplitter 已经有了一个子控件 A，你 insertWidget(0, B)，B 会出现在 A 前面。和 QStackedWidget 不同，QSplitter 的子控件在添加时不需要预先设定大小——QSplitter 会根据自身的可用空间和各子控件的 sizeHint 来分配初始比例。
 
 QSplitter 的子控件数量没有硬性上限——你可以往一个水平分割器里塞五六个控件，每个之间都会有一条可拖动的分割线。不过从用户体验角度看，超过三个子控件的分割器操作起来会变得比较局促——分割线太密集，拖动时容易拽错位置。如果你的布局确实需要四五个区域，建议用嵌套分割器来组织：外层分割器把窗口分成两半，每一半内部再用自己的分割器继续细分。
 

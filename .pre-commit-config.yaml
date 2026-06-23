@@ -1,0 +1,42 @@
+# 本地提交前自检。安装：pnpm hooks:install（或 bash scripts/setup_precommit.sh）
+# 规则与 CI 的 .github/workflows/lint.yml 用同一份 .markdownlint.json，本地和 CI 一致。
+#
+# 本批先挂最稳的四类：markdown 文章格式 / C++ 代码格式 / 防大文件漏入 / 基础文件卫生。
+# frontmatter 校验、check_bold、check_links 等待对应脚本落地后在第 2 批补进来。
+repos:
+  # Markdown 文章格式（规则在 .markdownlint.json）
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.38.0
+    hooks:
+      - id: markdownlint
+        args: ['--config', '.markdownlint.json']
+        files: '^tutorial/.*\.md$'
+        exclude: '^tutorial/.*\bindex\.md$'
+
+  # C/C++ 源码格式（复用根 .clang-format：LLVM / 4 空格 / 100 列）
+  # 专家层源码引用核对（本地有 qt_src 才核对，CI/无 qt_src 时脚本自动跳过 exit 0）
+  - repo: local
+    hooks:
+      - id: clang-format
+        name: clang-format C/C++ sources
+        entry: clang-format -i
+        language: system
+        files: '\.(c|cc|cpp|cxx|h|hh|hpp|hxx)$'
+      - id: verify-source-refs
+        name: Verify expert source refs (qt_src)
+        entry: python3 scripts/document/verify_source_refs.py
+        language: system
+        pass_filenames: false
+        files: '^tutorial/expert/.*\.md$'
+
+  # 基础文件卫生 + 防 5.5G 的 qt_src 误漏进 git 历史
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files
+        args: ['--maxkb=1500']
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        files: '^tutorial/.*\.md$'
+      - id: check-yaml
+        files: '^\.github/.*\.ya?ml$'

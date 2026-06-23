@@ -76,13 +76,13 @@ void mouseMoveEvent(QMouseEvent* event) override
 
 ### 3.3 setAttribute 的性能影响——频繁切换属性的开销
 
-`setAttribute()` 不是零成本的调用。每次修改一个 WA_* 属性，Qt 内部会做几件事：更新 `QWidgetPrivate` 中的属性位掩码，判断属性变更是否需要触发布局或重绘，如果涉及窗口系统层面的变更（比如 WA_TranslucentBackground），还会调用平台插件更新原生窗口的属性。这意味着如果你在每一帧的 paintEvent 或定时器回调中频繁切换 WA_* 属性，性能开销是可观的——不仅仅是 CPU 计算的开销，还可能导致窗口被反复重建。
+`setAttribute()` 不是零成本的调用。每次修改一个 WA_*属性，Qt 内部会做几件事：更新 `QWidgetPrivate` 中的属性位掩码，判断属性变更是否需要触发布局或重绘，如果涉及窗口系统层面的变更（比如 WA_TranslucentBackground），还会调用平台插件更新原生窗口的属性。这意味着如果你在每一帧的 paintEvent 或定时器回调中频繁切换 WA_* 属性，性能开销是可观的——不仅仅是 CPU 计算的开销，还可能导致窗口被反复重建。
 
 一个典型的反面案例是：有人试图通过在 timer 回调中交替设置 `setAttribute(Qt::WA_TransparentForMouseEvents, true)` 和 `setAttribute(Qt::WA_TransparentForMouseEvents, false)` 来实现"穿透模式切换"。每次切换都会触发一次属性更新和重绘通知，在高频定时器下会造成明显的性能问题和界面闪烁。正确的做法是在初始化时一次性设好所有属性，运行时不要修改。如果确实需要动态切换鼠标穿透，考虑用 `setMouseTracking()` 和事件过滤器配合条件判断来实现，而不是反复调 setAttribute。
 
 ### 3.4 WindowFlags 与 WA_* 属性的联动
 
-WindowFlags 和 WA_* 属性之间不是完全独立的——某些 WindowFlags 会隐式触发 WA_* 属性的变更，反过来某些 WA_* 属性也依赖特定的 WindowFlags 才能生效。
+WindowFlags 和 WA_*属性之间不是完全独立的——某些 WindowFlags 会隐式触发 WA_* 属性的变更，反过来某些 WA_* 属性也依赖特定的 WindowFlags 才能生效。
 
 最典型的联动是 `Qt::FramelessWindowHint` 和 `Qt::WA_TranslucentBackground` 的配合。要在 Windows 上实现真正的半透明窗口，你必须同时设置 FramelessWindowHint 和 WA_TranslucentBackground。原因是 Windows 的 DWM（Desktop Window Manager）对分层窗口（Layered Window）的实现要求窗口必须是 Frameless 的——或者更准确地说，Qt 在 Windows 上通过 WS_EX_LAYERED 扩展样式实现半透明，而这个扩展样式和标准窗口边框有冲突。在 macOS 和 Linux 上这个限制不那么严格，但为了跨平台一致性，还是建议两个都设。
 

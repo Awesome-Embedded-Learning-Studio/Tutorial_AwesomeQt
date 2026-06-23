@@ -111,7 +111,7 @@ setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
 
 ## 4. 踩坑预防
 
-第一个坑是 restoreState 在窗口 show() 之前调用导致布局恢复失败。这个坑在 3.1 节的随堂测验里已经分析过了，这里再强调一下后果：用户精心调整的 Dock 停靠位置、工具栏行号、浮动状态全部丢失，所有 Dock 变成浮动窗口，工具栏回到默认位置。对用户来说等于白配置了，体验极差。解决方案是在构造函数中先 show() 再 restoreState，或者用 QTimer::singleShot(0, this, [this]() { restoreState(...); }) 把 restoreState 推迟到事件循环的下一轮。前一种方案简单直接，后一种方案适合在构造函数中不方便调用 show() 的场景。
+第一个坑是 restoreState 在窗口 show() 之前调用导致布局恢复失败。这个坑在 3.1 节的随堂测验里已经分析过了，这里再强调一下后果：用户精心调整的 Dock 停靠位置、工具栏行号、浮动状态全部丢失，所有 Dock 变成浮动窗口，工具栏回到默认位置。对用户来说等于白配置了，体验极差。解决方案是在构造函数中先 show() 再 restoreState，或者用 `QTimer::singleShot(0, this, [this]() { restoreState(...); })` 把 restoreState 推迟到事件循环的下一轮。前一种方案简单直接，后一种方案适合在构造函数中不方便调用 show() 的场景。
 
 第二个坑是 setCorner 在 Dock 已存在后设置不生效。setCorner 改变的是角落区域的归属规则，这个规则在 Dock 被添加到主窗口时读取一次。如果你先 addDockWidget 再 setCorner，已有的 Dock 已经根据旧的角落归属计算好了自己的可用区域，setCorner 不会触发重新计算。后果是角落区域的行为不符合预期——比如你期望左侧 Dock 延伸到顶部但实际被截断了。解决方案很简单：把所有 setCorner 调用放在第一批 addDockWidget 之前。
 

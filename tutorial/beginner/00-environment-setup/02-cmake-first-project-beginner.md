@@ -118,7 +118,7 @@ cmake .. -DCMAKE_PREFIX_PATH=/home/你的用户名/Qt/6.9.1/gcc_64
 
 如果配置成功，你会看到：
 
-```
+```text
 -- Configuring done
 -- Generating done
 -- Build files have been written to: /path/to/HelloQt/build
@@ -309,7 +309,7 @@ int main(int argc, char *argv[])
 
 实际项目中，代码通常会分成多个模块：
 
-```
+```text
 MyApp/
 ├── CMakeLists.txt
 ├── app/

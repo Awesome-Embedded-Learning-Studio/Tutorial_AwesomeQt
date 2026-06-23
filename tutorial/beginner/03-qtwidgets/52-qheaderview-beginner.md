@@ -264,7 +264,7 @@ auto *customHeader = new ColoredHeaderView(Qt::Horizontal, tableView);
 tableView->setHorizontalHeader(customHeader);
 ```
 
-setHorizontalHeader(QHeaderView *header) 会替换掉 QTableView 默认的水平表头。QTableView 会接管新 header 的所有权，并在析构时自动 delete 它。同理，setVerticalHeader(QHeaderView *header) 替换垂直表头。替换后，之前通过 horizontalHeader() 设置的属性（比如列宽策略、排序指示器）全部丢失——你需要在新 header 上重新设置。
+setHorizontalHeader(QHeaderView *header) 会替换掉 QTableView 默认的水平表头。QTableView 会接管新 header 的所有权，并在析构时自动 delete 它。同理，setVerticalHeader(QHeaderView*header) 替换垂直表头。替换后，之前通过 horizontalHeader() 设置的属性（比如列宽策略、排序指示器）全部丢失——你需要在新 header 上重新设置。
 
 ## 4. 踩坑预防
 

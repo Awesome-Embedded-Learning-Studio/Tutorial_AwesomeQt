@@ -131,54 +131,20 @@ function generateVolumeConfig(vol: Volume, absSiteDir: string, absSrcDir: string
   const relSrc = relative(absSiteDir, absSrcDir)
   const relOut = relative(absSiteDir, join(BUILD_TMP, 'output', vol.name))
   const vpDir = join(absSiteDir, '.vitepress')
-  const relPlugins = relative(vpDir, join(MAIN_VP, 'plugins')).replace(/\\/g, '/')
+  const relShared = relative(vpDir, join(MAIN_VP, 'config', 'shared')).replace(/\\/g, '/')
 
+  // 共享配置（base / markdown 插件 / head / vite / vue / 主题基础项）统一来自 config/shared.ts。
+  // 这里只挂分卷专属字段（srcDir / outDir / ignoreDeadLinks）。改 markdown 插件只改 shared.ts 一处。
   return `import { defineConfig } from 'vitepress'
-import { cppTemplateEscapePlugin } from '${relPlugins}/escape-cpp-templates'
-import { mermaidPlugin } from '${relPlugins}/mermaid-plugin'
-import { viteCppEscape } from '${relPlugins}/vite-escape-cpp'
+import { sharedBase, sharedMarkdown, sharedThemeBase } from '${relShared}'
 
 export default defineConfig({
   srcDir: '${relSrc.replace(/\\/g, '/')}',
   outDir: '${relOut.replace(/\\/g, '/')}',
   ignoreDeadLinks: true,
-  title: 'AwesomeQt 教程',
-  description: '系统化的现代 Qt 6 教程 — 从基础入门到源码解析',
-  lang: 'zh-CN',
-  base: '/Tutorial_AwesomeQt/',
-  cleanUrls: true,
-  lastUpdated: true,
-
-  vite: {
-    build: { chunkSizeWarningLimit: 5000 },
-    plugins: [viteCppEscape()],
-  },
-
-  vue: {
-    template: {
-      compilerOptions: {
-        isCustomElement: (tag) => tag.includes('-') || tag.includes('.'),
-      },
-    },
-  },
-
-  head: [['link', { rel: 'icon', href: '/Tutorial_AwesomeQt/favicon.ico' }]],
-
-  markdown: {
-    lineNumbers: true,
-    theme: { light: 'github-light', dark: 'github-dark' },
-    config(md) { cppTemplateEscapePlugin(md); md.use(mermaidPlugin) },
-  },
-
-  themeConfig: {
-    search: { provider: 'local' },
-    editLink: {
-      pattern: 'https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/edit/main/tutorial/:path',
-      text: '在 GitHub 上编辑此页',
-    },
-    footer: { message: '基于 VitePress 构建', copyright: 'Copyright 2025-2026 Charliechen' },
-    socialLinks: [{ icon: 'github', link: 'https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt' }],
-  },
+  ...sharedBase,
+  markdown: sharedMarkdown,
+  themeConfig: sharedThemeBase,
 })
 `
 }
@@ -189,58 +155,20 @@ function generateRootConfig(absSiteDir: string, absSrcDir: string): string {
   const vpDir = join(absSiteDir, '.vitepress')
   const relNav = relative(vpDir, join(MAIN_VP, 'config', 'nav')).replace(/\\/g, '/')
   const relSidebar = relative(vpDir, join(MAIN_VP, 'config', 'sidebar')).replace(/\\/g, '/')
-  const relPlugins = relative(vpDir, join(MAIN_VP, 'plugins')).replace(/\\/g, '/')
+  const relShared = relative(vpDir, join(MAIN_VP, 'config', 'shared')).replace(/\\/g, '/')
 
   return `import { defineConfig } from 'vitepress'
 import { navZh } from '${relNav}'
 import { buildSidebar } from '${relSidebar}'
-import { cppTemplateEscapePlugin } from '${relPlugins}/escape-cpp-templates'
-import { mermaidPlugin } from '${relPlugins}/mermaid-plugin'
-import { viteCppEscape } from '${relPlugins}/vite-escape-cpp'
+import { sharedBase, sharedMarkdown, sharedThemeBase } from '${relShared}'
 
 export default defineConfig({
   srcDir: '${relSrc.replace(/\\/g, '/')}',
   outDir: '${relOut.replace(/\\/g, '/')}',
   ignoreDeadLinks: true,
-  title: 'AwesomeQt 教程',
-  description: '系统化的现代 Qt 6 教程 — 从基础入门到源码解析',
-  lang: 'zh-CN',
-  base: '/Tutorial_AwesomeQt/',
-  cleanUrls: true,
-  lastUpdated: true,
-
-  vite: {
-    build: { chunkSizeWarningLimit: 5000 },
-    plugins: [viteCppEscape()],
-  },
-
-  vue: {
-    template: {
-      compilerOptions: {
-        isCustomElement: (tag) => tag.includes('-') || tag.includes('.'),
-      },
-    },
-  },
-
-  head: [['link', { rel: 'icon', href: '/Tutorial_AwesomeQt/favicon.ico' }]],
-
-  markdown: {
-    lineNumbers: true,
-    theme: { light: 'github-light', dark: 'github-dark' },
-    config(md) { cppTemplateEscapePlugin(md); md.use(mermaidPlugin) },
-  },
-
-  themeConfig: {
-    nav: navZh,
-    sidebar: buildSidebar(),
-    search: { provider: 'local' },
-    editLink: {
-      pattern: 'https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/edit/main/tutorial/:path',
-      text: '在 GitHub 上编辑此页',
-    },
-    footer: { message: '基于 VitePress 构建', copyright: 'Copyright 2025-2026 Charliechen' },
-    socialLinks: [{ icon: 'github', link: 'https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt' }],
-  },
+  ...sharedBase,
+  markdown: sharedMarkdown,
+  themeConfig: { ...sharedThemeBase, nav: navZh, sidebar: buildSidebar() },
 })
 `
 }
@@ -477,6 +405,37 @@ async function mergeSearchIndexes(outputDirs: string[], finalDist: string) {
   log(`  ✓ 1 canonical + ${allTargets.length - 1} stubs (saved ${savedMB} MB)`)
 }
 
+// ── Sitemap ────────────────────────────────────────────────
+// 多卷构建下 VitePress 内置 sitemap 会按卷碎片（11 份各覆盖一卷），所以扫 dist 全部 .html
+// 自己生成一份完整的 sitemap.xml。cleanUrls：index.html → 目录、foo.html → foo。
+function generateSitemap(distDir: string) {
+  const SITE = 'https://awesome-embedded-learning-studio.github.io'
+  const BASE = '/Tutorial_AwesomeQt/'
+  const htmlFiles: string[] = []
+  function walk(d: string) {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      const full = join(d, e.name)
+      if (e.isDirectory()) walk(full)
+      else if (e.name.endsWith('.html') && e.name !== '404.html') htmlFiles.push(full)
+    }
+  }
+  walk(distDir)
+  const urls = htmlFiles.map(f => {
+    let rel = relative(distDir, f).replace(/\\/g, '/')
+    if (rel === 'index.html') rel = ''
+    else if (rel.endsWith('/index.html')) rel = rel.slice(0, -'index.html'.length)
+    else rel = rel.replace(/\.html$/, '')
+    return `${SITE}${BASE}${rel}`
+  }).sort()
+  const xml =
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    urls.map(u => `  <url><loc>${u}</loc></url>`).join('\n') + '\n' +
+    '</urlset>\n'
+  writeFileSync(join(distDir, 'sitemap.xml'), xml)
+  log(`  sitemap.xml generated: ${urls.length} URLs`)
+}
+
 // ── Main ────────────────────────────────────────────────────
 
 async function main() {
@@ -510,6 +469,14 @@ async function main() {
       mkdirSync(join(rootSrcDir, layer), { recursive: true })
       cpSync(s, join(rootSrcDir, layer, 'index.md'))
     }
+  }
+
+  // 拷公共静态资源（favicon 等）。VitePress 的 public 目录是 <srcDir>/public；多卷构建里
+  // 根构建的 srcDir=rootSrcDir，把 tutorial/public 复制进来，根产物就带上 favicon，合并进 dist
+  // 后全站可访问 /Tutorial_AwesomeQt/favicon.ico（dev 与 build:single 则原生认 tutorial/public）。
+  const publicSrc = join(DOCUMENTS, 'public')
+  if (existsSync(publicSrc)) {
+    cpSync(publicSrc, join(rootSrcDir, 'public'), { recursive: true })
   }
 
   const rootTmpSite = join(BUILD_TMP, 'site-root')
@@ -556,6 +523,9 @@ async function main() {
 
   // ── Step 3.5: Unify hash maps and site data ─────────────
   unifyCrossVolumeData(DIST_FINAL)
+
+  // ── Step 3.6: Generate sitemap (多卷合并后统一生成) ─────
+  generateSitemap(DIST_FINAL)
 
   // ── Step 4: Finalize ────────────────────────────────────
   logStep('Step 4/4: Finalizing')

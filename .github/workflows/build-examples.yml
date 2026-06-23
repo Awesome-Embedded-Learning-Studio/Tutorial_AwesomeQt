@@ -1,0 +1,63 @@
+# 示例编译门：PR 改动示例/实例库代码时，CI 真实编译所有 Qt6 CMake 工程，
+# 兑现「克隆即跑」承诺。CI 不安装的小众/不可用模块示例由 build_examples.py 自动排除。
+#
+# Qt6 用 jurplel/install-qt-action 从 Qt 官方镜像装（带 cache）—— Ubuntu 24.04 的 apt
+# 缺不少 addon 包（core5compat / statemachine 等），装不全；
+# install-qt-action 一次性给齐 CI 会编译的 addon 模块。
+name: Build Examples
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'examples/**'
+      - 'widget/**'
+      - 'app/**'
+      - 'model/**'
+      - 'industrial/**'
+      - 'scripts/build_examples.py'
+      - '.github/workflows/build-examples.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'examples/**'
+      - 'widget/**'
+      - 'app/**'
+      - 'model/**'
+      - 'industrial/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 构建工具走 apt（这些 apt 全有）；Qt 本体走下面的 install-qt-action。
+      - name: Install build tools (cmake / ninja / ccache + GL)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake ninja-build ccache libgl1-mesa-dev
+
+      # 从 Qt 官方镜像装 Qt 6.9.1 + 示例用到的全部 addon 模块。CI 排除的
+      # NFC/MQTT/WebEngine/WebChannel/RemoteObjects/SpatialAudio/TextToSpeech/
+      # Quick3D-Physics 不装。
+      # base（Core/Gui/Widgets/Network/Concurrent/Sql/Xml/OpenGL/OpenGLWidgets/
+      # PrintSupport/Svg/SvgWidgets/Qml/Quick/QuickControls2）随主包自带。
+      # cache: true 跨 run 缓存 Qt 安装，省去每次 ~1GB 重新下载。
+      - name: Install Qt 6.9.1 + addon modules
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.9.1'
+          modules: 'qtcharts qtmultimedia qtserialport qtserialbus qtwebsockets qt3d qtquick3d qtshadertools qtconnectivity qtpdf qt5compat qtscxml qthttpserver'
+          cache: true
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ccache-qt-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: ccache-qt-${{ runner.os }}-
+
+      - name: Build all examples
+        run: |
+          export CCACHE_DIR="$HOME/.cache/ccache"
+          python3 scripts/build_examples.py --workers 6
