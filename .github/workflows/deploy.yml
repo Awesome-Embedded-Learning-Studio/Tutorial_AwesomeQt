@@ -6,12 +6,26 @@ on:
       - main
   workflow_dispatch:
 
+# 官方 Pages 部署需要 pages:write + id-token:write（OIDC 鉴权）；
+# 不再需要 contents:write（旧方案靠它推 gh-pages 分支）。
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间只允许一个部署任务，避免连续 push 时旧部署覆盖新部署。
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    # 绑定 github-pages 环境，部署后产出可访问的站点 URL。
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout
@@ -49,8 +63,17 @@ jobs:
           NODE_OPTIONS: --max-old-space-size=6144
           BUILD_CONCURRENCY: 8
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      # ── 官方 Pages 部署三件套（替代旧的 peaceiris/actions-gh-pages）─────────────
+      # 不再推 gh-pages 分支，直接把构建产物作为临时 artifact 上传后部署，用完即弃，不污染仓库历史。
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site/.vitepress/dist
+          path: ./site/.vitepress/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
