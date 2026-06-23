@@ -45,6 +45,11 @@ def is_ci_excluded(unit_dir: Path) -> bool:
     return any(frag in name for frag in CI_EXCLUDE_FRAGMENTS)
 
 
+def tail_process_output(result: subprocess.CompletedProcess[str], limit: int = 3000) -> str:
+    output = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    return output[-limit:]
+
+
 def discover_build_units() -> list[Path]:
     units: list[Path] = []
     if EXAMPLES_ROOT.is_dir():
@@ -74,10 +79,10 @@ def build_one(unit: Path, use_ccache: bool) -> tuple[Path, bool, str, float]:
     t0 = time.time()
     cfg = subprocess.run(configure, capture_output=True, text=True)
     if cfg.returncode != 0:
-        return unit, False, f"configure failed:\n{cfg.stderr[-1500:]}", time.time() - t0
+        return unit, False, f"configure failed:\n{tail_process_output(cfg)}", time.time() - t0
     bld = subprocess.run(["cmake", "--build", str(build_dir)], capture_output=True, text=True)
     if bld.returncode != 0:
-        return unit, False, f"build failed:\n{bld.stderr[-1500:]}", time.time() - t0
+        return unit, False, f"build failed:\n{tail_process_output(bld)}", time.time() - t0
     # 清理产物（_build_ci 已在 .gitignore）
     shutil.rmtree(build_dir, ignore_errors=True)
     return unit, True, "", time.time() - t0
