@@ -6,8 +6,8 @@
   example_style 规范自洽（自带 AUTOMOC + find_package），可独立 `cmake -B build`。
   这天然跳过所有聚合器（beginner 顶层根、各模块聚合器、05-other-modules 聚合器）。
 - widget/app/model/industrial 是 root-owns-config，编译各自的**根 CMakeLists**。
-- S3 砍掉的 8 个小众模块示例（NFC/SCXML/Quick3D-Physics/WebChannel/WebEngine/
-  RemoteObjects/SpatialAudio/TextToSpeech）从发现中排除——CI 不装这些 Qt6 模块。
+- CI 不安装的小众/不可用模块示例（NFC/MQTT/SCXML/Quick3D-Physics/WebChannel/
+  WebEngine/RemoteObjects/SpatialAudio/TextToSpeech）从发现中排除。
 
 用法：
   python3 scripts/build_examples.py                 # 全量
@@ -26,9 +26,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES_ROOT = REPO_ROOT / "examples"
 LIB_ROOTS = ["widget", "app", "model", "industrial"]
 
-# S3 砍掉的 8 个小众模块（目录名片段匹配，大小写不敏感）——CI 不装，从发现中排除
-S3_EXCLUDE_FRAGMENTS = (
-    "qtnfc", "qtscxml", "qtquick3d-physics", "qtwebchannel",
+# CI 不安装的小众/不可用模块（目录名片段匹配，大小写不敏感）——从发现中排除
+CI_EXCLUDE_FRAGMENTS = (
+    "qtnfc", "mqtt", "qtscxml", "qtquick3d-physics", "qtwebchannel",
     "qtwebengine", "qtremoteobjects", "qtspatial-audio", "qttexttospeech",
 )
 
@@ -40,9 +40,9 @@ def is_leaf_cmake(cmake_path: Path) -> bool:
     return "add_subdirectory" not in text
 
 
-def is_s3_excluded(unit_dir: Path) -> bool:
+def is_ci_excluded(unit_dir: Path) -> bool:
     name = unit_dir.name.lower()
-    return any(frag in name for frag in S3_EXCLUDE_FRAGMENTS)
+    return any(frag in name for frag in CI_EXCLUDE_FRAGMENTS)
 
 
 def discover_build_units() -> list[Path]:
@@ -54,12 +54,12 @@ def discover_build_units() -> list[Path]:
                 continue
             if not is_leaf_cmake(cmake):
                 continue
-            if is_s3_excluded(cmake.parent):
+            if is_ci_excluded(cmake.parent):
                 continue
             units.append(cmake.parent)
     for lib in LIB_ROOTS:
         root_cmake = REPO_ROOT / lib / "CMakeLists.txt"
-        if root_cmake.exists() and not is_s3_excluded(root_cmake.parent):
+        if root_cmake.exists() and not is_ci_excluded(root_cmake.parent):
             units.append(root_cmake.parent)
     return units
 
@@ -99,7 +99,7 @@ def main():
     if args.dry_run:
         for u in units:
             print(f"  · {u.relative_to(REPO_ROOT)}")
-        # 顺带统计被 S3 排除的
+        # dry-run 只负责列出实际进入 CI 构建队列的单元
         return
 
     if not units:

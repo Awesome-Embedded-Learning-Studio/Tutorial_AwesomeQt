@@ -1,9 +1,9 @@
 # 示例编译门：PR 改动示例/实例库代码时，CI 真实编译所有 Qt6 CMake 工程，
-# 兑现「克隆即跑」承诺。S3 砍掉的 8 个小众模块示例由 build_examples.py 自动排除。
+# 兑现「克隆即跑」承诺。CI 不安装的小众/不可用模块示例由 build_examples.py 自动排除。
 #
 # Qt6 用 jurplel/install-qt-action 从 Qt 官方镜像装（带 cache）—— Ubuntu 24.04 的 apt
-# 缺不少 addon 包（mqtt / core5compat / statemachine / svgwidgets 等），装不全；
-# install-qt-action 一次性给齐所有非 S3 模块。
+# 缺不少 addon 包（core5compat / statemachine 等），装不全；
+# install-qt-action 一次性给齐 CI 会编译的 addon 模块。
 name: Build Examples
 
 on:
@@ -38,15 +38,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends cmake ninja-build ccache libgl1-mesa-dev
 
-      # 从 Qt 官方镜像装 Qt 6.9.1 + 示例用到的全部 addon 模块（S3 砍掉的 NFC/Scxml/
-      # WebEngine/WebChannel/RemoteObjects/SpatialAudio/TextToSpeech/Quick3D-Physics 不装）。
-      # base（Core/Gui/Widgets/Network/Concurrent/Sql/Xml/OpenGL/OpenGLWidgets/PrintSupport）随主包自带。
+      # 从 Qt 官方镜像装 Qt 6.9.1 + 示例用到的全部 addon 模块。CI 排除的
+      # NFC/MQTT/Scxml/WebEngine/WebChannel/RemoteObjects/SpatialAudio/TextToSpeech/
+      # Quick3D-Physics 不装。
+      # base（Core/Gui/Widgets/Network/Concurrent/Sql/Xml/OpenGL/OpenGLWidgets/
+      # PrintSupport/Svg/SvgWidgets/Qml/Quick/QuickControls2）随主包自带。
       # cache: true 跨 run 缓存 Qt 安装，省去每次 ~1GB 重新下载。
       - name: Install Qt 6.9.1 + addon modules
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.9.1'
-          modules: 'qtcharts qtmultimedia qtsvg qtserialport qtserialbus qtwebsockets qt3d qtquick3d qtshadertools qtconnectivity qtmqtt qtpdf qt5compat qtscxml qthttpserver qtdeclarative'
+          modules: 'qtcharts qtmultimedia qtserialport qtserialbus qtwebsockets qt3d qtquick3d qtshadertools qtconnectivity qtpdf qt5compat qthttpserver'
           cache: true
 
       - uses: actions/cache@v4
