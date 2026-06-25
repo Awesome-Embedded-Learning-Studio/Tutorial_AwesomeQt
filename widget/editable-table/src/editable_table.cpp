@@ -57,6 +57,9 @@ QWidget* ValidatorDelegate::createEditor(QWidget* parent, const QStyleOptionView
             auto* box = new QDoubleSpinBox(parent);
             box->setRange(min, max);
             box->setDecimals(3);
+            // 步长随量程（下限 0.1）：默认步长 1.0，在 [0,1] 这种小量程上上下键一次就
+            // 到顶、根本调不到小数；typing 仍可输任意 3 位小数。
+            box->setSingleStep(std::max(0.1, (max - min) / 10.0));
             return box;
         }
         case static_cast<int>(EditableTable::ColumnType::kCombo): {
@@ -149,6 +152,8 @@ EditableTable::EditableTable(QWidget* parent) : QWidget(parent) {
     table_->setColumnCount(0);
     table_->setRowCount(0);
     table_->setSelectionBehavior(QAbstractItemView::SelectRows);
+    // 最后一列拉伸填满表格宽度：否则列按内容宽后右侧留大片空白，没填满 viewport
+    table_->horizontalHeader()->setStretchLastSection(true);
 
     // 委托按列规格挑编辑器；规格回调把列定义喂给 detail 层（避免环引用）
     delegate_ = new detail::ValidatorDelegate(this);
