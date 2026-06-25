@@ -21,7 +21,7 @@
 6. industrial 链接 widget 库 .so 复用（speed-meter/circle-progress/line-chart 先落地）
 
 ### widget 栏（13·每族代表·自绘递进链）
-路径 `widget/<家族>/<控件名>/`。①status-led✅中等档标杆(颜色过渡+呼吸+Q_PROPERTY全+双文档pilot待验格式) ②toggle-switch✅(2026-06-16,滑动动画+拖动/点击+Q_PROPERTY配色+双文档) ③circle-progress ④speed-meter ⑤range-slider ⑥line-chart(纯QPainter) ⑦editable-table ⑧checkbox-tree ⑨checkbox-list ⑩log-viewer ⑪password-edit ⑫ip-edit(P1) ⑬fade-animation(P1)。未覆盖9族首波不碰：calendar/datetime/opengl/specialized/network-widget/data-display/multimedia/map/print。
+路径 `widget/<家族>/<控件名>/`。①status-led✅中等档标杆(颜色过渡+呼吸+Q_PROPERTY全+双文档pilot待验格式) ②toggle-switch✅(2026-06-16,滑动动画+拖动/点击+Q_PROPERTY配色+双文档) ③circle-progress✅(2026-06-25·value/progress解耦+drawArc) ④speed-meter✅(2026-06-25·动画指针+刻度) ⑤range-slider✅(2026-06-25·双柄拖拽) ⑥line-chart✅(纯QPainter·2026-06-25) ⑦editable-table ⑧checkbox-tree ⑨checkbox-list ⑩log-viewer ⑪password-edit ⑫ip-edit(P1) ⑬fade-animation(P1)。未覆盖9族首波不碰：calendar/datetime/opengl/specialized/network-widget/data-display/multimedia/map/print。
 
 ### app 栏（7旗舰+1拉伸·撑「真库不是片段」）
 路径 `app/<类目>/<应用名>/`。image-viewer★5 / sqlite-browser★5 / json-editor★4 / network-tool★4-5 / cpu-memory-monitor★4 / serial-tool★4-5(补入·嵌入式最高频) / tetris★4-5 / ~~audio-visualizer~~(拉伸·须先做模拟数据发生器)。
@@ -42,8 +42,9 @@
 > **[格式 gate]** ✅ status-led 已产 Full 导览 + Handbook（入口+01/02/03+troubleshooting）两套样板（2026-06-14，落 `tutorial/engineering/instances/widget/status-led/`）→ 待作者验格式放量后续
 
 ①✅已完成：status-led 基建化简(降C++17+重命名+STATIC库) + 深度改造(中等档：颜色过渡 QPropertyAnimation + 呼吸 QVariantAnimation + Q_PROPERTY 全 + minimumSizeHint) + 双文档 pilot(成品导览 + 手搓手册 5 文件) → 作者验过格式再放量
-②✅toggle-switch 已落(2026-06-16，代码+构建门+冒烟+Full+Handbook双文档) → 撑场批续：circle→speed-meter→line-chart + image-viewer/sqlite-browser/serial-tool
-③覆盖批：password/ip/range-slider/editable-table/checkbox-tree/list/log-viewer/fade + json-editor/network-tool/cpu-mem
+②✅toggle-switch 已落(2026-06-16，代码+构建门+冒烟+Full+Handbook双文档)
+②b✅自绘链撑场批(2026-06-25·分支 instance/widget-painter-batch)：circle-progress+speed-meter+range-slider+line-chart 四件，全 STATIC 库+demo+构建门绿(零warning)+offscreen冒烟+Full导览+Handbook 5文件。Workflow 并行产(speed/range/line)，circle-progress 因 429 限流挂→手补。待作者抽审放量
+③覆盖批：password/ip/editable-table/checkbox-tree/list/log-viewer/fade + json-editor/network-tool/cpu-mem
 ④✅model reference 骨架已落(2026-06-16)：undo-redo-framework 库式骨架(`move_command` STATIC + demo) + 三范式已定 → 其余 17 照范式放量
 ⑤收尾：tetris；audio-visualizer(须先模拟数据发生器)
 ⑥industrial pilot：widget 链落地后→hmi-dashboard 成品化（骨架已立，复用契约见下）

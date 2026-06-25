@@ -13,4 +13,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 # 控件子目录：每个控件自洽（STATIC 库 + 独立 demo）
 add_subdirectory(status-led)
 add_subdirectory(toggle-switch)
-# add_subdirectory(circle-progress)
+add_subdirectory(circle-progress)
+add_subdirectory(speed-meter)
+add_subdirectory(range-slider)
+add_subdirectory(line-chart)
