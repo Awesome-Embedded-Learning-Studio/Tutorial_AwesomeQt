@@ -6,13 +6,13 @@
 
 ```
 入门 137✅ · 进阶 134✅ · 专家 2/102（01·02 COW 已审结，见 expert.md）
-实例库 widget 6/13（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅），app/model/industrial 骨架已立
+实例库 widget 8/13（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅ + editable-table✅ + checkbox-tree✅），app/model/industrial 骨架已立
 examples 275✅ · 基建 P0✅ 基本清完
 ```
 
 ## 接力点（下次会话从这里接 · 2026-06-25 更）
 
-- **分支 `instance/widget-painter-batch`（从 main 切·本机已 commit 未 push）**：widget 自绘链撑场批 4 件——circle-progress / speed-meter / range-slider / line-chart。每件 STATIC 库+demo+构建门绿(零 warning)+offscreen 冒烟+Full 导览+Handbook 5 文件。Workflow 并行产(speed/range/line)，circle-progress 因 429 限流挂→手补。**待作者抽审放量**。
+- **分支 `instance/widget-painter-batch`（从 main 切·本机已 commit 未 push）**：widget 栏两批共 6 件——自绘链 4 件(circle-progress/speed-meter/range-slider/line-chart) + model/view 2 件(editable-table/checkbox-tree)。每件 STATIC 库+demo+构建门绿(零 warning)+offscreen 冒烟+Full 导览+Handbook。另含 **speed-meter 指针角度 bugfix**（v=0 曾指向 max 那端，已统一到屏幕角 β 修复 + 离屏渲图验证 + 文档同步）。**待作者抽审放量**。
 - **已合入 main（f8349b0）**：status-led 标杆 · toggle-switch 控件 + 双文档（上一批）
 - 工作区：分支上 4 件 + todo 更新；`main == origin/main`
 - **下一步（审完合入后）**：续 widget ⑦editable-table，或破 app/image-viewer（sqlite-browser/serial-tool）；专家层在 `expert/meta-object-system` 分支另线推进（5 篇未并入 main，README 专家行待合并后统一）
