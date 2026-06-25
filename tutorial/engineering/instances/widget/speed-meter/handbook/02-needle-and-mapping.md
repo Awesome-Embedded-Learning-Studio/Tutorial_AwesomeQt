@@ -56,10 +56,10 @@ description: "实现 angleForValue 把 value 映射成屏幕角 β，用 save/tr
 
 - `angleForValue` 映射（135° 起、270° 扫、除零保护）：`src/speed_meter.cpp:64-68`
 - setValue（这步的突变版可对照成品的逻辑骨架，动画部分 step 3 才加）：`src/speed_meter.cpp:74-86`
-- 指针坐标变换（save/translate/rotate/restore，rotate(β) 直接转）：`src/speed_meter.cpp:254-274`
-- 根粗尖细多边形顶点：`src/speed_meter.cpp:266-272`
-- 中心轴帽：`src/speed_meter.cpp:278-284`
-- 底部数字读数：`src/speed_meter.cpp:286-298`
+- 指针坐标变换（save/translate/rotate/restore，rotate(β) 直接转）：`src/speed_meter.cpp:266-288`
+- 根粗尖细多边形顶点：`src/speed_meter.cpp:278-283`
+- 中心轴帽：`src/speed_meter.cpp:290-296`
+- 底部数字读数：`src/speed_meter.cpp:298-311`
 
 ---
 

@@ -19,7 +19,7 @@ description: "按症状查：弧方向画反、指针偏 90°、指针不转/直
 ## 指针指反端 / 刻度上下镜像（value=0 指到了 max 那头）
 
 - 根因是两套角度约定混了：cos/sin 在屏幕 y 朝下算位置，`drawArc` 用 y 朝上逆时针——差一个 y 翻转。若再给 rotate 叠一个 +90°「修正」，两者叠加就把刻度/指针整体上下镜像，v=0 的针怼到 max 位置
-- 解法：全控件统一用屏幕角 β（3 点为 0°、顺时针为正，cos/sin/rotate 同套），`rotate(needle_angle_)` 直接转不修正；只有 drawArc 单独换算（225*16、-270*16）。→ 映射 `src/speed_meter.cpp:64-68`、rotate `src/speed_meter.cpp:260`（注释 `:255-257`）
+- 解法：全控件统一用屏幕角 β（3 点为 0°、顺时针为正，cos/sin/rotate 同套），`rotate(needle_angle_)` 直接转不修正；只有 drawArc 单独换算（225*16、-270*16）。→ 映射 `src/speed_meter.cpp:64-68`、rotate `src/speed_meter.cpp:272`（注释 `:268-269`）
 - 验证：value=0 → rotate 135° 指左下，value=max → rotate 45° 指右下
 
 ## 指针不转 / 直接跳（没有平滑过渡）

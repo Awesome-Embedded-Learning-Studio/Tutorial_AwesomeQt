@@ -209,6 +209,16 @@ void SpeedMeter::paintEvent(QPaintEvent*) {
 
     // —— 主刻度（kMajorTickCount 条）+ 数字标签 ——
     const QFontMetrics fm(p.font());
+
+    // —— 标签挤压检测：相邻主刻度数字标签的弧距 < 标签宽 + 留白时，整组隐藏 ——
+    // 控件被布局压小时，11 个数字标签会挤成一团；藏掉比挤着更易读。
+    // 弧距 = label_r × 相邻主刻度夹角(弧度)；最宽标签按量程上限的位数估。
+    const qreal kLabelGap = 4.0;
+    const qreal label_r = std::max(1.0, tick_major_inner - 14.0);
+    const qreal label_arc_step = label_r * degToRad(kSweep / (kMajorTickCount - 1));
+    const qreal widest_label_w = fm.horizontalAdvance(QString::number(max_value_));
+    const bool show_tick_labels = label_arc_step >= widest_label_w + kLabelGap;
+
     p.setPen(QPen(tick_color_, 2));
     for (int i = 0; i < kMajorTickCount; ++i) {
         // 第 i 个主刻度对应的屏幕角 β（与 angleForValue 同映射）
@@ -222,17 +232,19 @@ void SpeedMeter::paintEvent(QPaintEvent*) {
         p.drawLine(inner, outer);
 
         // 数字标签：在主刻度内端再往内一点，标该刻度对应的 value
-        const qreal label_r = std::max(1.0, tick_major_inner - 14.0);
-        const QPointF label_pos(center.x() + label_r * std::cos(rad),
-                                center.y() + label_r * std::sin(rad));
-        const int tick_value = static_cast<int>(std::round(t * max_value_)); // 该刻度代表的数值
-        const QString label_text = QString::number(tick_value);
-        p.setPen(tick_color_);
-        p.drawText(QRectF(label_pos.x() - fm.horizontalAdvance(label_text) / 2.0,
-                          label_pos.y() - fm.height() / 2.0, fm.horizontalAdvance(label_text),
-                          fm.height()),
-                   Qt::AlignCenter, label_text);
-        p.setPen(QPen(tick_color_, 2)); // 复位为刻度线画笔
+        // （控件太小时 show_tick_labels=false，整组藏掉防挤压）
+        if (show_tick_labels) {
+            const QPointF label_pos(center.x() + label_r * std::cos(rad),
+                                    center.y() + label_r * std::sin(rad));
+            const int tick_value = static_cast<int>(std::round(t * max_value_)); // 该刻度代表的数值
+            const QString label_text = QString::number(tick_value);
+            p.setPen(tick_color_);
+            p.drawText(QRectF(label_pos.x() - fm.horizontalAdvance(label_text) / 2.0,
+                              label_pos.y() - fm.height() / 2.0, fm.horizontalAdvance(label_text),
+                              fm.height()),
+                       Qt::AlignCenter, label_text);
+            p.setPen(QPen(tick_color_, 2)); // 复位为刻度线画笔
+        }
     }
 
     // —— 次刻度：每两个主刻度间 5 等分（4 条次刻度） ——
