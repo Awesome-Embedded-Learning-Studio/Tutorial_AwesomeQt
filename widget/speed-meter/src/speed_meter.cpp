@@ -20,14 +20,20 @@
 namespace AwesomeQt {
 
 namespace {
-// —— 角度约定（整套在 paintEvent 自洽，与 drawArc 角度分别处理）——
-// 数学角度（三角函数用）：0°=3 点钟方向，逆时针为正，Y 轴朝下时视觉上顺时针。
-//   表盘弧从 225°（左下）顺时针扫 270° 到 -45°（右下），开口朝下。
-//   value=0   → 225°（左下端）
-//   value=max → -45°（=315°，右下端）
-constexpr qreal kStartAngle = 225.0; // 最小值角度（左下）
-constexpr qreal kSweepAngle = 270.0; // 顺时针扫角
-constexpr int kMajorTickCount = 11;  // 主刻度条数（含两端，把量程 10 等分）
+// —— 仪表弧角度约定 ——
+// 用「屏幕角 β」统一描述：3 点钟为 0°、顺时针为正（与 QPainter::rotate 及
+// cos/sin 在 y 朝下的屏幕坐标系完全一致）。整条弧：
+//   value=0   → 135°（左下 7:30）
+//   value=max → 45°（右下 4:30，= 135°+270° 取模 360）
+//   value=mid → 270°（顶部 12:00）
+// 即 β(v) = kStartScreen + (v/max)*kSweep，开口朝下（6 点钟方向无刻度）。
+// drawArc 用 Qt 自带约定（0°=3 点、逆时针为正），与 β 差一个 y 翻转：
+//   β=135°（左下）↔ drawArc 起始角 225°，扫角取负（顺时针铺开）。
+constexpr qreal kStartScreen = 135.0; // β(v=0)：左下 7:30
+constexpr qreal kSweep = 270.0;       // 顺时针扫角
+constexpr int kArcStart16 = 225 * 16; // drawArc 起始角（= -β(0) mod 360，左下）
+constexpr int kArcSpan16 = -270 * 16; // drawArc 扫角（负=顺时针）
+constexpr int kMajorTickCount = 11;   // 主刻度条数（含两端，量程 10 等分）
 
 constexpr qreal degToRad(qreal deg) {
     return deg * M_PI / 180.0;
@@ -53,13 +59,13 @@ void SpeedMeter::initAnimation() {
 }
 
 // ============================================================================
-// value → 数学角度映射
+// value → 屏幕角 β 映射
 // ============================================================================
 qreal SpeedMeter::angleForValue(int v) const {
     const int max = std::max(1, max_value_);          // 防 max_value_<=0 除零
     const int clamped = std::clamp(v, 0, max_value_); // 夹到 [0, max]
-    // 从起始角 225° 顺时针扫：角度随 value 减小（225 → -45）
-    return kStartAngle - (static_cast<qreal>(clamped) / max) * kSweepAngle;
+    // β(v) = 135° + (v/max)*270°：v=0 左下、v=max 右下、mid 顶部，开口朝下
+    return kStartScreen + (static_cast<qreal>(clamped) / max) * kSweep;
 }
 
 // ============================================================================
@@ -188,28 +194,26 @@ void SpeedMeter::paintEvent(QPaintEvent*) {
     const qreal tick_minor_inner = std::max(1.0, gauge_r - 7.0);  // 次刻度内端（更短）
     const qreal needle_len = std::max(1.0, gauge_r - 22.0);       // 指针尖到中心距离
 
-    // —— 背景弧：drawArc 角度是 1/16°、0°=3点、正值逆时针。
-    //    我们要从 225° 顺时针扫到 -45°（视觉顺时针铺开 270°）。
-    //    drawArc 起始角 = 225°*16，扫角 = -270°*16（负=顺时针）。
+    // —— 背景弧：drawArc 用 Qt 约定（0°=3点、逆时针为正、单位 1/16°）。
+    //    kArcStart16/kArcSpan16 已按屏幕角 β 换算好（见顶部约定注释），
+    //    与下方刻度/指针描述同一物理弧（左下起、顺时针铺到右下，开口朝下）。
     {
         QPen pen(gauge_color_);
         pen.setWidthF(std::max(1.0, gauge_r * 0.06)); // 粗弧，随尺寸缩放但至少 1px
         pen.setCapStyle(Qt::RoundCap);
         p.setPen(pen);
         p.setBrush(Qt::NoBrush);
-        // drawArc 参数：x,y,w,h, 起始角(1/16°), 扫角(1/16°)；负扫角=顺时针
         const QRectF arc_rect(center.x() - gauge_r, center.y() - gauge_r, gauge_r * 2, gauge_r * 2);
-        p.drawArc(arc_rect, static_cast<int>(kStartAngle * 16),
-                  static_cast<int>(-kSweepAngle * 16));
+        p.drawArc(arc_rect, kArcStart16, kArcSpan16);
     }
 
     // —— 主刻度（kMajorTickCount 条）+ 数字标签 ——
     const QFontMetrics fm(p.font());
     p.setPen(QPen(tick_color_, 2));
     for (int i = 0; i < kMajorTickCount; ++i) {
-        // 第 i 个主刻度对应的数学角度（与 angleForValue 同映射）
+        // 第 i 个主刻度对应的屏幕角 β（与 angleForValue 同映射）
         const qreal t = static_cast<qreal>(i) / (kMajorTickCount - 1);
-        const qreal ang = kStartAngle - t * kSweepAngle;
+        const qreal ang = kStartScreen + t * kSweep;
         const qreal rad = degToRad(ang);
         const QPointF outer(center.x() + tick_outer * std::cos(rad),
                             center.y() + tick_outer * std::sin(rad));
@@ -237,7 +241,7 @@ void SpeedMeter::paintEvent(QPaintEvent*) {
         for (int j = 1; j < 5; ++j) {
             const qreal t =
                 (static_cast<qreal>(i) + static_cast<qreal>(j) / 5.0) / (kMajorTickCount - 1);
-            const qreal ang = kStartAngle - t * kSweepAngle;
+            const qreal ang = kStartScreen + t * kSweep;
             const qreal rad = degToRad(ang);
             const QPointF outer(center.x() + tick_outer * std::cos(rad),
                                 center.y() + tick_outer * std::sin(rad));
@@ -249,12 +253,11 @@ void SpeedMeter::paintEvent(QPaintEvent*) {
 
     // —— 指针：用 translate(center)+rotate 画根粗尖细的多边形 ——
     {
-        // rotate 以 12 点钟（数学 -90°）为 0、顺时针为正。我们的数学角度 0°=3 点钟，
-        // 故 painter 旋转角 = needle_angle_ + 90°（把 0° 摆正到 3 点，再 +90° 适配 rotate 基准）。
-        // 经验证：value=0(225°)→rotate 315° 指向左下，value=max(-45°)→rotate 45° 指向右下。
+        // needle_angle_ 就是屏幕角 β（顺时针为正）。rotate(β) 把指针（默认指 +x=3 点钟）
+        // 直接转到目标方向：v=0(135°)→左下、v=max(45°)→右下，与刻度/标签同映射。
         p.save();
         p.translate(center);
-        p.rotate(needle_angle_ + 90.0);
+        p.rotate(needle_angle_);
 
         // 多边形：根在中心附近(宽)，尖往内半径方向(窄)，水平指向 +x 方向
         const qreal base_w = std::max(1.5, needle_len * 0.04); // 根部半宽

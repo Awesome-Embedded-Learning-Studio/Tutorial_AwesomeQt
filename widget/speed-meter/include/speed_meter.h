@@ -18,9 +18,9 @@ namespace AwesomeQt {
 /// - `value` 是业务属性（用户语义），`needleAngle` 是动画属性（实际绘制角度）。
 ///   setValue 计算 value→角度映射后，用 QPropertyAnimation 从当前角度接力到新角度，
 ///   指针平滑旋转；二者解耦，避免「WRITE 指 setValue→setValue 又启动画→栈溢出」（踩坑⑦）。
-/// - 角度约定：表盘弧从 225°（左下）顺时针扫 270° 到 -45°（右下），开口朝下。
-///   数学角度（三角函数）与 QPainter drawArc 角度（1/16°、0°=3点、正值逆时针）分别处理，
-///   换算注释见 .cpp 顶部。
+/// - 角度约定：用「屏幕角 β」（3 点钟为 0°、顺时针为正，与 rotate/cos·sin 在 y 朝下屏幕一致），
+///   β(v)=135°+(v/max)×270° → v=0 左下(135°)、mid 顶部(270°)、v=max 右下(45°)，开口朝下。
+///   drawArc 单独用 Qt 自带约定（0°=3点、逆时针、1/16°），与 β 的换算见 .cpp 顶部。
 /// - 动画对象为持久成员指针，stop()/重配 setStartValue(当前角度)/start() 复用，
 ///   不用 DeleteWhenStopped（防连切悬空）。
 class SpeedMeter : public QWidget {
@@ -41,7 +41,7 @@ class SpeedMeter : public QWidget {
     void setValue(int value);
     int value() const;
 
-    /// @brief 当前指针绘制角度（度，数学角度）。Q_PROPERTY(needleAngle) 的 WRITE 回调，
+    /// @brief 当前指针绘制角度（度，屏幕角 β）。Q_PROPERTY(needleAngle) 的 WRITE 回调，
     ///        供 QPropertyAnimation 每帧驱动；外部业务请用 setValue，勿直接调。
     void setNeedleAngle(qreal angle);
     qreal needleAngle() const;
@@ -76,12 +76,12 @@ class SpeedMeter : public QWidget {
   private:
     void initAnimation();
 
-    /// @brief value → 数学角度（度）映射：起始角 225° 顺时针扫 270°。
+    /// @brief value → 屏幕角 β（度）映射：β(v)=135°+(v/max)×270°（v=0 左下、v=max 右下）。
     qreal angleForValue(int value) const;
 
     int value_{0};
     int max_value_{220};
-    qreal needle_angle_{225.0}; // 初始指向最小值（225°=左下）
+    qreal needle_angle_{135.0}; // 初始指向最小值（135°=左下 7:30）
 
     QColor needle_color_{QColor(255, 70, 70)};  // 指针：红
     QColor tick_color_{QColor(60, 60, 60)};     // 刻度：深灰

@@ -45,9 +45,9 @@ description: "把 step 2 的突变指针升级成 400ms 平滑旋转：Q_PROPERT
 ## 对照答案
 
 - needleAngle 的 Q_PROPERTY（WRITE 指 setNeedleAngle）：`include/speed_meter.h:31`
-- needle_anim_ 初始化（持久指针 + parent=this + duration/easing）：`src/speed_meter.cpp:46-51`
-- setValue 启动过渡（stop/setStart(needle_angle_)/setEnd/start）：`src/speed_meter.cpp:66-78`
-- setNeedleAngle 回调（qFuzzyCompare 去重 + 赋值 + emit + update）：`src/speed_meter.cpp:87-94`
+- needle_anim_ 初始化（持久指针 + parent=this + duration/easing）：`src/speed_meter.cpp:54-58`
+- setValue 启动过渡（stop/setStart(needle_angle_)/setEnd/start）：`src/speed_meter.cpp:74-86`
+- setNeedleAngle 回调（qFuzzyCompare 去重 + 赋值 + emit + update）：`src/speed_meter.cpp:95-101`
 
 ---
 
