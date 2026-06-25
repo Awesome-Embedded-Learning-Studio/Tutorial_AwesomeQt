@@ -21,7 +21,7 @@
 6. industrial 链接 widget 库 .so 复用（speed-meter/circle-progress/line-chart 先落地）
 
 ### widget 栏（13·每族代表·自绘递进链）
-路径 `widget/<家族>/<控件名>/`。①status-led✅中等档标杆(颜色过渡+呼吸+Q_PROPERTY全+双文档pilot待验格式) ②toggle-switch✅(2026-06-16,滑动动画+拖动/点击+Q_PROPERTY配色+双文档) ③circle-progress✅(2026-06-25·value/progress解耦+drawArc) ④speed-meter✅(2026-06-25·动画指针+刻度) ⑤range-slider✅(2026-06-25·双柄拖拽) ⑥line-chart✅(纯QPainter·2026-06-25) ⑦editable-table✅(2026-06-25·委托校验+数据往返) ⑧checkbox-tree✅(2026-06-25·三态+父子联动) ⑨checkbox-list✅(2026-06-25·QListWidget勾选+批量守卫) ⑩log-viewer✅(2026-06-25·级别染色+裁旧) ⑪password-edit✅(2026-06-25·显隐+强度) ⑫ip-edit(P1) ⑬fade-animation(P1)。未覆盖9族首波不碰：calendar/datetime/opengl/specialized/network-widget/data-display/multimedia/map/print。
+路径 `widget/<家族>/<控件名>/`。①status-led✅中等档标杆(颜色过渡+呼吸+Q_PROPERTY全+双文档pilot待验格式) ②toggle-switch✅(2026-06-16,滑动动画+拖动/点击+Q_PROPERTY配色+双文档) ③circle-progress✅(2026-06-25·value/progress解耦+drawArc) ④speed-meter✅(2026-06-25·动画指针+刻度) ⑤range-slider✅(2026-06-25·双柄拖拽) ⑥line-chart✅(纯QPainter·2026-06-25) ⑦editable-table✅(2026-06-25·委托校验+数据往返) ⑧checkbox-tree✅(2026-06-25·三态+父子联动) ⑨checkbox-list✅(2026-06-25·QListWidget勾选+批量守卫) ⑩log-viewer✅(2026-06-25·级别染色+裁旧) ⑪password-edit✅(2026-06-25·显隐+强度) ⑫ip-edit✅(2026-06-25·4段跳焦+0-255校验) ⑬fade-animation✅(2026-06-25·OpacityEffect淡入淡出)。**widget 栏 13/13 收齐**。未覆盖9族首波不碰：calendar/datetime/opengl/specialized/network-widget/data-display/multimedia/map/print。
 
 ### app 栏（7旗舰+1拉伸·撑「真库不是片段」）
 路径 `app/<类目>/<应用名>/`。image-viewer★5 / sqlite-browser★5 / json-editor★4 / network-tool★4-5 / cpu-memory-monitor★4 / serial-tool★4-5(补入·嵌入式最高频) / tetris★4-5 / ~~audio-visualizer~~(拉伸·须先做模拟数据发生器)。
@@ -46,7 +46,8 @@
 ②b✅自绘链撑场批(2026-06-25·分支 instance/widget-painter-batch)：circle-progress+speed-meter+range-slider+line-chart 四件，全 STATIC 库+demo+构建门绿(零warning)+offscreen冒烟+Full导览+Handbook 5文件。Workflow 并行产(speed/range/line)，circle-progress 因 429 限流挂→手补。待作者抽审放量
 ②c✅model/view 批(2026-06-25·同分支)：editable-table(委托校验+数据往返)+checkbox-tree(三态+父子联动) 两件，全 STATIC 库+demo+构建门绿(零warning)+offscreen冒烟+Full+Handbook。Workflow 并行产(本轮无 429)。待作者抽审
 ②d✅input/display 批(2026-06-25·同分支)：checkbox-list(QListWidget勾选+批量守卫)+log-viewer(QPlainTextEdit级别染色+裁旧)+password-edit(显隐+强度) 三件，全 STATIC 库+demo+构建门绿+offscreen冒烟+Full+Handbook。本批起 code Agent 预 clang-format，行号不漂+提交一把过。待作者抽审
-③覆盖批：ip/fade + json-editor/network-tool/cpu-mem（password/list/log-viewer/editable-table/checkbox-tree 已提前完成见②c/②d）
+②e✅widget 收尾批(2026-06-25·同分支)：ip-edit(4段跳焦+0-255校验)+fade-animation(QGraphicsOpacityEffect淡入淡出) 两件（P1 也做了），全 STATIC 库+demo+构建门绿+offscreen冒烟+Full+Handbook。**widget 栏 13/13 全部完成**。待作者抽审
+③app/model 放量：json-editor/network-tool/cpu-mem（widget 栏 ⑫⑬ 已完成见②e，widget 栏收齐）
 ④✅model reference 骨架已落(2026-06-16)：undo-redo-framework 库式骨架(`move_command` STATIC + demo) + 三范式已定 → 其余 17 照范式放量
 ⑤收尾：tetris；audio-visualizer(须先模拟数据发生器)
 ⑥industrial pilot：widget 链落地后→hmi-dashboard 成品化（骨架已立，复用契约见下）
