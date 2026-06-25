@@ -26,7 +26,7 @@ description: "按症状查：折线飞屏/NaN、空数据崩溃、Y 刻度数字
 
 - 数字**是不是用了固定起点 drawText**？左对齐时数字位数一变就往右溢进折线区。用 `QFontMetrics::horizontalAdvance` 量宽，起点设 `plot_left - text_w - 4` 右对齐到 Y 轴左侧。→ `src/line_chart.cpp:219-221`
 - 垂直对齐**是不是没做 baseline 修正**？`drawText(QPointF(x, y + fm.ascent()/2), text)` 让数字大致垂直居中在网格线上。→ `src/line_chart.cpp:221`
-- 进阶排查：[字体与文本渲染](../../../../../beginner/02-qtgui/04-font-text-beginner.md)
+- 进阶排查：[字体与文本渲染](../../../../../beginner/02-qtgui/04-font-text-rendering-beginner.md)
 
 ## 勾选框切不动外观 / 切了没反应
 

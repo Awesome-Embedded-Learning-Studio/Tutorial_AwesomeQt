@@ -40,7 +40,7 @@ description: "把 step 2 的突变指针升级成 400ms 平滑旋转：Q_PROPERT
 
 搓到这，SpeedMeter 主体就齐了。想再深一层（指针危险区渐红 / 高转速刻度分段配色 / 过冲回弹）回 [手册首页](./index.md) 看进阶挑战。
 
-> 动画框架不熟？[属性动画框架基础](../../../../../beginner/03-qtwidgets/09-animation-framework-beginner.md)、进阶 [动画框架进阶](../../../../../advanced/03-qtwidgets/09-advanced.md)。Q_PROPERTY 机制不熟？[QObject 与元对象系统](../../../../../beginner/01-qtbase/01-qobject-meta-system-beginner.md)、进阶 [属性系统深度拆解](../../../../../advanced/01-qtbase/01-qobject-property-system-advanced.md)。
+> 动画框架不熟？[属性动画框架基础](../../../../../beginner/03-qtwidgets/09-animation-framework-beginner.md)、进阶 [动画框架进阶](../../../../../advanced/03-qtwidgets/09-animation-advanced.md)。Q_PROPERTY 机制不熟？[QObject 与元对象系统](../../../../../beginner/01-qtbase/01-qobject-meta-system-beginner.md)、进阶 [属性系统深度拆解](../../../../../advanced/01-qtbase/01-qobject-property-system-advanced.md)。
 
 ## 对照答案
 
