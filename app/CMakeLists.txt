@@ -14,3 +14,5 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
 # 需要额外 Qt 组件的 app（如 sqlite-browser 要 Sql、network-tool 要 Network）
 # 在该 app 自己的目录里按需 find_package + link，不要堆进顶层默认集
 add_subdirectory(05-image-tools/image-viewer)
+add_subdirectory(01-dev-tools/json-editor)
+add_subdirectory(10-database-tools/sqlite-browser)

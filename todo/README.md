@@ -6,16 +6,16 @@
 
 ```
 入门 137✅ · 进阶 134✅ · 专家 2/102（01·02 COW 已审结，见 expert.md）
-实例库 widget 13/13 ✅收齐（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅ + editable-table✅ + checkbox-tree✅ + checkbox-list✅ + log-viewer✅ + password-edit✅ + ip-edit✅ + fade-animation✅），app image-viewer✅破零(整机范式标杆) · model/industrial 骨架已立
+实例库 widget 13/13 ✅收齐（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅ + editable-table✅ + checkbox-tree✅ + checkbox-list✅ + log-viewer✅ + password-edit✅ + ip-edit✅ + fade-animation✅），app image-viewer✅ + json-editor✅ + sqlite-browser✅(3 件整机成品) · model/industrial 骨架已立
 examples 275✅ · 基建 P0✅ 基本清完
 ```
 
 ## 接力点（下次会话从这里接 · 2026-06-27 更）
 
 - **已合入 main（fcde408 / PR#14）**：widget 栏 13/13 全收齐（status-led/toggle-switch/circle-progress/speed-meter/range-slider/line-chart/editable-table/checkbox-tree/checkbox-list/log-viewer/password-edit/ip-edit/fade-animation）
-- **分支 `instance/app-image-viewer`（从 main 切·本机已 commit 未 push）**：app 栏破零第 1 件——image-viewer 整机成品。自定义 ImageView 画布(paintEvent+QTransform 缩放/旋转/居中) + QScrollArea(widgetResizable=false) 滚动 + 同目录翻页(循环跳坏图) + 幻灯片(全屏+恢复 maximized)。构建门零 warning + offscreen 像素验证(旋转 90° 左蓝右红) + 对抗 review(3 维度)修正 6 处 + Full 导览 + Handbook 5 文件。**app 栏整机范式 + 双文档范式首立**，待作者抽审放量
-- 工作区：分支上 image-viewer 整机代码 + 双文档 + todo 更新；`main` 含 widget 13/13
-- **下一步（审完合入后）**：app 栏续 sqlite-browser(Sql)/serial-tool(SerialPort)/json-editor；或 model 栏放量（其余 17 照 undo-redo 范式）；industrial hmi-dashboard 复用 widget 链；专家层另线推进
+- **分支 `instance/app-image-viewer`（本机已 commit 未 push）**：app 栏 3 件整机成品——①image-viewer(自定义画布+QTransform+翻页跳坏图+幻灯片) ②json-editor(01-dev-tools·编辑/格式化/校验/树递归) ③sqlite-browser(10-database-tools·打开 db/表列表/可编辑表格/任意 SQL)。每件构建门零 warning + offscreen 验证 + 对抗 review 修正(image-viewer 6 处/json-editor 3 bug/sqlite 2 bug) + Full 导览 + Handbook。**app 栏 3 件整机范式 + 双文档范式已立**。待作者抽审放量
+- 工作区：分支上 3 件 app 整机 + 双文档 + app/CMakeLists 纳入 + todo 更新（含累计清单 instance-batch-log.md）；`main` 含 widget 13/13
+- **下一步（审完合入后）**：app 栏续 serial-tool(SerialPort·嵌入式高频)/network-tool/cpu-memory-monitor；或转 model 栏放量（17 件照 undo-redo 范式）；industrial hmi-dashboard 复用 widget 链；专家层另线推进
 - **挂账**：05-other-modules ~25 篇缺踩坑段——按「不编坑」原则，等真写到该模块再补真坑（memory: no-fabricated-pitfalls）
 - ⚠ **作者会在终端并行 commit/push/merge**：AI 改文件前先 `git status`；提交 / push 全归作者；commit / PR **不带任何 AI 署名**（memory: no-ai-attribution / user-handles-all-pushes）
 

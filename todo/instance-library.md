@@ -24,7 +24,7 @@
 路径 `widget/<家族>/<控件名>/`。①status-led✅中等档标杆(颜色过渡+呼吸+Q_PROPERTY全+双文档pilot待验格式) ②toggle-switch✅(2026-06-16,滑动动画+拖动/点击+Q_PROPERTY配色+双文档) ③circle-progress✅(2026-06-25·value/progress解耦+drawArc) ④speed-meter✅(2026-06-25·动画指针+刻度) ⑤range-slider✅(2026-06-25·双柄拖拽) ⑥line-chart✅(纯QPainter·2026-06-25) ⑦editable-table✅(2026-06-25·委托校验+数据往返) ⑧checkbox-tree✅(2026-06-25·三态+父子联动) ⑨checkbox-list✅(2026-06-25·QListWidget勾选+批量守卫) ⑩log-viewer✅(2026-06-25·级别染色+裁旧) ⑪password-edit✅(2026-06-25·显隐+强度) ⑫ip-edit✅(2026-06-25·4段跳焦+0-255校验) ⑬fade-animation✅(2026-06-25·OpacityEffect淡入淡出)。**widget 栏 13/13 收齐**。未覆盖9族首波不碰：calendar/datetime/opengl/specialized/network-widget/data-display/multimedia/map/print。
 
 ### app 栏（7旗舰+1拉伸·撑「真库不是片段」）
-路径 `app/<类目>/<应用名>/`。①image-viewer✅(2026-06-27·整机破零标杆：自定义画布 paintEvent+QTransform 缩放旋转+QScrollArea 滚动+同目录翻页跳坏图+幻灯片全屏+Full/Handbook 双文档) / sqlite-browser★5 / json-editor★4 / network-tool★4-5 / cpu-memory-monitor★4 / serial-tool★4-5(补入·嵌入式最高频) / tetris★4-5 / ~~audio-visualizer~~(拉伸·须先做模拟数据发生器)。**app 栏破零**——整机应用范式(整机 demo 非库式) + app 栏双文档范式首立。
+路径 `app/<类目>/<应用名>/`。①image-viewer✅(整机破零标杆·自定义画布+QTransform+翻页跳坏图+幻灯片) ②json-editor✅(01-dev-tools·编辑/格式化/校验/树递归) ③sqlite-browser✅(10-database-tools·打开 db/表列表/可编辑表格/任意 SQL) / network-tool★4-5 / cpu-memory-monitor★4 / serial-tool★4-5(补入·嵌入式最高频·续批) / tetris★4-5 / ~~audio-visualizer~~(拉伸)。**app 栏 3 件整机成品**，整机应用范式(整机 demo 非库式) + 双文档范式已立。
 
 ### model 栏（18·范式已定 2026-06-16）
 ✅ 三范式已定（undo-redo-framework 骨架打穿）：目录布局 `model/<NN-类目>/<名>/include|src|demo`（与 widget 同构）/ 库类进 `AwesomeQt::` / demo 形态 = 库式 STATIC + 独立 demo。undo-redo 骨架已落（`move_command` STATIC + QUndoStack/QUndoView demo，构建门+冒烟通），深度成品待 D2 放量，其余 17 照范式复刻。
