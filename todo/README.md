@@ -6,16 +6,16 @@
 
 ```
 入门 137✅ · 进阶 134✅ · 专家 2/102（01·02 COW 已审结，见 expert.md）
-实例库 widget 13/13 ✅收齐（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅ + editable-table✅ + checkbox-tree✅ + checkbox-list✅ + log-viewer✅ + password-edit✅ + ip-edit✅ + fade-animation✅），app image-viewer✅ + json-editor✅ + sqlite-browser✅ + serial-tool✅ + network-tool✅ + tetris✅(6 件整机成品) · model/industrial 骨架已立
+实例库 widget 13/13 ✅收齐（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅ + editable-table✅ + checkbox-tree✅ + checkbox-list✅ + log-viewer✅ + password-edit✅ + ip-edit✅ + fade-animation✅），app image-viewer✅ + json-editor✅ + sqlite-browser✅ + serial-tool✅ + network-tool✅ + tetris✅ + cpu-memory-monitor✅(7 件整机成品·Windows 路径未验) · model/industrial 骨架已立
 examples 275✅ · 基建 P0✅ 基本清完
 ```
 
 ## 接力点（下次会话从这里接 · 2026-06-27 更）
 
 - **已合入 main（fcde408 / PR#14）**：widget 栏 13/13 全收齐（status-led/toggle-switch/circle-progress/speed-meter/range-slider/line-chart/editable-table/checkbox-tree/checkbox-list/log-viewer/password-edit/ip-edit/fade-animation）
-- **分支 `instance/app-image-viewer`（本机已 commit 未 push）**：app 栏 6 件整机成品——①image-viewer(自定义画布+QTransform+翻页跳坏图+幻灯片) ②json-editor(01-dev-tools·编辑/格式化/校验/树递归) ③sqlite-browser(10-database-tools·打开 db/表列表/可编辑表格/任意 SQL) ④serial-tool(02-network-tools·串口配置/收发/Hex-ASCII/错误收敛) ⑤network-tool(02-network-tools·TCP Server/Client + UDP 调试·loopback 可验) ⑥tetris(08-games·俄罗斯方块自绘·7 形态/旋转/消行/计分)。每件构建门零 warning + offscreen 验证 + 对抗 review 修正 + Full 导览 + Handbook。**app 栏 6 件整机范式 + 双文档范式已立**。待作者抽审放量
-- 工作区：分支上 6 件 app 整机 + 双文档 + app/CMakeLists 纳入 + todo 更新（含累计清单 instance-batch-log.md）；`main` 含 widget 13/13
-- **下一步（审完合入后）**：app 栏续 cpu-memory-monitor(系统监控·跨平台 CPU 坑)；或转 model 栏放量（17 件照 undo-redo 范式）；industrial hmi-dashboard 复用 widget 链；专家层另线推进
+- **分支 `instance/app-image-viewer`（本机已 commit 未 push）**：app 栏 7 件整机成品——①image-viewer ②json-editor ③sqlite-browser ④serial-tool ⑤network-tool(loopback 可验) ⑥tetris ⑦cpu-memory-monitor(系统监控·CPU/内存进度条+历史曲线·**Windows 路径 #ifdef 隔离标「尚未验证」**)。每件构建门零 warning + offscreen 验证 + 对抗 review 修正 + Full 导览 + Handbook。**app 栏 7 件整机范式 + 双文档范式已立**。待作者抽审放量 + 一起验证
+- 工作区：分支上 7 件 app 整机 + 双文档 + app/CMakeLists 纳入 + todo 更新（含累计清单 instance-batch-log.md）；`main` 含 widget 13/13
+- **下一步（作者抽审 + 验证后）**：app 栏暂收（7 件完整）；转 model 栏放量（17 件照 undo-redo 范式）/ industrial hmi-dashboard 复用 widget 链 / 专家层另线推进；cpu-memory-monitor 的 Windows 路径需作者 Windows 实机复验
 - **挂账**：05-other-modules ~25 篇缺踩坑段——按「不编坑」原则，等真写到该模块再补真坑（memory: no-fabricated-pitfalls）
 - ⚠ **作者会在终端并行 commit/push/merge**：AI 改文件前先 `git status`；提交 / push 全归作者；commit / PR **不带任何 AI 署名**（memory: no-ai-attribution / user-handles-all-pushes）
 

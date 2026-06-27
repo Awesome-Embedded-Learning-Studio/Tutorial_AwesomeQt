@@ -40,6 +40,12 @@
 - offscreen：渲染/下落/计分/移动/暂停链路通（初始 4 格→硬降 8 格→score 36→P 暂停 isPaused=1）
 - 对抗 review（2 维度）：修 1 真 bug——lockPiece 丢弃 br<0 格子(漏判顶出)→顶出 game over；+2 risk(Key_P/Key_R 三处重复绑定→棋盘保留 Key_P 兼容 offscreen + window 删死代码 + R 交 QAction/statsChanged 每次 softDrop 落盘→推迟 gameOver+closeEvent)
 
+### cpu-memory-monitor ✅（app 栏 04-system-tools·第三批·构建+offscreen(Linux /proc)+review 全过）
+- 构建：gate 零 warning（-Wall -Wextra -Wpedantic）+ 从 app/ 层构建七件绿
+- offscreen（Linux）：内存 52% **精确匹配** /proc 复算（diff=0）、CPU 4% vs 独立 3%（采样抖动合理）、断笔填充重写后正常渲染
+- 对抗 review（2 维度）：修 1 渲染 risk（断笔处半透明填充越过缺口→按连续段分组每段单独 fill）+ 1 防御 risk（readCounters 单共享 ok 串接→必备字段独立校验，Qt6 实测复现畸形字段静默变 0）；+nit(startsWith("cpu")→"cpu "/clear 死代码删)
+- **⚠ Windows 路径 100% 未验**：GlobalMemoryStatusEx(内存) + GetSystemTimes(CPU) 用 #ifdef Q_OS_WIN 隔离，Linux offscreen 不参与编译/执行，代码按 Win32 文档写（dwLength/kernel-idle 扣减/ULARGE_INTEGER）但需作者 Windows 实机复验 3 点：dwMemoryLoad 返回 / GetSystemTimes 差值对任务管理器 / kernel32 链接
+
 ## 🟡 待拍板（AI 用默认推进，作者回来定夺）
 
 ### json-editor
@@ -83,5 +89,13 @@
 - **7-bag 随机未实现**（每次独立随机 0..6，理论可连出同型）——竞赛用 7-bag 每 7 个全形态
 - **消行未单测**（clearFullLines 逻辑人工核验，offscreen 难构造满行）
 - **Key_P 棋盘保留**（兼容 offscreen 直接投递 + 真实 UI QAction 先吃不冲突）；Key_R 交 QAction
+
+### cpu-memory-monitor
+- **⚠ Windows 路径 100% 未验**（核心待拍板）：GlobalMemoryStatusEx + GetSystemTimes 用 #ifdef Q_OS_WIN 隔离，offscreen 在 Linux 跑不到。需作者 Windows 实机复验 3 点（见 🟢 已验证栏）。代码 + 文档已统一标「尚未验证」
+- **CpuSampler 滚动基线**（非固定基线）：utilization 每次把本次读数滚成下次 prev_，CPU% 反映「最近一间隔」负载；构造 sample() 拿 t0，第一拍 onTick 即出短窗差值（非 N/A）
+- **CPU 历史曲线 CpuHistoryView**：60 点滚动窗口（约 60s）、QPainterPath 折线+半透明填充+25/50/75/100% 网格、无效点(-1)断笔（填充也断，不越过缺口）
+- **进度条 setTextVisible(false) + QLabel 数值**（内存「52% (6.09 GB / 11.68 GB)」、CPU「3%」）
+- **采样失败 -1 占容量槽**（长时间失败 60 槽被 -1 填满，恢复需 60 拍挤净）——边界降级，文档说明
+- **mac/未覆盖平台 fallback** valid=false（UI 显示 N/A，不崩）
 
 ---
