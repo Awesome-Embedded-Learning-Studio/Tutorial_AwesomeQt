@@ -10,7 +10,8 @@
 
 int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
+    app.setApplicationName("AwesomeQt Image Viewer");
     ImageViewerWindow window;
     window.show();
-    app.exec();
+    return app.exec();
 }
