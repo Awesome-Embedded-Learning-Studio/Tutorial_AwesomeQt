@@ -30,6 +30,16 @@
 - offscreen：UI/配置逻辑 PASS（6 combo/3 button/4 radio + dataBits 4 项/parity 3 项/flow 2 项 + Hex 切换；本机 8 真实端口）。**真实串口收发无法 offscreen 验证（无硬件）**，靠 build 门 + 对抗 review
 - 对抗 review（2 维度，带 qt_src 实证）：修 2 真 bug——①fromHex 对非 hex 字符是「跳过」非报错(实证 qbytearray.cpp:4641)混入非法字符静默截断→发送前正向校验(去空白+全 hex+偶数长度) ②write 只入队未 flush(close 时 pending 字节可能丢)→write 后 flush；+3 risk(onPortError 不可恢复错误主动 close 收敛/dataBits currentText().toInt()→currentIndex/errorString stale→errorToString 自带映射)
 
+### network-tool ✅（app 栏 02-network-tools·第二批·构建+offscreen(loopback 真验)+review 全过）
+- 构建：gate 零 warning + 从 app/ 层构建六件绿（demo 自带 find_package Network）
+- offscreen：**真 loopback 验证**（无硬件限制）——TCP Server listen port 0→serverPort()→Client connect→write "ping"→Server RX=4→echo "pong"→Client TX=4；UDP bind+writeDatagram 自收 RX=9；累计 13
+- 对抗 review（2 维度）：修 3 真 bug——①UDP target 控件隐藏只走 loopback 发不了外部→need_target 对 UDP 也 true ②客户端 socket 无父退出泄漏→setParent(this) ③Server 广播 TX 只计一份+中途失败抹成功字节→循环累加每 client 实发；+2 risk(Client 断开未禁 send→禁用+重连恢复/teardownAll 缺对称 disconnect→补)
+
+### tetris ✅（app 栏 08-games·第二批·构建+offscreen(渲染/下落/暂停)+review 全过）
+- 构建：gate 零 warning（1 轮）+ 从 app/ 层构建六件绿
+- offscreen：渲染/下落/计分/移动/暂停链路通（初始 4 格→硬降 8 格→score 36→P 暂停 isPaused=1）
+- 对抗 review（2 维度）：修 1 真 bug——lockPiece 丢弃 br<0 格子(漏判顶出)→顶出 game over；+2 risk(Key_P/Key_R 三处重复绑定→棋盘保留 Key_P 兼容 offscreen + window 删死代码 + R 交 QAction/statsChanged 每次 softDrop 落盘→推迟 gameOver+closeEvent)
+
 ## 🟡 待拍板（AI 用默认推进，作者回来定夺）
 
 ### json-editor
@@ -55,5 +65,23 @@
 - **SoftwareControl 软流控未列**（少用）——combo 只 None/Hardware
 - **suppress_error_ flag** 挡主动 close 的同步噪声，挡不住 close 后异步 errorOccurred（review risk，多数情况够用）
 - **errorOccurred 不自动重连**：调试助手定位（非自动重连客户端），不可恢复错误主动 close 回关闭态
+
+### network-tool
+- **byte 计数会话级累计**（切协议不清零）——符合调试助手「一趟会话总流量」直觉
+- **UDP target 留空默认 loopback**（发自己 bind 端口，单窗口自测）；填了按填的发外部
+- **TCP Server 发送=广播所有客户端**（调试助手典型用法，非选某一个）
+- **运行态用 server/socket 是否非空判断**（非按钮文案）+ 运行中锁协议切换/配置
+- **onTcpDisconnected 用 lambda 捕获 socket 区分 Client 自身断开 vs Server 某客户端断开**（略有 hack 味，比 sender() 明确）
+- **WebSocket 留进阶未做**（首版 TCP/UDP）
+
+### tetris
+- **旋转态全预排静态表**（不运行时转置，杜绝方向错位）——代价 7×4×16=448 int 静态表
+- **投影按整块行偏移算 ghost**（非单格，缝隙形 S/Z/T 才正确）
+- **board 只存类型索引 type+1**（颜色不入 board，查 shapeOf 取色）——0=空，1..7=方块
+- **6 步壁踢（非 SRS 18 步）**——实测防卡墙够用，竞技级要 SRS
+- **速度调参非标准**（700ms 起，每级 -60ms，下限 80ms）——非 Tetris Guideline 帧表
+- **7-bag 随机未实现**（每次独立随机 0..6，理论可连出同型）——竞赛用 7-bag 每 7 个全形态
+- **消行未单测**（clearFullLines 逻辑人工核验，offscreen 难构造满行）
+- **Key_P 棋盘保留**（兼容 offscreen 直接投递 + 真实 UI QAction 先吃不冲突）；Key_R 交 QAction
 
 ---
