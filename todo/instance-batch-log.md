@@ -25,6 +25,11 @@
 - offscreen：表列表 [other,t]/选中 t 行数 3/状态栏 PASS；**removeDatabase "connection still in use" warning 已消除**（作用域修复生效，stderr 干净）
 - 对抗 review（2 维度，带 qt_src 实证）：修 2 真 bug——①closeDatabase+openDatabase 的 removeDatabase 时局部 QSqlDatabase 副本仍活(Qt 反模式,实证 qsqldatabase.cpp:140)→嵌套作用域 ②rowCount 对 >255 行偏低(SQLite QuerySize=false,prefetch 255)→fetchMore 拉全量；+3 risk(连接名加 QAtomicInt 序号防多窗口撞名/OnFieldChange 切表前 submitAll/错误文本统一 err.text())+1 nit
 
+### serial-tool ✅（app 栏 02-network-tools·本批·构建+offscreen(UI/配置)+review 全过）
+- 构建：gate 零 warning（3 轮：Qt6 remove(char)/-Wshadow/全过；-Wall -Wextra -Wpedantic -Wshadow）+ 从 app/ 层构建四件绿
+- offscreen：UI/配置逻辑 PASS（6 combo/3 button/4 radio + dataBits 4 项/parity 3 项/flow 2 项 + Hex 切换；本机 8 真实端口）。**真实串口收发无法 offscreen 验证（无硬件）**，靠 build 门 + 对抗 review
+- 对抗 review（2 维度，带 qt_src 实证）：修 2 真 bug——①fromHex 对非 hex 字符是「跳过」非报错(实证 qbytearray.cpp:4641)混入非法字符静默截断→发送前正向校验(去空白+全 hex+偶数长度) ②write 只入队未 flush(close 时 pending 字节可能丢)→write 后 flush；+3 risk(onPortError 不可恢复错误主动 close 收敛/dataBits currentText().toInt()→currentIndex/errorString stale→errorToString 自带映射)
+
 ## 🟡 待拍板（AI 用默认推进，作者回来定夺）
 
 ### json-editor
@@ -40,5 +45,15 @@
 
 ### image-viewer（补充，commit 时未记）
 - 无遗留待拍板（已审结合入范式）
+
+### serial-tool
+- **真实串口收发未 offscreen 验证**（无硬件环境）：UI/配置/编解码逻辑已验，收发靠 build+review+代码审。如需更强覆盖可加 socat 虚拟串口对(PTY)集成测（超本 demo 范围）
+- **port_ 单例**：整生命周期持有 QSerialPort（构造 new、析构 close、open/close 复用），不反复 new/delete
+- **Open/Close 单按钮两态**（非两按钮）+ 开态锁死所有配置控件
+- **波特率 combo setEditable**：用户可手输任意合法波特率（如 230400）
+- **ASCII 渲染 Latin-1 保底**（非 toUtf8，防丢非可打印字节）——控制字符(CR/NUL)显示可能失真，要逐字节精确请切 Hex
+- **SoftwareControl 软流控未列**（少用）——combo 只 None/Hardware
+- **suppress_error_ flag** 挡主动 close 的同步噪声，挡不住 close 后异步 errorOccurred（review risk，多数情况够用）
+- **errorOccurred 不自动重连**：调试助手定位（非自动重连客户端），不可恢复错误主动 close 回关闭态
 
 ---
