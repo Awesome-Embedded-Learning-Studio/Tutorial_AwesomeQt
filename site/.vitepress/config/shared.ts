@@ -47,6 +47,13 @@ export const sharedBase = {
       {},
       `(function(){try{var s=localStorage.getItem('awesomeqt-font-size')||'normal';if(s!=='xxsmall'&&s!=='small'&&s!=='normal'&&s!=='large'&&s!=='xxlarge'){s='normal';}document.documentElement.dataset.fontSize=s;}catch(e){}})()`,
     ],
+    // 可拖拽侧栏首屏防闪：hydration 前从 localStorage 还原左右栏宽度 CSS 变量，默认 272/256。
+    // 与 theme/components/ResizableSidebar.vue 的 CONF（key=vp-sidebar-width/vp-aside-width）一致。
+    [
+      'script',
+      {},
+      `(function(){try{var w=parseInt(localStorage.getItem('vp-sidebar-width'));if(!w||w<200||w>480){w=272;}document.documentElement.style.setProperty('--vp-sidebar-width',w+'px');var a=parseInt(localStorage.getItem('vp-aside-width'));if(!a||a<180||a>360){a=256;}document.documentElement.style.setProperty('--vp-aside-width',a+'px');}catch(e){}})()`,
+    ],
   ],
 }
 

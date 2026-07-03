@@ -105,6 +105,11 @@ function hashDir(dir: string): string {
   return h.digest('hex').substring(0, 16)
 }
 
+// 主题/配置共享哈希：theme/ 与 config/ 任一文件变动 → 所有 per-volume 缓存失效。
+// per-volume cacheKey 默认只哈希 docs 目录；改主题/CSS/head/nav/sidebar 后若不并入此哈希，
+// 缓存不失效、会输出旧皮（曾踩坑：改 custom.css 后 8/10 卷仍挂旧 CSS，须 --force 才全量重建）。
+const SHARED_HASH = hashDir(join(MAIN_VP, 'theme')) + hashDir(join(MAIN_VP, 'config'))
+
 // ── Manifest ────────────────────────────────────────────────
 
 interface ManifestEntry { hash: string; timestamp: string }
@@ -184,7 +189,8 @@ interface BuildTask {
 
 function prepareTask(vol: Volume, manifest: Manifest): BuildTask {
   const volDocDir = join(DOCUMENTS, vol.srcDir)
-  const cacheKey = existsSync(volDocDir) ? hashDir(volDocDir) : ''
+  const docsHash = existsSync(volDocDir) ? hashDir(volDocDir) : ''
+  const cacheKey = docsHash + '|' + SHARED_HASH
   const prev = manifest[vol.name]
   const cached = !FORCE_REBUILD && prev && prev.hash === cacheKey && existsSync(join(CACHE_DIR, 'output', vol.name))
   return { id: vol.name, vol, cacheKey, cached }
