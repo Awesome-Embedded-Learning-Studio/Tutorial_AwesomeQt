@@ -1,3 +1,76 @@
+/* ================================================================
+   AwesomeQt 设计令牌 · Qt 绿身份 + 借 anatomy_gui 暖骨白/炭墨底
+   亮：骨白底 / Qt 绿强调 / 深炭文
+   暗：炭墨底 / 亮绿强调 / 暖灰文
+   ================================================================ */
+:root {
+  /* ── 品牌色 · Qt 绿（亮）── */
+  --vp-c-brand-1: #2EA66A;
+  --vp-c-brand-2: #1F8A55;
+  --vp-c-brand-3: #52BF85;
+  --vp-c-brand-soft: rgba(46, 166, 106, 0.10);
+  --vp-c-brand: var(--vp-c-brand-1);
+
+  /* ── 背景 · 骨白（借 anatomy）── */
+  --vp-c-bg: #F7F3EC;
+  --vp-c-bg-soft: #EFE8DC;
+  --vp-c-bg-soft-up: #FBF8F2;
+  --vp-c-bg-elv: #FFFCF7;
+
+  /* ── 文字 · 深炭 ── */
+  --vp-c-text-1: #2A2622;
+  --vp-c-text-2: #5C544D;
+  --vp-c-text-3: #8A8077;
+
+  /* ── 分隔 / 边框 ── */
+  --vp-c-divider: #E0D8CC;
+  --vp-c-border: #D6CDBF;
+
+  /* ── 三层强调（首页 feature 卡分色，避开品牌绿）── */
+  --aq-c-eng-1: #C8843C;          /* 工程篇 · 琥珀 */
+  --aq-c-eng-2: #A66825;
+  --aq-c-eng-soft: rgba(200, 132, 60, 0.10);
+  --aq-c-dom-1: #4F5BD5;          /* 领域篇 · 靛 */
+  --aq-c-dom-2: #3A47B0;
+  --aq-c-dom-soft: rgba(79, 91, 213, 0.10);
+
+  /* ── CJK 字体栈 ── */
+  --vp-font-family: system-ui, -apple-system, 'Segoe UI', Roboto,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑',
+    'Source Han Sans SC', 'Noto Sans CJK SC', sans-serif;
+}
+
+.dark {
+  /* ── 品牌色 · Qt 绿（暗色提亮）── */
+  --vp-c-brand-1: #52BF85;
+  --vp-c-brand-2: #6FCF9C;
+  --vp-c-brand-3: #8ADDB5;
+  --vp-c-brand-soft: rgba(82, 191, 133, 0.16);
+
+  /* ── 背景 · 炭墨 ── */
+  --vp-c-bg: #161412;
+  --vp-c-bg-soft: #1F1B18;
+  --vp-c-bg-soft-up: #24201D;
+  --vp-c-bg-elv: #24201D;
+
+  /* ── 文字 · 暖灰 ── */
+  --vp-c-text-1: #E0D8CA;
+  --vp-c-text-2: #B5AC9E;
+  --vp-c-text-3: #7F776C;
+
+  /* ── 分隔 / 边框 ── */
+  --vp-c-divider: #332E29;
+  --vp-c-border: #3D3733;
+
+  /* ── 三层强调（暗色提亮）── */
+  --aq-c-eng-1: #E0A052;
+  --aq-c-eng-2: #C8843C;
+  --aq-c-eng-soft: rgba(224, 160, 82, 0.16);
+  --aq-c-dom-1: #7B8AF0;
+  --aq-c-dom-2: #5C6CD9;
+  --aq-c-dom-soft: rgba(123, 138, 240, 0.16);
+}
+
 /* Chinese Typography */
 .vp-doc {
   line-height: 1.85;
@@ -67,7 +140,7 @@
 .vp-doc blockquote {
   border-left: 4px solid var(--vp-c-brand-1);
   border-radius: 0 4px 4px 0;
-  background: rgba(81, 107, 232, 0.04);
+  background: var(--vp-c-brand-soft);
 }
 
 /* Links */
@@ -120,7 +193,7 @@
   background: linear-gradient(135deg,
       var(--vp-c-brand-soft) 0%,
       transparent 50%,
-      var(--vp-c-indigo-soft) 100%);
+      var(--vp-c-brand-soft) 100%);
   opacity: 0.5;
   pointer-events: none;
 }
@@ -128,8 +201,8 @@
 .VPHero .name.clip {
   background: linear-gradient(135deg,
       var(--vp-c-brand-1) 0%,
-      var(--vp-c-indigo-1) 50%,
-      var(--vp-c-purple-1) 100%);
+      var(--vp-c-brand-2) 50%,
+      var(--vp-c-brand-3) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -251,7 +324,7 @@
   border-radius: 12px !important;
   background: linear-gradient(135deg,
       var(--vp-c-brand-soft) 0%,
-      var(--vp-c-indigo-soft) 100%) !important;
+      var(--vp-c-brand-soft) 100%) !important;
   color: var(--vp-c-brand-1) !important;
   font-size: 22px !important;
   transition: background 0.39s ease,
@@ -296,56 +369,56 @@
   transform: translateX(4px);
 }
 
-/* ── Tier Color Coding: Core (1-4) ─ Brand/Indigo ────────────── */
+/* ── Tier Color Coding: Core (1-4) ─ Qt 绿（品牌）────────────── */
 
 .VPFeatures .item:nth-child(-n+4) .VPFeature .icon {
-  background: linear-gradient(135deg, var(--vp-c-brand-soft), var(--vp-c-indigo-soft)) !important;
+  background: linear-gradient(135deg, var(--vp-c-brand-soft), var(--vp-c-brand-soft)) !important;
   color: var(--vp-c-brand-1) !important;
 }
 
 .VPFeatures .item:nth-child(-n+4) .VPFeature.link:hover .icon {
-  background: linear-gradient(135deg, var(--vp-c-brand-1), var(--vp-c-indigo-1)) !important;
+  background: linear-gradient(135deg, var(--vp-c-brand-1), var(--vp-c-brand-2)) !important;
   color: var(--vp-c-white) !important;
 }
 
-/* ── Tier Color Coding: Engineering (5-7) ─ Green ────────────── */
+/* ── Tier Color Coding: Engineering (5-7) ─ 琥珀 ─────────────── */
 
 .VPFeatures .item:nth-child(n+5):nth-child(-n+7) .VPFeature .icon {
-  background: linear-gradient(135deg, var(--vp-c-green-soft), rgba(16, 185, 129, 0.08)) !important;
-  color: var(--vp-c-green-1) !important;
+  background: linear-gradient(135deg, var(--aq-c-eng-soft), var(--aq-c-eng-soft)) !important;
+  color: var(--aq-c-eng-1) !important;
 }
 
 .VPFeatures .item:nth-child(n+5):nth-child(-n+7) .VPFeature.link:hover .icon {
-  background: linear-gradient(135deg, var(--vp-c-green-1), var(--vp-c-green-2)) !important;
+  background: linear-gradient(135deg, var(--aq-c-eng-1), var(--aq-c-eng-2)) !important;
   color: var(--vp-c-white) !important;
 }
 
 .VPFeatures .item:nth-child(n+5):nth-child(-n+7) .VPFeature.link:hover {
-  border-color: var(--vp-c-green-1) !important;
+  border-color: var(--aq-c-eng-1) !important;
 }
 
 .VPFeatures .item:nth-child(n+5):nth-child(-n+7) .VPFeature.link:hover .title {
-  color: var(--vp-c-green-1) !important;
+  color: var(--aq-c-eng-1) !important;
 }
 
-/* ── Tier Color Coding: Domain (8-12) ─ Purple ───────────────── */
+/* ── Tier Color Coding: Domain (8-12) ─ 靛 ───────────────────── */
 
 .VPFeatures .item:nth-child(n+8) .VPFeature .icon {
-  background: linear-gradient(135deg, var(--vp-c-purple-soft), rgba(159, 122, 234, 0.08)) !important;
-  color: var(--vp-c-purple-1) !important;
+  background: linear-gradient(135deg, var(--aq-c-dom-soft), var(--aq-c-dom-soft)) !important;
+  color: var(--aq-c-dom-1) !important;
 }
 
 .VPFeatures .item:nth-child(n+8) .VPFeature.link:hover .icon {
-  background: linear-gradient(135deg, var(--vp-c-purple-1), var(--vp-c-purple-2)) !important;
+  background: linear-gradient(135deg, var(--aq-c-dom-1), var(--aq-c-dom-2)) !important;
   color: var(--vp-c-white) !important;
 }
 
 .VPFeatures .item:nth-child(n+8) .VPFeature.link:hover {
-  border-color: var(--vp-c-purple-1) !important;
+  border-color: var(--aq-c-dom-1) !important;
 }
 
 .VPFeatures .item:nth-child(n+8) .VPFeature.link:hover .title {
-  color: var(--vp-c-purple-1) !important;
+  color: var(--aq-c-dom-1) !important;
 }
 
 /* ── Dark Mode ───────────────────────────────────────────────── */
@@ -517,7 +590,7 @@
 /* ── Content Dark Mode ─────────────────────────────────────────── */
 
 .dark .vp-doc blockquote {
-  background: rgba(81, 107, 232, 0.08);
+  background: var(--vp-c-brand-soft);
 }
 
 .dark .vp-doc table tr:nth-child(even) {
@@ -771,4 +844,74 @@ html[data-font-size='large'] {
 
 html[data-font-size='xxlarge'] {
   zoom: 1.16;
+}
+
+/* ================================================================
+   可拖拽侧栏 · ResizableSidebar（左右栏宽度可拖动调整，双击重置）
+   --vp-sidebar-width 由 VitePress 全链路消费；--vp-aside-width 控右大纲栏。
+   宽度首屏防闪由 shared.ts head 内联脚本注入；组件运行时再读写 localStorage。
+   ================================================================ */
+:root {
+  --vp-sidebar-width: 272px;
+  --vp-aside-width: 256px;
+}
+
+.VPDoc.has-aside .aside {
+  width: var(--vp-aside-width);
+  max-width: var(--vp-aside-width);
+}
+
+.rs-handle {
+  position: fixed;
+  top: var(--vp-nav-height, 64px);
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 50;
+  background: transparent;
+  transition: background 0.2s ease, opacity 0.2s ease;
+}
+
+.rs-handle:hover,
+.rs-handle.is-active {
+  background: var(--vp-c-brand-1);
+  opacity: 0.45;
+}
+
+.rs-handle.is-active {
+  opacity: 0.65;
+}
+
+.rs-handle--right {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  bottom: 0;
+  width: 6px;
+}
+
+body.rs-resizing {
+  user-select: none;
+  cursor: col-resize;
+}
+
+body.rs-resizing * {
+  pointer-events: none !important;
+}
+
+@media (max-width: 959px) {
+  .rs-handle {
+    display: none !important;
+  }
+}
+
+/* ================================================================
+   code-group tabs —— hover 着色（借 anatomy_gui）
+   ================================================================ */
+.vp-code-group .tabs label {
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.vp-code-group .tabs label:hover {
+  color: var(--vp-c-brand-1);
 }

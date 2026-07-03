@@ -1,24 +1,19 @@
 import { nextTick, onMounted, watch } from 'vue'
 import { useData, useRouter } from 'vitepress'
 
-declare global {
-  interface Window {
-    mermaid?: {
-      initialize: (config: Record<string, unknown>) => void
-      render: (id: string, text: string) => Promise<{ svg: string; bindFunctions?: (el: Element) => void }>
-    }
-    __mermaidLoadingPromise__?: Promise<void>
-  }
-}
-
-// 沿用与 ModernCPP 一致的 CDN 运行时方案（站点本身需联网访问）。
-// 注意：cdn.jsdelivr.net 自 2022.5 起在大陆被墙；若收到国内读者反馈图表加载失败，
-// 可把此 URL 换成 npmmirror 镜像，或把 mermaid.min.js 放进 site/public/ 自托管。
-const MERMAID_CDN = 'https://cdn.jsdelivr.net/npm/mermaid@10.9.6/dist/mermaid.min.js'
+// 本地打包 mermaid：dynamic import 客户端懒加载，SSR 不引入。Vite 自动 code-split 成独立 chunk。
+// 不走 CDN —— 浏览器加载跨域 CDN 脚本不可靠（onload 永不触发会卡骨架）。
 
 type MermaidTheme = 'default' | 'dark'
 
+let mermaidApi: any = null
 let currentTheme: MermaidTheme | null = null
+
+async function ensureMermaid(): Promise<any> {
+  if (mermaidApi) return mermaidApi
+  mermaidApi = (await import('mermaid')).default
+  return mermaidApi
+}
 
 function mermaidConfig(theme: MermaidTheme): Record<string, unknown> {
   return {
@@ -39,6 +34,14 @@ function mermaidConfig(theme: MermaidTheme): Record<string, unknown> {
   }
 }
 
+/** 按当前主题初始化 mermaid；主题变化时重新 initialize（initialize 本身不重绘已有 SVG）。 */
+async function ensureInitialized(theme: MermaidTheme): Promise<void> {
+  const m = await ensureMermaid()
+  if (currentTheme === theme) return
+  m.initialize(mermaidConfig(theme))
+  currentTheme = theme
+}
+
 function escapeHtml(s: string): string {
   return s
     .replaceAll('&', '&amp;')
@@ -48,68 +51,29 @@ function escapeHtml(s: string): string {
     .replaceAll("'", '&#39;')
 }
 
-function loadMermaid(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve()
-
-  if (window.mermaid) return Promise.resolve()
-  if (window.__mermaidLoadingPromise__) return window.__mermaidLoadingPromise__
-
-  window.__mermaidLoadingPromise__ = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>('script[data-mermaid-runtime]')
-    if (existing) {
-      existing.addEventListener('load', () => resolve())
-      existing.addEventListener('error', () => reject(new Error('Failed to load Mermaid')))
-      return
-    }
-
-    const script = document.createElement('script')
-    script.src = MERMAID_CDN
-    script.async = true
-    script.dataset.mermaidRuntime = 'true'
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error(`Failed to load Mermaid from ${MERMAID_CDN}`))
-    document.head.appendChild(script)
-  })
-
-  return window.__mermaidLoadingPromise__
-}
-
-/** 按当前主题初始化 mermaid；主题变化时重新 initialize（initialize 本身不重绘已有 SVG）。 */
-function ensureInitialized(theme: MermaidTheme): void {
-  const mermaid = window.mermaid
-  if (!mermaid || currentTheme === theme) return
-  mermaid.initialize(mermaidConfig(theme))
-  currentTheme = theme
-}
-
 async function renderMermaidDiagrams(theme: MermaidTheme): Promise<void> {
   if (typeof window === 'undefined') return
 
   try {
-    await loadMermaid()
-  } catch {
-    // CDN 加载失败：把所有未渲染的图降级成源码兜底，而不是抛未捕获的 Promise rejection。
-    document
-      .querySelectorAll<HTMLElement>('.mermaid-diagram[data-rendered="false"]')
-      .forEach((el) => {
-        const raw = el.dataset.mermaid
-        el.dataset.rendered = 'error'
-        if (raw) el.innerHTML = `<pre class="mermaid-error">${escapeHtml(decodeURIComponent(raw))}</pre>`
-      })
+    await ensureInitialized(theme)
+  } catch (e) {
+    console.error('[mermaid] init failed', e)
     return
   }
 
   await nextTick()
-  await new Promise<void>((r) => requestAnimationFrame(() => r()))
 
-  const mermaid = window.mermaid
-  if (!mermaid) return
-
-  ensureInitialized(theme)
-
-  const nodes = Array.from(
-    document.querySelectorAll<HTMLElement>('.mermaid-diagram[data-rendered="false"]')
-  )
+  // SPA 路由切换：VitePress 的 onAfterRouteChange 在 loadPage（设 route.component）之后立即触发，
+  // 但 Vue 把新页 component 渲染进 DOM 是异步的——触发那一刻新页的 mermaid 占位 div 还没挂载，
+  // 一次 nextTick 等不到。轮询等节点出现，最多 ~1.5s；直载（onMounted）时内容已在 DOM，首次即命中。
+  let nodes: HTMLElement[] = []
+  for (let attempt = 0; attempt < 15; attempt++) {
+    nodes = Array.from(
+      document.querySelectorAll<HTMLElement>('.mermaid-diagram[data-rendered="false"]')
+    )
+    if (nodes.length > 0) break
+    await new Promise<void>((r) => setTimeout(r, 100))
+  }
 
   for (let i = 0; i < nodes.length; i++) {
     const el = nodes[i]
@@ -120,12 +84,14 @@ async function renderMermaidDiagrams(theme: MermaidTheme): Promise<void> {
     const id = `mermaid-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 8)}`
 
     try {
-      const { svg } = await mermaid.render(id, source)
+      const m = await ensureMermaid()
+      const { svg } = await m.render(id, source)
       el.innerHTML = svg
       el.dataset.rendered = 'true'
-    } catch {
+    } catch (e) {
       el.dataset.rendered = 'error'
       el.innerHTML = `<pre class="mermaid-error">${escapeHtml(source)}</pre>`
+      console.error('[mermaid] render failed for:\n' + source, e)
     }
   }
 }
