@@ -20,8 +20,19 @@ widget/
 
 | 控件 | 说明 |
 |------|------|
-| [status-led](status-led/) | 状态指示灯，4 种状态（Normal/Warning/Error/Offline）+ 闪烁动画 |
-| [toggle-switch](toggle-switch/) | 滑动开关，点击/拖动切换 + 滑块滑动动画 + 轨道变色 + 自定义配色 |
+| [status-led](status-led/) | 状态指示灯，4 态 + 闪烁动画 |
+| [toggle-switch](toggle-switch/) | 滑动开关，点击/拖动 + 滑块动画 |
+| [circle-progress](circle-progress/) | 圆形进度环，value/progress 解耦 |
+| [speed-meter](speed-meter/) | 速度仪表盘，动画指针 + 双角度自洽 |
+| [range-slider](range-slider/) | 双柄范围滑块，拖拽 + 键盘微调 |
+| [line-chart](line-chart/) | 折线图，纯 QPainter 自绘 |
+| [editable-table](editable-table/) | 可编辑表格，委托校验 + 数据往返 |
+| [checkbox-tree](checkbox-tree/) | 树形复选框，三态 + 父子联动 |
+| [checkbox-list](checkbox-list/) | 复选框列表，全选 + 级联 |
+| [log-viewer](log-viewer/) | 滚动日志，级别染色 + 裁旧 |
+| [password-edit](password-edit/) | 密码框，显隐 + 强度指示 |
+| [ip-edit](ip-edit/) | IPv4 输入框，4 段跳焦 + 校验 |
+| [fade-animation](fade-animation/) | 淡入淡出容器，OpacityEffect |
 
 ## 构建
 

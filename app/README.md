@@ -21,9 +21,15 @@ app/
 
 | 应用 | 类目 | 说明 |
 |------|------|------|
-| [image-viewer](05-image-tools/image-viewer/) | 05-image-tools | 图片查看器（骨架：QMainWindow + 菜单 + 文件对话框 + 占位区） |
+| [image-viewer](05-image-tools/image-viewer/) | 05-image-tools | 图片查看器（缩放/旋转/翻页/幻灯片） |
+| [json-editor](01-dev-tools/json-editor/) | 01-dev-tools | JSON 编辑器（格式化/校验/树形浏览） |
+| [sqlite-browser](10-database-tools/sqlite-browser/) | 10-database-tools | SQLite 浏览器（表浏览 + 任意 SQL） |
+| [serial-tool](02-network-tools/serial-tool/) | 02-network-tools | 串口调试助手（收发 + Hex/ASCII） |
+| [network-tool](02-network-tools/network-tool/) | 02-network-tools | TCP/UDP 调试（Server/Client） |
+| [tetris](08-games/tetris/) | 08-games | 俄罗斯方块（自绘 + 消行计分） |
+| [cpu-memory-monitor](04-system-tools/cpu-memory-monitor/) | 04-system-tools | CPU/内存监控（进度条 + 历史曲线） |
 
-首波 7 旗舰应用见 [todo/instance-library.md](../todo/instance-library.md)，按批次往里填。
+首波旗舰应用已齐，详见 [todo/instance-library.md](../todo/instance-library.md)。
 
 ## 构建
 

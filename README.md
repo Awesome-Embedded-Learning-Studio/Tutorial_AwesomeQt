@@ -55,7 +55,7 @@ cd Tutorial_AwesomeQt
 入门层    ██████████  137 / 137 篇教程 · 141 个代码示例
 进阶层    ██████████  134 / 134 篇教程 · 134 个代码示例
 专家层    █░░░░░░░░░  2 / 102 篇（源码拆解 · 连载中）
-实例库    █████████░  widget 13 + app 7 = 20 件真成品（配双文档）
+实例库    ████████░░  持续扩充 · widget / app / model / industrial（配双文档）
 ```
 
 🚀🚀🚀 更加详细的进度：[tutorial/index.md](tutorial/index.md)
@@ -137,7 +137,7 @@ cd Tutorial_AwesomeQt
 
 项目内置一套实例库：`widget/` 是可复用控件库（统一 `AwesomeQt::` 命名空间），`app/` 是整机应用。每件都是可独立编译的成品，配「成品导览 + 手搓手册」两套文档，落在 [tutorial/engineering/instances/](tutorial/engineering/instances/)。
 
-### widget 通用控件（13 件）
+### widget 通用控件
 
 | 控件 | 说明 |
 |------|------|
@@ -155,7 +155,7 @@ cd Tutorial_AwesomeQt
 | [`IpEdit`](widget/ip-edit/) | IP 地址输入框（4 段跳焦 + 校验） |
 | [`FadeAnimation`](widget/fade-animation/) | 淡入淡出动画 |
 
-### app 整机成品（7 件）
+### app 整机成品
 
 | 应用 | 分类 | 说明 |
 |------|------|------|
