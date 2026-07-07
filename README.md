@@ -4,13 +4,15 @@
 
 ---
 
+> 🌐 **在线阅读**：<https://awesome-embedded-learning-studio.github.io/Tutorial_AwesomeQt/> · 教程与示例同步更新
+
 ## 这是什么
 
 **AwesomeQt** 是一套 Qt 6 中文深度教程，隶属 [Awesome-Embedded-Learning-Studio](https://github.com/Awesome-Embedded-Learning-Studio)。
 
 采用三层分级结构：
 
-```
+```text
 入门层 → 能跑起来，理解核心概念，知其然
 进阶层 → 懂原理，写出工程级稳健代码
 专家层 → 读懂 Qt 源码，每条结论带 文件:行号 证据
@@ -49,11 +51,11 @@ cd Tutorial_AwesomeQt
 
 ## 当前进度
 
-```
-入门层    ██████████  137 / 137 篇教程 · 134 个代码示例
+```text
+入门层    ██████████  137 / 137 篇教程 · 141 个代码示例
 进阶层    ██████████  134 / 134 篇教程 · 134 个代码示例
-专家层    ░░░░░░░░░░  0 / ~101-108 篇（主力规划中，精确清单待定）
-合计      ██████░░░░  271 / ~372-379 篇
+专家层    █░░░░░░░░░  2 / 102 篇（源码拆解 · 连载中）
+实例库    █████████░  widget 13 + app 7 = 20 件真成品（配双文档）
 ```
 
 🚀🚀🚀 更加详细的进度：[tutorial/index.md](tutorial/index.md)
@@ -70,7 +72,7 @@ cd Tutorial_AwesomeQt
 
 ### 路径 A：零基础完整学习
 
-```
+```text
 环境搭建 → QtBase → QtGui → QtWidgets → 项目实战 → QtNetwork → 扩展模块 → QML
 ```
 
@@ -78,7 +80,7 @@ cd Tutorial_AwesomeQt
 
 ### 路径 B：Qt 5 老用户速成
 
-```
+```text
 环境搭建（重点 CMake）→ Qt 6 新变化 → 直接跳到感兴趣的模块
 ```
 
@@ -86,7 +88,7 @@ cd Tutorial_AwesomeQt
 
 ### 路径 C：源码深度钻研
 
-```
+```text
 完成入门层 → 专家层源码解析章节（MOC 原理、信号槽底层、事件循环...）
 ```
 
@@ -131,17 +133,41 @@ cd Tutorial_AwesomeQt
 
 ---
 
-## AwesomeQt Widgets — 通用控件库
+## 实例库 — 真成品，不是片段
 
-项目包含一套可复用的自定义控件库，位于 [`widget/`](widget/) 目录。每个控件都是独立的、可编译的库组件，统一使用 `AwesomeQt::` 命名空间。
+项目内置一套实例库：`widget/` 是可复用控件库（统一 `AwesomeQt::` 命名空间），`app/` 是整机应用。每件都是可独立编译的成品，配「成品导览 + 手搓手册」两套文档，落在 [tutorial/engineering/instances/](tutorial/engineering/instances/)。
 
-**当前已实现：**
+### widget 通用控件（13 件）
 
 | 控件 | 说明 |
 |------|------|
-| [`StatusLED`](widget/status-led/) | 状态指示灯，支持 4 种状态（Normal/Warning/Error/Offline）+ 闪烁动画 |
+| [`StatusLED`](widget/status-led/) | 状态指示灯，4 态 + 闪烁动画 |
+| [`ToggleSwitch`](widget/toggle-switch/) | 滑动开关按钮 |
+| [`CircleProgress`](widget/circle-progress/) | 环形进度条 |
+| [`SpeedMeter`](widget/speed-meter/) | 速度仪表盘（自绘） |
+| [`RangeSlider`](widget/range-slider/) | 双滑块范围选择器 |
+| [`LineChart`](widget/line-chart/) | 折线图（纯 QPainter 自绘） |
+| [`EditableTable`](widget/editable-table/) | 可编辑表格（委托校验 + 数据往返） |
+| [`CheckboxTree`](widget/checkbox-tree/) | 树形复选框（三态 + 父子联动） |
+| [`CheckboxList`](widget/checkbox-list/) | 复选框列表（全选 + 级联） |
+| [`LogViewer`](widget/log-viewer/) | 日志查看器（级别染色 + 裁旧） |
+| [`PasswordEdit`](widget/password-edit/) | 密码框（显隐 + 强度） |
+| [`IpEdit`](widget/ip-edit/) | IP 地址输入框（4 段跳焦 + 校验） |
+| [`FadeAnimation`](widget/fade-animation/) | 淡入淡出动画 |
 
-**构建方式：** 每个控件是 STATIC 库 + 独立 demo，根 [`widget/CMakeLists.txt`](widget/CMakeLists.txt) 统一配置（C++17 / AUTOMOC / find_package Qt6）。`cd widget && cmake -B build && cmake --build build` 即可构建。
+### app 整机成品（7 件）
+
+| 应用 | 分类 | 说明 |
+|------|------|------|
+| [`image-viewer`](app/05-image-tools/image-viewer/) | 图像工具 | 图片查看器（缩放/旋转/翻页/幻灯片） |
+| [`json-editor`](app/01-dev-tools/json-editor/) | 开发工具 | JSON 编辑器（格式化/校验/树） |
+| [`sqlite-browser`](app/10-database-tools/sqlite-browser/) | 数据库 | SQLite 浏览器（表浏览 + 任意 SQL） |
+| [`serial-tool`](app/02-network-tools/serial-tool/) | 网络工具 | 串口调试助手（收发 + Hex/ASCII） |
+| [`network-tool`](app/02-network-tools/network-tool/) | 网络工具 | TCP/UDP 调试工具 |
+| [`tetris`](app/08-games/tetris/) | 游戏 | 俄罗斯方块（自绘 + 消行计分） |
+| [`cpu-memory-monitor`](app/04-system-tools/cpu-memory-monitor/) | 系统工具 | CPU/内存监控（进度条 + 历史曲线） |
+
+**构建方式：** widget 控件为 STATIC 库 + 独立 demo，根 [`widget/CMakeLists.txt`](widget/CMakeLists.txt) 统一配置（C++17 / AUTOMOC / find_package Qt6）；app 为整机 demo，根 [`app/CMakeLists.txt`](app/CMakeLists.txt) 统一配置。`cd widget && cmake -B build && cmake --build build` 即可构建。
 
 ---
 
@@ -215,7 +241,7 @@ cd Tutorial_AwesomeQt
 ## 联系方式
 
 - 作者：CharlieChen
-- 邮箱：725610365@qq.com
+- 邮箱：<725610365@qq.com>
 - 组织：[Awesome-Embedded-Learning-Studio](https://github.com/Awesome-Embedded-Learning-Studio)
 
 ---
