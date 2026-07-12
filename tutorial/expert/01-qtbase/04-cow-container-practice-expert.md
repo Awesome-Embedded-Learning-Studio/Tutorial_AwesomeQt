@@ -3,11 +3,11 @@ title: COW 在 Qt 容器中的实战
 description: QString、QByteArray、QList 各自的 detach 触发点，const 与非 const 访问的性能差异，fromRawData 与 QVarLengthArray 的取舍。
 ---
 
-# 现代Qt开发教程（专家篇）1.02——COW 在 Qt 容器中的实战
+# 现代Qt开发教程（专家篇）1.04——COW 在 Qt 容器中的实战
 
 ## 1. 前言——从「怎么实现」到「怎么触发」
 
-在[上一篇](./01-cow-implicit-sharing-expert.md)里我们把 COW 的机制从原子操作到 detach_helper 拆了个遍。我们知道了一个 QList 拷贝构造只花一次原子加法，知道了 detach 分配新内存然后 swap，知道了 QArrayDataPointer 析构时 deref 归零才释放。
+在 [COW 隐式共享机制一篇](./19-cow-implicit-sharing-expert.md)里我们把 COW 的机制从原子操作到 detach_helper 拆了个遍。我们知道了一个 QList 拷贝构造只花一次原子加法，知道了 detach 分配新内存然后 swap，知道了 QArrayDataPointer 析构时 deref 归零才释放。
 
 但那篇刻意避开了一个问题：**到底哪些操作会触发 detach？** 我们只说了「非 const 方法会触发」，但没有展开。这篇就是把三个主力容器——QString、QByteArray、QList——逐个翻一遍，看清楚每个方法在源码层面是怎么处理 COW 的。搞清楚这件事，你以后写代码就能精确判断「这一行会不会导致深拷贝」，而不是凭感觉猜。
 

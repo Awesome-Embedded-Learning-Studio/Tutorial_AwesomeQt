@@ -3,7 +3,7 @@ title: 隐式共享（COW）机制原理
 description: Qt 6 隐式共享的源码级拆解——从原子引用计数到 detach 机制，覆盖 QArrayData 和 QSharedData 两条路线，附线程安全边界分析。
 ---
 
-# 现代Qt开发教程（专家篇）1.01——隐式共享（Copy-on-Write）机制原理
+# 现代Qt开发教程（专家篇）1.19——隐式共享（Copy-on-Write）机制原理
 
 ## 1. 前言——为什么 Qt 要发明隐式共享
 

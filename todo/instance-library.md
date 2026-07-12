@@ -45,7 +45,7 @@
 ②✅toggle-switch 已落(2026-06-16，代码+构建门+冒烟+Full+Handbook双文档)
 ②b✅自绘链撑场批(2026-06-25·分支 instance/widget-painter-batch)：circle-progress+speed-meter+range-slider+line-chart 四件，全 STATIC 库+demo+构建门绿(零warning)+offscreen冒烟+Full导览+Handbook 5文件。Workflow 并行产(speed/range/line)，circle-progress 因 429 限流挂→手补。待作者抽审放量
 ②c✅model/view 批(2026-06-25·同分支)：editable-table(委托校验+数据往返)+checkbox-tree(三态+父子联动) 两件，全 STATIC 库+demo+构建门绿(零warning)+offscreen冒烟+Full+Handbook。Workflow 并行产(本轮无 429)。待作者抽审
-②d✅input/display 批(2026-06-25·同分支)：checkbox-list(QListWidget勾选+批量守卫)+log-viewer(QPlainTextEdit级别染色+裁旧)+password-edit(显隐+强度) 三件，全 STATIC 库+demo+构建门绿+offscreen冒烟+Full+Handbook。本批起 code Agent 预 clang-format，行号不漂+提交一把过。待作者抽审
+②d✅input/display 批(2026-06-25·同分支)：checkbox-list(QListWidget勾选+批量守卫)+log-viewer(QPlainTextEdit级别染色+裁旧)+password-edit(显隐+强度) 三件，全 STATIC 库+demo+构建门绿+offscreen冒烟+Full+Handbook。本批起提交前预 clang-format，行号不漂+提交一把过。待作者抽审
 ②e✅widget 收尾批(2026-06-25·同分支)：ip-edit(4段跳焦+0-255校验)+fade-animation(QGraphicsOpacityEffect淡入淡出) 两件（P1 也做了），全 STATIC 库+demo+构建门绿+offscreen冒烟+Full+Handbook。**widget 栏 13/13 全部完成**。待作者抽审
 ②f✅app 栏破零(2026-06-27·分支 instance/app-image-viewer)：image-viewer 整机成品（自定义 ImageView 画布 paintEvent+QTransform 一次合成缩放/旋转/居中 + QScrollArea widgetResizable=false 滚动 + 同目录翻页循环跳坏图 + 幻灯片全屏恢复 maximized）。构建门零 warning + offscreen 像素验证(旋转 90° 左蓝右红方向正确) + 对抗 review(3 维度)修正 6 处 + Full 导览 + Handbook 5 文件。**app 栏整机范式 + 双文档范式首立**。✅ 2026-07-07 已合 main（PR#16 764f035）
 ③app/model 放量：json-editor/network-tool/cpu-mem/serial-tool/sqlite-browser（image-viewer 已破零见②f）

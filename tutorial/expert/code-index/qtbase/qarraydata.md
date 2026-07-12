@@ -41,3 +41,17 @@ description: QArrayData 的字段结构、ref_ 初始值、isShared() 与 needsD
 | 论点 | 行号 | 原文摘要 | 解读 |
 |---|---|---|---|
 | allocate() 中 ref_ 初始化为 1（storeRelaxed） | :141 | `header->ref_.storeRelaxed(1);` | 分配即持有，ref_=1。与 QSharedData 的 ref=0 不同（两套体系）。 |
+
+## 分配链路与增长策略
+
+> 本节由 03-qstring-memory 篇补录（Qt 6.9.1 查证）。QString/QByteArray/QList 共用这套分配与增长机制。
+
+源码文件：`qtbase/src/corelib/tools/qarraydata.cpp` / `qarraydata.h`
+
+| 论点 | 行号 | 原文摘要 | 解读 |
+|---|---|---|---|
+| allocateData 单次 ::malloc 分配 header+数据合并的整块 | qarraydata.cpp:137-146 | `QArrayData *header = static_cast<QArrayData *>(::malloc(size_t(allocSize)));` | allocSize 由 allocateHelper 算好（headerSize+元素区+null 终止符），一次 malloc 拿到连续块，dataStart 用位掩码对齐后落在 header 之后。有利 cache 局部性。 |
+| QTypedArrayData::allocate 按 sizeof(T) 选分支，char16_t 走 allocate2 | qarraydata.h:129-148 | `if constexpr (sizeof(T) == 2) { result = allocate2(&d, capacity, option); }` | static_assert(sizeof(QTypedArrayData)==sizeof(QArrayData)) 保证头部恒定，派生类不引入额外成员。 |
+| reallocateUnaligned 独占时 ::realloc 试图 in-place 扩展免拷贝 | qarraydata.cpp:225-252 | `Q_ASSERT(!data \|\| !data->isShared()); ... ::realloc(data, size_t(allocSize));` | ref==1 且无 freeSpaceAtBegin 时走这条；操作系统可能直接伸展堆块，免 memcpy。Q_ASSERT 保证只在独占时进。 |
+| 增长策略 qNextPowerOfTwo 上取整到 2 的幂（几何翻倍） | qarraydata.cpp:84-108 | `size_t morebytes = qNextPowerOfTwo(quint64(bytes));` | 翻倍超 qsizetype 上限（变负）退化为加一半 (morebytes-bytes)/2，避免在 32 位上尝试分配刚好 2G。 |
+| FooterSize 并入 headerSize（qMax(char16_t,char)=2） | qarraydata.cpp:118-126 | `constexpr qsizetype FooterSize = qMax(sizeof(QString::value_type), sizeof(QByteArray::value_type)); if (objectSize <= FooterSize) headerSize += FooterSize;` | null 终止符预算藏进 header，故 capacity() 与字符数精确相等，`\0` 不占元素位、是额外送的。 |
