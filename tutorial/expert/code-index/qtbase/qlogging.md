@@ -1,6 +1,6 @@
 ---
 title: qDebug 与 QLoggingCategory 源码索引
-description: qDebug 是宏展开成 QMessageLogger 成员函数指针取址、QMessageLogContext release 默认丢 file/line/function（QT_NO_MESSAGELOGCONTEXT）、qt_message_print 真正分流（thread_local 防自递归）+ qt_message_output 是带 isFatal 外层、qFatal 走 qAbort（Windows fastfail/TerminateProcess 其他 std::abort）不跑析构非 exit、qInstallMessageHandler fetchAndStoreOrdered 直接替换不 wrap 返回旧 handler nullptr restore、QDebug RAII 析构输出、QLoggingCategory 构造默认 0x01010101 全开（注释漏 info 爆点）+ defaultCategoryFilter 只关 qt.* 前缀、4 套规则集 QtConfig→Config→Api→Environment、qCDebug for+Holder 编译期短路、Qt6.9 Q_LOGGING_CATEGORY 改函数返回引用、QT_MESSAGE_PATTERN 默认 %{if-category}%{category}: %{endif}%{message}。
+description: "qDebug 是宏展开成 QMessageLogger 成员函数指针取址、QMessageLogContext release 默认丢 file/line/function（QT_NO_MESSAGELOGCONTEXT）、qt_message_print 真正分流（thread_local 防自递归）+ qt_message_output 是带 isFatal 外层、qFatal 走 qAbort（Windows fastfail/TerminateProcess 其他 std::abort）不跑析构非 exit、qInstallMessageHandler fetchAndStoreOrdered 直接替换不 wrap 返回旧 handler nullptr restore、QDebug RAII 析构输出、QLoggingCategory 构造默认 0x01010101 全开（注释漏 info 爆点）+ defaultCategoryFilter 只关 qt.* 前缀、4 套规则集 QtConfig→Config→Api→Environment、qCDebug for+Holder 编译期短路、Qt6.9 Q_LOGGING_CATEGORY 改函数返回引用、QT_MESSAGE_PATTERN 默认 %{if-category}%{category}: %{endif}%{message}。"
 ---
 
 # qDebug 与 QLoggingCategory 源码索引
