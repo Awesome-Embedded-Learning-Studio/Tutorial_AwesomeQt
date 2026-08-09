@@ -29,11 +29,10 @@ void SortFilterProxyModel::setFilterScope(FilterScope scope) {
     }
     filter_scope_ = scope;
     emit filterScopeChanged();
-    // 匹配范围变了，已有行的去留要重新判定。
-    // Qt 6.13 起 invalidateFilter() 弃用，改用 begin/endFilterChange(Rows)——
-    // 它通知视图「行的可见性要变」，代理重新调用 filterAcceptsRow。
-    beginFilterChange();
-    endFilterChange(QSortFilterProxyModel::Direction::Rows);
+    // 匹配范围变了，已有行的去留要重新判定：失效当前过滤，代理重算
+    // filterAcceptsRow 并通知视图刷新。invalidateFilter() 自 Qt 6.9 即可用；
+    // Qt 6.13 起另有更细粒度的 begin/endFilterChange(Direction) 变体，留待届时迁移。
+    invalidateFilter();
 }
 
 bool SortFilterProxyModel::lessThan(const QModelIndex& left, const QModelIndex& right) const {
