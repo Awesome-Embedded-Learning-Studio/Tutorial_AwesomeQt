@@ -2,7 +2,7 @@
 
 ## ⚡ 交接（2026-07-08，下次从这里接）
 
-**现状**：18 篇产出。审结 2（`19-cow-implicit-sharing` / `04-cow-container-practice`）+ 待审 16（`01-qobject` / `02-signal-slot` / `03-qstring-memory` / `05-qvariant` / `06-memory-model` / `07-event-loop` / `08-file-io-iodevice` / `09-qthread-internals` / `10-qprocess` / `11-qtimer` / `12-plugin-loader` / `13-i18n` / `14-logging` / `15-regex-pcre` / `17-moc` / `21-object-tree`，已过一轮去 AI 味）。**剩 84 篇。**
+**现状**：19 篇产出。审结 2（`19-cow-implicit-sharing` / `04-cow-container-practice`）+ 待审 17（`01-qobject` / `02-signal-slot` / `03-qstring-memory` / `05-qvariant` / `06-memory-model` / `07-event-loop` / `08-file-io-iodevice` / `09-qthread-internals` / `10-qprocess` / `11-qtimer` / `12-plugin-loader` / `13-i18n` / `14-logging` / `15-regex-pcre` / `16-json-parser` / `17-moc` / `21-object-tree`，已过一轮去 AI 味）。**剩 83 篇。**
 
 **取证复用（省重复劳动）**：2026-06-24 一批硬核基石篇的取证已跑完存档，但正文当时都没落盘。开新篇先 `git log --all -- <正文文件名>` 核实：① 正文已在→直接审改；② 正文没有但取证已存档→直接取证据写正文，省一轮取证；③ 取证也没存→重新取证。**⚠️ 已存档主题：cow / qobject / signalslot / moc / objecttree / eventloop / qstring / memory / fileio / thread / timer / variant / qprocess / plugin / i18n / logging / regex 共 17 个；之外的篇（如 16-json-parser / 18-signal-slot-deep-dive）仍要重新取证。**
 
@@ -14,7 +14,7 @@
 
 **编号**：知识点队列（文件名序号 = 本文件「102 篇队列」里的号）。新篇按队列号落盘。
 
-**下一篇**：`16-json-parser`（QJsonDocument/QJsonParseError 源码：JSON 解析器/CBOR 互转/QJson_value；🟡 中频；取证空白须重新取证）。**注：本次会话已连推 11 篇（03/05/06/08/09/10/11/12/13/14/15），均落盘待审，建议作者先审一批再继续。**
+**下一篇**：`18-signal-slot-deep-dive`（专属·activate 调用链深拆；02 已覆盖基础可复用，须重新取证深水区如 queued 连接/QML 调用）。**注：16-json-parser 本次会话已落盘待审（A 35 条取证 + B 零打回复核，立论反转：Qt6 JSON 内部 = CBOR 子集、自 5.15 起）。**
 
 **文件位置**：正文 `tutorial/expert/01-qtbase/`；行号证据 `tutorial/expert/code-index/qtbase/`（进站点）；审查记录 `tutorial/expert/.audit/`（不进站点、不进 git）。
 
@@ -47,11 +47,13 @@
 
 - ✅ **15 regex-pcre 篇已落盘（待审）**：`tutorial/expert/01-qtbase/15-regex-pcre-expert.md`。立论：QRegularExpression 用 QExplicitlySharedDataPointer 隐式共享、构造懒编译（首次 match/isValid 才 compilePattern，isValid 有副作用）、Qt 用 PCRE2 16 位宽 _16 接口不转 UTF-8（pattern.constData 直传 PCRE2_SPTR16）+ 强制 PCRE2_UTF、PatternOption 值与 PCRE2 不同需 convertToPcreOptions 显式映射（CaseInsensitiveOption=0x1 vs PCRE2_CASELESS）、JIT Release 默认开（Debug/macOS Rosetta 关，QT_ENABLE_REGEXP_JIT 覆盖）编译时自动 pcre2_jit_compile 三模式、Qt 用 pcre2_match_16 非 jit_match（PCRE2 内部自动检测 JIT，safe_pcre2_match_16 处理栈耗尽重试）、JIT 栈 thread_local、match_context/match_data per-call、ovector 拷贝依赖 PCRE2_UNSET==-1（未捕获 -1）、partial 回退 lookbehind 兼容 PCRE1、(?J) 重复命名 qWarning+放行不支持（captureIndexForName 假设 name 唯一）、线程安全三层（隐式共享 detach + mutex 编译 + thread_local JIT 栈，const 已编译对象可跨线程并发 match）、setPattern detach+isDirty 重编译、anchoredPattern \A(?:...)\z、wildcard 默认文件路径 glob。五段 + 2 mermaid + 4 踩坑 + 去 AI 味 + markdownlint 0 error。A 取证 29 claims + B 聚焦复核 14 全过（6 处高价值纠偏逐字核实）。
 
+- ✅ **16 json-parser 篇已落盘（待审）**：`tutorial/expert/01-qtbase/16-json-parser-expert.md`。**立论反转——自 Qt 5.15 起 JSON 内部表示已是 QCborValue（Qt6 继承深化）**：QJsonDocument 是 QCborValue 薄壳（unique_ptr 持 QJsonDocumentPrivate{QCborValue}）、QJsonObject/Array 共享 QCborContainerPrivate（继承 QSharedData）、Parser 直接产 QCborValue。手写递归下降 Parser（nestingLimit 1024 防栈溢出、StashedContainer 暂存外层、parseNumber 三段整数优先、key 排序 sortContainer 解析期完成保最后值）。独家料：DocumentTooLarge/TerminationByNumber 死枚举（全 parser 无赋值）、二进制 API（fromBinaryData 等）6.9 直接删除非 deprecated、NaN/Inf 降级 null、type() 合并 Integer→Double 是 CBOR 副产物非 Qt6 独有。五段 + 3 mermaid + 5 踩坑 + 去 AI 味 + markdownlint 0 error。A 取证 35 claims + B 零打回（22 通过 / 11 有疑 / 1 笔误改字，纯精度修正；行号普遍漂移已校正、CBOR 化边界改 5.15 起、type() 合并改非独有）。code-index 新增 qjson-internals.md，交接单 .audit/16-json-parser.md。
+
 > 本批 5 篇的取证 2026-06-24 已跑完存档，但正文当时都没落盘；这次直接取存档证据写正文，省了一轮取证。每篇配 code-index（按机制分文件）+ markdownlint 0 error + 已过一轮去 AI 味。
 - ✅ **19 COW 隐式共享篇已落盘（审结）**：2026-06-13 产出（2026-07-08 按知识点队列重编为 19），`tutorial/expert/01-qtbase/19-cow-implicit-sharing-expert.md`。K03/L04 已作者拍板。
 - ✅ **04 COW 容器实战篇已落盘（审结）**：2026-06-13 产出（2026-07-08 按知识点队列重编为 04），`tutorial/expert/01-qtbase/04-cow-container-practice-expert.md`。
-- ✅ **code-index 已落地（31 文件）**：`tutorial/expert/code-index/qtbase/` 按源码机制分文件（COW 5 + 本批 20：qobject-dptr-pimpl / qmetaobject-static-metadata / metacall-dispatch / signal-* / event-* / moc-* / object-tree-* + 03-qstring 新增 qstring-memory-layout，qarraydata.md 另补分配链路节 + 06-memory 新增 qsharedpointer-family + 08-file-io 新增 qiodevice-fileio + 09-qthread 新增 qthread-internals + 11-qtimer 新增 qtimer + 05-qvariant 新增 qvariant + 10-qprocess 新增 qprocess + 12-plugin 新增 qpluginloader + 13-i18n 新增 qtranslator + 14-logging 新增 qlogging + 15-regex 新增 qregularexpression），全进 VitePress 构建。
-- ✅ **审查记录存 `.audit/`**：`tutorial/expert/.audit/`（18 篇各一份，含 03-qstring / 05-qvariant / 06-memory / 08-file-io / 09-qthread / 10-qprocess / 11-qtimer / 12-plugin / 13-i18n / 14-logging / 15-regex，不进站点、已 gitignore）。
+- ✅ **code-index 已落地（31 文件）**：`tutorial/expert/code-index/qtbase/` 按源码机制分文件（COW 5 + 本批 20：qobject-dptr-pimpl / qmetaobject-static-metadata / metacall-dispatch / signal-* / event-* / moc-* / object-tree-* + 03-qstring 新增 qstring-memory-layout，qarraydata.md 另补分配链路节 + 06-memory 新增 qsharedpointer-family + 08-file-io 新增 qiodevice-fileio + 09-qthread 新增 qthread-internals + 11-qtimer 新增 qtimer + 05-qvariant 新增 qvariant + 10-qprocess 新增 qprocess + 12-plugin 新增 qpluginloader + 13-i18n 新增 qtranslator + 14-logging 新增 qlogging + 15-regex 新增 qregularexpression + 16-json 新增 qjson-internals），全进 VitePress 构建。
+- ✅ **审查记录存 `.audit/`**：`tutorial/expert/.audit/`（19 篇各一份，含 03-qstring / 05-qvariant / 06-memory / 08-file-io / 09-qthread / 10-qprocess / 11-qtimer / 12-plugin / 13-i18n / 14-logging / 15-regex / 16-json-parser，不进站点、已 gitignore）。
 
 ## 建议顺序
 

@@ -85,7 +85,9 @@ def main():
 
     articles = [
         a for a in sorted(EXPERT_DIR.rglob("*.md"))
-        if a.name != "index.md" and "code-index" not in a.parts
+        if a.name != "index.md"
+        and "code-index" not in a.parts
+        and not any(part.startswith(".") for part in a.parts)  # 跳过 .audit 取证草稿等隐藏目录
     ]
     all_problems, checked = [], 0
     for a in articles:

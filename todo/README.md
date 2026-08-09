@@ -5,8 +5,8 @@
 ## 速览
 
 ```
-入门 137✅ · 进阶 134✅ · 专家 2 审结 + 16 待审（01·02 COW 审结 · 待审 16 篇：01 qobject / 02 signal-slot / 03 qstring-memory / 05 qvariant / 06 memory-model / 07 event-loop / 08 file-io / 09 qthread / 10 qprocess / 11 qtimer / 12 plugin-loader / 13 i18n / 14 logging / 15 regex-pcre / 17 moc / 21 object-tree，见 expert.md）
-实例库 widget 13/13 ✅收齐（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅ + editable-table✅ + checkbox-tree✅ + checkbox-list✅ + log-viewer✅ + password-edit✅ + ip-edit✅ + fade-animation✅），app image-viewer✅ + json-editor✅ + sqlite-browser✅ + serial-tool✅ + network-tool✅ + tetris✅ + cpu-memory-monitor✅(7 件整机成品·已合 main PR#16 · Windows 路径待作者实机复验) · model/industrial 骨架已立
+入门 137✅ · 进阶 134✅ · 专家 2 审结 + 17 待审（01·02 COW 审结 · 待审 17 篇：01 qobject / 02 signal-slot / 03 qstring-memory / 05 qvariant / 06 memory-model / 07 event-loop / 08 file-io / 09 qthread / 10 qprocess / 11 qtimer / 12 plugin-loader / 13 i18n / 14 logging / 15 regex-pcre / 16 json-parser / 17 moc / 21 object-tree，见 expert.md）
+实例库 widget 13/13 ✅收齐（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅ + editable-table✅ + checkbox-tree✅ + checkbox-list✅ + log-viewer✅ + password-edit✅ + ip-edit✅ + fade-animation✅），app image-viewer✅ + json-editor✅ + sqlite-browser✅ + serial-tool✅ + network-tool✅ + tetris✅ + cpu-memory-monitor✅(7 件整机成品·已合 main PR#16 · Windows 路径待作者实机复验) · model 首波 5 件已产(MV3 proxy/custom/tree-drag-move + observer + toast·待审) / industrial 骨架已立
 examples 275✅ · 基建 P0✅ 基本清完
 ```
 
@@ -30,7 +30,7 @@ examples 275✅ · 基建 P0✅ 基本清完
 - **专家层 13-i18n 已落盘（待审·未合 main）**：立论——tr 由 Q_OBJECT 植入/context 是 moc 编译期类名、tr 找不到返原文非空串、installTranslator 不去重后装优先、QM 16 字节随机 magic 非 mcookie 生成非可读串、QM 无版本号字段 Qt5/Qt6 兼容、消息查找二分搜索预排序哈希数组非哈希表、translation 字段 UTF-16 大端非 UTF-8、复数 NumerusRules 字节码虚拟机、disambiguation=comment 新旧名并存、QTranslator 析构自摘除。详见 expert.md。
 - **专家层 14-logging 已落盘（待审·未合 main）**：立论——qDebug 是宏展开成成员函数指针取址（.debug 无括号）、release 默认丢 file/line/function、qt_message_print 真正分流 qt_message_output 是外层、qFatal 走 qAbort 非 exit（Windows fastfail/TerminateProcess 其他 std::abort 不跑析构）、qInstallMessageHandler fetchAndStoreOrdered 直接替换不 wrap 返回旧 handler nullptr restore、【重大爆点】QLoggingCategory 构造默认 0x01010101 全开（注释漏 info）、defaultCategoryFilter 只硬编码关 qt.* 用户自定义默认开 debug、4 套规则集 QtConfig→Config→Api→Environment、qCDebug 编译期短路 for+Holder、Qt6.9 Q_LOGGING_CATEGORY 改函数返回引用、handler 在产生线程跑。详见 expert.md。
 - **专家层 15-regex-pcre 已落盘（待审·未合 main）**：立论——QRegularExpression 封装 PCRE2、构造懒编译（isValid 有副作用）、PCRE2 16 位宽 _16 接口不转 UTF-8 + 强制 PCRE2_UTF、PatternOption 值与 PCRE2 不同需映射、JIT Release 默认开编译时自动搞定、用 pcre2_match_16 非 jit_match（内部自动检测 JIT）、(?J) 重复命名 qWarning 放行不支持、线程安全三层（隐式共享+mutex+thread_local JIT 栈）const 对象可跨线程并发 match、anchoredPattern \A(?:...)\z、wildcard 默认文件路径 glob。详见 expert.md。
-- **下一步**：app 栏暂收（7 件完整）；转 model 栏放量（17 件照 undo-redo 范式）/ industrial hmi-dashboard 复用 widget 链 / 专家层另线推进；cpu-memory-monitor 的 Windows 路径需作者 Windows 实机复验
+- **下一步**：app 栏暂收（7 件完整）；model 栏首波 5 件已产（MV3 + observer + toast·待审），剩 12 件照范式复刻 / industrial hmi-dashboard 复用 widget 链 / 专家层 16-json-parser 已落盘待审；cpu-memory-monitor 的 Windows 路径需作者 Windows 实机复验
 - **挂账**：05-other-modules ~25 篇缺踩坑段——按「不编坑」原则，等真写到该模块再补真坑（memory: no-fabricated-pitfalls）
 - ⚠ **作者会在终端并行 commit/push/merge**：AI 改文件前先 `git status`；提交 / push 全归作者；commit / PR **不带任何 AI 署名**（memory: no-ai-attribution / user-handles-all-pushes）
 

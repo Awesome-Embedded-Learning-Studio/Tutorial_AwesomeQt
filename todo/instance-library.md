@@ -27,10 +27,12 @@
 路径 `app/<类目>/<应用名>/`。①image-viewer✅(整机破零标杆·自定义画布+QTransform+翻页跳坏图+幻灯片) ②json-editor✅(01-dev-tools·编辑/格式化/校验/树递归) ③sqlite-browser✅(10-database-tools·打开 db/表列表/可编辑表格/任意 SQL) ④serial-tool✅(02-network-tools·串口配置/收发/Hex-ASCII/错误收敛·嵌入式高频) ⑤network-tool✅(02-network-tools·TCP Server/Client + UDP 调试·loopback 可 offscreen 验) ⑥tetris✅(08-games·俄罗斯方块自绘·7 形态/旋转/消行/计分) ⑦cpu-memory-monitor✅(04-system-tools·CPU/内存进度条+历史曲线·跨平台·**Windows 路径 #ifdef 隔离标「尚未验证」**) / ~~audio-visualizer~~(拉伸·须先做模拟数据发生器)。**app 栏 7 件整机成品（2026-07-07 已合 main · PR#16）**，整机应用范式(整机 demo 非库式) + 双文档范式已立。
 
 ### model 栏（18·范式已定 2026-06-16）
-✅ 三范式已定（undo-redo-framework 骨架打穿）：目录布局 `model/<NN-类目>/<名>/include|src|demo`（与 widget 同构）/ 库类进 `AwesomeQt::` / demo 形态 = 库式 STATIC + 独立 demo。undo-redo 骨架已落（`move_command` STATIC + QUndoStack/QUndoView demo，构建门+冒烟通），深度成品待 D2 放量，其余 17 照范式复刻。
-- MV链(3)：proxy-model · custom-model · tree-drag-move
-- 设计模式链(15)：undo-redo-framework⭐ref · pimpl-pattern · shared-data-pattern · observer-pattern · sidebar-navigation · theme-system · animation-stack · ide-layout · window-single-instance · config-manager · pdf-export · variant-property-editor(降级·先手写轻量) · state-machine · frameless-window · toast-notification
+✅ 三范式已定（undo-redo-framework 骨架打穿）：目录布局 `model/<NN-类目>/<名>/include|src|demo`（与 widget 同构）/ 库类进 `AwesomeQt::` / demo 形态 = 库式 STATIC + 独立 demo。undo-redo 骨架已落（`move_command` STATIC + QUndoStack/QUndoView demo，构建门+冒烟通）。
+✅ **首波 5 件已产（2026-07-16·D2 Workflow 批量·待作者抽审）**：MV链3 + 设计模式2，全 STATIC 库 + 独立 demo + 构建门零 warning + offscreen 冒烟 + Full 导览 + Handbook 五文件。顶层 `model/CMakeLists.txt` 已纳管 6 件（undo + 5）整体构建通。
+- MV链(3)：✅proxy-model（QSortFilterProxyModel 子类·自定义 lessThan/filterAcceptsRow·数值列避字典序陷阱）· ✅custom-model（QAbstractTableModel 自管数据源·七角色 data + 可编辑 + 增删行 beginInsertRows）· ✅tree-drag-move（QTreeWidget 拖放协议四件套·MoveAction 协议层复制+dropEvent 删源时序防 double-free）
+- 设计模式链(15)：undo-redo-framework⭐ref · pimpl-pattern · shared-data-pattern · ✅observer-pattern（信号槽观察者 vs 纯 C++ 接口对照·一对多广播 + 连接类型）· sidebar-navigation · theme-system · animation-stack · ide-layout · window-single-instance · config-manager · pdf-export · variant-property-editor(降级·先手写轻量) · state-machine · frameless-window · ✅toast-notification（无边框置顶 + QPropertyAnimation 淡入淡出 + 多条堆叠队列）
 - 边界：pimpl/shared-data/observer/state-machine 对齐专家层源码——文档须明确「练手实例 vs 专家源码行号」边界，别和 [expert.md](expert.md) 03/04/19 篇重复。
+- ⚠️ **作者待拍板·范式差异**：首波 5 件 agent 误读 ip-edit 做成了**自包含 CMake**（子目录自带 cmake_minimum_required/project/find_package），与 undo-redo 的 **root-owns-config**（依赖顶层）范式不一致。两种范式在顶层 `add_subdirectory` 整体构建**均通**（自包含另有独立 `cmake -S` 构建门优势，D2 Workflow 验证友好）。作者审时定夺：统一改 root-owns-config 对齐 widget（动 10 文件返工），还是保留自包含。
 
 ### industrial 栏（首波 pilot 只1）
 - hmi-dashboard ✅唯一pilot：温度/压力/流量自绘仪表+趋势曲线+报警，复用 widget 递进链；industrial/ 目录首建脚手架；整机允许 QtCharts
