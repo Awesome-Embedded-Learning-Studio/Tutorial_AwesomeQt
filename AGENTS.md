@@ -4,7 +4,7 @@
 
 ## 这是什么
 
-**AwesomeQt** —— 聚焦 C++ / QtWidgets 的 Qt 6 中文深度教程，三层递进（入门 137 ✅ / 进阶 134 ✅ / 专家 2 进行中，规划 102 篇）+ 可复用实例库（`widget/` `app/` `model/` `industrial/`，`AwesomeQt::` 命名空间），VitePress 建站。隶属 Awesome-Embedded-Learning-Studio。不摊 QML 深度 / PySide6。
+**AwesomeQt** —— 聚焦 C++ / QtWidgets 的 Qt 6 中文深度教程，三层递进（入门 137 ✅ / 进阶 134 ✅ / 专家 19/102 进行中）+ 可复用实例库（`widget/` `app/` `model/` `industrial/`，`AwesomeQt::` 命名空间），VitePress 建站。隶属 Awesome-Embedded-Learning-Studio。不摊 QML 深度 / PySide6。
 
 ## 目录结构
 
@@ -37,4 +37,4 @@ qt_src/qt6.9.1/                                    Qt 6.9.1 源码（gitignore�
 | 专家层源码查证 | 本地 `qt_src/qt6.9.1/`（不入库，gitignore） |
 | 死链检查 | `python3 scripts/document/check_links.py` |
 
-> 本文件只描述项目规则与入口，不依赖任何私有配置。专家层进度 2/102（进行中）。
+> 本文件只描述项目规则与入口，不依赖任何私有配置。专家层进度 19/102（进行中）。

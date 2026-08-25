@@ -1,6 +1,7 @@
 <script setup>
 // 篇首横幅：左侧篇号标记（默认 PART，可经 label 覆盖）+ 标题 + 副标题 + 计数。
-// motif 选 theory（同心圆）/ specimen（带斜线的矩形）/ practice（分支树）三种抽象图形。
+// motif 选 theory（同心圆）/ specimen（带斜线的矩形）/ practice（分支树）三种抽象图形，
+// 三 motif 各配一枚强调色令牌：theory=Qt 绿 / specimen=琥珀 / practice=靛。
 defineProps({
   act: { type: String, required: true },
   title: { type: String, required: true },
@@ -18,23 +19,23 @@ defineProps({
         <span class="chapter-hero__act-label">{{ label }}</span>
         <span class="chapter-hero__act-num">{{ act }}</span>
         <svg v-if="motif === 'theory'" class="chapter-hero__motif" viewBox="0 0 40 40" aria-hidden="true">
-          <circle cx="20" cy="20" r="14" fill="none" stroke="var(--vp-c-brand-1)" stroke-width="1.2" opacity="0.45" />
-          <circle cx="20" cy="20" r="8" fill="none" stroke="var(--vp-c-brand-1)" stroke-width="1.2" opacity="0.7" />
-          <circle cx="20" cy="20" r="2" fill="var(--vp-c-brand-1)" />
+          <circle cx="20" cy="20" r="14" fill="none" stroke="var(--ch-accent)" stroke-width="1.2" opacity="0.45" />
+          <circle cx="20" cy="20" r="8" fill="none" stroke="var(--ch-accent)" stroke-width="1.2" opacity="0.7" />
+          <circle cx="20" cy="20" r="2" fill="var(--ch-accent)" />
           <g fill="var(--vp-c-text-3)" opacity="0.55">
             <circle cx="6" cy="6" r="1" /><circle cx="34" cy="6" r="1" />
             <circle cx="6" cy="34" r="1" /><circle cx="34" cy="34" r="1" />
           </g>
         </svg>
         <svg v-else-if="motif === 'specimen'" class="chapter-hero__motif" viewBox="0 0 40 40" aria-hidden="true">
-          <rect x="6" y="8" width="22" height="24" rx="2" fill="none" stroke="var(--vp-c-brand-1)" stroke-width="1.2" />
-          <line x1="4" y1="36" x2="36" y2="4" stroke="var(--vp-c-brand-1)" stroke-width="1.6" stroke-linecap="round" />
-          <circle cx="34" cy="6" r="2.2" fill="var(--vp-c-brand-1)" />
+          <rect x="6" y="8" width="22" height="24" rx="2" fill="none" stroke="var(--ch-accent)" stroke-width="1.2" />
+          <line x1="4" y1="36" x2="36" y2="4" stroke="var(--ch-accent)" stroke-width="1.6" stroke-linecap="round" />
+          <circle cx="34" cy="6" r="2.2" fill="var(--ch-accent)" />
         </svg>
         <svg v-else class="chapter-hero__motif" viewBox="0 0 40 40" aria-hidden="true">
           <path d="M20 6 L20 20 M20 20 L10 30 M20 20 L30 30 M10 30 L6 36 M10 30 L14 36 M30 30 L26 36 M30 30 L34 36"
-            fill="none" stroke="var(--vp-c-brand-1)" stroke-width="1.3" stroke-linecap="round" />
-          <circle cx="20" cy="6" r="2.5" fill="var(--vp-c-brand-1)" />
+            fill="none" stroke="var(--ch-accent)" stroke-width="1.3" stroke-linecap="round" />
+          <circle cx="20" cy="6" r="2.5" fill="var(--ch-accent)" />
         </svg>
       </div>
       <div class="chapter-hero__body">
@@ -50,12 +51,30 @@ defineProps({
 </template>
 
 <style scoped>
+/* 三 motif 强调色：组件只引用令牌，不硬编码色值；未知 motif 兜底 Qt 绿 */
 .chapter-hero {
-  margin: 1rem 0 2.5rem;
-  padding: 2rem 1.5rem 1.5rem;
-  background: var(--vp-c-bg-soft);
-  border-radius: 12px;
-  border-left: 4px solid var(--vp-c-brand-1);
+  --ch-accent: var(--vp-c-brand-1);
+}
+
+.chapter-hero.motif-theory {
+  --ch-accent: var(--vp-c-brand-1);
+}
+
+.chapter-hero.motif-specimen {
+  --ch-accent: var(--aq-c-eng-1);
+}
+
+.chapter-hero.motif-practice {
+  --ch-accent: var(--aq-c-dom-1);
+}
+
+.chapter-hero {
+  margin: 1rem 0 2.25rem;
+  padding: 1.4rem 1.5rem 1.1rem;
+  background: var(--ide-panel-bg);
+  border: 1px solid var(--ide-border);
+  border-radius: 6px;
+  border-left: 4px solid var(--ch-accent);
   position: relative;
 }
 
@@ -76,9 +95,11 @@ defineProps({
 }
 
 .chapter-hero__act-label {
+  font-family: var(--aq-mono);
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
   color: var(--vp-c-text-3);
 }
 
@@ -86,7 +107,7 @@ defineProps({
   font-size: 2.6rem;
   font-weight: 800;
   line-height: 1;
-  color: var(--vp-c-brand-1);
+  color: var(--ch-accent);
 }
 
 .chapter-hero__motif {
@@ -118,15 +139,16 @@ defineProps({
 }
 
 .chapter-hero__count {
-  font-size: 0.85rem;
+  font-family: var(--aq-mono);
+  font-size: 0.82rem;
   font-weight: 600;
-  color: var(--vp-c-brand-1);
+  color: var(--ch-accent);
   margin: 0;
   letter-spacing: 0.04em;
 }
 
 .chapter-hero__rule {
-  margin-top: 1.5rem;
+  margin-top: 1.1rem;
   height: 1px;
   background: var(--vp-c-divider);
   position: relative;
@@ -138,13 +160,13 @@ defineProps({
   top: -3px;
   width: 7px;
   height: 7px;
-  background: var(--vp-c-brand-1);
+  background: var(--ch-accent);
   transform: rotate(45deg);
 }
 
 @media (max-width: 639px) {
   .chapter-hero {
-    padding: 1.5rem 1rem 1rem;
+    padding: 1.1rem 1rem 0.9rem;
   }
   .chapter-hero__inner {
     gap: 1rem;
