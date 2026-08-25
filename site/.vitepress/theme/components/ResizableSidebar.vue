@@ -6,9 +6,11 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 //   改这一个变量即全联动。但 handle 的定位与拖动计算必须读 .VPSidebar 的实际几何 —— 宽屏
 //   (≥1440px)布局居中,sidebar 左缘非 0、右缘带 (vw-maxW)/2 偏移,且受滚动条宽度影响,
 //   CSS 公式推算总有小偏差。故 left 一律用 JS 读 getBoundingClientRect 精确设定(与右 handle 同策略)。
+// 左栏默认宽度不写死:按当前卷 sidebar 最宽条目文字实测 + 留白 + buffer 动态求值
+//   (用户拖过并存了宽度 = 有明确偏好,保存值优先;双击重置即恢复自适应并清掉保存值)。
 // 右栏 --vp-aside-width 自定义变量(在 custom.css 覆盖 aside max-width);右 handle absolute
 //   注入 aside 内,MutationObserver 在路由切换重建 aside 时重新注入。
-// 宽度持久化 localStorage;首屏防闪由 config head 内联脚本(hydration 前注入变量)负责。
+// 宽度持久化 localStorage;首屏防闪由 config head 内联脚本(hydration 前注入 272 近似值)负责。
 
 type Side = 'left' | 'right'
 interface Dim { min: number; max: number; def: number; key: string; cssVar: string }
@@ -18,10 +20,40 @@ const CONF: Record<Side, Dim> = {
   right: { min: 180, max: 360, def: 256, key: 'vp-aside-width', cssVar: '--vp-aside-width' },
 }
 
+const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
+
+/** 读用户保存的宽度;没有或非法返回 null */
+function savedWidth(side: Side): number | null {
+  try {
+    const v = parseInt(localStorage.getItem(CONF[side].key) || '')
+    return v >= CONF[side].min && v <= CONF[side].max ? v : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 左栏自适应默认宽度:实测当前 sidebar 最宽条目文字右缘(含嵌套缩进;text 带
+ * 省略号截断,scrollWidth-clientWidth 补回被截掉的部分)+ 右侧留白 32 + buffer 14
+ * (字体渲染差异/滚动条余量),夹在 [min,max]。测不到回退 272。
+ * 换卷 sidebar 内容不同,路由变化后要重测。
+ */
+function measureLeftDefault(): number {
+  const sb = document.querySelector('.VPSidebar') as HTMLElement | null
+  if (!sb) return CONF.left.def
+  const base = sb.getBoundingClientRect().left
+  let maxRight = 0
+  sb.querySelectorAll<HTMLElement>('.VPSidebarItem .text').forEach((t) => {
+    const w = t.getBoundingClientRect().right + (t.scrollWidth - t.clientWidth) - base
+    if (w > maxRight) maxRight = w
+  })
+  if (maxRight <= 0) return CONF.left.def
+  return clamp(Math.ceil(maxRight + 32 + 14), CONF.left.min, CONF.left.max)
+}
+
 const leftHandle = ref<HTMLElement | null>(null)
 const RIGHT_HANDLE_ID = 'rs-right-handle'
 
-const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 const applyVar = (side: Side, px: number) =>
   document.documentElement.style.setProperty(CONF[side].cssVar, px + 'px')
 const persist = (side: Side, px: number) => {
@@ -81,8 +113,14 @@ function startDrag(side: Side, e: MouseEvent) {
 }
 
 function reset(side: Side) {
-  applyVar(side, CONF[side].def)
-  persist(side, CONF[side].def)
+  if (side === 'left') {
+    // 双击重置 = 回到自适应默认,并清掉保存值 → 内容增长后继续自适应
+    applyVar('left', measureLeftDefault())
+    try { localStorage.removeItem(CONF.left.key) } catch { /* 隐私模式 */ }
+  } else {
+    applyVar(side, CONF[side].def)
+    persist(side, CONF[side].def)
+  }
   if (side === 'left') updateLeftPosition()
 }
 
@@ -117,21 +155,34 @@ function injectRightHandle() {
 
 let observer: MutationObserver | null = null
 let leftTimer = 0
+
+// 自适应默认宽度:rAF 去抖地重测(路由换卷 sidebar 重建时 MutationObserver 高频触发,
+// 每次都量 ~200 个 text 节点会抖布局)。用户存过宽度就不测。
+let measureQueued = false
+function queueMeasureLeftDefault() {
+  if (measureQueued || savedWidth('left') !== null) return
+  measureQueued = true
+  requestAnimationFrame(() => {
+    measureQueued = false
+    applyVar('left', measureLeftDefault())
+    updateLeftPosition()
+  })
+}
+
 const onMutate = () => {
   updateLeftVisibility()
   updateLeftPosition()
   injectRightHandle()
+  queueMeasureLeftDefault()
 }
 
 onMounted(() => {
-  // 恢复已存宽度(防闪脚本已在首屏注入,这里做内存兜底)
+  // 恢复已存宽度(防闪脚本已在首屏注入近似值);左栏没存过 → 立即按内容实测自适应
   ;(['left', 'right'] as Side[]).forEach((side) => {
-    const dim = CONF[side]
-    try {
-      const v = parseInt(localStorage.getItem(dim.key) || '')
-      if (v >= dim.min && v <= dim.max) applyVar(side, v)
-    } catch {}
+    const v = savedWidth(side)
+    if (v !== null) applyVar(side, v)
   })
+  queueMeasureLeftDefault()
   onMutate()
   // sidebar 桌面端有 transform 入场过渡(translateX(-100%)→0,约 0.25s),过渡中
   // getBoundingClientRect 偏左,导致 handle 初始错位(拖动后才贴合)。

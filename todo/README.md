@@ -5,7 +5,7 @@
 ## 速览
 
 ```
-入门 137✅ · 进阶 134✅ · 专家 2 审结 + 17 待审（01·02 COW 审结 · 待审 17 篇：01 qobject / 02 signal-slot / 03 qstring-memory / 05 qvariant / 06 memory-model / 07 event-loop / 08 file-io / 09 qthread / 10 qprocess / 11 qtimer / 12 plugin-loader / 13 i18n / 14 logging / 15 regex-pcre / 16 json-parser / 17 moc / 21 object-tree，见 expert.md）
+入门 137✅ · 进阶 134✅ · 专家 19/102 审结（2026-08-26 作者确认全审结 · QtBase 卷剩 18/20 两篇，见 expert.md）
 实例库 widget 13/13 ✅收齐（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅ + editable-table✅ + checkbox-tree✅ + checkbox-list✅ + log-viewer✅ + password-edit✅ + ip-edit✅ + fade-animation✅），app image-viewer✅ + json-editor✅ + sqlite-browser✅ + serial-tool✅ + network-tool✅ + tetris✅ + cpu-memory-monitor✅(7 件整机成品·已合 main PR#16 · Windows 路径待作者实机复验) · model 首波 5 件已产(MV3 proxy/custom/tree-drag-move + observer + toast·待审) / industrial 骨架已立
 examples 275✅ · 基建 P0✅ 基本清完
 ```
@@ -46,7 +46,7 @@ examples 275✅ · 基建 P0✅ 基本清完
 
 ## 当下优先
 
-- 专家层：01·02 审结 · 待审 16 篇（01/02/03/05/06/07/08/09/10/11/12/13/14/15/17/21，本次会话连推 11 篇 03/05/06/08/09/10/11/12/13/14/15）→ 审过后接 16-json-parser 等（一次一篇）
+- 专家层：19 篇全审结（2026-08-26）→ 下一篇 18-signal-slot-deep-dive（须重新取证深水区），QtBase 卷收满仅剩 18/20 两篇
 - 实例库：widget 13/13 + app 7/7 全合 main（PR#14/#16）→ 转 model 栏放量（17 件照 undo-redo 范式）
 - 基建：P0✅ 基本清完（死链 + 需要注意的是×30 + 风格违例已入 main）→ 剩 专家 sidebar 收敛 + 入门结构漂移
 

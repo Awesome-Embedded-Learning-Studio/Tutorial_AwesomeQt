@@ -28,7 +28,7 @@ const HTML_TAGS = new Set([
 ])
 
 const VUE_COMPONENTS = new Set([
-  'HomeRoadmap', 'HomeMeta', 'CardGrid', 'CardLink',
+  'CardGrid', 'CardLink',
 ])
 
 function looksLikeCppTemplate(inner: string): boolean {

@@ -2,11 +2,19 @@
 import { ref, computed, onMounted } from 'vue'
 
 // 正文字号五档：超小 / 小 / 正常(默认) / 大 / 超大，用 A- / A+ 步进切换。
-// 写 documentElement.dataset.fontSize → custom.css 的 html[data-font-size] 用 zoom 整页缩放。
+// 写 documentElement 的 --aq-font-scale CSS 变量 → custom.css 里 .vp-doc 各条
+// calc 只缩正文文字，布局宽度不动（旧 zoom 方案整页缩放会打乱排版，issue #18 已废弃）。
 // 存 localStorage（key=awesomeqt-font-size），首屏由 config/shared.ts 的 head 内联脚本提前应用，避免刷新闪烁。
 type Size = 'xxsmall' | 'small' | 'normal' | 'large' | 'xxlarge'
 const STORAGE_KEY = 'awesomeqt-font-size'
 const order: Size[] = ['xxsmall', 'small', 'normal', 'large', 'xxlarge']
+const scale: Record<Size, string> = {
+  xxsmall: '0.88',
+  small: '0.94',
+  normal: '1',
+  large: '1.08',
+  xxlarge: '1.16',
+}
 const label: Record<Size, string> = {
   xxsmall: '超小',
   small: '小',
@@ -22,7 +30,7 @@ function apply(s: Size) {
     localStorage.setItem(STORAGE_KEY, s)
   } catch {}
   if (typeof document !== 'undefined') {
-    document.documentElement.dataset.fontSize = s
+    document.documentElement.style.setProperty('--aq-font-scale', scale[s])
   }
 }
 

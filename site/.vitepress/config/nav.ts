@@ -25,5 +25,12 @@ export const navZh: DefaultTheme.NavItem[] = [
       { text: '06 · QML 现代界面', link: '/advanced/06-qml/' },
     ],
   },
+  {
+    text: '专家教程',
+    items: [
+      { text: '01 · QtBase 源码拆解', link: '/expert/01-qtbase/' },
+      { text: '总目录 · 102 篇连载中', link: '/expert/' },
+    ],
+  },
   { text: '项目实战', link: '/engineering/' },
 ]

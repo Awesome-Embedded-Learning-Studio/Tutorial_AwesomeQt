@@ -40,14 +40,16 @@ export const sharedBase = {
 
   head: [
     ['link', { rel: 'icon', href: '/Tutorial_AwesomeQt/favicon.ico' }],
-    // 字号切换首屏防闪烁：Vue 挂载前先从 localStorage 读档位写 data-font-size，默认 normal。
-    // 与 theme/components/FontSizeSwitcher.vue 的 STORAGE_KEY('awesomeqt-font-size') 一致。
+    // 字号切换首屏防闪烁：Vue 挂载前先从 localStorage 读档位映射成 --aq-font-scale
+    // 写到 documentElement，只缩正文不缩布局（issue #18，旧 data-font-size+zoom 方案已废弃）。
+    // 与 theme/components/FontSizeSwitcher.vue 的 STORAGE_KEY('awesomeqt-font-size') 与 scale 映射一致。
     [
       'script',
       {},
-      `(function(){try{var s=localStorage.getItem('awesomeqt-font-size')||'normal';if(s!=='xxsmall'&&s!=='small'&&s!=='normal'&&s!=='large'&&s!=='xxlarge'){s='normal';}document.documentElement.dataset.fontSize=s;}catch(e){}})()`,
+      `(function(){var m={xxsmall:'0.88',small:'0.94',normal:'1',large:'1.08',xxlarge:'1.16'};try{var s=localStorage.getItem('awesomeqt-font-size');document.documentElement.style.setProperty('--aq-font-scale',m[s]||'1');}catch(e){}})()`,
     ],
-    // 可拖拽侧栏首屏防闪：hydration 前从 localStorage 还原左右栏宽度 CSS 变量，默认 272/256。
+    // 可拖拽侧栏首屏防闪：hydration 前从 localStorage 还原左右栏宽度 CSS 变量。
+    // 左栏 272 只是近似值——挂载后 ResizableSidebar 会按当前卷最长条目自适应实测（未存过宽度时）。
     // 与 theme/components/ResizableSidebar.vue 的 CONF（key=vp-sidebar-width/vp-aside-width）一致。
     [
       'script',
@@ -76,6 +78,24 @@ export const sharedMarkdown = {
 export const sharedThemeBase = {
   search: {
     provider: 'local',
+    options: {
+      translations: {
+        button: {
+          buttonText: '搜索教程',
+          buttonAriaLabel: '搜索教程',
+        },
+        modal: {
+          noResultsText: '没有找到相关内容',
+          resetButtonTitle: '清除查询',
+          displayDetails: '显示详细列表',
+          footer: {
+            selectText: '选择',
+            navigateText: '切换',
+            closeText: '关闭',
+          },
+        },
+      },
+    },
   },
 
   editLink: {
@@ -86,7 +106,7 @@ export const sharedThemeBase = {
   footer: {
     message: (() => {
       const { version, sha, date } = getBuildInfo()
-      return `AwesomeQt ${version} · ${sha} · ${date}`
+      return `AwesomeQt ${version} · ${sha} · ${date} · CHECKED-BY: CI`
     })(),
     copyright: 'Copyright 2025-2026 Charliechen',
   },

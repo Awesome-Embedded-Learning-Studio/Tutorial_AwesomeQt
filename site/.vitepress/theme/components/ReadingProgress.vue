@@ -43,12 +43,13 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* IDE 语义：整页最顶的 2px 扁平进度线（构建进行中），压在标题栏之上 */
 .reading-progress {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 2px;
   z-index: 100;
   pointer-events: none;
   background: transparent;
@@ -56,8 +57,7 @@ onBeforeUnmount(() => {
 
 .reading-progress__bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--vp-c-brand-1), var(--vp-c-brand-3));
-  box-shadow: 0 0 8px color-mix(in srgb, var(--vp-c-brand-1) 35%, transparent);
+  background: var(--vp-c-brand-1);
   transition: width 0.12s ease-out;
 }
 
