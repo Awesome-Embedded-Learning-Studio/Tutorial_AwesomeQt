@@ -1,45 +1,25 @@
 ---
 title: "1.2 信号与槽"
-description: "说实话，第一次接触 Qt 的时候，我对「信号与槽」这四个字是懵的。那时候我刚从传统的回调函数和观察者模式转过来，满脑子都是「为什么要搞这一套新东西？」"
+description: "Qt 对象间解耦通信的机制：信号是事件声明、槽是可调用目标，新式
+函数指针 connect 自带编译期检查，跨线程时 Qt 自动把参数打包排队投递到目标线程。
+四个坑各有各的崩法——Lambda 捕获野指针的偶发崩溃、漏 Q_OBJECT 信号连不上、
+工作线程直接碰 GUI、重载信号连接歧义。配套可跑示例在
+examples/beginner/01-qtbase/02-signal-slot-beginner/。"
 ---
 
 # 现代Qt开发教程（新手篇）1.2——信号与槽
 
-## 1. 为什么要发明信号槽
+一个按钮被点击之后，该让谁知道这件事？最直接的写法：让按钮持有窗口的指针，点击时直接调窗口的函数。能跑，但代价是两头互相知道——按钮得清楚"谁"会响应它，窗口也得知道按钮的类型，换个窗口按钮跟着改，换个按钮窗口跟着改。
 
-说实话，第一次接触 Qt 的时候，我对「信号与槽」这四个字是懵的。那时候我刚从传统的回调函数和观察者模式转过来，满脑子都是「为什么要搞这一套新东西？」
+Qt 的答案是信号与槽。按钮只说"我被点击了"，谁来听、听完做什么，它一概不知；窗口只说"我关心点击事件"。两边互不相识却能协作，中间的连接交给元对象系统，咱们只要告诉它"把这两个连起来"。
 
-后来我熬夜调试了一个跨线程的 UI 更新 bug，在无数次崩溃和崩溃之间突然就明白了。Qt 发明信号槽，是为了解决一个非常现实的问题：**对象之间如何解耦通信**。
+从回调函数过来的朋友可能会问：注册个回调不也能解耦？能，但解耦只是表层收益。信号槽真正值钱的地方是跨线程天生安全——参数打包、投递到目标线程、排队执行，这些 Qt 全包了；再加上自动断开（对象销毁连接跟着断）和一发多收。这些下文都会用到。
 
-你想想，如果不用信号槽，当按钮被点击时，你想让某个窗口响应，你会怎么做？传统做法要么让按钮直接持有窗口的指针，要么写一堆回调函数注册。这两种方式都有一个共同问题——耦合太紧了。按钮需要知道「谁」会响应它，窗口也需要知道按钮的类型。
+其实笔者认为，信号槽的核心在于：发射者不需要知道接收者的存在。上一篇 [1.1 QObject 与元对象系统](./01-qobject-meta-system-beginner.md) 把 Q_OBJECT 与对象树备好了课，本篇专心讲通信本身。
 
-但信号槽完全不同。按钮只需要说「我被点击了」，至于谁来听、听后做什么，按钮完全不在乎。窗口呢，只要说「我关心点击事件」就行了。两者互不认识，却可以完美协作。
+## 信号与槽是什么：一个只声明，一个真干活
 
-这就是信号槽的核心价值——**发射者不需要知道接收者的存在，接收者也不需要知道发射者的细节**。中间的连接工作由 Qt 的元对象系统来处理，你只需要告诉它「把这两个连起来」。
-
-当然，信号槽的妙用不止解耦。它还天然支持跨线程通信、自动断开、连接多个接收者等一系列强大功能。这些我们在后面慢慢聊。现在先把这个核心概念刻进脑子里：**信号槽 = 解耦的通信机制**。
-
-## 2. 环境说明
-
-本文档基于 Qt 6.x 编写，所有示例代码和 API 调用都已验证兼容 Qt 6.2+ 版本。
-
-如果你还在用 Qt 5，需要注意几点：一是 `QString::split` 返回值类型有变化，二是某些信号槽的连接参数在 Qt 6 中有所调整。不过信号槽的核心语法是稳定的，迁移成本不大。
-
-另外，强烈建议使用 C++11 或更高版本编译器，因为现代 Qt 开发中大量使用了 Lambda 表达式和 `auto` 类型推导。你不会想在 2026 年还用 C++98 写 Qt 的。
-
-## 3. 信号槽是什么
-
-信号和槽是 Qt 对观察者模式的一种实现，但它的语法设计得非常优雅。我们先从概念上搞清楚这两件事。
-
-信号（Signal）就是一个「事件声明」。你在类里声明一个信号，说「这类事可能发生」，比如按钮被点击、滑块值改变、数据加载完成。信号本身不实现任何代码，它只是一个声明。
-
-槽（Slot）就是一个「可调用目标」。它可以是普通成员函数、静态函数、Lambda 表达式，甚至任何可调用的东西。当信号发射时，所有连接到这个信号的槽都会被调用。
-
-这里的关键是：**声明信号和定义槽是完全分开的**。你可以在一个类里声明信号，然后在另一个完全无关的类里定义槽，只要把它们连起来就行。
-
-### 3.1 声明信号和槽
-
-在 Qt 中声明信号和槽非常简单。信号放在 `signals:` 保护段下（实际上这是 `public` 的，但 Qt 约定用这个关键字），槽则放在 `public slots:`、`protected slots:` 或 `private slots:` 下。
+信号（Signal）是一句"事件声明"——按钮被点击、滑块值变、数据加载完成，声明本身不含任何实现；槽（Slot）是一个可调用目标，成员函数、静态函数、Lambda 都行。信号一响，连到它的槽全部被调用。
 
 ```cpp
 class Counter : public QObject {
@@ -63,11 +43,11 @@ private:
 };
 ```
 
-上面这段代码声明了一个信号 `valueChanged`，它会在值改变时发射。`printValue` 是一个槽，可以连接到信号上。
+您在八竿子打不着的另一个类里定义槽、连上这个信号，照样工作——声明和定义完全分开，是这套机制松耦合的根源。signals: 这个关键字本质是 public（moc 预处理时会特殊对待），Qt 用它标记"这一段是信号"，属于约定成俗。
 
-### 3.2 连接信号与槽
+这份约定生效有个前提：moc 真的处理了这个类。图省事不写 Q_OBJECT 的话，约定落空——不少人先写 signals 和 connect，想着"跑起来再补"，结果编译通过、信号永远连不上，因为没被 moc 处理的类，signals: 下面就是一串普通成员函数声明，怎么连都不响。继承 QObject 的第一件事就是加 Q_OBJECT，没有例外；根子（moc 的扫描机制）[1.1 篇](./01-qobject-meta-system-beginner.md) 拆过了，这里不重讲。
 
-有了信号和槽，接下来就是连接它们。Qt 6 中，新式语法是用函数指针直接连接：
+## connect：让编译器替咱们守门
 
 ```cpp
 Counter counter;
@@ -75,11 +55,7 @@ connect(&counter, &Counter::valueChanged,
         &app,    &QApplication::quit);
 ```
 
-这个连接的意思是：当 `counter` 发射 `valueChanged` 信号时，调用 `app` 的 `quit` 槽。
-
-你可能注意到这里没有写参数类型。这是新式语法的优势——编译器会在编译时检查信号和槽的参数是否匹配。如果 `valueChanged` 信号有参数而 `quit` 槽不接受参数，编译会直接失败。这种编译期检查比运行时崩溃友好多了。
-
-新式语法还支持 Lambda 表达式，这在实际开发中非常实用：
+counter 发射 valueChanged 时，app 的 quit 被调用。注意咱们没写参数类型——新式语法用函数指针，参数匹配检查交给编译器：信号带的参数槽收不下，直接编译失败。这种错在编译期报，比运行期崩友好太多。一次性的小逻辑不必单写槽函数，Lambda 直接上：
 
 ```cpp
 connect(&counter, &Counter::valueChanged, [](int newValue) {
@@ -87,52 +63,7 @@ connect(&counter, &Counter::valueChanged, [](int newValue) {
 });
 ```
 
-不需要单独写一个槽函数，直接用 Lambda 处理信号。这种写法在处理简单逻辑时特别方便，而且代码更紧凑。
-
-### 3.3 同步连接与异步连接
-
-信号槽有一个很重要的特性：它可以是同步的，也可以是异步的。这取决于连接类型和发射者与接收者所在的线程。
-
-默认情况下，如果发射者和接收者在同一线程，信号槽是同步的——也就是说，发射信号的代码会阻塞，直到所有槽函数执行完毕。这看起来就像直接调用函数一样。
-
-但如果接收者在不同线程，Qt 会自动把调用转换为异步——信号发射后立即返回，槽函数会在接收者的线程中执行。这太有用了，因为它让你完全不用关心跨线程调用的细节，Qt 会把参数打包、跨线程传递、在目标线程执行。
-
-你也可以显式指定连接类型：
-
-```cpp
-// 强制同步（直接调用）
-connect(sender, &Sender::signal,
-        receiver, &Receiver::slot,
-        Qt::DirectConnection);
-
-// 强制异步（排队执行）
-connect(sender, &Sender::signal,
-        receiver, &Receiver::slot,
-        Qt::QueuedConnection);
-```
-
-不过大多数情况下，让 Qt 自动判断就好。显式指定主要是为了某些特殊场景，比如你确实需要在发射线程立即执行，或者强制异步。
-
-### 3.4 Lambda 表达式作为槽
-
-Lambda 表达式是现代 C++ 最强大的特性之一，Qt 信号槽完美支持它。使用 Lambda 的好处是你不需要为每个信号都写一个独立的槽函数，尤其是那些只用一次的简单逻辑。
-
-```cpp
-QSlider *slider = new QSlider(Qt::Horizontal);
-QLabel *label = new QLabel;
-
-connect(slider, &QSlider::valueChanged, [&](int value) {
-    label->setText(QString("Value: %1").arg(value));
-});
-```
-
-这里用 `[&]` 捕获了 `label` 的引用，在 Lambda 里直接操作它。代码非常直观。
-
-不过有个需要注意的点：如果你捕获的是指针或引用，要确保对象在信号发射时还有效。否则你会收获一个漂亮的 segfault。后面踩坑部分会详细说这个问题。
-
-### 3.5 旧式语法的问题
-
-说到这里，我必须吐槽一下。今年都 Qt6 了，你还能在网上看到大量这样的代码：
+今年都 Qt6 了，网上还能刷到大量 SIGNAL/SLOT 宏的老写法：
 
 ```cpp
 // 请不要这样写了，求你了
@@ -140,90 +71,9 @@ connect(sender, SIGNAL(valueChanged(int)),
         receiver, SLOT(onValueChanged(int)));
 ```
 
-这是 Qt 的老式 `SIGNAL` / `SLOT` 宏语法。它的问题很明显：没有编译期检查。如果你把信号名拼错，或者参数类型不匹配，编译器不会报错，只会在运行时给你一个警告。这个警告往往淹没在一堆调试输出里，等你发现 bug 时已经过了三天。
+宏语法没有上面那道编译期检查，错误全拖到运行期才爆。比如手一抖把 valueChanged 打成 valuChanged：编译通过，运行不报错，信号发了槽永远不来，排查起来能耗掉一下午，最后发现只是少了个 e。同样的拼写错误放在函数指针语法下，编译期直接报错，定位就在那一行。
 
-新式语法用函数指针，编译期就能检查错误，IDE 还能自动补全和跳转。没有任何理由继续用老式语法了。
-
-这里有个很典型的场景：你用 SIGNAL/SLOT 宏连接信号，手一抖把 `valueChanged` 打成了 `valuChanged`（少了个 e）。编译通过，运行也不报错——就是信号发了但槽永远不调用。你可能会花好几个小时排查逻辑，最后发现只是拼错了一个字母。换成函数指针语法之后，同样的拼写错误会在编译期直接报错，秒定位。所以从现在起，永远用 `&Sender::valueChanged` 这种写法，让编译器帮你守门。
-
-## 3.6 信号槽的连接管理
-
-信号槽连接是有生命周期的。默认情况下，如果发送者或接收者被销毁，连接会自动断开。这很合理——对象都没了，连接留着也没用。
-
-但有时候你需要手动断开连接，比如某个临时对象只关心一段时间的事件：
-
-```cpp
-QMetaObject::Connection conn = connect(sender, &Sender::someSignal, [](int value) {
-    // 一次性处理
-});
-
-// 处理完后断开
-disconnect(conn);
-```
-
-也可以用 `QObject::disconnect()` 的各种重载版本批量断开。这在重构代码或者临时屏蔽某些连接时很有用。
-
-## 4. 踩坑预防
-
-信号槽用起来很简单，但有些坑真的会让你血压拉满。我们一个一个来看。
-
-第一个坑：Lambda 捕获了已销毁的对象。这个坑在新手代码里出现频率极高。场景通常是这样的——你在一个函数里创建了 QLabel，用 Lambda 捕获了它的指针，连接到某个信号上。看起来一切正常，但问题是：如果这个 QLabel 在其他地方被删除了，而信号又恰好发射了，Lambda 里访问的就是野指针，直接崩溃。而且这种崩溃不是每次必现的，而是取决于信号什么时候发射、对象什么时候被删除，典型的偶发 bug，调起来能让人抓狂。
-
-正确做法有两个思路。一是在 connect 的时候把对象作为 context object 传进去，这样对象销毁时连接会自动断开。二是用 QPointer 这个 Qt 提供的弱指针包装器，在访问之前检查对象是否还有效。
-
-```cpp
-// 思路一：用 context object
-QLabel *label = new QLabel;
-connect(slider, &QSlider::valueChanged, label, [label](int value) {
-    if (label) label->setText(QString::number(value));
-});
-
-// 思路二：用 QPointer
-QPointer<QLabel> safeLabel = label;
-connect(slider, &QSlider::valueChanged, [safeLabel](int value) {
-    if (safeLabel) safeLabel->setText(QString::number(value));
-});
-```
-
-第二个坑：忘记 Q_OBJECT 宏。这个坑我们在上一篇已经详细说过了，但信号槽这里踩到的概率更大。因为很多新手写信号槽的时候，会先写 signals 和 connect，想着"先让功能跑起来再补 Q_OBJECT"。结果一跑，编译通过但信号永远连不上。所以还是那句话：继承 QObject 的第一件事就是加 Q_OBJECT 宏，没有例外。
-
-```cpp
-// 错误：没有 Q_OBJECT
-class MyButton : public QWidget {
-    Q_PROPERTY(int count READ count WRITE setCount)
-signals:
-    void clicked();
-};
-
-// 正确：必须加 Q_OBJECT
-class MyButton : public QWidget {
-    Q_OBJECT
-signals:
-    void clicked();
-};
-```
-
-第三个坑：跨线程直接调用 GUI 函数。这个坑的根源在于 Qt 的一个硬性规定——所有 GUI 操作必须在主线程执行。如果你在工作线程里直接调用 `label->setText("Done")`，程序可能会崩溃，可能会出现诡异的界面行为，也可能看起来暂时没事然后在某个不可预测的时刻爆炸。正确做法是通过信号槽让 Qt 自动处理跨线程调用：在工作线程里发射信号，在主线程的槽函数里更新 UI。Qt 的信号槽机制会自动识别线程差异，把调用安全地排队到目标线程执行。
-
-```cpp
-// 错误：在工作线程中直接操作 UI
-void WorkerThread::run() {
-    label->setText("Done");  // 崩溃！
-}
-
-// 正确：使用信号槽让 Qt 自动跨线程
-class WorkerThread : public QThread {
-    Q_OBJECT
-signals:
-    void textChanged(const QString &);
-};
-
-// 连接到主线程的槽
-connect(worker, &WorkerThread::textChanged,
-        label, &QLabel::setText);
-```
-
-第四个坑：重载信号的连接歧义。C++ 的函数重载在大多数场景下很好用，但在信号槽连接时会制造一个麻烦。比如 QSlider 有多个 `valueChanged` 重载，编译器看到 `&QSlider::valueChanged` 的时候不知道你指的是哪一个，直接报编译错误。解决办法是用 QOverload 显式指定你想要的那个重载版本，或者先用一个函数指针变量把地址取出来再连接。
+函数指针语法自己也有个小门槛：重载信号。QSlider 的 valueChanged 有重载时，`&QSlider::valueChanged` 让编译器犯了难——有好几个重载，您指的是哪个？直接报编译错误。用函数指针变量把地址取出来，或者 QOverload 显式指定，都行：
 
 ```cpp
 // 错误：编译器无法确定是哪个重载
@@ -243,49 +93,93 @@ connect(slider, QOverload<int>::of(&QSlider::valueChanged), [](int value) {
 });
 ```
 
-现在有一道调试题给大家。下面这段代码有什么问题？为什么信号发射后槽函数没有被调用？
+## 同步、异步与跨线程：谁来排队，Qt 说了算
+
+发射者和接收者同线程，默认同步——发射处阻塞到槽执行完，跟直接调函数没区别。跨线程时 Qt 自动转异步：发射立即返回，参数打包送到接收者线程排队执行。想显式控制也有：
 
 ```cpp
-class Downloader : public QObject {
-    Q_OBJECT
+// 强制同步（直接调用）
+connect(sender, &Sender::signal,
+        receiver, &Receiver::slot,
+        Qt::DirectConnection);
 
-public:
-    Downloader(QObject *parent = nullptr) : QObject(parent) {}
-
-    void startDownload() {
-        QTimer::singleShot(1000, this, [this]() {
-            emit downloadComplete("data downloaded");
-        });
-    }
-
-signals:
-    void downloadComplete(const QString &data);
-};
-
-// 使用处
-int main() {
-    Downloader downloader;
-    connect(&downloader, &Downloader::downloadComplete, [](const QString &data) {
-        qDebug() << "Received:" << data;
-    });
-
-    downloader.startDownload();
-    // 程序立即退出
-    return 0;
-}
+// 强制异步（排队执行）
+connect(sender, &Sender::signal,
+        receiver, &Receiver::slot,
+        Qt::QueuedConnection);
 ```
 
-问题出在事件循环上。QTimer::singleShot 是一个异步操作，它需要事件循环在运行才能触发。但 main() 函数在调用 startDownload() 之后直接 return 了，程序立即退出，事件循环根本没机会跑起来，所以那个 1 秒后的定时器回调永远不会执行。解决办法是在 startDownload() 之后加上 `QCoreApplication::exec()` 来启动事件循环，让程序保持运行，等信号真正发射后再退出。
+绝大多数场景让 Qt 自动判断就好。"自动"背后怎么认线程归属，是 [进阶篇 1.02](../../advanced/01-qtbase/02-signal-slot-advanced.md) 和 [专家篇 1.02 源码拆解](../../expert/01-qtbase/02-signal-slot-internals-expert.md) 的主菜，这里只要求会用，机制细节留给上面两篇。
 
-## 5. 练习项目
+异步这一端有个容易被忽视的前提：排队执行靠的是事件循环在转。空口说不直观，咱们动手看：配套示例在 `examples/beginner/01-qtbase/02-signal-slot-beginner/`（`cmake -B build && cmake --build build` 跑起来，七段输出对应七种用法）。做个实验：示例 5 里等定时器的那行 `QCoreApplication::processEvents();` 注释掉再跑，程序卡死在示例 5——事件不派发，`QTimer::singleShot` 的回调永远不来，`timerDone` 永远不翻转，while 循环空转。排队调用能不能落地，取决于事件循环在不在转，这个实验比文字描述直观。
 
-练习项目：简易计时器。我们要做一个小型桌面计时器应用，功能不多但正好练手。
+跨线程还有一条 Qt 的硬规定：所有 GUI 操作必须在主线程。您在工作线程里直接 `label->setText("Done")`，可能崩、可能界面诡异、也可能暂时没事然后在某个不可预测的时刻出错——而且崩溃位置常常不在碰 GUI 的那一行，排查难度翻倍。正确做法就是用信号槽：工作线程发信号，主线程的槽更新 UI，跨线程排队 Qt 自动做。
 
-我们要实现的功能是：启动、暂停、重置计时器，每秒更新显示的当前时间（格式 MM:SS），当计时达到指定时长时发出「超时」信号并打印提示。完成标准是程序能正确响应启动、暂停、重置操作，每秒准时更新显示，到达设定时间后能触发超时信号，代码结构清晰，信号槽连接合理，没有内存泄漏或崩溃风险。
+```cpp
+// 错误：在工作线程中直接操作 UI
+void WorkerThread::run() {
+    label->setText("Done");  // 崩！
+}
 
-提示几个关键点：用 QTimer 作为计时核心，连接它的 timeout 信号到更新显示的槽；需要维护一个「当前秒数」的状态变量，暂停时停止计时器但不重置这个值；超时判断可以在更新显示的槽里做，每次检查是否到达目标时间；启动、暂停、重置可以用三个不同的槽实现，或者一个带参数的槽。
+// 正确：使用信号槽让 Qt 自动跨线程
+class WorkerThread : public QThread {
+    Q_OBJECT
+signals:
+    void textChanged(const QString &);
+};
 
-## 6. 官方文档参考
+// 连接到主线程的槽
+connect(worker, &WorkerThread::textChanged,
+        label, &QLabel::setText);
+```
+
+## Lambda 作槽：捕获的对象必须活到信号发射
+
+```cpp
+QSlider *slider = new QSlider(Qt::Horizontal);
+QLabel *label = new QLabel;
+
+connect(slider, &QSlider::valueChanged, [&](int value) {
+    label->setText(QString("Value: %1").arg(value));
+});
+```
+
+`[&]` 把 label 的引用捕进来，直观好用，但问题也出在捕获上：捕获指针或引用时，得保证信号发射那一刻对象还活着。函数里 new 了个 QLabel、Lambda 捕获它的指针连上信号，函数返回后对象在别处被删，信号再发射时，Lambda 摸到的就是野指针——不然您会收获一个非常漂亮的 segfault。这种崩溃还是偶发的，取决于信号什么时候来、对象什么时候死，排查起来相当磨人。
+
+根子是连接的生命周期没人管，解法两条：connect 时把对象作为 context object 传进去，对象销毁连接自动断；或者用 QPointer 包装，访问前先验活。
+
+```cpp
+// 思路一：用 context object
+QLabel *label = new QLabel;
+connect(slider, &QSlider::valueChanged, label, [label](int value) {
+    if (label) label->setText(QString::number(value));
+});
+
+// 思路二：用 QPointer
+QPointer<QLabel> safeLabel = label;
+connect(slider, &QSlider::valueChanged, [safeLabel](int value) {
+    if (safeLabel) safeLabel->setText(QString::number(value));
+});
+```
+
+## 连接的生命周期
+
+连接不是永生的。发送者或接收者销毁，连接自动断——对象都没了，连接留着也没用。要手动管理时，connect 返回的句柄就是把手：
+
+```cpp
+QMetaObject::Connection conn = connect(sender, &Sender::someSignal, [](int value) {
+    // 一次性处理
+});
+
+// 处理完后断开
+disconnect(conn);
+```
+
+重构代码、临时屏蔽某条连接时用得上，其余时候交给自动断开就好。
+
+## 官方文档参考
+
+文中代码与行为均在 Qt 6.2+ / C++11 验证；Qt 5 迁移对照表见[环境搭建篇](../00-environment-setup/00-qt6-install-beginner.md)。
 
 [Qt 文档 · Signals & Slots](https://doc.qt.io/qt-6/signalsandslots.html) · 信号槽的官方完整说明，包含所有连接类型和高级用法
 
@@ -297,4 +191,4 @@ int main() {
 
 ---
 
-到这里，信号槽的基础你应该已经掌握了。记住几个核心点：用新式函数指针语法、Lambda 捕获注意对象生命周期、跨线程 GUI 操作用信号槽。这些足够你应对 80% 的日常开发场景了。接下来我们可以去看看 Qt 的字符串处理，或者继续深入对象树和内存管理。你决定。
+日常开发里八成的信号槽场景，本篇的内容够用了。想动手的，跑配套示例：把某条 connect 的参数改错，看编译器报什么；或按上文的实验把事件循环掐断，看程序卡在哪。下一篇 [1.3 字符串与编码](./03-string-encoding-beginner.md)，讲 QString 和编码的常见陷阱。
