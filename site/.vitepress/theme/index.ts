@@ -12,6 +12,7 @@ import CardGrid from './components/CardGrid.vue'
 import CardLink from './components/CardLink.vue'
 import FontSizeSwitcher from './components/FontSizeSwitcher.vue'
 import ResizableSidebar from './components/ResizableSidebar.vue'
+import SidebarRail from './components/SidebarRail.vue'
 import ReadingProgress from './components/ReadingProgress.vue'
 import ModuleCard from './components/ModuleCard.vue'
 import ChapterHero from './components/ChapterHero.vue'
@@ -24,7 +25,8 @@ export default {
     return h(DefaultTheme.Layout, null, {
       // 工作台外壳：网站 = 一个 Qt 桌面应用。标题栏经 --vp-layout-top-height
       // 由 VitePress 原生机制全链避让；状态栏 fixed 钉底（.Layout 已留 26px）。
-      'layout-top': () => [h(ReadingProgress), h(AppTitleBar), h(ResizableSidebar)],
+      // SidebarRail：左缘窄条，抽屉侧栏的桌面开关（issue #20）
+      'layout-top': () => [h(ReadingProgress), h(AppTitleBar), h(ResizableSidebar), h(SidebarRail)],
       'layout-bottom': () => h(StatusBar),
       // 首页 = Welcome 欢迎屏（index.md 零 hero/features frontmatter，零覆盖战）：
       // 交互演示（signal→slot 真控件复刻）→ 三层卡 → 示例画廊 → 编译输出 → 生态行。

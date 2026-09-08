@@ -506,12 +506,12 @@ kbd {
    ================================================================ */
 :root {
   --vp-sidebar-width: 272px;
-  --vp-aside-width: 256px;
 }
 
+/* 右大纲栏(TOC)固定宽:右栏拖拽功能已砍(抽屉化改版后右侧拖拽条被打回),不再消费变量 */
 .VPDoc.has-aside .aside {
-  width: var(--vp-aside-width);
-  max-width: var(--vp-aside-width);
+  width: 256px;
+  max-width: 256px;
 }
 
 .rs-handle {
@@ -520,7 +520,8 @@ kbd {
   bottom: 0;
   width: 6px;
   cursor: col-resize;
-  z-index: 50;
+  /* 抽屉 z-index 60:handle 要在抽屉右缘之上才可拖(仅 open 时显示,平时无感) */
+  z-index: 65;
   background: transparent;
   transition: background 0.2s ease, opacity 0.2s ease;
 }
@@ -535,14 +536,6 @@ kbd {
   opacity: 0.65;
 }
 
-.rs-handle--right {
-  position: absolute;
-  top: 0;
-  right: -3px;
-  bottom: 0;
-  width: 6px;
-}
-
 body.rs-resizing {
   user-select: none;
   cursor: col-resize;
@@ -555,6 +548,202 @@ body.rs-resizing * {
 @media (max-width: 959px) {
   .rs-handle {
     display: none !important;
+  }
+}
+
+/* ================================================================
+   全视口抽屉侧栏（issue #20，2026-09）
+   桌面/平板不再常驻避让：撤销 theme-default 对 --vp-sidebar-width 的
+   全链路 padding 消费，侧栏统一回到移动端抽屉形态——平时收起在左缘外，
+   拉出后悬浮覆盖正文（不挤压内容，长标题自适应宽度也无害）。
+   开关：左缘窄条 SidebarRail.vue（≥960）+ VPLocalNav 菜单按钮（<1280）。
+   ⚠ 本段全部是对 theme-default scoped 样式的覆盖（双类写法补特异性，
+   依赖 custom.css 晚于组件样式加载），升级 vitepress 需回归本段。
+   ================================================================ */
+
+/* 1. 侧栏本体：全视口统一「浮起圆角 panel」几何——四边留缝 + 圆角 + 大阴影，
+   不再是贴死左缘的全高竖条。宽度上限与 ResizableSidebar CONF.left.max 一致 */
+.VPSidebar.VPSidebar {
+  top: calc(var(--vp-layout-top-height, 0px) + 10px);
+  bottom: 10px;
+  left: 10px;
+  width: calc(100vw - 20px);
+  max-width: 480px;
+  border-radius: 14px;
+  border: 1px solid var(--vp-c-border);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+}
+
+/* ≥960px 撤销常驻/居中容器宽，回到抽屉态（滑入滑出同移动端） */
+@media (min-width: 960px) {
+  :root:root {
+    /* 桌面常驻态会降为 25（低于遮罩 50），抽屉必须盖住正文与遮罩 */
+    --vp-z-index-sidebar: 60;
+  }
+
+  .VPSidebar.VPSidebar {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition: opacity 0.5s, transform 0.25s ease;
+  }
+
+  .VPSidebar.VPSidebar.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    transition: opacity 0.25s,
+      transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  /* curtain 是常驻态把侧栏背景垫到顶栏下的补丁，抽屉模式用不上 */
+  .VPSidebar .curtain {
+    display: none;
+  }
+}
+
+/* ≥1440px 常驻态会把内容推到居中线，撤销大留白 padding */
+@media (min-width: 1440px) {
+  .VPSidebar.VPSidebar {
+    padding-left: 32px;
+  }
+}
+
+/* 2. 遮罩：≥1280px theme-default 会整个隐藏遮罩，放开让点击外部可关闭 */
+@media (min-width: 1280px) {
+  .VPBackdrop.VPBackdrop {
+    display: block;
+  }
+}
+:root:root {
+  /* 默认 0.6 太重，抽屉是轻量浮层，压到 0.3 */
+  --vp-backdrop-bg-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 3. 正文避让清零：侧栏不再占位，VPContent 恢复无侧栏的居中布局 */
+.VPContent.VPContent.has-sidebar {
+  margin: var(--vp-layout-top-height, 0px) auto 0;
+}
+
+@media (min-width: 960px) {
+  .VPContent.VPContent.has-sidebar {
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPContent.VPContent.has-sidebar {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* 正文行宽：常驻态行宽靠 VPContent 的 padding-left 控制，清零后正文可用全屏。
+   侧栏已悬浮不占位，行宽从原版 752/784 放宽到 864/896（中文 ~54 字/行），
+   并解除 has-aside 页 688px 的二次收紧。只限 content、不动 container——
+   container 在 ≥1280 是 flex（正文+右大纲栏），压它的 max-width 会让
+   两个 width:100% 的 flex 子项互相挤压，正文塌成 0px（实测）。 */
+@media (min-width: 960px) {
+  .VPDoc.VPDoc.has-sidebar .content.content {
+    max-width: 864px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPDoc.VPDoc.has-sidebar .content.content {
+    max-width: 896px;
+  }
+}
+
+.VPDoc.VPDoc.has-aside .content-container.content-container {
+  max-width: 848px;
+}
+
+@media (min-width: 1440px) {
+  .VPDoc.VPDoc.has-aside .content-container.content-container {
+    max-width: 880px;
+  }
+}
+
+/* 4. 顶栏避让清零：logo 区从 absolute 叠在侧栏上方恢复回正常文档流 */
+@media (min-width: 960px) {
+  /* theme-default ≥960 让整条 navbar 透明、白底靠常驻侧栏+右侧 content-body 垫；
+     侧栏悬浮后没有东西垫底，logo 区透出页面灰底——navbar 自己给整条背景，
+     并撤掉 content-body 的垫底（避免双层） */
+  .VPNavBar.VPNavBar:not(.home) {
+    background-color: var(--vp-nav-bg-color);
+  }
+
+  .VPNavBar.VPNavBar:not(.home.top) .content-body.content-body {
+    background-color: transparent;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .wrapper.wrapper {
+    padding: 0 32px;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .container.container {
+    max-width: calc(var(--vp-layout-max-width) - 64px);
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .title.title {
+    position: static;
+    padding: 0;
+    width: auto;
+    height: auto;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .content.content {
+    position: static;
+    padding-right: 32px;
+    padding-left: 0;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .divider.divider {
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPNavBar.VPNavBar.has-sidebar .title.title {
+    padding: 0;
+    width: auto;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .content.content {
+    padding-right: calc((100vw - var(--vp-layout-max-width)) / 2 + 32px);
+    padding-left: 0;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .divider.divider {
+    padding-left: 0;
+  }
+}
+
+/* 文档页顶栏 logo（"AwesomeQt 教程"）收起：品牌已由 AppTitleBar（IDE 标题栏）
+   承载，navbar 再挂一行属于信息重复；且侧栏常驻时代它叠在侧栏上方、视觉有归属，
+   抽屉化后独占顶栏钉在左上角显得突兀（issue #20 改版反馈）。首页不动。 */
+@media (min-width: 960px) {
+  .VPNavBar.VPNavBar:not(.home) .title.title {
+    display: none;
+  }
+}
+
+/* 5. 本地导航条（960~1279 显示）：撤销侧栏避让，「菜单」按钮即抽屉开关 */
+@media (min-width: 960px) {
+  .VPLocalNav.VPLocalNav.has-sidebar {
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPLocalNav.VPLocalNav.has-sidebar {
+    padding-left: 0;
+  }
+
+  /* outline 下拉原本定位在常驻侧栏右侧，改回左缘 */
+  .VPLocalNavOutlineDropdown .items.items {
+    left: 32px;
   }
 }
 

@@ -48,13 +48,14 @@ export const sharedBase = {
       {},
       `(function(){var m={xxsmall:'0.88',small:'0.94',normal:'1',large:'1.08',xxlarge:'1.16'};try{var s=localStorage.getItem('awesomeqt-font-size');document.documentElement.style.setProperty('--aq-font-scale',m[s]||'1');}catch(e){}})()`,
     ],
-    // 可拖拽侧栏首屏防闪：hydration 前从 localStorage 还原左右栏宽度 CSS 变量。
-    // 左栏 272 只是近似值——挂载后 ResizableSidebar 会按当前卷最长条目自适应实测（未存过宽度时）。
-    // 与 theme/components/ResizableSidebar.vue 的 CONF（key=vp-sidebar-width/vp-aside-width）一致。
+    // 可拖拽抽屉侧栏首屏防闪：hydration 前从 localStorage 还原宽度 CSS 变量。
+    // 272 只是近似值——挂载后 ResizableSidebar 会按当前卷最长条目自适应实测（未存过宽度时）。
+    // 与 theme/components/ResizableSidebar.vue 的 CONF（key=vp-sidebar-width）一致。
+    // （右大纲栏拖拽已砍，TOC 固定 256，不再注入 --vp-aside-width。）
     [
       'script',
       {},
-      `(function(){try{var w=parseInt(localStorage.getItem('vp-sidebar-width'));if(!w||w<200||w>480){w=272;}document.documentElement.style.setProperty('--vp-sidebar-width',w+'px');var a=parseInt(localStorage.getItem('vp-aside-width'));if(!a||a<180||a>360){a=256;}document.documentElement.style.setProperty('--vp-aside-width',a+'px');}catch(e){}})()`,
+      `(function(){try{var w=parseInt(localStorage.getItem('vp-sidebar-width'));if(!w||w<200||w>480){w=272;}document.documentElement.style.setProperty('--vp-sidebar-width',w+'px');}catch(e){}})()`,
     ],
   ],
 }

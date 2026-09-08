@@ -1,133 +1,111 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 
-// 可拖拽侧栏宽度:左导航树 + 右大纲栏(TOC)。
-// 左栏 --vp-sidebar-width 由 VitePress 全链路消费(sidebar 自身 / 正文 padding-left / 顶栏对齐),
-//   改这一个变量即全联动。但 handle 的定位与拖动计算必须读 .VPSidebar 的实际几何 —— 宽屏
-//   (≥1440px)布局居中,sidebar 左缘非 0、右缘带 (vw-maxW)/2 偏移,且受滚动条宽度影响,
-//   CSS 公式推算总有小偏差。故 left 一律用 JS 读 getBoundingClientRect 精确设定(与右 handle 同策略)。
-// 左栏默认宽度不写死:按当前卷 sidebar 最宽条目文字实测 + 留白 + buffer 动态求值
+// 可拖拽抽屉侧栏宽度(仅左栏;右大纲栏 TOC 固定 256px,不再提供拖拽——
+// 全视口抽屉化改版后右侧孤零零一条拖拽条被打回,功能低频直接砍掉)。
+// 左栏 --vp-sidebar-width 由 VitePress 全链路消费(sidebar 自身宽度),改这一个变量即联动。
+// handle 是 fixed 竖条、贴抽屉右缘:定位与拖动计算读 .VPSidebar 实际几何,仅抽屉
+//   打开时显示(class 感知靠单独的 VPSidebar attribute observer,它与 .VPContent 平级)。
+// 默认宽度不写死:按当前卷 sidebar 最宽条目文字实测 + 留白 + buffer 动态求值
 //   (用户拖过并存了宽度 = 有明确偏好,保存值优先;双击重置即恢复自适应并清掉保存值)。
-// 右栏 --vp-aside-width 自定义变量(在 custom.css 覆盖 aside max-width);右 handle absolute
-//   注入 aside 内,MutationObserver 在路由切换重建 aside 时重新注入。
 // 宽度持久化 localStorage;首屏防闪由 config head 内联脚本(hydration 前注入 272 近似值)负责。
 
-type Side = 'left' | 'right'
 interface Dim { min: number; max: number; def: number; key: string; cssVar: string }
 
-const CONF: Record<Side, Dim> = {
-  left: { min: 200, max: 480, def: 272, key: 'vp-sidebar-width', cssVar: '--vp-sidebar-width' },
-  right: { min: 180, max: 360, def: 256, key: 'vp-aside-width', cssVar: '--vp-aside-width' },
-}
+const CONF: Dim = { min: 200, max: 480, def: 272, key: 'vp-sidebar-width', cssVar: '--vp-sidebar-width' }
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
 
 /** 读用户保存的宽度;没有或非法返回 null */
-function savedWidth(side: Side): number | null {
+function savedWidth(): number | null {
   try {
-    const v = parseInt(localStorage.getItem(CONF[side].key) || '')
-    return v >= CONF[side].min && v <= CONF[side].max ? v : null
+    const v = parseInt(localStorage.getItem(CONF.key) || '')
+    return v >= CONF.min && v <= CONF.max ? v : null
   } catch {
     return null
   }
 }
 
 /**
- * 左栏自适应默认宽度:实测当前 sidebar 最宽条目文字右缘(含嵌套缩进;text 带
+ * 自适应默认宽度:实测当前 sidebar 最宽条目文字右缘(含嵌套缩进;text 带
  * 省略号截断,scrollWidth-clientWidth 补回被截掉的部分)+ 右侧留白 32 + buffer 14
  * (字体渲染差异/滚动条余量),夹在 [min,max]。测不到回退 272。
  * 换卷 sidebar 内容不同,路由变化后要重测。
  */
 function measureLeftDefault(): number {
   const sb = document.querySelector('.VPSidebar') as HTMLElement | null
-  if (!sb) return CONF.left.def
+  if (!sb) return CONF.def
   const base = sb.getBoundingClientRect().left
   let maxRight = 0
   sb.querySelectorAll<HTMLElement>('.VPSidebarItem .text').forEach((t) => {
     const w = t.getBoundingClientRect().right + (t.scrollWidth - t.clientWidth) - base
     if (w > maxRight) maxRight = w
   })
-  if (maxRight <= 0) return CONF.left.def
-  return clamp(Math.ceil(maxRight + 32 + 14), CONF.left.min, CONF.left.max)
+  if (maxRight <= 0) return CONF.def
+  return clamp(Math.ceil(maxRight + 32 + 14), CONF.min, CONF.max)
 }
 
 const leftHandle = ref<HTMLElement | null>(null)
-const RIGHT_HANDLE_ID = 'rs-right-handle'
 
-const applyVar = (side: Side, px: number) =>
-  document.documentElement.style.setProperty(CONF[side].cssVar, px + 'px')
-const persist = (side: Side, px: number) => {
-  try { localStorage.setItem(CONF[side].key, String(px)) } catch { /* 隐私模式 / 配额 */ }
+const applyVar = (px: number) =>
+  document.documentElement.style.setProperty(CONF.cssVar, px + 'px')
+const persist = (px: number) => {
+  try { localStorage.setItem(CONF.key, String(px)) } catch { /* 隐私模式 / 配额 */ }
 }
 
-interface DragCtx {
-  side: Side
-  dim: Dim
+let drag: {
   lastV: number
   handle: HTMLElement
   onMove: (e: MouseEvent) => void
   onUp: () => void
-}
-let drag: DragCtx | null = null
+} | null = null
 
-function startDrag(side: Side, e: MouseEvent) {
+function startDrag(e: MouseEvent) {
   e.preventDefault()
-  const dim = CONF[side]
   const handle = e.currentTarget as HTMLElement
   handle.classList.add('is-active')
   document.body.classList.add('rs-resizing')
 
-  // 用「位移」而非「绝对坐标」算新宽度。居中布局(≥1440px)下 sidebar 容器 left:0 但视觉
-  // nav 树因居中留白偏右,getBoundingClientRect/offsetLeft 都是容器几何、不代表 nav 树视觉
-  // 位置,按绝对坐标算会多算居中偏移导致宽度暴涨(线上曾遮挡正文)。位移法与布局无关,恒正确。
+  // 用「位移」而非「绝对坐标」算新宽度,与布局无关恒正确。
   const startX = e.clientX
   const startWidth =
-    parseInt(getComputedStyle(document.documentElement).getPropertyValue(dim.cssVar)) || dim.def
+    parseInt(getComputedStyle(document.documentElement).getPropertyValue(CONF.cssVar)) || CONF.def
 
   const onMove = (ev: MouseEvent) => {
-    const delta = ev.clientX - startX
-    // 左栏:鼠标右移加宽;右栏:鼠标左移加宽(右栏左缘向左拖)
-    const v = clamp(
-      Math.round(side === 'left' ? startWidth + delta : startWidth - delta),
-      dim.min,
-      dim.max
-    )
+    const v = clamp(Math.round(startWidth + (ev.clientX - startX)), CONF.min, CONF.max)
     if (drag) drag.lastV = v
-    applyVar(side, v)
-    if (side === 'left' && drag?.handle) {
+    applyVar(v)
+    if (drag?.handle) {
       drag.handle.style.left = ev.clientX + 'px' // handle 跟随鼠标(按下点在右缘,故 = 新右缘)
     }
   }
   const onUp = () => {
-    if (drag) persist(side, drag.lastV)
+    if (drag) persist(drag.lastV)
     handle.classList.remove('is-active')
     document.body.classList.remove('rs-resizing')
     document.removeEventListener('mousemove', onMove)
     document.removeEventListener('mouseup', onUp)
     drag = null
-    if (side === 'left') updateLeftPosition() // 拖动结束重新精确对齐(offsetLeft+offsetWidth)
+    updateLeftPosition() // 拖动结束重新精确对齐(offsetLeft+offsetWidth)
   }
-  drag = { side, dim, lastV: startWidth, handle, onMove, onUp }
+  drag = { lastV: startWidth, handle, onMove, onUp }
   document.addEventListener('mousemove', onMove)
   document.addEventListener('mouseup', onUp)
 }
 
-function reset(side: Side) {
-  if (side === 'left') {
-    // 双击重置 = 回到自适应默认,并清掉保存值 → 内容增长后继续自适应
-    applyVar('left', measureLeftDefault())
-    try { localStorage.removeItem(CONF.left.key) } catch { /* 隐私模式 */ }
-  } else {
-    applyVar(side, CONF[side].def)
-    persist(side, CONF[side].def)
-  }
-  if (side === 'left') updateLeftPosition()
+function reset() {
+  // 双击重置 = 回到自适应默认,并清掉保存值 → 内容增长后继续自适应
+  applyVar(measureLeftDefault())
+  try { localStorage.removeItem(CONF.key) } catch { /* 隐私模式 */ }
+  updateLeftPosition()
 }
 
-// 仅在有侧栏的页(文档页)显示左 handle;首页等无侧栏页隐藏
+// 仅在抽屉打开时显示左 handle;收起时隐藏(侧栏在屏外,handle 不能悬在正文上)
 function updateLeftVisibility() {
   if (!leftHandle.value) return
-  leftHandle.value.style.display = document.querySelector('.VPSidebar') ? '' : 'none'
+  const sb = document.querySelector('.VPSidebar')
+  leftHandle.value.style.display =
+    sb && sb.classList.contains('open') ? '' : 'none'
 }
 
 // 左 handle 精确定位:用 offsetLeft + offsetWidth(不含 transform),避开 sidebar 入场过渡
@@ -138,53 +116,52 @@ function updateLeftPosition() {
   if (sb) leftHandle.value.style.left = (sb.offsetLeft + sb.offsetWidth) + 'px'
 }
 
-function injectRightHandle() {
-  const aside = document.querySelector('.VPDoc.has-aside .aside') as HTMLElement | null
-  if (!aside || aside.querySelector('#' + RIGHT_HANDLE_ID)) return
-  const handle = document.createElement('div')
-  handle.id = RIGHT_HANDLE_ID
-  handle.className = 'rs-handle rs-handle--right'
-  handle.setAttribute('role', 'separator')
-  handle.setAttribute('aria-orientation', 'vertical')
-  handle.setAttribute('aria-label', '拖动调整右侧大纲栏宽度(双击重置)')
-  handle.addEventListener('mousedown', (ev) => startDrag('right', ev))
-  handle.addEventListener('dblclick', () => reset('right'))
-  aside.style.position = 'relative'
-  aside.appendChild(handle)
-}
-
 let observer: MutationObserver | null = null
 let leftTimer = 0
+
+// 抽屉开合是 .VPSidebar 上的 class 切换(open),而它与 .VPContent 平级——
+// 下面的 VPContent observer 监听不到。单独给 .VPSidebar 挂 attribute 观察,
+// 元素重建时(v-if 切换)由 VPContent 的 childList 回调重新绑定。
+let sbObserver: MutationObserver | null = null
+let watchedSb: Element | null = null
+function watchSidebarElement() {
+  const sb = document.querySelector('.VPSidebar')
+  if (sb === watchedSb) return
+  watchedSb = sb
+  sbObserver?.disconnect()
+  if (sb && 'MutationObserver' in window) {
+    if (!sbObserver) sbObserver = new MutationObserver(onMutate)
+    sbObserver.observe(sb, { attributes: true, attributeFilter: ['class'] })
+  }
+}
 
 // 自适应默认宽度:rAF 去抖地重测(路由换卷 sidebar 重建时 MutationObserver 高频触发,
 // 每次都量 ~200 个 text 节点会抖布局)。用户存过宽度就不测。
 let measureQueued = false
 function queueMeasureLeftDefault() {
-  if (measureQueued || savedWidth('left') !== null) return
+  if (measureQueued || savedWidth() !== null) return
   measureQueued = true
   requestAnimationFrame(() => {
     measureQueued = false
-    applyVar('left', measureLeftDefault())
+    applyVar(measureLeftDefault())
     updateLeftPosition()
   })
 }
 
 const onMutate = () => {
+  watchSidebarElement()
   updateLeftVisibility()
   updateLeftPosition()
-  injectRightHandle()
   queueMeasureLeftDefault()
 }
 
 onMounted(() => {
-  // 恢复已存宽度(防闪脚本已在首屏注入近似值);左栏没存过 → 立即按内容实测自适应
-  ;(['left', 'right'] as Side[]).forEach((side) => {
-    const v = savedWidth(side)
-    if (v !== null) applyVar(side, v)
-  })
+  // 恢复已存宽度(防闪脚本已在首屏注入近似值);没存过 → 立即按内容实测自适应
+  const v = savedWidth()
+  if (v !== null) applyVar(v)
   queueMeasureLeftDefault()
   onMutate()
-  // sidebar 桌面端有 transform 入场过渡(translateX(-100%)→0,约 0.25s),过渡中
+  // sidebar 打开有 transform 入场过渡(translateX(-100%)→0,约 0.25s),过渡中
   // getBoundingClientRect 偏左,导致 handle 初始错位(拖动后才贴合)。
   // 多时机补校准,确保首屏即贴合:下一帧 / 过渡结束后(~350ms)/ 页面 load 后。
   requestAnimationFrame(updateLeftPosition)
@@ -196,17 +173,24 @@ onMounted(() => {
   const root = document.querySelector('.VPContent') || document.body
   if ('MutationObserver' in window) {
     observer = new MutationObserver(onMutate)
-    observer.observe(root, { childList: true, subtree: true })
+    observer.observe(root, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class'],
+    })
   }
 })
 
 onBeforeUnmount(() => {
   observer?.disconnect()
   observer = null
+  sbObserver?.disconnect()
+  sbObserver = null
+  watchedSb = null
   window.clearTimeout(leftTimer)
   window.removeEventListener('resize', updateLeftPosition)
   window.removeEventListener('load', updateLeftPosition)
-  document.querySelectorAll('#' + RIGHT_HANDLE_ID).forEach((n) => n.remove())
   if (drag) {
     document.removeEventListener('mousemove', drag.onMove)
     document.removeEventListener('mouseup', drag.onUp)
@@ -221,8 +205,8 @@ onBeforeUnmount(() => {
     class="rs-handle rs-handle--left"
     role="separator"
     aria-orientation="vertical"
-    aria-label="拖动调整左侧导航栏宽度(双击重置)"
-    @mousedown="startDrag('left', $event)"
-    @dblclick="reset('left')"
+    aria-label="拖动调整侧栏宽度(双击重置)"
+    @mousedown="startDrag($event)"
+    @dblclick="reset"
   ></div>
 </template>
