@@ -17,7 +17,7 @@ interface Dim { min: number; max: number; def: number; key: string; cssVar: stri
 
 const CONF: Record<Side, Dim> = {
   left: { min: 200, max: 480, def: 272, key: 'vp-sidebar-width', cssVar: '--vp-sidebar-width' },
-  right: { min: 180, max: 360, def: 256, key: 'vp-aside-width', cssVar: '--vp-aside-width' },
+  right: { min: 184, max: 320, def: 248, key: 'vp-aside-width', cssVar: '--vp-aside-width' },
 }
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v))
@@ -35,7 +35,9 @@ function savedWidth(side: Side): number | null {
 /**
  * 左栏自适应默认宽度:实测当前 sidebar 最宽条目文字右缘(含嵌套缩进;text 带
  * 省略号截断,scrollWidth-clientWidth 补回被截掉的部分)+ 右侧留白 32 + buffer 14
- * (字体渲染差异/滚动条余量),夹在 [min,max]。测不到回退 272。
+ * (字体渲染差异/滚动条余量),夹在 [min,动态上限]。测不到回退 272。
+ * 动态上限 = min(320, max(272, 视口/6)):超长标题靠 ellipsis 收口，避免侧栏
+ * 为单个标题吞掉正文空间。拖拽/存储范围仍是固定 [200,480]，用户明确偏好优先。
  * 换卷 sidebar 内容不同,路由变化后要重测。
  */
 function measureLeftDefault(): number {
@@ -48,7 +50,8 @@ function measureLeftDefault(): number {
     if (w > maxRight) maxRight = w
   })
   if (maxRight <= 0) return CONF.left.def
-  return clamp(Math.ceil(maxRight + 32 + 14), CONF.left.min, CONF.left.max)
+  const dynamicMax = Math.min(320, Math.max(CONF.left.def, Math.floor(window.innerWidth / 6)))
+  return clamp(Math.ceil(maxRight + 32 + 14), CONF.left.min, dynamicMax)
 }
 
 const leftHandle = ref<HTMLElement | null>(null)

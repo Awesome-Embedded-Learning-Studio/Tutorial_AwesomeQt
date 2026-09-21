@@ -39,43 +39,42 @@ import { layerCards } from './home-data'
 
 <style scoped>
 .layers {
-  padding-top: 40px;
-  padding-bottom: 8px;
+  padding-top: 50px;
+  padding-bottom: 16px;
 }
 
 .layers__head {
-  margin: 0 0 16px;
+  margin: 0 0 18px;
 }
 
 .layers__grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 0;
+  border-top: 1px solid var(--vp-c-border);
+  border-bottom: 1px solid var(--vp-c-divider);
 }
 
-/* QGroupBox 形态：面板底 + 顶部彩色边 */
+/* 教程层级像一张目录表：共享边界，避免三张浮起的卡片。 */
 .layers__card {
   display: block;
-  padding: 20px 20px 16px;
-  border: 1px solid var(--ide-border);
-  border-top: 3px solid var(--vp-c-brand-1);
-  border-radius: 6px;
-  background: var(--ide-panel-bg);
+  padding: 26px 28px 22px;
+  border-right: 1px solid var(--vp-c-divider);
+  background: transparent;
   text-decoration: none !important;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: background-color 0.18s ease;
+}
+
+.layers__card:last-child {
+  border-right: 0;
 }
 
 .layers__card:hover {
-  border-color: var(--vp-c-brand-1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  background: var(--vp-c-bg-soft-up);
 }
 
 .layers__card--wip {
-  border-top-color: var(--aq-c-eng-1);
-}
-
-.layers__card--wip:hover {
-  border-color: var(--aq-c-eng-1);
+  background: color-mix(in srgb, var(--aq-c-eng-soft) 45%, transparent);
 }
 
 .layers__label {
@@ -88,8 +87,8 @@ import { layerCards } from './home-data'
 }
 
 .layers__title {
-  margin: 0 0 6px;
-  font-size: 22px;
+  margin: 0 0 8px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--vp-c-text-1);
 }
@@ -103,8 +102,8 @@ import { layerCards } from './home-data'
 }
 
 .layers__subtitle {
-  margin: 0 0 16px;
-  font-size: 13px;
+  margin: 0 0 22px;
+  font-size: 14px;
   line-height: 1.7;
   color: var(--vp-c-text-2);
   min-height: 44px;
@@ -121,7 +120,7 @@ import { layerCards } from './home-data'
   display: inline-block;
   margin-right: 8px;
   padding: 1px 8px;
-  border-radius: 8px;
+  border-radius: 2px;
   background: var(--aq-c-eng-soft);
   color: var(--aq-c-eng-1);
   font-size: 10.5px;
@@ -135,6 +134,16 @@ import { layerCards } from './home-data'
 @media (max-width: 959px) {
   .layers__grid {
     grid-template-columns: 1fr;
+  }
+
+  .layers__card,
+  .layers__card:last-child {
+    border-right: 0;
+    border-bottom: 1px solid var(--vp-c-divider);
+  }
+
+  .layers__card:last-child {
+    border-bottom: 0;
   }
 
   .layers__subtitle {

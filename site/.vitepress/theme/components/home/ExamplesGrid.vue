@@ -70,7 +70,7 @@ const shown = computed(() =>
 
 <style scoped>
 .examples {
-  padding-top: 48px;
+  padding-top: 56px;
 }
 
 .examples__head {
@@ -84,17 +84,21 @@ const shown = computed(() =>
 
 .examples__chips {
   display: flex;
-  gap: 6px;
+  gap: 0;
   overflow-x: auto;
-  padding-bottom: 2px;
+  border: 1px solid var(--ide-border);
+  border-radius: 3px;
+  background: var(--ide-panel-bg);
 }
 
 .examples__chip {
   flex-shrink: 0;
-  padding: 3px 12px;
-  border: 1px solid var(--ide-border);
-  border-radius: 12px;
-  background: var(--ide-panel-bg);
+  min-height: 30px;
+  padding: 3px 13px;
+  border: 0;
+  border-right: 1px solid var(--ide-border);
+  border-radius: 0;
+  background: transparent;
   font-family: var(--aq-mono);
   font-size: 11.5px;
   color: var(--vp-c-text-2);
@@ -103,15 +107,18 @@ const shown = computed(() =>
 }
 
 .examples__chip:hover:not(:disabled) {
-  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-bg-soft);
   color: var(--vp-c-brand-1);
 }
 
 .examples__chip.is-active {
-  border-color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-1);
+  color: #fff;
   font-weight: 600;
+}
+
+.examples__chip:last-child {
+  border-right: 0;
 }
 
 .examples__chip:disabled {
@@ -122,23 +129,23 @@ const shown = computed(() =>
 .examples__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 .examples__tile {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--ide-border);
-  border-radius: 6px;
+  border-radius: 3px;
   background: var(--ide-panel-bg);
   overflow: hidden;
   text-decoration: none !important;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
 }
 
 .examples__tile:hover {
   border-color: var(--vp-c-brand-1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  background: var(--vp-c-bg-soft-up);
 }
 
 .examples__thumb {
@@ -158,18 +165,12 @@ const shown = computed(() =>
   display: flex;
   align-items: center;
   justify-content: center;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--vp-c-bg-soft),
-    var(--vp-c-bg-soft) 8px,
-    var(--vp-c-bg-mute) 8px,
-    var(--vp-c-bg-mute) 9px
-  );
+  background: var(--vp-c-bg-soft);
 }
 
 .examples__thumb-glyph {
-  font-size: 30px;
-  font-weight: 700;
+  font-size: 34px;
+  font-weight: 650;
   color: var(--vp-c-text-3);
   opacity: 0.6;
 }
@@ -198,7 +199,7 @@ const shown = computed(() =>
   font-style: normal;
   padding: 0 6px;
   border: 1px solid var(--ide-border);
-  border-radius: 3px;
+  border-radius: 2px;
   font-family: var(--aq-mono);
   font-size: 10px;
   color: var(--vp-c-text-3);

@@ -60,14 +60,18 @@ export const codeFoldPlugin: PluginSimple = (md: MarkdownIt) => {
     const lineCount = body === '' ? 0 : body.split('\n').length
     if (lineCount <= FOLD_THRESHOLD) return html
 
-    // 双 summary（vp-cf-closed / vp-cf-open）配 CSS :has(details[open]) 切文案。
-    const closedLabel = `展开代码 <em>(共 ${lineCount} 行)</em>`
+    // summary 四格 grid（icon + 标题 + 行数徽章 + chevron），配 CSS :has(details[open]) 切文案。
+    // icon 纯装饰（aria-hidden），chevron 由 CSS ::after 出；样式见 theme/article-code.css。
+    const closedLabel = '展开代码'
     const openLabel = '收起代码'
+    const countLabel = `${lineCount} 行`
 
     return (
       `<div class="vp-code-fold" data-lines="${lineCount}">` +
-      `<details><summary><span class="vp-cf-closed">${closedLabel}</span>` +
-      `<span class="vp-cf-open">${openLabel}</span></summary></details>` +
+      `<details><summary><span class="vp-cf-icon" aria-hidden="true"></span>` +
+      `<span class="vp-cf-title"><span class="vp-cf-closed">${closedLabel}</span>` +
+      `<span class="vp-cf-open">${openLabel}</span></span>` +
+      `<span class="vp-cf-count">${countLabel}</span></summary></details>` +
       html +
       `</div>`
     )

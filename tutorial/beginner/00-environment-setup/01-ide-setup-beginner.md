@@ -1,217 +1,121 @@
 ---
-title: "0.1 IDE 配置全指南"
-description: "老实说，我第一次用 VS Code 跑 Qt 项目的时候，对着满屏的红色波浪线差点砸键盘。智能提示不工作、找不到头文件、CMake 配置报错——这些问题每一个都够让人崩溃的。"
+title: "0.1 IDE 配置"
+description: "VS Code、CLion、Qt Creator 三家 IDE 接上 Qt 工具链的方法。真正的配置只有两件事：告诉 IDE 用哪套编译器（VS Code 的 Kit / CLion 的 Toolchain / Qt Creator 的 Kit 三件套），再告诉它 Qt 装在哪（CMAKE_PREFIX_PATH，三家入口不同、填的是同一个值）。含智能提示自动注入、launch.json 调试配置、QString 的 pretty-printer、connect 日志开关与断点落点。"
 ---
 
-# 现代Qt开发教程（新手篇）0.1——IDE 配置全指南
+# 现代Qt开发教程（新手篇）0.1——IDE 配置
 
-## 1. 前言：为什么 IDE 配置能折腾死人
+同一个 Qt 工程，命令行里 `cmake -B build` 一把通过，进了 VS Code 满屏红色波浪线，`#include <QApplication>` 底下还画着"找不到头文件"。第一次见这场面的朋友多半会怀疑 IDE 坏了。IDE 没坏，它只是被蒙在鼓里：不知道 Qt 的头文件在哪，也不知道该用哪套编译器。把这两样告诉它，波浪线自己会退。这一篇咱们就干这件事，VS Code、CLion、Qt Creator 三家，各把工具链接上。
 
-老实说，我第一次用 VS Code 跑 Qt 项目的时候，对着满屏的红色波浪线差点砸键盘。智能提示不工作、找不到头文件、CMake 配置报错——这些问题每一个都够让人崩溃的。
+动 IDE 之前有个顺序要立住：命令行先通。上一篇装好的 Qt 6.9.1，`qmake --version` 有输出、`cmake --version` 可用，随便一个小工程能配置成功，再进 IDE。这么排序的道理很实际——命令行通了，IDE 里再出报错，咱们就能断定问题在配置；命令行没通就先折腾 IDE，两边的报错混在一起，谁也说不清。
 
-后来我才发现，问题不是 IDE 不好用，而是我根本没配对。Qt 的开发环境确实有点特殊：有 MOC、有 RCC、有 UIC，再加上 CMake 的各种变量，配错一个地方整条链就断了。
+## VS Code：两个插件，一条路径
 
-所以这一篇我们不是走马观花，而是真的要把三个主流 IDE（VS Code、CLion、Qt Creator）的配置彻底搞明白。你可以选一个自己喜欢的主力，另外两个备用——毕竟总有那么些时候，主力 IDE 突然抽风，有个备用能救命。
+插件装两个，都认 Microsoft 的：C/C++ 管智能提示、跳转和调试，CMake Tools 管 Kit 选择、CMake 配置和构建入口。市场里搜 CMake 会冒出一堆第三方插件，名字像、功能重叠，装混了互相打架，出了怪问题还容易赖到代码头上，装的时候认准发布者。另外 Qt 官方自己也在市场上架了 Qt C++ 扩展（2024 年起），CMake 集成、Qt 类型调试、Designer 界面编辑打包在一起，您想一站式可以试；本篇咱们仍走两个基础插件，出问题时排查面最小。
 
-现在我们要做的是：选好你的武器，把它调教到能顺滑地写 Qt 代码。
+Kit 是 CMake Tools 给“一套编译器”起的名字。`Ctrl+Shift+P` 敲 `CMake: Select a Kit`，咱们按环境挑：MSVC 选带 amd64 字样的 Visual Studio 项，MinGW 选 GCC x86_64-w64-mingw32，Linux 和 WSL2 选 GCC x86_64-linux-gnu。
 
-## 2. 环境说明
-
-本篇假设你已经完成了上一篇的 Qt 安装，并且 Qt 6.9.1 已安装（`qmake --version` 能看到版本号）、CMake 可用（`cmake --version` 输出 3.26 以上）、编译器已就位（Windows 上是 MSVC 或 MinGW，Linux 上是 GCC）。
-
-我们会分别配置三个 IDE，你可以按需跳跃到感兴趣的部分。
-
-无论选哪个 IDE，确保先在命令行能成功编译一个 Qt 工程。IDE 只是包装，底层工具链才是核心。命令行跑不通，IDE 配再花也没用。
-
-## 3. VS Code 配置
-
-### 3.1 必装插件
-
-VS Code 装好之后，你至少需要这几个插件。
-
-首先是 C/C++，微软官方出的那个——认准发布者是 Microsoft，别看到名字像的就装，最后装了一堆重复功能的插件互相打架，你还以为是代码的问题。这个插件管智能提示、语法高亮、跳转定义，基本上没有它你就只能写纯文本。
-
-然后是 CMake Tools，发布者是 twxs。这是个神器，有了它你才能在 VS Code 里管理 CMake 项目、一键构建调试，不用它你会累死。Qt C++ Helpers 可装可不装，但它能提供信号槽语法高亮和 .ui 文件预览，写 Qt 项目的时候确实贴心。
-
-### 3.2 CMake 工具链配置
-
-VS Code 的 CMake Tools 插件需要知道你的编译器和 Qt 在哪里。
-
-打开任意 CMake 项目（或者新建一个），按下 `Ctrl+Shift+P`，输入 `CMake: Select a Kit`。第一次运行它会让你选择编译器：Windows MSVC 选 Visual Studio Community 2019 Release - amd64，Windows MinGW 选 GCC x86_64-w64-mingw32，Linux 和 WSL2 选 GCC x86_64-linux-gnu。
-
-然后需要设置 Qt 的路径。同样是 `Ctrl+Shift+P`，输入 `CMake: Configure Args`，添加以下参数：
-
-```cmake
--DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64
-# Linux 下改成：
--DCMAKE_PREFIX_PATH=/home/你的用户名/Qt/6.9.1/gcc_64
-```
-
-这个配置会保存到 `.vscode/cmake-kits.json` 里，不用每次都设。
-
-### 3.3 智能提示配置（c_cpp_properties.json）
-
-VS Code 的智能提示需要知道 Qt 的头文件在哪里。按 `Ctrl+Shift+P`，输入 `C/C++: Edit Configurations (UI)`，在 "Include path" 里添加：
+咱们接下来把 Qt 的位置告诉它。这步漏了的话，配置项目时会停在 "Could not find Qt6"——`find_package` 不知道 Qt 装在哪，IDE 的报错又不会直说，人就容易对着界面干着急。出路是给 CMake 传 CMAKE_PREFIX_PATH，VS Code 里落在 settings.json：
 
 ```json
-[
-    "${workspaceFolder}/**",
-    "C:/Qt/6.9.1/mingw_64/include",
-    "C:/Qt/6.9.1/mingw_64/include/QtCore",
-    "C:/Qt/6.9.1/mingw_64/include/QtWidgets",
-    "C:/Qt/6.9.1/mingw_64/include/QtGui"
-]
+// .vscode/settings.json
+{
+    "cmake.configureSettings": {
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.9.1/mingw_64"
+    }
+}
 ```
 
-Linux 路径同理调整。配置完后，你会看到红色的波浪线消失，`#include <QApplication>` 不再报错。
+Linux 换成 `/home/您的用户名/Qt/6.9.1/gcc_64`。网上教程给这步的写法五花八门，Configure Args、variants、CMake Presets 都能到同一个地方，咱们认准目的就行：把 Qt 的安装前缀交给 CMake。
 
-你可能会问，为什么 VS Code 需要配置 CMAKE_PREFIX_PATH？不配会怎样？其实道理很简单——CMAKE_PREFIX_PATH 告诉 CMake 去哪里找 Qt 的库文件和 CMake 配置文件。不配的话 `find_package(Qt6)` 会找不到，整条构建链就断了，CMake 会直接报错 "Could not find Qt6"，然后你对着报错一脸茫然。
+智能提示这一步，咱们不用照老教程一个个抄 include 路径。CMake Tools 配置完项目后，C/C++ 扩展可以直接从它手里拿每个文件的编译参数，Qt 头文件的位置自动就有了：
 
-### 3.4 调试配置（launch.json）
+```json
+// 同样在 .vscode/settings.json
+{
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+}
+```
 
-按 F5 调试时，VS Code 会读取 `.vscode/launch.json`。CMake Tools 会自动生成一个，但你可能需要微调：
+咱们存盘，重新配置一次项目，波浪线应该退干净。真有残留，再用 `C/C++: Edit Configurations (UI)` 手动往 Include path 里补 Qt 的几个 include 目录，属于兜底手段。
+
+调试按 F5，VS Code 这时读的是 `.vscode/launch.json`。咱们从 CMake Tools 生成的模板起步就够，关键是 program 一项指向构建产物：
 
 ```json
 {
-    "version": "0.2.0",
-    "configurations": [
+    "name": "Debug Qt App",
+    "type": "cppdbg",
+    "request": "launch",
+    "program": "${command:cmake.launchTargetPath}",
+    "args": [],
+    "cwd": "${workspaceFolder}",
+    "MIMode": "gdb",
+    "setupCommands": [
         {
-            "name": "Debug Qt App",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${command:cmake.launchTargetPath}",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": false,
-            "MIMode": "gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                }
-            ]
+            "description": "Enable pretty-printing",
+            "text": "-enable-pretty-printing",
+            "ignoreFailures": true
         }
     ]
 }
 ```
 
-## 4. CLion 配置
+咱们把 setupCommands 里那行 enable-pretty-printing 先按下不表，调试一节回收。
 
-### 4.1 工具链设置
+## CLion：填对工具链，剩下它包了
 
-CLion 的好处是它对 CMake 的支持是原生的，配置起来比 VS Code 简单一些。
+CLion 对 CMake 是原生支持，咱们要填的东西少得多。Settings 的 Build, Execution, Deployment 里找 Toolchains：Windows MinGW 环境，CMake 用 bundled 或系统的都行，Build tool 在 Ninja 和 MinGW Makefiles 里挑一个，编译器指向 gcc 和 g++。MSVC 环境把编译器换成 VS 自带的 cl.exe。Linux 和 WSL2 几乎全自动，检测出来什么用什么。
 
-打开 Settings → Build, Execution, Deployment → Toolchains，根据你的环境设置对应参数。Windows MinGW 下 CMake 用 bundled 或系统安装的都行，Build tool 选 Ninja 或 MinGW Makefiles，C Compiler 和 C++ Compiler 指向你的 gcc 和 g++ 路径，Debugger 用 gdb 或 lldb。Windows MSVC 下基本一样，只是 C/C++ Compiler 要指向 VS 自带的 cl.exe。Linux 和 WSL2 下最简单，CMake 用 bundled，Build tool 选 Unix Makefiles，编译器就是 `/usr/bin/gcc` 和 `/usr/bin/g++`。
+装了 Visual Studio、CLion 却报找不到 cl.exe，是 MSVC 这边的老问题。CLion 要的是 cl.exe 的确切路径，装了 VS 不代表它能自己摸到。咱们用 VS 里的 Developer Command Prompt for VS 把 cl.exe 的位置找出来，回 Toolchains 手动填上，事情就了了。
 
-如果你装了 VS 但 CLion 报错找不到 cl.exe，别慌。CLion 需要知道 VS 工具链的确切路径，不是你装了 Visual Studio 它就能自动找到的。用 VS Installer 里的 "Developer Command Prompt for VS" 路径来定位 cl.exe 的位置，然后在 CLion 里手动填上就行。
+Qt 的位置在 CMake profiles 里给：建一个 Profile，CMake options 填 `-DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64`，Build type 选 Debug。写到这里您应该看出来了，这和 VS Code 里干的是同一件事，CMAKE_PREFIX_PATH 没变，换了个表格填而已。
 
-### 4.2 CMake Profile 配置
+调试是 CLion 的强项，QList、QHash 这类 Qt 容器展开直接看内容，咱们不用配任何东西。QML 高亮要另装插件，在 Settings 的 Plugins 页搜 QML，装上 QML Support 即可。
 
-在同一设置页面，找到 CMake profiles。添加一个新的 Profile，配置如下：
+## Qt Creator：Kit 是三样凑一套
 
-```cmake
-# Build directory
-${workspaceFolder}/cmake-build-debug
+Qt Creator 界面朴素，胜在它是官方 IDE，对 Qt 的支持是内置的。.ui 文件的可视化编辑、信号槽的图形化连接，到今天还是它做得最顺手，哪怕咱们主力用别家，留着它画界面不亏。
 
-# CMake options (关键部分)
--DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64
+它管配置的单位叫 Kit：编译器、Qt 版本、调试器，三样凑成一个可用的构建环境。首次启动它会自动检测已装的 Qt，检测不到就手动补——Edit 菜单进 Preferences，Kits 分类下的 Qt Versions 里填上 qmake 路径（比如 `C:/Qt/6.9.1/mingw_64/bin/qmake.exe`），再回 Kits 页确认有一个 Kit 挂着这个 Qt 版本。跳过这步直接编译，得到的是一句 "No valid kit found"，缺了哪样它不细说，得咱们自己回来补。
 
-# Build type
-Debug
+打开项目用 File 菜单的 Open File or Project 选中 `CMakeLists.txt`，配置自动跑完，Ctrl+R 运行。咱们双击 .ui 文件进设计器：左边控件面板拖布局，右边属性栏改字体颜色，底部信号槽编辑器图形化连线。画界面的效率比手写高出一截，新手期用它，熟练之后转手写也不迟。
 
-# Toolchain
-默认即可（CLion 会自动检测）
-```
-
-保存后，CLion 会在右上方显示这个 Profile，切换过去就行。
-
-### 4.3 运行与调试
-
-CLion 的调试配置很直观：点击右上角的运行配置，选择 Edit… 在 "Program arguments" 里填参数（如果需要），"Working directory" 默认是项目根目录。按 Shift+F9 就能开始调试。CLion 的调试器体验比 VS Code 好一些，尤其是查看 Qt 容器内容的时候。
-
-### 4.4 Qt Quick (.qml) 支持
-
-CLion 默认对 QML 的支持有限，需要额外配置。安装插件：Settings → Plugins → 搜索 "QML"，安装 QML Support 插件。
-
-到这里你可能已经注意到了——不管哪个 IDE，CMake 配置的核心就是那个 CMAKE_PREFIX_PATH。CLion 里它藏在 CMake Profile 的 options 里，VS Code 里它藏在 CMake Tools 的 Configure Args 里，形式不同但本质一样。如果你的 CMake options 里要找 Qt 6.9.1，就是 `-DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64`，Build type 写 Debug，要启用 Qt 的 MOC、RCC、UIC 自动处理就在 CMakeLists.txt 里写上 `set(CMAKE_AUTOMOC ON)`、`set(CMAKE_AUTORCC ON)`、`set(CMAKE_AUTOUIC ON)`。
-
-## 5. Qt Creator 配置
-
-### 5.1 为什么还要说 Qt Creator
-
-我知道有些人可能觉得 Qt Creator 界面"老旧"，但说实话，它是官方 IDE，对 Qt 的支持是原生的。有些功能——比如 .ui 文件的可视化编辑、信号槽的图形化连接——只有 Qt Creator 做得最好。
-
-所以建议是：主力可以选别的，但 Qt Creator 留着备用，特别是做 UI 设计的时候。
-
-### 5.2 首次启动配置
-
-Qt Creator 首次启动时会自动检测 Qt 安装，如果检测不到，打开 Edit → Preferences → Kits → Qt Versions，手动添加：
-
-```text
-名称: Qt 6.9.1 (mingw_64)
-qmake 路径: C:/Qt/6.9.1/mingw_64/bin/qmake.exe
-```
-
-然后在 Kits 页面，确保有一个 Kit 包含这个 Qt 版本。Qt Creator 的 Kit 是编译器 + Qt + 调试器的组合，缺一不可。如果你看到没 Kit 就不管直接编译，一定会得到一个 "No valid kit found" 的报错。
-
-### 5.3 打开 CMake 项目
-
-Qt Creator 打开 CMake 项目超简单：File → Open File or Project → 选择 `CMakeLists.txt`，它会自动配置，然后你就可以直接按 Ctrl+R 运行了。
-
-### 5.4 .ui 文件可视化编辑
-
-这是 Qt Creator 的杀手级功能。双击项目里的 .ui 文件，会打开一个可视化设计器：左侧是控件面板，拖拽就能加到界面上；右侧是属性编辑器，改字体、颜色、大小；底部是信号槽编辑器，图形化连接信号和槽。说实话，这个功能真的好用，特别是对新手。等你熟练了可以手写 UI，但刚开始用可视化工具能省很多时间。
-
-我们来想一个场景——如果 VS Code 的 cmake-kits.json 里只配了编译器路径，但没有设置 CMAKE_PREFIX_PATH，同时 launch.json 里也没配 program 字段，会发生什么？CMake 找不到 Qt 的位置，无法解析任何 Qt 相关的 `find_package`，构建直接失败；就算构建通过了，调试器也不知道该启动哪个可执行文件。所以这两个文件的关键字段一定都要填上。
-
-## 6. 三端对比与选择建议
+## 三家怎么选
 
 | 特性 | VS Code | CLion | Qt Creator |
 |------|---------|-------|------------|
 | 轻量程度 | 极轻量 | 中等 | 较轻量 |
-| CMake 支持 | 良好 | 原生支持，最强 | 良好 |
-| Qt 专用功能 | 一般 | 较弱 | 原生支持，最强 |
+| CMake 支持 | 良好 | 原生，最强 | 良好 |
+| Qt 专用功能 | 一般 | 较弱 | 原生，最强 |
 | 调试体验 | 一般 | 优秀 | 良好 |
-| 插件生态 | 最丰富 | 中等 | 较少 |
-| 价格 | 免费 | 收费（学生免费） | 免费 |
+| 授权 | 开源 | 商业授权（教育许可可申请） | 开源 |
 
-选择建议很简单：预算敏感又喜欢折腾就选 VS Code，重度 CMake 用户且预算充足就选 CLion，Qt 专用且 UI 设计频繁就选 Qt Creator。
+怎么挑，给您一句实在话。预算敏感、愿意折腾，VS Code。CMake 重度用户、预算充足，CLion。界面设计多、专攻 Qt，Qt Creator。主力咱们定一个，另两个装着当备胎——主力 IDE 偶尔抽风的时候，有个能用的退路比什么都强。
 
-## 7. 通用调试技巧
+## 调试：pretty-printer、connect 日志、断点落点
 
-无论你用哪个 IDE，调试 Qt 项目有几个通用的要点。
+先说 QString。GDB 默认看不见它的内容——QString 里装的是指针加隐式共享的结构，不打 pretty-printer，变量窗口里全是 `d->data` 这类代理字段，没有可读的东西。Qt Creator 自带渲染，CLion 内置，VS Code 就用咱们 launch.json 里埋的那行 enable-pretty-printing，配合 GDB 的 Python 支持把 QString、QList 打成可读的样子。三家的差别只是要不要自己动手配这一下。
 
-GDB 默认看不到 QString 的内部内容，需要使用 pretty-printer。Qt Creator 自带，VS Code 和 CLion 需要额外配置。如果你想在调试时看到信号槽的调用信息，在 `main.cpp` 里加这一行：
+再说一个排查信号槽的开关。咱们怀疑“信号发了、槽没动”的时候，在 main.cpp 里加一行，connect 的匹配过程会全部打进日志：
 
 ```cpp
 QLoggingCategory::setFilterRules("qt.core.qobject.connect=true");
 ```
 
-另外，Qt 的 MOC 会生成额外代码，有时候断点会打在奇怪的地方。建议断点打在你自己写的函数里，而不是 Qt 的内部函数。
+它帮咱们分清两种情况：连接压根没建立，和连接建立了但槽没被调用。两种病的治法完全不同，先分清再动手，少走弯路。
 
-## 8. 练习项目
+断点也有讲究。MOC 生成的代码和 Qt 内部函数里下断点，命中位置常常漂到意想不到的地方；排查时把断点放在自己写的函数里，命中得最稳。咱们初学阶段守住这一条，能省不少疑惑。
 
-**练习项目：三端 Hello Qt**
+## 官方文档参考
 
-用三个 IDE 分别打开同一个 Qt Hello World 项目，配置好工具链，确保每个 IDE 都能成功编译运行。
-
-完成标准是四个：VS Code 下 F5 能调试且智能提示正常，CLion 下右上角能选 Kit 且 Shift+F9 调试正常，Qt Creator 下能打开项目且 Ctrl+R 运行正常，最后三个 IDE 编译出的程序都能弹出 "Hello Qt" 窗口。
-
-项目本身很简单——一个 QApplication 加一个显示 "Hello Qt" 的 QWidget。关键是先在命令行确认能编译，再用 IDE 打开。每个 IDE 里配置 CMAKE_PREFIX_PATH 是关键步骤，VS Code 需要手动配 include path，CLion 和 Qt Creator 会自动检测。
-
-## 9. 官方文档参考
+本篇基于 Qt 6.9.1；三家 IDE 的菜单细节随版本会有小幅挪动，找不到同名菜单时在设置里搜关键词最快。
 
 [Qt Creator 手册](https://doc.qt.io/qtcreator/) · 官方 IDE 的完整文档
-[VS Code C++ 教程](https://code.visualstudio.com/docs/cpp/config-mingw) · 微软官方配置指南
-[CLion CMake 教程](https://www.jetbrains.com/help/clion/quick-cmake-tutorial.html) · JetBrains CMake 支持
 
-*（链接已验证，2026-03-17 可访问）*
+[VS Code · Using GCC with MinGW](https://code.visualstudio.com/docs/cpp/config-mingw) · 微软官方的 MinGW 工具链配置指南
+
+[CLion · Quick CMake Tutorial](https://www.jetbrains.com/help/clion/quick-cmake-tutorial.html) · JetBrains 的 CMake 快速上手
 
 ---
 
-**到这里就大功告成了！** 选一个你喜欢的 IDE，把它调教顺手。后面我们就要正式进入 Qt 代码的世界了。记住，IDE 只是工具，代码才是核心。别在配置上花太多时间，能用就行。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+配置是不是真在工作，做个破坏性实验最放心：把 settings.json 里的 CMAKE_PREFIX_PATH 故意改错，重新配置，"Could not find Qt6" 应声而出；改回去再配，报错消失。能亲手把错造出来再消掉，这套配置就归您了。下一篇 [0.2 第一个 CMake Qt6 工程](./02-cmake-first-project-beginner.md) 从零建第一个工程，CMakeLists.txt 每一行为什么在那，讲清楚。

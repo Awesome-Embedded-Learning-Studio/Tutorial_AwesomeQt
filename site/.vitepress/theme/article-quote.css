@@ -1,0 +1,109 @@
+/* ================================================================
+   正文引用块 ·「概念批注」概念（2026-09 对齐 tamcpp 精细度）
+   引用块 = 教程里的笔者按/概念批注：纸面微绿白 + Qt 绿引号装饰。
+   保留原生 blockquote 标记；字号机制沿用 custom.css 的
+   calc(16px * --aq-font-scale)（见文末 p 规则，normal 档与旧版一致）。
+   ================================================================ */
+:root {
+  --article-quote-bg: #FAFCFB;
+  --article-quote-border: #DCE7E1;
+  --article-quote-accent: #2EA66A;  /* brand-1：引号装饰 */
+  --article-quote-ink: #44514B;
+  --article-quote-shadow: none;
+}
+
+.dark {
+  --article-quote-bg: #232826;
+  --article-quote-border: #343D38;
+  --article-quote-accent: #52BF85;
+  --article-quote-ink: #C9D3CD;
+  --article-quote-shadow: none;
+}
+
+.vp-doc blockquote {
+  position: relative;
+  margin: 24px 0;
+  padding: 18px 22px 18px 54px;
+  border: 1px solid var(--article-quote-border);
+  border-left: 3px solid var(--article-quote-accent);
+  border-radius: 3px;
+  background: var(--article-quote-bg);
+  box-shadow: var(--article-quote-shadow);
+  color: var(--article-quote-ink);
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+
+/* 装饰引号：mask 上色，纯装饰——不进复制文本、不进屏幕阅读器 */
+.vp-doc blockquote::before {
+  position: absolute;
+  top: 22px;
+  left: 18px;
+  width: 20px;
+  height: 20px;
+  background: var(--article-quote-accent);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M10 5H6a2 2 0 0 0-2 2v5h6V5Zm0 7c0 4-2 6-5 7M21 5h-4a2 2 0 0 0-2 2v5h6V5Zm0 7c0 4-2 6-5 7' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  pointer-events: none;
+  content: '';
+}
+
+.vp-doc blockquote > p {
+  margin: 0.65em 0;
+  /* 字号机制从 custom.css 原样迁入：px 定值 × 五档缩放，normal 档不变 */
+  font-size: calc(16px * var(--aq-font-scale, 1));
+  line-height: inherit;
+}
+
+/* 嵌套引用降级：不重复外层装饰，退回细左线 */
+.vp-doc blockquote blockquote {
+  margin: 14px 0;
+  padding: 2px 0 2px 16px;
+  border: 0;
+  border-left: 2px solid var(--article-quote-border);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.vp-doc blockquote blockquote::before {
+  display: none;
+}
+
+.vp-doc blockquote > :first-child {
+  margin-top: 0;
+}
+
+.vp-doc blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* ── 移动端：padding 收窄、装饰引号缩位 ── */
+@media (max-width: 639px) {
+  .vp-doc blockquote {
+    padding: 16px 16px 16px 44px;
+    border-radius: 3px;
+  }
+
+  .vp-doc blockquote::before {
+    top: 21px;
+    left: 14px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .vp-doc blockquote blockquote {
+    padding: 2px 0 2px 12px;
+  }
+}
+
+/* ── 打印：去阴影去动效，浅色定妆 ── */
+@media print {
+  .vp-doc blockquote {
+    --article-quote-border: #D5E0DA;
+    --article-quote-accent: #21985D;
+    background: #F7FAF8;
+    box-shadow: none;
+    color: #44514B;
+    break-inside: auto;
+  }
+}

@@ -25,22 +25,16 @@ defineProps<{
   gap: 12px;
   padding: 16px 18px;
   border: 1px solid var(--vp-c-divider);
-  border-radius: 12px;
-  background-color: var(--vp-c-bg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04),
-              0 1px 2px rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  background-color: var(--vp-c-bg-elv);
   text-decoration: none !important;
   color: inherit;
-  transition: border-color 0.3s ease,
-              box-shadow 0.3s ease,
-              transform 0.3s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .card-link:hover {
   border-color: var(--vp-c-brand-1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08),
-              0 2px 6px rgba(0, 0, 0, 0.04);
-  transform: translateY(-2px);
+  background-color: var(--vp-c-bg-soft-up);
   text-decoration: none !important;
 }
 
@@ -49,17 +43,12 @@ defineProps<{
   border-color: var(--vp-c-border);
 }
 
-.dark .card-link:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25),
-              0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
 .card-num {
   flex-shrink: 0;
   font-size: 0.72rem;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 2px;
   background: var(--vp-c-brand-soft);
   color: var(--vp-c-brand-1);
   line-height: 1.6;

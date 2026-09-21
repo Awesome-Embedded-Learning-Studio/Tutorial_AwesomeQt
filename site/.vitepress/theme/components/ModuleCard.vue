@@ -40,32 +40,30 @@ const roman = computed(() => ROMAN[props.number] || String(props.number))
   display: flex;
   gap: 0.75rem;
   padding: 1rem 1.1rem 1rem 0.85rem;
-  background: var(--vp-c-bg);
+  background: var(--vp-c-bg-elv);
   border: 1px solid var(--vp-c-divider);
-  border-radius: 10px;
+  border-radius: 4px;
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 a.module-card:hover {
   border-color: var(--vp-c-brand-1);
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  background: var(--vp-c-bg-soft-up);
 }
 
 .module-card__rail {
   width: 3px;
   flex-shrink: 0;
-  border-radius: 2px;
+  border-radius: 0;
   background: var(--vp-c-brand-1);
   opacity: 0.5;
-  transition: opacity 0.25s ease, width 0.25s ease;
+  transition: opacity 0.2s ease;
 }
 
 a.module-card:hover .module-card__rail {
   opacity: 1;
-  width: 5px;
 }
 
 .module-card__main {

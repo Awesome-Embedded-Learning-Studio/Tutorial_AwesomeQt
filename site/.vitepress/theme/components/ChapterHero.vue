@@ -70,11 +70,10 @@ defineProps({
 
 .chapter-hero {
   margin: 1rem 0 2.25rem;
-  padding: 1.4rem 1.5rem 1.1rem;
-  background: var(--ide-panel-bg);
-  border: 1px solid var(--ide-border);
-  border-radius: 6px;
-  border-left: 4px solid var(--ch-accent);
+  padding: 1.5rem 0 1.2rem;
+  background: transparent;
+  border-top: 1px solid var(--ide-border);
+  border-bottom: 1px solid var(--ide-border);
   position: relative;
 }
 
@@ -150,7 +149,7 @@ defineProps({
 .chapter-hero__rule {
   margin-top: 1.1rem;
   height: 1px;
-  background: var(--vp-c-divider);
+  background: transparent;
   position: relative;
 }
 
@@ -158,15 +157,15 @@ defineProps({
   position: absolute;
   left: 0;
   top: -3px;
-  width: 7px;
-  height: 7px;
+  width: 42px;
+  height: 3px;
   background: var(--ch-accent);
-  transform: rotate(45deg);
+  transform: none;
 }
 
 @media (max-width: 639px) {
   .chapter-hero {
-    padding: 1.1rem 1rem 0.9rem;
+    padding: 1.1rem 0 0.9rem;
   }
   .chapter-hero__inner {
     gap: 1rem;

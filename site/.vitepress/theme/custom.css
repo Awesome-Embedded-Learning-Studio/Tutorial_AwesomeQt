@@ -1,45 +1,51 @@
 /* ================================================================
    AwesomeQt 设计令牌 ·「工作台」概念（2026-08 整站重设计）
    整站 = 一个 Qt 桌面应用：IDE 界面灰纸面 + Qt 绿品牌。
-   亮：Creator 风 #F3F3F1 底 / 白面板 / Qt 绿强调
-   暗：#232323 底 / #2B2B2B 面板 / 亮绿强调
+   亮：技术出版物的柔白纸面 / 碳黑字 / Qt 绿强调
+   暗：中性炭灰底 / 深色面板 / 亮绿强调
    全站组件只引用变量，不硬编码色值。
+
+   样式分层（2026-09 对齐 tamcpp 精细度起）：
+   custom.css      —— 令牌 + 排版 + 布局宽度 + IDE chrome（本文件）
+   article-code.css—— 正文代码卡/折叠条/code-group（Creator 编辑器隐喻）
+   article-quote.css—— 正文引用块（概念批注隐喻）
+   正文元素专项打磨去对应文件，别往这里堆。
    ================================================================ */
 :root {
   /* ── 品牌色 · Qt 绿（亮）── */
-  --vp-c-brand-1: #2EA66A;
-  --vp-c-brand-2: #1F8A55;
-  --vp-c-brand-3: #52BF85;
-  --vp-c-brand-soft: rgba(46, 166, 106, 0.10);
+  --vp-c-brand-1: #148A52;
+  --vp-c-brand-2: #0D7041;
+  --vp-c-brand-3: #31A86A;
+  --vp-c-brand-soft: rgba(20, 138, 82, 0.09);
   --vp-c-brand: var(--vp-c-brand-1);
 
   /* ── 背景 · IDE 界面灰（亮）── */
-  --vp-c-bg: #F3F3F1;
-  --vp-c-bg-soft: #ECECEA;
-  --vp-c-bg-soft-up: #F7F7F5;
+  --vp-c-bg: #F7F8F6;
+  --vp-c-bg-soft: #EFF1EE;
+  --vp-c-bg-soft-up: #FAFBF9;
   --vp-c-bg-elv: #FFFFFF;
   --vp-c-bg-alt: #FFFFFF;
-  --vp-c-bg-mute: #E8E8E6;
+  --vp-c-bg-mute: #E8EBE7;
 
   /* ── 文字 ── */
-  --vp-c-text-1: #262626;
-  --vp-c-text-2: #5A5A57;
-  --vp-c-text-3: #8A8A86;
+  --vp-c-text-1: #202421;
+  --vp-c-text-2: #505853;
+  --vp-c-text-3: #7A827D;
 
   /* ── 分隔 / 边框 ── */
-  --vp-c-divider: #E0E0DD;
-  --vp-c-border: #D4D4D0;
+  --vp-c-divider: #DDE1DC;
+  --vp-c-border: #CDD3CD;
 
   /* ── IDE 家具 · 应用窗口件（标题栏/菜单栏/面板/状态栏）── */
   --ide-titlebar-h: 28px;
-  --ide-titlebar-bg: #DDDDDB;
-  --ide-titlebar-text: #4F4F4D;
-  --ide-menubar-bg: #F3F3F1;
+  --ide-titlebar-bg: #202622;
+  --ide-titlebar-text: #D9E0DB;
+  --ide-menubar-bg: rgba(247, 248, 246, 0.96);
   --ide-panel-bg: #FFFFFF;
-  --ide-statusbar-bg: #E8E8E6;
-  --ide-border: #D4D4D0;
-  --ide-splitter: #D4D4D0;
-  --ide-tab-active: #2EA66A;
+  --ide-statusbar-bg: #202622;
+  --ide-border: #D5DAD5;
+  --ide-splitter: #C7CEC8;
+  --ide-tab-active: #148A52;
 
   /* ── 三层强调（feature 卡分色，避开品牌绿）── */
   --aq-c-eng-1: #C8843C;          /* 工程篇 · 琥珀 */
@@ -63,12 +69,12 @@
   --vp-c-brand-soft: rgba(82, 191, 133, 0.16);
 
   /* ── 背景 · IDE 暗色（Creator 风）── */
-  --vp-c-bg: #232323;
-  --vp-c-bg-soft: #1E1E1E;
-  --vp-c-bg-soft-up: #303030;
-  --vp-c-bg-elv: #2B2B2B;
-  --vp-c-bg-alt: #2B2B2B;
-  --vp-c-bg-mute: #333333;
+  --vp-c-bg: #1E211F;
+  --vp-c-bg-soft: #181B19;
+  --vp-c-bg-soft-up: #282C29;
+  --vp-c-bg-elv: #252926;
+  --vp-c-bg-alt: #252926;
+  --vp-c-bg-mute: #303532;
 
   /* ── 文字 ── */
   --vp-c-text-1: #E4E4E1;
@@ -80,11 +86,11 @@
   --vp-c-border: #3C3C3C;
 
   /* ── IDE 家具 · 暗色 ── */
-  --ide-titlebar-bg: #1E1E1E;
-  --ide-titlebar-text: #9E9E9A;
-  --ide-menubar-bg: #232323;
-  --ide-panel-bg: #2B2B2B;
-  --ide-statusbar-bg: #1E1E1E;
+  --ide-titlebar-bg: #101311;
+  --ide-titlebar-text: #BEC7C0;
+  --ide-menubar-bg: rgba(30, 33, 31, 0.96);
+  --ide-panel-bg: #252926;
+  --ide-statusbar-bg: #101311;
   --ide-border: #3C3C3C;
   --ide-splitter: #3C3C3C;
   --ide-tab-active: #52BF85;
@@ -104,34 +110,42 @@
     Consolas, monospace);
 }
 
+/* ── 选区配色（soft tint，明暗双模式都可读）── */
+::selection {
+  background: var(--vp-c-brand-soft);
+}
+
 /* Chinese Typography
    正文与各级标题都乘 --aq-font-scale（FontSizeSwitcher 五档，见文末机制段）。
-   档位只缩文字、不缩布局：侧栏/导航/右大纲/首页组件不消费该变量，
-   normal 档像素与旧版完全一致。 */
+   档位只缩文字、不缩布局：侧栏/导航/右大纲/首页组件不消费该变量。 */
 .vp-doc {
-  line-height: 1.85;
-  font-size: calc(0.82rem * var(--aq-font-scale, 1));
+  line-height: 1.9;
+  font-size: calc(0.94rem * var(--aq-font-scale, 1));
+  letter-spacing: 0;
 }
 
 .vp-doc h1 {
-  line-height: 1.4;
-  font-size: calc(28px * var(--aq-font-scale, 1));
+  line-height: 1.3;
+  font-size: calc(30px * var(--aq-font-scale, 1));
+  letter-spacing: 0;
 }
 
 @media (min-width: 768px) {
   .vp-doc h1 {
-    font-size: calc(32px * var(--aq-font-scale, 1));
+    font-size: calc(36px * var(--aq-font-scale, 1));
   }
 }
 
 .vp-doc h2 {
-  line-height: 1.45;
-  font-size: calc(24px * var(--aq-font-scale, 1));
+  line-height: 1.4;
+  font-size: calc(25px * var(--aq-font-scale, 1));
+  letter-spacing: 0;
 }
 
 .vp-doc h3 {
   line-height: 1.5;
   font-size: calc(20px * var(--aq-font-scale, 1));
+  letter-spacing: 0;
 }
 
 .vp-doc h4 {
@@ -145,10 +159,7 @@
   margin-bottom: 1.2em;
 }
 
-/* 引用块正文 / 表格单元 / 提示块行距：同为 px 定值，同样补乘（normal 档不变） */
-.vp-doc blockquote > p {
-  font-size: calc(16px * var(--aq-font-scale, 1));
-}
+/* 引用块正文字号机制已随视觉迁入 article-quote.css */
 
 .vp-doc th,
 .vp-doc td {
@@ -159,22 +170,25 @@
   line-height: 1.7;
 }
 
-/* Content Width */
+/* Content Width
+   文章布局以「剩余可用视口」为中心，而不是围绕整个屏幕的旧 VitePress
+   公式对称。宽屏下正文保持 800–900px，大纲只占导航所需宽度。 */
 :root {
-  --vp-layout-max-width: 80rem;
+  --vp-layout-max-width: 100rem;
 }
 
-/* Code Blocks（字号随正文档位缩放） */
-.vp-doc div[class*='language-'] {
-  border-radius: 8px;
-  font-size: calc(0.75rem * var(--aq-font-scale, 1));
-  line-height: 1.6;
+.VPDoc .content-container.content-container,
+.VPDoc.has-aside .content-container.content-container {
+  max-width: 900px;
 }
 
-.vp-doc div[class*='language-'] code {
-  font-size: calc(0.75rem * var(--aq-font-scale, 1));
+@media (min-width: 1280px) {
+  .VPDoc .container.container {
+    max-width: 1320px;
+  }
 }
 
+/* Code Blocks 的卡片化样式见 article-code.css（字号机制 calc(0.75rem×scale) 已随迁）。 */
 .vp-doc :not(pre)>code {
   font-size: 0.78em;
   padding: 0.15em 0.35em;
@@ -198,12 +212,7 @@
   background-color: rgba(0, 0, 0, 0.02);
 }
 
-/* Blockquotes */
-.vp-doc blockquote {
-  border-left: 4px solid var(--vp-c-brand-1);
-  border-radius: 0 4px 4px 0;
-  background: var(--vp-c-brand-soft);
-}
+/* Blockquotes 的批注面板样式见 article-quote.css。 */
 
 /* Links */
 .vp-doc a {
@@ -217,10 +226,10 @@
   text-decoration-style: solid;
 }
 
-/* Images */
+/* Images（阴影调轻一档：视觉减重，对齐 2026-09 轻量化基调） */
 .vp-doc img {
   border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 /* Print */
@@ -252,10 +261,6 @@
 }
 
 /* ── Content Dark Mode ─────────────────────────────────────────── */
-
-.dark .vp-doc blockquote {
-  background: var(--vp-c-brand-soft);
-}
 
 .dark .vp-doc table tr:nth-child(even) {
   background-color: rgba(255, 255, 255, 0.03);
@@ -373,99 +378,122 @@
   border: 0;
 }
 
-/* ================================================================
-   长代码折叠（.vp-code-fold）：构建期 code-fold-plugin 把 >30 行的代码块
-   包成 <div class="vp-code-fold"><details><summary/></details><代码/></div>。
-   - 收起 = 只显示 summary 条（代码完全隐藏）；展开 = 代码全部显示。二态干净。
-   - 代码在 <details> 外，靠纯 CSS :has(details[open]) 控制 display；零 JS、无 JS 也能展开。
-   - 内部 div.language-* 兄弟链（copy/lang/pre/line-numbers）不动，复制按钮不受影响。
-   ================================================================ */
-.vp-doc .vp-code-fold {
-  margin: 16px 0;
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--vp-code-block-bg);
+/* ── maximize 按钮:图被容器挤窄时可见,点开进全屏模态（对齐 tamcpp） ── */
+.vp-doc .mermaid-diagram--zoomable {
+  position: relative;
 }
 
-.vp-doc .vp-code-fold > details > summary {
-  list-style: none;
+.mermaid-maximize-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 6px;
+  background: var(--vp-c-bg-elv);
+  color: var(--vp-c-text-2);
   cursor: pointer;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+/* hover 图 / 键盘聚焦图内 → 按钮完全显形并高亮 */
+.vp-doc .mermaid-diagram--zoomable:hover .mermaid-maximize-btn,
+.vp-doc .mermaid-diagram--zoomable:focus-within .mermaid-maximize-btn {
+  opacity: 1;
+}
+
+.mermaid-maximize-btn:hover,
+.mermaid-maximize-btn:focus-visible {
+  opacity: 1;
+  color: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+  outline: none;
+}
+
+/* ── 全屏查看模态(MermaidLightbox.vue,Teleport 到 body;panzoom 缩放拖拽) ── */
+.mermaid-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  background: rgba(20, 20, 20, 0.78);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.mermaid-lightbox__toolbar {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--vp-c-bg-soft);
+  border-bottom: 1px solid var(--vp-c-border);
   color: var(--vp-c-text-2);
-  user-select: none;
-  background: var(--vp-code-block-bg);
-  transition: color 0.2s ease;
 }
 
-.vp-doc .vp-code-fold > details > summary:hover {
+.mermaid-lightbox__btn {
+  appearance: none;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 6px;
+  background: var(--vp-c-bg-elv);
   color: var(--vp-c-text-1);
-}
-
-.vp-doc .vp-code-fold > details > summary::-webkit-details-marker {
-  display: none;
-}
-
-.vp-doc .vp-code-fold > details > summary::before {
-  content: '▶';
-  font-size: 1rem;
+  font-size: 13px;
   line-height: 1;
-  color: var(--vp-c-text-3);
-  transition: transform 0.2s ease, color 0.2s ease;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
 }
 
-.vp-doc .vp-code-fold > details > summary:hover::before {
+.mermaid-lightbox__btn:hover,
+.mermaid-lightbox__btn:focus-visible {
   color: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+  outline: none;
 }
 
-.vp-doc .vp-code-fold:has(details[open]) > details > summary::before {
-  transform: rotate(90deg);
+.mermaid-lightbox__close {
+  margin-left: auto;
 }
 
-.vp-doc .vp-code-fold:not(:has(details[open])) .vp-cf-open {
-  display: none;
-}
-
-.vp-doc .vp-code-fold:has(details[open]) .vp-cf-closed {
-  display: none;
-}
-
-.vp-doc .vp-code-fold:has(details[open]) .vp-cf-open {
-  display: inline;
-}
-
-.vp-doc .vp-code-fold > details > summary em {
-  font-style: normal;
+.mermaid-lightbox__hint {
+  font-size: 12px;
   color: var(--vp-c-text-3);
-  margin-left: 4px;
+  margin-left: 8px;
 }
 
-.vp-doc .vp-code-fold > div[class*='language-'] {
-  margin: 0;
-  border-radius: 0;
+.mermaid-lightbox__stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 32px;
 }
 
-.vp-doc .vp-code-fold:not(:has(details[open])) > div[class*='language-'] {
-  display: none;
+.mermaid-lightbox__target {
+  display: inline-block;
+  touch-action: none; /* panzoom 自己管 pointer,关掉浏览器默认触摸手势 */
+  user-select: none;
 }
 
-@media print {
-  .vp-doc .vp-code-fold > div[class*='language-'] {
-    display: block !important;
-  }
+.mermaid-lightbox__target svg {
+  display: block;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  background: var(--vp-c-bg-elv);
+  border-radius: 4px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .vp-doc .vp-code-fold > details > summary,
-  .vp-doc .vp-code-fold > details > summary::before {
-    transition: none;
-  }
-}
-
+/* 长代码折叠的卡片样式已升级迁入 article-code.css（icon + count 徽章版 summary）。 */
 /* ================================================================
    kbd 键盘按键样式（配合 kbd-plugin，++Ctrl+S++ → <kbd>Ctrl</kbd>+<kbd>S</kbd>）
    ================================================================ */
@@ -506,12 +534,20 @@ kbd {
    ================================================================ */
 :root {
   --vp-sidebar-width: 272px;
-  --vp-aside-width: 256px;
+  --vp-aside-width: 248px;
 }
 
 .VPDoc.has-aside .aside {
   width: var(--vp-aside-width);
   max-width: var(--vp-aside-width);
+  /* 空间不足时先缩正文别缩大纲:大纲被 flex 压到 ~96px 时条目文字全截断,
+     而正文只是行宽变窄(2026-09-21 实测 1440 视口 aside 只剩 128px)。 */
+  flex-shrink: 0;
+}
+
+.VPDoc.has-aside .aside-container,
+.VPDoc.has-aside .aside-curtain {
+  width: calc(var(--vp-aside-width) - 32px);
 }
 
 .rs-handle {
@@ -608,6 +644,8 @@ body.rs-resizing * {
 /* ── 菜单栏（VPNavBar 重皮）：QMenu 感的项 hover 矩形高亮 ── */
 .VPNavBar {
   background-color: var(--ide-menubar-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .VPNavBar.has-sidebar .content-body,
@@ -620,7 +658,7 @@ body.rs-resizing * {
 }
 
 .VPNavBarMenuLink {
-  border-radius: 4px;
+  border-radius: 2px;
   transition: color 0.18s ease, background-color 0.18s ease;
 }
 
@@ -637,7 +675,7 @@ body.rs-resizing * {
 .VPNavBarSearch .DocSearch-Button {
   height: 32px;
   border: 1px solid var(--ide-border);
-  border-radius: 4px;
+  border-radius: 3px;
   background: var(--ide-panel-bg);
 }
 
@@ -653,9 +691,9 @@ body.rs-resizing * {
 /* ── 下拉菜单（VPFlyout/VPMenu）：边框面板 + 全行高亮 ── */
 .VPMenu {
   border: 1px solid var(--ide-border);
-  border-radius: 6px;
+  border-radius: 4px;
   background: var(--ide-panel-bg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 12px 32px rgba(22, 28, 24, 0.12);
 }
 
 .dark .VPMenu {
@@ -677,7 +715,8 @@ body.rs-resizing * {
 
 /* ── 侧栏（QTreeView 化）：面板底 + 整行高亮 + 绿左轨 ── */
 .VPSidebar {
-  background-color: var(--ide-panel-bg);
+  background-color: var(--vp-c-bg-soft-up);
+  border-right: 1px solid var(--vp-c-divider);
 }
 
 .VPSidebar .curved {
@@ -685,7 +724,7 @@ body.rs-resizing * {
 }
 
 .VPSidebarItem .item {
-  border-radius: 4px;
+  border-radius: 2px;
   transition: background-color 0.15s ease;
 }
 
@@ -729,14 +768,17 @@ body.rs-resizing * {
   white-space: nowrap;
 }
 
-/* 宽屏侧栏贴左（照搬 TAMCPP）：≥1440px 时 VitePress 会把布局居中的外侧留白
-   塞进 sidebar 的 padding-left——viewport 越宽导航树离左边越远（1920px 下
-   约 212px，2559px 屏更远），形成一大片无效空白。sidebar 外框宽度和右边缘
-   仍交给 VitePress 计算，只收回内容与站点标题的动态缩进，因而正文位置、
-   侧栏拖拽手柄和居中布局都不受影响。重复类名用于压过组件 scoped CSS。 */
+/* 宽屏时左栏维持真实宽度，正文在去掉侧栏后的可用区域里居中。
+   原生公式同时加左右外留白，会在 1920px+ 屏幕上将整组内容推向左侧。 */
 @media (min-width: 1440px) {
   .VPSidebar.VPSidebar {
+    width: var(--vp-sidebar-width);
     padding-left: 32px;
+  }
+
+  .VPContent.has-sidebar.VPContent.has-sidebar {
+    padding-right: 0;
+    padding-left: var(--vp-sidebar-width);
   }
 
   .VPNavBar.has-sidebar .title.title {
@@ -754,30 +796,39 @@ body.rs-resizing * {
   color: var(--vp-c-text-3);
 }
 
+.VPDocAsideOutline .outline-marker {
+  width: 2px;
+  background-color: var(--vp-c-brand-1);
+}
+
+.VPDocAsideOutline .outline-link {
+  line-height: 1.55;
+}
+
 /* ── 提示块（tip/warning）QGroupBox 扁平框化 ── */
 .vp-doc .custom-block {
   border: 1px solid var(--ide-border);
-  border-top: 3px solid var(--vp-c-brand-1);
-  border-radius: 6px;
+  border-left: 3px solid var(--vp-c-brand-1);
+  border-radius: 3px;
   background-color: var(--vp-c-bg-elv);
 }
 
 .vp-doc .custom-block.warning {
-  border-top-color: var(--aq-c-eng-1);
+  border-left-color: var(--aq-c-eng-1);
 }
 
 .vp-doc .custom-block.danger {
-  border-top-color: #D05050;
+  border-left-color: #D05050;
 }
 
-/* ── 滚动条 IDE 化 ── */
+/* ── 滚动条 IDE 化（thin：8px 细轨 + Firefox 标准属性，深浅轨都克制） ── */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  border-radius: 5px;
+  border-radius: 4px;
   background: var(--ide-splitter);
 }
 
@@ -789,6 +840,11 @@ body.rs-resizing * {
   background: transparent;
 }
 
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ide-splitter) transparent;
+}
+
 /* ── 状态栏让位（StatusBar 组件 fixed 底条，别盖住页脚）── */
 .Layout {
   padding-bottom: 26px;
@@ -798,9 +854,9 @@ body.rs-resizing * {
    IDE 组件库（.ide-* 供工作台组件用，只引用变量）
    ================================================================ */
 .ide-wrap {
-  max-width: 1120px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding-inline: 24px;
+  padding-inline: 32px;
 }
 
 .ide-eyebrow {
@@ -816,7 +872,7 @@ body.rs-resizing * {
 .ide-panel {
   background: var(--ide-panel-bg);
   border: 1px solid var(--ide-border);
-  border-radius: 6px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
@@ -827,7 +883,7 @@ body.rs-resizing * {
   gap: 6px;
   padding: 0 18px;
   height: 38px;
-  border-radius: 4px;
+  border-radius: 3px;
   border: 1px solid var(--vp-c-border);
   font-size: 14px;
   font-weight: 600;
@@ -871,16 +927,15 @@ body.rs-resizing * {
 
 /* 进度条（QProgressBar：凹槽 + 填充） */
 .ide-progress {
-  height: 8px;
-  border-radius: 4px;
+  height: 5px;
+  border-radius: 0;
   background: var(--vp-c-bg-mute);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
 .ide-progress__fill {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 0;
   background: var(--vp-c-brand-1);
   transition: width 0.3s ease;
 }
@@ -888,5 +943,9 @@ body.rs-resizing * {
 @media (max-width: 767px) {
   :root {
     --ide-titlebar-h: 24px;
+  }
+
+  .ide-wrap {
+    padding-inline: 20px;
   }
 }

@@ -41,6 +41,32 @@
 - [ ] multithreading 踩坑章重构
 - [ ] QML6.2 进阶重写
 
+## 站点风格精细度对齐 tamcpp（✅ 已落盘 2026-09-21 · build 双跑通过 · 待作者实机看效果）
+
+> 方向拍板：对齐的是**精细程度**（tamcpp 每个正文元素一套完整设计：变量集亮暗双套+装饰+微交互+无障碍+响应式+打印），不是换皮肤。Qt 绿身份 + IDE 工作台隐喻不动；quiz/在线编译等 interactive 功能不搬（S7）。
+
+落盘清单（改动全在 `site/.vitepress/`）：
+
+- **样式分层**（对齐 tamcpp 三文件架构）：新建 `theme/article-code.css`（代码卡）+ `theme/article-quote.css`（引用块）；`custom.css` 892→~900 行重组（令牌+排版+IDE chrome，正文元素专项外迁）
+- **代码卡**（Creator 编辑器隐喻）：卡片化（边框+径向头部 tint+双层轻阴影 #254 档）、lang 徽章（</> mask 图标+Qt 绿 badge）、copy 按钮精修（focus-visible 焦点环）、行号列贴头部、hover 上浮（hover:hover+pointer:fine+no-preference 三条件）、code-group 集成去壳
+- **折叠条升级**：summary 四格 grid（icon 徽章+标题+行数徽章+chevron 旋转），`code-fold-plugin.ts` DOM 同步升级（照 tamcpp 结构）
+- **引用块**（概念批注隐喻）：SVG mask 装饰引号（不进复制/屏幕阅读器）+hover 上浮+嵌套降级+移动端+打印，配色微绿白+Qt 绿 accent
+- **code-label-plugin.ts**（新）：lang 徽章文案美化 cpp→C++/qml→QML/cmake→CMake/bash→Shell 等（全站分布实测映射），挂 shared.ts
+- **mermaid 灯箱**（新，搬 tamcpp 全套）：maximize 按钮（hover 显形）+ MermaidLightbox 全屏模态（panzoom 缩放拖拽+焦点陷阱+ESC）；新增依赖 `@panzoom/panzoom@4.6.2`（动态 import 不进首屏）
+- **router-hooks.ts**（新，搬 tamcpp）：onAfterRouteChange 单值回调的订阅器根治（mermaid-client 从直接赋值换订阅；ReadingProgress 已是 watch 无现行冲突，此为防复发加固）
+- **细节四件套**：::selection 选区配色、滚动条 8px thin+Firefox 标准属性、图片阴影调轻（0.08→0.05）、暗色/打印/reduced-motion 全覆盖
+
+验证：`pnpm build` 双跑 SUCCESS（211s/206s·10 卷 4832 篇）；dist 抽查折叠条新 DOM（icon+count）✓、lang 标签 C++ 1176 处无裸 cpp 残留 ✓、panzoom/lightbox 进 chunk ✓。
+
+**追加修复 · 宽屏布局塌陷（作者 2026-09-21 报「默认打开宽度抽象」，puppeteer 实测定位）**：
+- 根因：VitePress ≥1440px 把「布局居中留白」塞进侧栏盒（盒宽 = (100vw−(layout_max−64))/2+sidebar_w−32）。tamcpp 布局宽 1560+侧栏底色=页面底色所以隐身；咱们布局 1280+侧栏是 IDE 白面板 → 2560 屏白面板假宽 1120px、正文被挤剩 576px。**PR#17 照搬 tamcpp 贴左手法时埋的雷，非本次改造引入**
+- 修法三件（custom.css + ResizableSidebar.vue）：①≥1440 侧栏盒宽钉死=变量宽（白面板只包真实内容），正文避让=侧栏右缘+48px，居中留白全让右侧；②正文列放开 VitePress 默认 content-container 688px 上限→1380（类名加倍压 scoped 特异性）；③自适应侧栏上限改视口相关 min(480, max(272, vw/5))+大纲 flex-shrink:0
+- 实测（puppeteer·beginner 首页）：2560 屏正文 576→1047px；1440 屏大纲 128→256px；1280 屏大纲 96→256px；全视口正常。build SUCCESS
+
+待作者拍板（视觉决策，未擅动）：
+- tamcpp 正文 1.05rem/代码 0.91rem vs 咱们 0.82rem/0.75rem（偏小一档，tamcpp 注释明说改大是 1080p+ 阅读反馈）——改的话牵动五档字号 normal 档基准，老用户存的档位意义会漂移
+- 首页 feature 卡 rail 左条手法（tamcpp VPFeature 专用，咱们首页是自定义组件 LayerCards，要移植得改组件，属后续可选）
+
 ## P4 时效
 - [ ] QtCharts 弃用横幅（迁 QtGraphs）
 - [ ] QtGraphs

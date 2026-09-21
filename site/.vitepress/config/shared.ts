@@ -9,6 +9,7 @@
 import type { MarkdownIt } from 'markdown-it'
 import { cppTemplateEscapePlugin } from '../plugins/escape-cpp-templates'
 import { codeFoldPlugin } from '../plugins/code-fold-plugin'
+import { codeLabelPlugin } from '../plugins/code-label-plugin'
 import { kbdPlugin } from '../plugins/kbd-plugin'
 import { mermaidPlugin } from '../plugins/mermaid-plugin'
 import { viteCppEscape } from '../plugins/vite-escape-cpp'
@@ -54,7 +55,7 @@ export const sharedBase = {
     [
       'script',
       {},
-      `(function(){try{var w=parseInt(localStorage.getItem('vp-sidebar-width'));if(!w||w<200||w>480){w=272;}document.documentElement.style.setProperty('--vp-sidebar-width',w+'px');var a=parseInt(localStorage.getItem('vp-aside-width'));if(!a||a<180||a>360){a=256;}document.documentElement.style.setProperty('--vp-aside-width',a+'px');}catch(e){}})()`,
+      `(function(){try{var w=parseInt(localStorage.getItem('vp-sidebar-width'));if(!w||w<200||w>480){w=272;}document.documentElement.style.setProperty('--vp-sidebar-width',w+'px');var a=parseInt(localStorage.getItem('vp-aside-width'));if(!a||a<184||a>320){a=248;}document.documentElement.style.setProperty('--vp-aside-width',a+'px');}catch(e){}})()`,
     ],
   ],
 }
@@ -70,6 +71,7 @@ export const sharedMarkdown = {
     cppTemplateEscapePlugin(md)
     md.use(mermaidPlugin)
     md.use(codeFoldPlugin) // 必须在 mermaid 之后：覆写 fence 要拿到 mermaid 改型后的完整链
+    md.use(codeLabelPlugin) // 在 codeFold 之后：只改 lang 徽章文案，不动兄弟链
     md.use(kbdPlugin)
   },
 }
