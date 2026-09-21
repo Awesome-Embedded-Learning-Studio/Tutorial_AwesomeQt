@@ -173,7 +173,7 @@ function toggle() {
   margin: 0;
   padding: 10px 14px;
   border: 1px solid var(--ide-border);
-  border-radius: 2px;
+  border-radius: var(--aq-radius-sm);
   background: var(--vp-c-bg-soft);
   font-family: var(--aq-mono);
   font-size: 11.5px;

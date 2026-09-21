@@ -87,7 +87,7 @@ const shown = computed(() =>
   gap: 0;
   overflow-x: auto;
   border: 1px solid var(--ide-border);
-  border-radius: 3px;
+  border-radius: var(--aq-radius-md);
   background: var(--ide-panel-bg);
 }
 
@@ -136,7 +136,7 @@ const shown = computed(() =>
   display: flex;
   flex-direction: column;
   border: 1px solid var(--ide-border);
-  border-radius: 3px;
+  border-radius: var(--aq-radius-md);
   background: var(--ide-panel-bg);
   overflow: hidden;
   text-decoration: none !important;
@@ -199,7 +199,7 @@ const shown = computed(() =>
   font-style: normal;
   padding: 0 6px;
   border: 1px solid var(--ide-border);
-  border-radius: 2px;
+  border-radius: var(--aq-radius-sm);
   font-family: var(--aq-mono);
   font-size: 10px;
   color: var(--vp-c-text-3);

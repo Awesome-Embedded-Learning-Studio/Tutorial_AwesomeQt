@@ -42,7 +42,7 @@ const roman = computed(() => ROMAN[props.number] || String(props.number))
   padding: 1rem 1.1rem 1rem 0.85rem;
   background: var(--vp-c-bg-elv);
   border: 1px solid var(--vp-c-divider);
-  border-radius: 4px;
+  border-radius: var(--aq-radius-md);
   text-decoration: none;
   color: inherit;
   transition: border-color 0.2s ease, background-color 0.2s ease;

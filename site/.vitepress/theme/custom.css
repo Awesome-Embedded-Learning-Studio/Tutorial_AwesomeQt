@@ -108,6 +108,10 @@
 :root {
   --aq-mono: var(--vp-font-family-mono, ui-monospace, SFMono-Regular, Menlo,
     Consolas, monospace);
+  --aq-reading-font: 'Noto Serif CJK SC', 'Source Han Serif SC', 'Songti SC',
+    STSong, SimSun, serif;
+  --aq-radius-sm: 6px;
+  --aq-radius-md: 8px;
 }
 
 /* ── 选区配色（soft tint，明暗双模式都可读）── */
@@ -119,9 +123,14 @@
    正文与各级标题都乘 --aq-font-scale（FontSizeSwitcher 五档，见文末机制段）。
    档位只缩文字、不缩布局：侧栏/导航/右大纲/首页组件不消费该变量。 */
 .vp-doc {
-  line-height: 1.9;
-  font-size: calc(0.94rem * var(--aq-font-scale, 1));
+  font-family: var(--aq-reading-font);
+  line-height: 1.95;
+  font-size: calc(1rem * var(--aq-font-scale, 1));
   letter-spacing: 0;
+}
+
+.vp-doc :where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--vp-font-family);
 }
 
 .vp-doc h1 {
@@ -155,8 +164,8 @@
 
 /* p 行高用无单位值顶掉 VitePress 的 28px 定值，让行距跟字号一起缩放 */
 .vp-doc p {
-  line-height: 1.85;
-  margin-bottom: 1.2em;
+  line-height: 1.95;
+  margin-bottom: 1.3em;
 }
 
 /* 引用块正文字号机制已随视觉迁入 article-quote.css */
@@ -192,14 +201,14 @@
 .vp-doc :not(pre)>code {
   font-size: 0.78em;
   padding: 0.15em 0.35em;
-  border-radius: 4px;
+  border-radius: var(--aq-radius-sm);
 }
 
 /* Tables */
 .vp-doc table {
   font-size: calc(0.78rem * var(--aq-font-scale, 1));
   line-height: 1.6;
-  border-radius: 8px;
+  border-radius: var(--aq-radius-md);
   overflow: hidden;
 }
 
@@ -528,26 +537,24 @@ kbd {
 }
 
 /* ================================================================
-   可拖拽侧栏 · ResizableSidebar（左右栏宽度可拖动调整，双击重置）
-   --vp-sidebar-width 由 VitePress 全链路消费；--vp-aside-width 控右大纲栏。
+   可拖拽抽屉侧栏 · ResizableSidebar（仅左栏，双击重置）
+   --vp-sidebar-width 由抽屉侧栏消费；右大纲固定 248px。
    宽度首屏防闪由 shared.ts head 内联脚本注入；组件运行时再读写 localStorage。
    ================================================================ */
 :root {
   --vp-sidebar-width: 272px;
-  --vp-aside-width: 248px;
 }
 
+/* 右大纲栏(TOC)固定宽:右栏拖拽功能已砍，保持紧凑但不截断常见标题。 */
 .VPDoc.has-aside .aside {
-  width: var(--vp-aside-width);
-  max-width: var(--vp-aside-width);
-  /* 空间不足时先缩正文别缩大纲:大纲被 flex 压到 ~96px 时条目文字全截断,
-     而正文只是行宽变窄(2026-09-21 实测 1440 视口 aside 只剩 128px)。 */
+  width: 248px;
+  max-width: 248px;
   flex-shrink: 0;
 }
 
 .VPDoc.has-aside .aside-container,
 .VPDoc.has-aside .aside-curtain {
-  width: calc(var(--vp-aside-width) - 32px);
+  width: 216px;
 }
 
 .rs-handle {
@@ -556,7 +563,8 @@ kbd {
   bottom: 0;
   width: 6px;
   cursor: col-resize;
-  z-index: 50;
+  /* 抽屉 z-index 60:handle 要在抽屉右缘之上才可拖(仅 open 时显示,平时无感) */
+  z-index: 65;
   background: transparent;
   transition: background 0.2s ease, opacity 0.2s ease;
 }
@@ -571,14 +579,6 @@ kbd {
   opacity: 0.65;
 }
 
-.rs-handle--right {
-  position: absolute;
-  top: 0;
-  right: -3px;
-  bottom: 0;
-  width: 6px;
-}
-
 body.rs-resizing {
   user-select: none;
   cursor: col-resize;
@@ -591,6 +591,201 @@ body.rs-resizing * {
 @media (max-width: 959px) {
   .rs-handle {
     display: none !important;
+  }
+}
+
+/* ================================================================
+   全视口抽屉侧栏（issue #20，2026-09）
+   桌面/平板不再常驻避让：撤销 theme-default 对 --vp-sidebar-width 的
+   全链路 padding 消费，侧栏统一回到移动端抽屉形态——平时收起在左缘外，
+   拉出后悬浮覆盖正文（不挤压内容，长标题自适应宽度也无害）。
+   开关：左缘窄条 SidebarRail.vue（≥960）+ VPLocalNav 菜单按钮（<1280）。
+   ⚠ 本段全部是对 theme-default scoped 样式的覆盖（双类写法补特异性，
+   依赖 custom.css 晚于组件样式加载），升级 vitepress 需回归本段。
+   ================================================================ */
+
+/* 1. 侧栏本体：四边留一道缝，作为覆盖正文的工具抽屉。 */
+.VPSidebar.VPSidebar {
+  top: calc(var(--vp-layout-top-height, 0px) + 10px);
+  bottom: 10px;
+  left: 10px;
+  width: calc(100vw - 20px);
+  max-width: 480px;
+  border-radius: var(--aq-radius-md);
+  border: 1px solid var(--vp-c-border);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+/* ≥960px 撤销常驻/居中容器宽，回到抽屉态（滑入滑出同移动端） */
+@media (min-width: 960px) {
+  :root:root {
+    /* 桌面常驻态会降为 25（低于遮罩 50），抽屉必须盖住正文与遮罩 */
+    --vp-z-index-sidebar: 60;
+  }
+
+  .VPSidebar.VPSidebar {
+    width: var(--vp-sidebar-width);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-100%);
+    transition: opacity 0.5s, transform 0.25s ease;
+  }
+
+  .VPSidebar.VPSidebar.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+    transition: opacity 0.25s,
+      transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+
+  /* curtain 是常驻态把侧栏背景垫到顶栏下的补丁，抽屉模式用不上 */
+  .VPSidebar .curtain {
+    display: none;
+  }
+}
+
+/* ≥1440px 常驻态会把内容推到居中线，撤销大留白 padding */
+@media (min-width: 1440px) {
+  .VPSidebar.VPSidebar {
+    padding-left: 32px;
+  }
+}
+
+/* 2. 遮罩：≥1280px theme-default 会整个隐藏遮罩，放开让点击外部可关闭 */
+@media (min-width: 1280px) {
+  .VPBackdrop.VPBackdrop {
+    display: block;
+  }
+}
+:root:root {
+  /* 默认 0.6 太重，抽屉是轻量浮层，压到 0.3 */
+  --vp-backdrop-bg-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 3. 正文避让清零：侧栏不再占位，VPContent 恢复无侧栏的居中布局 */
+.VPContent.VPContent.has-sidebar {
+  margin: var(--vp-layout-top-height, 0px) auto 0;
+}
+
+@media (min-width: 960px) {
+  .VPContent.VPContent.has-sidebar {
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPContent.VPContent.has-sidebar {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* 正文行宽由文首的 1320px 组合容器 + 900px 文章列统一控制。 */
+
+/* 超宽屏下用一列与 TOC 等宽的左侧平衡区，使 900px 正文的轴线
+   严格落在视口中央。TOC 仍在右侧，但不再把正文整体推向左边。 */
+@media (min-width: 1600px) {
+  .VPDoc.VPDoc.has-aside .container.container {
+    display: grid;
+    grid-template-columns: 248px minmax(0, 900px) 248px;
+    justify-content: center;
+    max-width: 1396px;
+  }
+
+  .VPDoc.VPDoc.has-aside .content.content {
+    grid-column: 2;
+    margin: 0;
+    min-width: 0;
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  .VPDoc.VPDoc.has-aside .aside.aside {
+    grid-column: 3;
+    padding-left: 32px;
+  }
+}
+
+/* 4. 顶栏避让清零：logo 区从 absolute 叠在侧栏上方恢复回正常文档流 */
+@media (min-width: 960px) {
+  /* theme-default ≥960 让整条 navbar 透明、白底靠常驻侧栏+右侧 content-body 垫；
+     侧栏悬浮后没有东西垫底，logo 区透出页面灰底——navbar 自己给整条背景，
+     并撤掉 content-body 的垫底（避免双层） */
+  .VPNavBar.VPNavBar:not(.home) {
+    background-color: var(--vp-nav-bg-color);
+  }
+
+  .VPNavBar.VPNavBar:not(.home.top) .content-body.content-body {
+    background-color: transparent;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .wrapper.wrapper {
+    padding: 0 32px;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .container.container {
+    max-width: calc(var(--vp-layout-max-width) - 64px);
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .title.title {
+    position: static;
+    padding: 0;
+    width: auto;
+    height: auto;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .content.content {
+    position: static;
+    padding-right: 32px;
+    padding-left: 0;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .divider.divider {
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPNavBar.VPNavBar.has-sidebar .title.title {
+    padding: 0;
+    width: auto;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .content.content {
+    padding-right: calc((100vw - var(--vp-layout-max-width)) / 2 + 32px);
+    padding-left: 0;
+  }
+
+  .VPNavBar.VPNavBar.has-sidebar .divider.divider {
+    padding-left: 0;
+  }
+}
+
+/* 文档页顶栏 logo（"AwesomeQt 教程"）收起：品牌已由 AppTitleBar（IDE 标题栏）
+   承载，navbar 再挂一行属于信息重复；且侧栏常驻时代它叠在侧栏上方、视觉有归属，
+   抽屉化后独占顶栏钉在左上角显得突兀（issue #20 改版反馈）。首页不动。 */
+@media (min-width: 960px) {
+  .VPNavBar.VPNavBar:not(.home) .title.title {
+    display: none;
+  }
+}
+
+/* 5. 本地导航条（960~1279 显示）：撤销侧栏避让，「菜单」按钮即抽屉开关 */
+@media (min-width: 960px) {
+  .VPLocalNav.VPLocalNav.has-sidebar {
+    padding-left: 0;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPLocalNav.VPLocalNav.has-sidebar {
+    padding-left: 0;
+  }
+
+  /* outline 下拉原本定位在常驻侧栏右侧，改回左缘 */
+  .VPLocalNavOutlineDropdown .items.items {
+    left: 32px;
   }
 }
 
@@ -658,7 +853,7 @@ body.rs-resizing * {
 }
 
 .VPNavBarMenuLink {
-  border-radius: 2px;
+  border-radius: var(--aq-radius-sm);
   transition: color 0.18s ease, background-color 0.18s ease;
 }
 
@@ -675,7 +870,7 @@ body.rs-resizing * {
 .VPNavBarSearch .DocSearch-Button {
   height: 32px;
   border: 1px solid var(--ide-border);
-  border-radius: 3px;
+  border-radius: var(--aq-radius-sm);
   background: var(--ide-panel-bg);
 }
 
@@ -691,7 +886,7 @@ body.rs-resizing * {
 /* ── 下拉菜单（VPFlyout/VPMenu）：边框面板 + 全行高亮 ── */
 .VPMenu {
   border: 1px solid var(--ide-border);
-  border-radius: 4px;
+  border-radius: var(--aq-radius-md);
   background: var(--ide-panel-bg);
   box-shadow: 0 12px 32px rgba(22, 28, 24, 0.12);
 }
@@ -701,7 +896,7 @@ body.rs-resizing * {
 }
 
 .VPMenuLink {
-  border-radius: 4px;
+  border-radius: var(--aq-radius-sm);
 }
 
 .VPMenuLink a {
@@ -724,7 +919,7 @@ body.rs-resizing * {
 }
 
 .VPSidebarItem .item {
-  border-radius: 2px;
+  border-radius: var(--aq-radius-sm);
   transition: background-color 0.15s ease;
 }
 
@@ -768,24 +963,6 @@ body.rs-resizing * {
   white-space: nowrap;
 }
 
-/* 宽屏时左栏维持真实宽度，正文在去掉侧栏后的可用区域里居中。
-   原生公式同时加左右外留白，会在 1920px+ 屏幕上将整组内容推向左侧。 */
-@media (min-width: 1440px) {
-  .VPSidebar.VPSidebar {
-    width: var(--vp-sidebar-width);
-    padding-left: 32px;
-  }
-
-  .VPContent.has-sidebar.VPContent.has-sidebar {
-    padding-right: 0;
-    padding-left: var(--vp-sidebar-width);
-  }
-
-  .VPNavBar.has-sidebar .title.title {
-    padding-left: 32px;
-  }
-}
-
 /* ── 右栏大纲：OUTLINE 面板化 ── */
 .VPDocAsideOutline .outline-title {
   font-family: var(--aq-mono);
@@ -809,7 +986,7 @@ body.rs-resizing * {
 .vp-doc .custom-block {
   border: 1px solid var(--ide-border);
   border-left: 3px solid var(--vp-c-brand-1);
-  border-radius: 3px;
+  border-radius: var(--aq-radius-md);
   background-color: var(--vp-c-bg-elv);
 }
 
@@ -872,7 +1049,7 @@ html {
 .ide-panel {
   background: var(--ide-panel-bg);
   border: 1px solid var(--ide-border);
-  border-radius: 3px;
+  border-radius: var(--aq-radius-md);
   overflow: hidden;
 }
 
@@ -883,7 +1060,7 @@ html {
   gap: 6px;
   padding: 0 18px;
   height: 38px;
-  border-radius: 3px;
+  border-radius: var(--aq-radius-sm);
   border: 1px solid var(--vp-c-border);
   font-size: 14px;
   font-weight: 600;
@@ -928,14 +1105,14 @@ html {
 /* 进度条（QProgressBar：凹槽 + 填充） */
 .ide-progress {
   height: 5px;
-  border-radius: 0;
+  border-radius: 3px;
   background: var(--vp-c-bg-mute);
   overflow: hidden;
 }
 
 .ide-progress__fill {
   height: 100%;
-  border-radius: 0;
+  border-radius: 3px;
   background: var(--vp-c-brand-1);
   transition: width 0.3s ease;
 }

@@ -26,7 +26,7 @@
   padding: 18px 22px 18px 54px;
   border: 1px solid var(--article-quote-border);
   border-left: 3px solid var(--article-quote-accent);
-  border-radius: 3px;
+  border-radius: var(--aq-radius-md);
   background: var(--article-quote-bg);
   box-shadow: var(--article-quote-shadow);
   color: var(--article-quote-ink);
@@ -81,7 +81,7 @@
 @media (max-width: 639px) {
   .vp-doc blockquote {
     padding: 16px 16px 16px 44px;
-    border-radius: 3px;
+    border-radius: var(--aq-radius-md);
   }
 
   .vp-doc blockquote::before {

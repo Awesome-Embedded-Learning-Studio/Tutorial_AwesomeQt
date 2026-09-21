@@ -91,7 +91,7 @@ import InteractiveDemo from './InteractiveDemo.vue'
 .welcome-hero__panel-dot {
   width: 8px;
   height: 8px;
-  border-radius: 2px;
+  border-radius: var(--aq-radius-sm);
   background: var(--vp-c-brand-1);
 }
 
@@ -99,7 +99,7 @@ import InteractiveDemo from './InteractiveDemo.vue'
   margin-left: auto;
   padding: 1px 7px;
   border: 1px solid var(--ide-border);
-  border-radius: 2px;
+  border-radius: var(--aq-radius-sm);
   font-size: 10px;
 }
 

@@ -51,8 +51,9 @@ import { layerCards } from './home-data'
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0;
-  border-top: 1px solid var(--vp-c-border);
-  border-bottom: 1px solid var(--vp-c-divider);
+  border: 1px solid var(--vp-c-border);
+  border-radius: var(--aq-radius-md);
+  overflow: hidden;
 }
 
 /* 教程层级像一张目录表：共享边界，避免三张浮起的卡片。 */
@@ -120,7 +121,7 @@ import { layerCards } from './home-data'
   display: inline-block;
   margin-right: 8px;
   padding: 1px 8px;
-  border-radius: 2px;
+  border-radius: var(--aq-radius-sm);
   background: var(--aq-c-eng-soft);
   color: var(--aq-c-eng-1);
   font-size: 10.5px;

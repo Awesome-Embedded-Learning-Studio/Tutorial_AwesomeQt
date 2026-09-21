@@ -25,7 +25,7 @@ defineProps<{
   gap: 12px;
   padding: 16px 18px;
   border: 1px solid var(--vp-c-divider);
-  border-radius: 4px;
+  border-radius: var(--aq-radius-md);
   background-color: var(--vp-c-bg-elv);
   text-decoration: none !important;
   color: inherit;
@@ -48,7 +48,7 @@ defineProps<{
   font-size: 0.72rem;
   font-weight: 600;
   padding: 2px 8px;
-  border-radius: 2px;
+  border-radius: var(--aq-radius-sm);
   background: var(--vp-c-brand-soft);
   color: var(--vp-c-brand-1);
   line-height: 1.6;
