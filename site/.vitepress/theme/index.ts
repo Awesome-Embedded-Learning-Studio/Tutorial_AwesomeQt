@@ -16,8 +16,11 @@ import SidebarRail from './components/SidebarRail.vue'
 import ReadingProgress from './components/ReadingProgress.vue'
 import ModuleCard from './components/ModuleCard.vue'
 import ChapterHero from './components/ChapterHero.vue'
+import MermaidLightbox from './components/MermaidLightbox.vue'
 import { setupMermaid } from './mermaid-client'
 import './custom.css'
+import './article-code.css'
+import './article-quote.css'
 
 export default {
   extends: DefaultTheme,
@@ -26,7 +29,14 @@ export default {
       // 工作台外壳：网站 = 一个 Qt 桌面应用。标题栏经 --vp-layout-top-height
       // 由 VitePress 原生机制全链避让；状态栏 fixed 钉底（.Layout 已留 26px）。
       // SidebarRail：左缘窄条，抽屉侧栏的桌面开关（issue #20）
-      'layout-top': () => [h(ReadingProgress), h(AppTitleBar), h(ResizableSidebar), h(SidebarRail)],
+      // MermaidLightbox 自身 Teleport 到 body，这里只负责常驻挂载。
+      'layout-top': () => [
+        h(ReadingProgress),
+        h(AppTitleBar),
+        h(ResizableSidebar),
+        h(SidebarRail),
+        h(MermaidLightbox),
+      ],
       'layout-bottom': () => h(StatusBar),
       // 首页 = Welcome 欢迎屏（index.md 零 hero/features frontmatter，零覆盖战）：
       // 交互演示（signal→slot 真控件复刻）→ 三层卡 → 示例画廊 → 编译输出 → 生态行。

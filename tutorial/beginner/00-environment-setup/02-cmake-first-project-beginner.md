@@ -1,21 +1,15 @@
 ---
-title: "0.2 第一个 CMake Qt6 工程从零跑通"
-description: "说实话，我第一次接触 CMake 的时候，内心是拒绝的。qmake 用得好好的，为什么要换？结果配了一天 CMake，最后生成的还是一堆乱七八糟的文件。"
+title: "0.2 第一个 CMake Qt6 工程"
+description: "从零跑通一个 Qt 6 的 CMake 工程。CMakeLists.txt 逐行拆：最低版本 3.16 的出处、C++17 是硬要求、AUTOMOC 三件套在安排什么、find_package 的 COMPONENTS、target_link_libraries 的 PRIVATE。另含 out-of-source 构建的好处、资源文件 .qrc 的 :/ 路径坑、.ui 文件与 AUTOUIC、多模块结构与 PUBLIC/PRIVATE 的分工。附一个找错测验和一个改标准看报错的实验。"
 ---
 
-# 现代Qt开发教程（新手篇）0.2——第一个 CMake Qt6 工程从零跑通
+# 现代Qt开发教程（新手篇）0.2——第一个 CMake Qt6 工程
 
-## 1. 前言：为什么非得用 CMake
+qmake 的 `.pro` 文件语法亲切，网上教程成山，为什么 Qt 6 的世界非要换 CMake？因为官方把重心整个挪了过去：Qt 6 新增的构建命令，`qt_add_executable`、`qt_add_resources` 这一族，只在 CMake 侧存在，文档示例也全线 CMake 化。qmake 还能用，但新项目再从它起步，等于逆着官方的方向游。这一篇咱们从零建一个能跑的工程，CMakeLists.txt 每一行为什么在那，讲清楚。
 
-说实话，我第一次接触 CMake 的时候，内心是拒绝的。qmake 用得好好的，为什么要换？结果配了一天 CMake，最后生成的还是一堆乱七八糟的文件。
+## 十行代码，三道工序
 
-但后来我发现，Qt 6 时代，CMake 已经是唯一的选择了。qmake 虽然还能用，但已经被官方标记为 "legacy"。而且 CMake 的威力是真的强大——跨平台构建、依赖管理、IDE 集成，这些都不是 qmake 能比的。
-
-所以这一篇，我们不搞虚的，直接从零创建一个 Qt 6 的 CMake 工程。我会把每个字段、每个命令都解释清楚，让你不仅知其然，更知其所以然。
-
-## 2. 最小可运行的 Qt 程序
-
-在写 CMake 之前，先让我们看看一个最小的 Qt 程序长什么样：
+代码本身十行不到：
 
 ```cpp
 // main.cpp
@@ -34,140 +28,69 @@ int main(int argc, char *argv[])
 }
 ```
 
-就这么简单。但这背后，Qt 的构建系统需要做很多事情：MOC（Meta-Object Compiler）处理 Q_OBJECT 宏，RCC（Resource Compiler）把资源文件编译成 C++ 代码，UIC（User Interface Compiler）把 .ui 文件转成 C++ 代码。CMake 会自动调用这些工具，前提是你的 CMakeLists.txt 写对了。
+但这十行背后，构建系统要干三件普通 C++ 工程不用干的活。类头文件里出现 Q_OBJECT，就得先过 MOC 生成元对象代码，信号槽才有得连。图片、图标这类资源要过 RCC 编译进二进制。.ui 界面文件要过 UIC 转成 C++ 头文件。咱们看 CMakeLists.txt 时那些陌生的配置，大半就是在安排这三道工序。
 
-## 3. CMakeLists.txt 逐行解析
+## CMakeLists.txt 逐行拆
 
-下面是一个标准的 Qt 6 项目的 CMakeLists.txt，我会逐行解释：
+一份完整的配置长这样，咱们顺着往下过：
 
 ```cmake
-# 1. 指定 CMake 最低版本
-cmake_minimum_required(VERSION 3.26)
-
-# 2. 项目名称和语言
+cmake_minimum_required(VERSION 3.16)
 project(HelloQt VERSION 1.0 LANGUAGES CXX)
 
-# 3. 设置 C++ 标准
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 4. 自动处理 Qt 的 MOC、RCC、UIC
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-# 5. 查找 Qt6 包
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
-# 6. 创建可执行文件
 add_executable(HelloQt
     main.cpp
 )
 
-# 7. 链接 Qt 库
 target_link_libraries(HelloQt PRIVATE
     Qt6::Widgets
 )
 ```
 
-我们从上往下走。`cmake_minimum_required(VERSION 3.26)` 告诉 CMake 这个项目至少需要 3.26 版本，因为 Qt 6.9.1 就要求这个版本起步。`project(HelloQt VERSION 1.0 LANGUAGES CXX)` 声明了项目名称是 HelloQt，版本号 1.0，使用 C++ 语言——这里的 VERSION 会自动生成版本宏，后面可以用。`CMAKE_CXX_STANDARD` 设为 17 是因为 Qt 6 需要 C++17 或更高，`CMAKE_CXX_STANDARD_REQUIRED ON` 表示编译器必须支持这个标准，不支持就报错。
+开头两行是每个 CMake 工程的标配。`cmake_minimum_required` 的版本咱们跟着官方写 3.16：入门示例和 qtbase 源码顶层都是这个数，机器上的 CMake 比这新当然没问题。`project()` 声明项目名、版本、语言，VERSION 会在 CMake 里生成 `PROJECT_VERSION_MAJOR` 一族变量，代码里要用版本号时直接取。
 
-然后是三件套：`CMAKE_AUTOMOC` 让 CMake 自动运行 MOC 处理信号槽机制，`CMAKE_AUTORCC` 自动处理资源文件（图片、图标之类），`CMAKE_AUTOUIC` 自动把 .ui 界面文件转成 C++ 代码。这三个开关开了之后，你基本不用手动管 Qt 的代码生成工具了。
+`CMAKE_CXX_STANDARD` 给 17 是 Qt 6 的硬要求——它的头文件用上了 C++17 特性，标准给低，报错直接从 Qt 头文件深处冒出来，位置根本不在咱们自己的代码里。旁边的 `CMAKE_CXX_STANDARD_REQUIRED ON` 是让它硬得彻底：编译器不支持，配置阶段就报错拦下，而不是拖到编译期再炸。
 
-`find_package(Qt6 REQUIRED COMPONENTS Widgets)` 是整个配置的灵魂——它告诉 CMake 去找 Qt6 的 Widgets 模块，`REQUIRED` 意味着找不到就直接报错，不会静默跳过。`add_executable(HelloQt main.cpp)` 创建一个叫 HelloQt 的可执行文件，后面的 main.cpp 是源文件。最后 `target_link_libraries(HelloQt PRIVATE Qt6::Widgets)` 把 Qt 的 Widgets 库链接进来，`PRIVATE` 表示这个链接只对 HelloQt 自己生效，不会传染给依赖 HelloQt 的其他目标。
+接着三行 `CMAKE_AUTO*` 就是给开头那三道工序派活的：AUTOMOC 盯 Q_OBJECT，AUTORCC 盯资源，AUTOUIC 盯界面文件。开关一开，哪个文件变了、要重跑哪个工具，CMake 自己盯着，不用咱们操心。漏了 AUTOMOC 的后果很典型：编译期风平浪静，链接期报上一条 `undefined reference to vtable for XXX`——类里写了 Q_OBJECT，moc 的代码却没跟上，吓人的报错背后就这么个根因。补上开关，把含 Q_OBJECT 的文件列进目标，就平了。
 
-这里有个大坑——如果你忘了设 CMAKE_PREFIX_PATH，`find_package(Qt6)` 会直接告诉你 "Could not find Qt6"。CMake 需要知道 Qt 安装在哪里，CMAKE_PREFIX_PATH 就是那张地图。配置的时候加上 `-DCMAKE_PREFIX_PATH=/path/to/Qt/6.9.1/gcc_64` 就行了。
+`find_package(Qt6 REQUIRED COMPONENTS Widgets)` 是整份文件的灵魂，灵魂在 COMPONENTS。Qt 6 是模块化的，用到哪个模块才列哪个：Widgets 是桌面控件一族，几乎总在。Quick 归 QML，教程 Part 6 才登场。Network 和 Sql 在各自篇章出现。咱们全勾上去也不会报错，只是拖慢编译、撑大程序。REQUIRED 的意思是找不到就报错停下，绝不静默继续。
 
-### 3.2 COMPONENTS 参数详解
-
-`find_package(Qt6 REQUIRED COMPONENTS Widgets)` 里的 `COMPONENTS` 是什么意思？Qt 6 是模块化的，不同的功能在不同的模块里。Widgets 是传统桌面控件（QPushButton、QLabel），几乎总是需要；Quick 是 QML/Qt Quick 现代界面，写 QML 时才需要；Network 是网络编程（QTcpSocket、QHttp），做网络请求时才需要；Sql 是数据库（QSqlDatabase、QSqlQuery），操作数据库时才需要。你只需要引入你用到的模块，不需要的模块不要加，否则会增加编译时间和最终程序大小。
-
-## 4. 从零创建项目
-
-### 4.1 创建目录结构
+这个报错咱们在 0.1 篇见过面：`Could not find Qt6`。多半是 CMake 不知道 Qt 装在哪，也就是 CMAKE_PREFIX_PATH 没传进去，命令行下的给法：
 
 ```bash
-# 创建项目目录
-mkdir HelloQt && cd HelloQt
-
-# 创建文件
-touch main.cpp CMakeLists.txt
-
-# 目录结构应该是这样：
-# HelloQt/
-# ├── CMakeLists.txt
-# └── main.cpp
+cmake -B build -DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64
+# Linux 换成 ~/Qt/6.9.1/gcc_64
 ```
 
-### 4.2 写入代码
+最后两行收尾：咱们用 `add_executable` 建目标、列源文件，`target_link_libraries` 把 Qt6::Widgets 链进来，PRIVATE 修饰的意思是这层链接关系只归 HelloQt 自己，不外传。单目标的工程里 PRIVATE 看不出差别，等多模块一节 PUBLIC 登场，它的意义才显出来。
 
-把上面的 main.cpp 和 CMakeLists.txt 内容分别填入对应的文件。
+## 跑起来：out-of-source 的规矩
 
-### 4.3 配置项目
+咱们把工程目录建好，构建目录单独开一个，人待在 build 里配置：
 
 ```bash
-# 创建构建目录（推荐 out-of-source 构建）
 mkdir build && cd build
-
-# 配置项目（记得替换成你的 Qt 路径）
-cmake .. -DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64
-
-# Linux 下：
-cmake .. -DCMAKE_PREFIX_PATH=/home/你的用户名/Qt/6.9.1/gcc_64
-```
-
-如果配置成功，你会看到：
-
-```text
--- Configuring done
--- Generating done
--- Build files have been written to: /path/to/HelloQt/build
-```
-
-你可能注意到我们是在 build 目录里编译的，而不是直接在源码目录里。这种 out-of-source 构建方式有几个好处：源码目录保持干净，CMake 生成的文件都在 build 里；想清理构建产物的时候直接删 build 目录就行；而且 .gitignore 只需要忽略 build/ 目录，不会污染 Git 仓库。
-
-### 4.4 编译运行
-
-```bash
-# 编译
+cmake .. -DCMAKE_PREFIX_PATH=/home/您的用户名/Qt/6.9.1/gcc_64
 cmake --build .
-
-# 运行（Windows）
-./Debug/HelloQt.exe
-
-# 运行（Linux/WSL2）
-./HelloQt
+./HelloQt          # MSVC 多配置生成器下在 Debug/HelloQt.exe
 ```
 
-如果一切顺利，你会看到一个显示 "Hello, Qt 6!" 的窗口。
+咱们看到末尾三行 `Configuring done`、`Generating done`、`Build files have been written to` 再编译，最后窗口弹出，"Hello, Qt 6!"。
 
-## 5. 常见编译错误及解决
+特意单开 build 目录不是洁癖。CMake 生成的缓存、中间文件全关在里面，源码目录一个不沾。想推倒重来，删掉目录了事。版本控制也只需忽略 build/ 一项。咱们要是在源码目录里直接 `cmake .`，生成物撒一地，混进 git 提交后再清理就是体力活了。
 
-### 5.1 "Could not find Qt6"
+## 拿一份有毛病的配置练手
 
-CMake 找不到 Qt 安装位置。解决方法就是设置 CMAKE_PREFIX_PATH：
-
-```bash
-cmake .. -DCMAKE_PREFIX_PATH=/path/to/Qt/6.9.1/gcc_64
-```
-
-### 5.2 "The C++ compiler does not support C++17"
-
-编译器太老了。升级编译器，或者确保 `CMAKE_CXX_STANDARD` 设为 17。
-
-### 5.3 "moc_xxx.cpp not found"
-
-AUTOMOC 没开。确保 CMakeLists.txt 里有：
-
-```cmake
-set(CMAKE_AUTOMOC ON)
-```
-
-### 5.4 "undefined reference to vtable for XXX"
-
-这个报错看着吓人，实际上就是类里写了 Q_OBJECT 但没有 moc 生成的代码被链接。确保 AUTOMOC 开启，并且把包含 Q_OBJECT 的头文件加到 add_executable 里。
-
-我们来试一个调试练习。下面这段 CMakeLists.txt 有好几处问题，看看你能找出多少：
+下面这份配置能过配置阶段，但构建一定出问题，毛病在哪，咱们来当一回排查者：
 
 ```cmake
 cmake_minimum_required(VERSION 3.16)
@@ -175,21 +98,23 @@ project(MyApp VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
-find_package(Qt6 REQUIRED Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
-add_executable(MyApp main.cpp)
-target_link_libraries(MyApp Qt6::Widgets)
+add_executable(MyApp
+    main.cpp
+    widget.cpp
+)
+
+target_link_libraries(MyApp PRIVATE Qt6::Widgets)
 ```
 
-问题不少：VERSION 3.16 太低了，Qt 6.9.1 需要 3.26 以上；C++14 也不够，Qt 6 要求 C++17；`find_package` 缺少 `COMPONENTS` 关键字；`target_link_libraries` 缺少 `PRIVATE`；更别说还缺少整个 AUTOMOC/AUTORCC/AUTOUIC 三件套。这六处问题不改完，构建一定失败。
+答案两处。`CMAKE_CXX_STANDARD` 给了 14，报错会从 Qt 头文件深处冒出来；AUTOMOC 没开，而 widget.cpp 里有带 Q_OBJECT 的类，链接期等着的 vtable 报错。对照上一节的逐行拆解，咱们两处都能对上号。
 
-## 6. 进阶：添加资源文件
+还想再狠一点，拿能跑的工程做实验：把 `CMAKE_CXX_STANDARD` 改成 14，重新配置构建，亲眼看编译器报的第一个错长什么样、落在哪个文件。见过一次，以后咱们在别的项目撞上同样的报错，就不会先怀疑自己的代码了。
 
-Qt 项目常常需要添加图片、图标等资源。这时候需要用 .qrc 资源文件。
+## 资源文件：路径前那个冒号
 
-### 6.1 创建资源文件
-
-创建一个 `resources.qrc` 文件：
+咱们要把图片、图标弄进 Qt 工程，走的是 .qrc 这条路。`resources.qrc` 里登记文件：
 
 ```xml
 <!DOCTYPE RCC>
@@ -200,91 +125,27 @@ Qt 项目常常需要添加图片、图标等资源。这时候需要用 .qrc �
 </RCC>
 ```
 
-### 6.2 更新 CMakeLists.txt
+把它加进 `add_executable` 的源列表，AUTORCC 就接手了。咱们用的时候有个细节容易栽跟头：路径前面有个冒号，`QPixmap(":/images/icon.png")`。这个 `:/` 是资源系统的入口标记——资源已经编进二进制，只能从这条路走。写成 `QPixmap("images/icon.png")`，编译照样过、运行不报错，图片默默出不来，发布后才发现图标全丢。这种静默失败没有报错可看，排查起来最磨人，头一回写资源路径就把它记牢。
 
-```cmake
-add_executable(HelloQt
-    main.cpp
-    resources.qrc
-)
-```
+## .ui 文件：界面描述接进 CMake
 
-因为我们之前已经开了 AUTORCC，CMake 会自动调用 RCC 把资源编译进可执行文件。
-
-### 6.3 在代码中使用
-
-```cpp
-#include <QApplication>
-#include <QLabel>
-#include <QPixmap>
-
-int main(int argc, char *argv[])
-{
-    QApplication app(argc, argv);
-
-    QLabel label;
-    label.setPixmap(QPixmap(":/images/icon.png"));
-    label.show();
-
-    return app.exec();
-}
-```
-
-这里有个很容易栽的跟头——注意资源路径前面的冒号。`QPixmap(":/images/icon.png")` 是对的，`QPixmap("images/icon.png")` 是错的。冒号前缀 `:/` 是 Qt 资源系统的标识，不用它的话程序运行时找不到图片，或者发布之后图片就丢了。因为资源文件已经被编译进可执行文件里，只能通过 `:/` 路径访问，不能当普通文件路径用。
-
-## 7. 进阶：使用 .ui 文件
-
-### 7.1 创建 .ui 文件
-
-在 Qt Creator 里设计界面，会自动生成 .ui 文件。或者手动创建一个简单的：
+咱们在 Qt Creator 里拖出来的界面存成 .ui 文件，本质是一份 XML，手写一个最小的也行：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>400</width>
-    <height>300</height>
-   </rect>
-  </property>
   <property name="windowTitle">
    <string>Hello Qt</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>150</x>
-      <y>120</y>
-      <width>93</width>
-      <height>29</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Click Me</string>
-    </property>
-   </widget>
-  </widget>
  </widget>
  <resources/>
  <connections/>
 </ui>
 ```
 
-### 7.2 更新 CMakeLists.txt
-
-```cmake
-add_executable(HelloQt
-    main.cpp
-    mainwindow.ui
-)
-```
-
-### 7.3 在代码中使用
+咱们同样把它加进 `add_executable`。AUTOUIC 把它转成 `ui_mainwindow.h` 放进构建目录，代码里 include 进来用：
 
 ```cpp
 #include <QApplication>
@@ -303,11 +164,11 @@ int main(int argc, char *argv[])
 }
 ```
 
-整合一下上面学的所有内容，一个包含 .ui 文件的完整 CMakeLists.txt 应该是这样：`cmake_minimum_required(VERSION 3.26)`，`project(MyApp VERSION 1.0 LANGUAGES CXX)`，C++ 标准设 17，AUTOMOC 和 AUTOUIC 都开，`find_package(Qt6 REQUIRED COMPONENTS Widgets)`，add_executable 里加上 main.cpp 和 mainwindow.ui，最后 `target_link_libraries(MyApp PRIVATE Qt6::Widgets)`。缺任何一个都会出问题。
+`ui.setupUi(&window)` 一执行，XML 里描述的控件就在 window 上建了出来，咱们拖出来的界面和手写的逻辑就这样接上了。
 
-## 8. 多模块项目结构
+## 项目大了：抽库，让 PUBLIC 上场
 
-实际项目中，代码通常会分成多个模块：
+项目一大，所有源文件挤一个目录就不好过了。咱们常见的做法是核心逻辑抽成库、主程序去链它：
 
 ```text
 MyApp/
@@ -323,26 +184,10 @@ MyApp/
     └── app.qrc
 ```
 
-根目录的 CMakeLists.txt：
+根 CMakeLists.txt 管全局，咱们用 `add_subdirectory(core)` 和 `add_subdirectory(app)` 把两个子模块挂进来。core 声明成库：
 
 ```cmake
-cmake_minimum_required(VERSION 3.26)
-project(MyApp VERSION 1.0 LANGUAGES CXX)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
-
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
-
-add_subdirectory(core)
-add_subdirectory(app)
-```
-
-core/CMakeLists.txt：
-
-```cmake
+# core/CMakeLists.txt
 add_library(core
     core.h
     core.cpp
@@ -353,9 +198,10 @@ target_link_libraries(core PUBLIC
 )
 ```
 
-app/CMakeLists.txt：
+app 是可执行文件，链接 core：
 
 ```cmake
+# app/CMakeLists.txt
 add_executable(MyApp
     main.cpp
     ../resources/app.qrc
@@ -366,28 +212,18 @@ target_link_libraries(MyApp PRIVATE
 )
 ```
 
-你会发现这里用了 `add_subdirectory` 来引入子模块，core 作为一个库被 app 链接。core 里用的是 `PUBLIC` 链接 Qt6::Widgets，这样依赖 core 的目标也会自动获得 Qt 的头文件和库路径；而 app 里链接 core 用的是 `PRIVATE`，只对 MyApp 自己可见。这种分层结构在项目变大之后会非常有用。
+值得咱们盯的是两处链接关键字。core 链 Widgets 用 PUBLIC：core 的头文件里出现 Qt 类型，依赖 core 的 app 编译时也得见到 Qt 的头文件和库，这层“顺带传下去”就是 PUBLIC 的意思。app 链 core 用 PRIVATE，因为 app 是链条终点，这层依赖到它为止。往外传播用 PUBLIC，自己消费用 PRIVATE，项目分层越复杂，这条规则越值钱。
 
-## 9. 练习项目
+## 官方文档参考
 
-**练习项目：Qt 计算器**
+本篇基于 Qt 6.9.1 与 CMake 3.16+；文中工程在 Windows（MinGW/MSVC）与 Linux（GCC）行为一致。
 
-创建一个简单的计算器程序，支持加减乘除四种运算。
+[Qt 文档 · Build with CMake](https://doc.qt.io/qt-6/cmake-manual.html) · Qt 官方 CMake 手册，目标与命令的全量说明
 
-完成标准：使用 CMake 构建系统，界面用 .ui 文件设计（有数字按钮和运算符按钮），有一个显示结果的 QLineEdit，点击等号按钮能计算结果，能处理除零错误。
+[CMake · Tutorial](https://cmake.org/cmake/help/latest/guide/tutorial/index.html) · CMake 官方循序渐进教程
 
-CMakeLists.txt 需要链接 QtWidgets 模块，.ui 文件需要加到 add_executable 里。逻辑上用 QLineEdit::text() 获取输入，转成数字进行运算，除零时显示 "Error"。
-
-## 10. 官方文档参考
-
-[CMake 手册 - Qt 6](https://doc.qt.io/qt-6/cmake-manual.html) · Qt 官方的 CMake 使用指南
-[CMake 命令参考](https://doc.qt.io/qt-6/cmake-commands-api.html) · CMake 命令参考
-[CMake 教程](https://cmake.org/cmake/help/latest/guide/tutorial/index.html) · CMake 官方教程
-
-*（链接已验证，2026-03-17 可访问）*
+[CMake · cmake-commands(7)](https://cmake.org/cmake/help/latest/manual/cmake-commands.7.html) · 全部 CMake 命令的参考手册
 
 ---
 
-**到这里你的第一个 Qt 6 项目就跑通了！** 掌握了 CMake 基本用法，后面的项目构建都不在话下。下一节我们会深入 Qt 的核心——信号槽机制。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+环境搭建到此收官：Qt 装好、IDE 接上、第一个工程跑通。咱们想再练手的话，给 .ui 那份 XML 里塞一个 QPushButton 重新构建，看 AUTOUIC 自动重跑；下一篇 [1.1 QObject 与元对象系统](../01-qtbase/01-qobject-meta-system-beginner.md) 进 QtBase 正题，Q_OBJECT 这个到处出现的宏，就该拆开看看里面是什么了。

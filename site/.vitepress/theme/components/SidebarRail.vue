@@ -44,21 +44,18 @@ function toggle() {
   height: 128px;
   border: 1px solid var(--vp-c-border);
   border-left: none;
-  border-radius: 0 12px 12px 0;
+  border-radius: 0 8px 8px 0;
   background: var(--vp-c-bg-elv);
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   color: var(--vp-c-text-2);
   cursor: pointer;
-  opacity: 0.9;
-  transition: color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease,
-    width 0.2s ease;
+  opacity: 0.94;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .sidebar-rail:hover {
   color: var(--vp-c-brand-1);
   border-color: var(--vp-c-brand-1);
-  box-shadow: 2px 0 14px var(--vp-c-brand-soft);
-  width: 36px;
+  background: var(--vp-c-bg-soft-up);
 }
 
 /* 自绘箭头（vpi 图标字号上限太保守，把手要大要明显就用 SVG 级尺寸） */

@@ -65,7 +65,7 @@ onBeforeUnmount(() => {
   border-top: 1px solid var(--ide-border);
   font-family: var(--aq-mono);
   font-size: 11px;
-  color: var(--vp-c-text-3);
+  color: #9FAAA2;
   user-select: none;
 }
 
@@ -86,14 +86,14 @@ a.ide-statusbar__seg:hover {
 }
 
 .ide-statusbar__ready {
-  color: var(--vp-c-brand-1);
+  color: #6FD19B;
 }
 
 .ide-statusbar__dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--vp-c-brand-1);
+  background: #4FC183;
 }
 
 .ide-statusbar__right {
@@ -105,7 +105,7 @@ a.ide-statusbar__seg:hover {
 }
 
 .ide-statusbar__ref {
-  color: var(--vp-c-text-3);
+  color: #9FAAA2;
 }
 
 @media (max-width: 767px) {

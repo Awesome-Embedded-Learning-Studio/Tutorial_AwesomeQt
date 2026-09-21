@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 
-// 可拖拽抽屉侧栏宽度(仅左栏;右大纲栏 TOC 固定 256px,不再提供拖拽——
+// 可拖拽抽屉侧栏宽度(仅左栏;右大纲栏 TOC 固定 248px,不再提供拖拽——
 // 全视口抽屉化改版后右侧孤零零一条拖拽条被打回,功能低频直接砍掉)。
 // 左栏 --vp-sidebar-width 由 VitePress 全链路消费(sidebar 自身宽度),改这一个变量即联动。
 // handle 是 fixed 竖条、贴抽屉右缘:定位与拖动计算读 .VPSidebar 实际几何,仅抽屉
@@ -29,7 +29,9 @@ function savedWidth(): number | null {
 /**
  * 自适应默认宽度:实测当前 sidebar 最宽条目文字右缘(含嵌套缩进;text 带
  * 省略号截断,scrollWidth-clientWidth 补回被截掉的部分)+ 右侧留白 32 + buffer 14
- * (字体渲染差异/滚动条余量),夹在 [min,max]。测不到回退 272。
+ * (字体渲染差异/滚动条余量),夹在 [min,动态上限]。测不到回退 272。
+ * 动态上限 = min(320, max(272, 视口/6)):超长标题靠 ellipsis 收口，避免侧栏
+ * 为单个标题吞掉正文空间。拖拽/存储范围仍是固定 [200,480]，用户明确偏好优先。
  * 换卷 sidebar 内容不同,路由变化后要重测。
  */
 function measureLeftDefault(): number {
@@ -42,7 +44,8 @@ function measureLeftDefault(): number {
     if (w > maxRight) maxRight = w
   })
   if (maxRight <= 0) return CONF.def
-  return clamp(Math.ceil(maxRight + 32 + 14), CONF.min, CONF.max)
+  const dynamicMax = Math.min(320, Math.max(CONF.def, Math.floor(window.innerWidth / 6)))
+  return clamp(Math.ceil(maxRight + 32 + 14), CONF.min, dynamicMax)
 }
 
 const leftHandle = ref<HTMLElement | null>(null)

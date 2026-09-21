@@ -1,0 +1,342 @@
+/* ================================================================
+   正文代码卡 ·「Qt Creator 编辑器」概念（2026-09 对齐 tamcpp 精细度）
+   代码块 = Creator 的代码编辑器：白纸面(亮)/#1E1E1E(暗) + Qt 绿徽章。
+   只管 .vp-doc 内的 article fences：
+     - 交互编辑器/PDF 各有自己的呈现，不在此文件；
+     - code-group 与 vp-code-fold 内的块去壳（外层卡片已带皮）；
+     - mermaid 被 mermaidPlugin 改型，不进 language-* 渲染链，天然不受影响。
+   字号机制：乘 --aq-font-scale（FontSizeSwitcher 五档，见 custom.css 机制段），
+   头部 40px/徽章/按钮是布局件，不随档位缩放。
+   ================================================================ */
+:root {
+  /* ── 代码卡 · Creator 浅色主题 ── */
+  --article-code-bg: #FFFFFF;        /* 编辑器纸面（IDE 面板白，浮在 #F3F3F1 站底上） */
+  --article-code-border: #DFDFDC;
+  --article-code-header: #F6F8F7;    /* 头部 tint：微绿灰，径向渐变晕进纸面 */
+  --article-code-accent: #1F8A55;    /* brand-2 深绿：徽章文字/焦点环 */
+  --article-code-badge: #EAF4EF;     /* 徽章底：Qt 绿 soft */
+  --article-code-shadow: none;
+  --article-code-number: #9BA79E;    /* 行号：Creator 的浅灰绿 */
+  --article-code-font: 'Cascadia Code', 'Cascadia Mono', ui-monospace, SFMono-Regular,
+    Menlo, Consolas, 'Liberation Mono', 'Noto Sans Mono CJK SC',
+    'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei', monospace;
+}
+
+.dark {
+  /* ── 代码卡 · Creator 暗色主题（#1E1E1E 编辑器标准底） ── */
+  --article-code-bg: #1E1E1E;
+  --article-code-border: #303030;
+  --article-code-header: #232323;
+  --article-code-accent: #52BF85;    /* brand 亮绿档 */
+  --article-code-badge: #26332B;
+  --article-code-shadow: none;
+  --article-code-number: #5F6B63;
+}
+
+/* ── 卡片本体：tint 画在卡片上，行号 padding 不会切断它 ── */
+.vp-doc div[class*='language-'] {
+  --vp-font-family-mono: var(--article-code-font);
+  --vp-code-line-number-color: var(--article-code-number);
+  --vp-code-block-bg: var(--article-code-bg);
+  --vp-code-copy-code-bg: var(--article-code-bg);
+  --vp-code-copy-code-hover-bg: var(--article-code-badge);
+  --vp-code-copy-code-border-color: var(--article-code-border);
+  --vp-code-copy-code-hover-border-color: var(--article-code-accent);
+  margin: 24px 0;
+  border: 1px solid var(--article-code-border);
+  border-radius: var(--aq-radius-md);
+  background: var(--article-code-bg);
+  box-shadow: var(--article-code-shadow);
+  font-size: calc(0.75rem * var(--aq-font-scale, 1));
+  line-height: 1.6;
+}
+
+/* 静默头部：40px 空间容纳徽章/copy，与代码区用细线分层 */
+.vp-doc div[class*='language-']::before {
+  display: block;
+  height: 40px;
+  border-bottom: 1px solid var(--article-code-border);
+  background: var(--article-code-header);
+  content: '';
+}
+
+.vp-doc [class*='language-'] pre {
+  padding: 8px 0 18px;
+}
+
+.vp-doc [class*='language-'] pre,
+.vp-doc [class*='language-'] code,
+.vp-doc .line-numbers-wrapper {
+  font-family: var(--article-code-font);
+  font-variant-ligatures: none; /* 关连字：==/!= 保持字符等宽 */
+}
+
+/* ── 行号模式（shared.ts lineNumbers:true）：行号列贴头部，去掉分隔线 ── */
+.vp-doc div[class*='language-'].line-numbers-mode {
+  padding-left: 40px;
+}
+
+.vp-doc .line-numbers-wrapper {
+  top: 40px;
+  width: 40px;
+  padding-top: 8px;
+  border-right: 0;
+}
+
+/* ── lang 徽章：左上角 badge 底 + </> mask 图标，颜色随 currentColor ── */
+.vp-doc [class*='language-'] > span.lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  top: 7px;
+  right: auto;
+  left: 16px;
+  padding: 4px 9px;
+  border-radius: var(--aq-radius-sm);
+  background: transparent;
+  color: var(--article-code-accent);
+  font: 600 11px/18px var(--vp-font-family-base);
+  letter-spacing: 0.025em;
+}
+
+.vp-doc [class*='language-'] > span.lang::before,
+.vp-doc .vp-cf-icon::before {
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m8 7-5 5 5 5m8-10 5 5-5 5m-3-14-2 18' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  content: '';
+}
+
+/* ── copy 按钮：圆角小按钮 + 键盘焦点环；copied 气泡同高贴合 ── */
+.vp-doc [class*='language-'] > button.copy {
+  top: 5px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--article-code-border);
+  border-radius: var(--aq-radius-sm);
+  background-size: 15px;
+  opacity: 0.7;
+}
+
+.vp-doc [class*='language-'] > button.copy:focus-visible {
+  outline: 2px solid var(--article-code-accent);
+  outline-offset: 3px;
+}
+
+.vp-doc [class*='language-']:hover > button.copy + span.lang,
+.vp-doc [class*='language-'] > button.copy:focus + span.lang {
+  opacity: 1;
+}
+
+.vp-doc [class*='language-'] > button.copy.copied::before {
+  top: -1px;
+  height: 30px;
+  border-radius: 8px 0 0 8px;
+}
+
+/* 覆盖 VitePress 相邻代码块的负间距，两块各留呼吸位 */
+.vp-doc div[class*='language-'] + div[class*='language-'] {
+  margin-top: 24px;
+}
+
+/* ================================================================
+   长代码折叠（.vp-code-fold）：与代码卡同一张皮。
+   DOM 由 code-fold-plugin 构建：icon + title(closed/open 双态) + count。
+   代码在 <details> 外，纯 CSS :has() 控展开（零 JS、无 JS 也能展开）。
+   ================================================================ */
+.vp-doc .vp-code-fold {
+  margin: 24px 0;
+  border: 1px solid var(--article-code-border);
+  border-radius: var(--aq-radius-md);
+  overflow: hidden;
+  background: var(--article-code-bg);
+  box-shadow: var(--article-code-shadow);
+}
+
+.vp-doc .vp-code-fold > details > summary {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto 16px;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  margin: 0;
+  padding: 12px 16px;
+  list-style: none;
+  color: var(--article-code-accent);
+  font: 600 13px/1.6 var(--vp-font-family-base);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.vp-doc .vp-code-fold > details > summary:hover {
+  background-color: var(--article-code-header);
+}
+
+.vp-doc .vp-code-fold > details > summary:focus-visible {
+  outline: 2px solid var(--article-code-accent);
+  outline-offset: -4px;
+  border-radius: 8px;
+}
+
+.vp-doc .vp-code-fold > details > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* 图标格：badge 底的 28px 方格，</> 图标复用 lang 徽章的 mask */
+.vp-doc .vp-cf-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--aq-radius-sm);
+  background: var(--article-code-badge);
+}
+
+/* 行数徽章：等宽数字，不动布局 */
+.vp-doc .vp-cf-count {
+  padding: 2px 8px;
+  border: 1px solid var(--article-code-border);
+  border-radius: var(--aq-radius-sm);
+  color: var(--vp-c-text-2);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* chevron：summary 尾列，开合旋转 */
+.vp-doc .vp-code-fold > details > summary::after {
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: transform 0.2s ease;
+  content: '';
+}
+
+.vp-doc .vp-code-fold > details[open] > summary {
+  border-bottom: 1px solid var(--article-code-border);
+}
+
+.vp-doc .vp-code-fold > details[open] > summary::after {
+  transform: rotate(180deg);
+}
+
+.vp-doc .vp-code-fold > details:not([open]) .vp-cf-open,
+.vp-doc .vp-code-fold > details[open] .vp-cf-closed {
+  display: none;
+}
+
+/* 内部代码块去壳：外层卡片已带皮 */
+.vp-doc .vp-code-fold > div[class*='language-'] {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.vp-doc .vp-code-fold:not(:has(> details[open])) > div[class*='language-'] {
+  display: none;
+}
+
+/* ── code-group 与折叠块：自带头部，内部徽章隐藏、copy 悬停才现 ── */
+.vp-doc .vp-code-group div[class*='language-']::before,
+.vp-doc .vp-code-fold > div[class*='language-']::before {
+  display: none;
+}
+
+.vp-doc .vp-code-group div[class*='language-'],
+.vp-doc .vp-code-fold > div[class*='language-'] {
+  box-shadow: none;
+}
+
+.vp-doc .vp-code-group .line-numbers-wrapper,
+.vp-doc .vp-code-fold .line-numbers-wrapper {
+  top: 0;
+  padding-top: 20px;
+}
+
+.vp-doc .vp-code-group [class*='language-'] pre,
+.vp-doc .vp-code-fold [class*='language-'] pre {
+  padding-top: 20px;
+}
+
+.vp-doc .vp-code-group [class*='language-'] > span.lang,
+.vp-doc .vp-code-fold [class*='language-'] > span.lang {
+  display: none;
+}
+
+.vp-doc .vp-code-group [class*='language-'] > button.copy,
+.vp-doc .vp-code-fold [class*='language-'] > button.copy {
+  opacity: 0;
+}
+
+.vp-doc .vp-code-group [class*='language-']:hover > button.copy,
+.vp-doc .vp-code-fold [class*='language-']:hover > button.copy,
+.vp-doc .vp-code-group [class*='language-'] > button.copy:focus,
+.vp-doc .vp-code-fold [class*='language-'] > button.copy:focus {
+  opacity: 1;
+}
+
+.vp-doc .vp-code-group .tabs {
+  margin-right: 0;
+  margin-left: 0;
+  border-radius: var(--aq-radius-md) var(--aq-radius-md) 0 0;
+  background: var(--article-code-header);
+}
+
+/* ── 移动端：行号列收窄 ── */
+@media (max-width: 639px) {
+  .vp-doc div[class*='language-'],
+  .vp-doc .vp-code-fold {
+    border-radius: var(--aq-radius-sm);
+  }
+
+  .vp-doc .vp-code-fold > details > summary {
+    gap: 10px;
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .vp-doc div[class*='language-'].line-numbers-mode {
+    padding-left: 32px;
+  }
+
+  .vp-doc .line-numbers-wrapper {
+    width: 32px;
+  }
+}
+
+/* ── 打印：去阴影、折叠全展开、藏 copy ── */
+@media print {
+  .vp-doc div[class*='language-'],
+  .vp-doc .vp-code-fold {
+    box-shadow: none;
+  }
+
+  .vp-doc .vp-code-fold {
+    overflow: visible;
+  }
+
+  .vp-doc .vp-code-fold > details {
+    display: none;
+  }
+
+  .vp-doc .vp-code-fold > div[class*='language-'] {
+    display: block !important;
+  }
+
+  .vp-doc [class*='language-'] > button.copy {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vp-doc .vp-code-fold > details > summary,
+  .vp-doc .vp-code-fold > details > summary::after {
+    transition: none;
+  }
+}

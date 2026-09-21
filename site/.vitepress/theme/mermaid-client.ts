@@ -1,5 +1,7 @@
 import { nextTick, onMounted, watch } from 'vue'
-import { useData, useRouter } from 'vitepress'
+import { useData } from 'vitepress'
+import { openMermaidLightbox } from './mermaid-lightbox'
+import { subscribeAfterRouteChange } from './router-hooks'
 
 // 本地打包 mermaid：dynamic import 客户端懒加载，SSR 不引入。Vite 自动 code-split 成独立 chunk。
 // 不走 CDN —— 浏览器加载跨域 CDN 脚本不可靠（onload 永不触发会卡骨架）。
@@ -88,6 +90,7 @@ async function renderMermaidDiagrams(theme: MermaidTheme): Promise<void> {
       const { svg } = await m.render(id, source)
       el.innerHTML = svg
       el.dataset.rendered = 'true'
+      attachMaximize(el, source)
     } catch (e) {
       el.dataset.rendered = 'error'
       el.innerHTML = `<pre class="mermaid-error">${escapeHtml(source)}</pre>`
@@ -96,14 +99,46 @@ async function renderMermaidDiagrams(theme: MermaidTheme): Promise<void> {
   }
 }
 
+// ── maximize 按钮:每张图都挂(跟 GitHub 一样,所有图都可缩放),点开进全屏模态 ──
+// 样式见 custom.css 的 .mermaid-maximize-btn / .mermaid-lightbox 段（对齐 tamcpp）。
+
+// Feather maximize-2 图标(四角向外箭头),currentColor 随主题。
+const MAXIMIZE_ICON =
+  '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" ' +
+  'stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>' +
+  '<line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>'
+
+function attachMaximize(el: HTMLElement, source: string) {
+  const svg = el.querySelector('svg')
+  if (!svg) return
+  el.classList.add('mermaid-diagram--zoomable')
+
+  const btn = document.createElement('button')
+  btn.type = 'button'
+  btn.className = 'mermaid-maximize-btn'
+  btn.setAttribute('aria-label', '放大查看图表')
+  btn.title = '放大查看图表'
+  btn.innerHTML = MAXIMIZE_ICON
+  btn.addEventListener('click', () => {
+    openMermaidLightbox({ svg, source, trigger: btn })
+  })
+  el.appendChild(btn)
+}
+
 export function setupMermaid(): void {
-  const router = useRouter()
   const { isDark } = useData()
 
-  const render = () => renderMermaidDiagrams(isDark.value ? 'dark' : 'default')
+  const render = () =>
+    renderMermaidDiagrams(isDark.value ? 'dark' : 'default').catch((e) =>
+      console.error('[mermaid] 渲染失败', e),
+    )
 
+  // 用订阅器而非直接赋值 router.onAfterRouteChange:后者是单值属性,
+  // 会被后挂的组件覆盖,导致 SPA 跳转后 mermaid 不渲染(见 router-hooks.ts 注释)。
+  // .catch 治「静默失败」:之前 onMounted 调用没接住 reject,加载失败时图直接消失无痕。
   onMounted(render)
-  router.onAfterRouteChange = render
+  subscribeAfterRouteChange(render)
 
   // 切换深浅色时，已渲染的 SVG 不会自动变色——重置占位再按新主题重渲染。
   watch(isDark, (dark) => {

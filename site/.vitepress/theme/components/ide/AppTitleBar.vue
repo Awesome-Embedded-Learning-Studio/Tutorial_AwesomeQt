@@ -27,7 +27,7 @@ import { statusBar } from '../home/home-data'
 .ide-titlebar__mark {
   width: 10px;
   height: 10px;
-  border-radius: 2px;
+  border-radius: 1px;
   background: var(--vp-c-brand-1);
   flex-shrink: 0;
 }
@@ -41,10 +41,10 @@ import { statusBar } from '../home/home-data'
 .ide-titlebar__kit {
   white-space: nowrap;
   padding: 1px 8px;
-  border: 1px solid var(--ide-border);
-  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 2px;
   font-size: 10.5px;
-  color: var(--vp-c-text-3);
+  color: #AEB8B1;
 }
 
 @media (max-width: 767px) {

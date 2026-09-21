@@ -6,15 +6,15 @@ import InteractiveDemo from './InteractiveDemo.vue'
 <template>
   <section class="welcome-hero ide-wrap">
     <div class="welcome-hero__main">
-      <p class="ide-eyebrow">WELCOME · AWESOMEQT WORKBENCH</p>
-      <h1 class="welcome-hero__title">把 Qt 学进<br />一个 Qt 应用里</h1>
+      <p class="ide-eyebrow">C++ · QT 6 · WIDGETS</p>
+      <h1 class="welcome-hero__title">AwesomeQt</h1>
+      <p class="welcome-hero__lead">把 Qt 学进一个 Qt 应用里</p>
       <p class="welcome-hero__tag">
-        聚焦 C++ / QtWidgets 的三层递进教程 + 可复用实例库——
-        这个网站本身就长得像一个 Qt 桌面应用，点一点右边。
+        从第一个 Widgets 窗口到 Qt 源码内部，三层递进教程与可复用实例库放在同一张工作台上。
       </p>
       <div class="welcome-hero__actions">
-        <a class="ide-btn ide-btn--primary" :href="withBase('/beginner/')">走主线</a>
-        <a class="ide-btn" :href="withBase('/engineering/')">浏览实例库</a>
+        <a class="ide-btn ide-btn--primary" :href="withBase('/beginner/')">开始学习 <span aria-hidden="true">→</span></a>
+        <a class="ide-btn" :href="withBase('/engineering/')">实例库</a>
       </div>
     </div>
 
@@ -34,26 +34,37 @@ import InteractiveDemo from './InteractiveDemo.vue'
 <style scoped>
 .welcome-hero {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 48px;
+  grid-template-columns: minmax(0, 1.05fr) minmax(440px, 0.95fr);
+  gap: 88px;
   align-items: center;
-  padding-top: 56px;
-  padding-bottom: 48px;
+  min-height: 510px;
+  padding-top: 54px;
+  padding-bottom: 54px;
+  border-bottom: 1px solid var(--vp-c-divider);
 }
 
 .welcome-hero__title {
-  margin: 14px 0 16px;
-  font-size: clamp(2.4rem, 5vw, 3.7rem);
-  font-weight: 700;
-  line-height: 1.22;
-  letter-spacing: 0.01em;
+  margin: 16px 0 6px;
+  font-size: 64px;
+  font-weight: 760;
+  line-height: 1.05;
+  letter-spacing: 0;
+  color: var(--vp-c-text-1);
+}
+
+.welcome-hero__lead {
+  margin: 0 0 24px;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.45;
   color: var(--vp-c-text-1);
 }
 
 .welcome-hero__tag {
-  margin: 0 0 28px;
-  font-size: 1.02rem;
-  line-height: 1.9;
+  max-width: 620px;
+  margin: 0 0 30px;
+  font-size: 16px;
+  line-height: 1.85;
   color: var(--vp-c-text-2);
 }
 
@@ -68,7 +79,7 @@ import InteractiveDemo from './InteractiveDemo.vue'
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 14px;
+  padding: 9px 14px;
   border-bottom: 1px solid var(--ide-border);
   background: var(--vp-c-bg-soft);
   font-family: var(--aq-mono);
@@ -80,7 +91,7 @@ import InteractiveDemo from './InteractiveDemo.vue'
 .welcome-hero__panel-dot {
   width: 8px;
   height: 8px;
-  border-radius: 2px;
+  border-radius: var(--aq-radius-sm);
   background: var(--vp-c-brand-1);
 }
 
@@ -88,25 +99,46 @@ import InteractiveDemo from './InteractiveDemo.vue'
   margin-left: auto;
   padding: 1px 7px;
   border: 1px solid var(--ide-border);
-  border-radius: 3px;
+  border-radius: var(--aq-radius-sm);
   font-size: 10px;
 }
 
 .welcome-hero__panel-body {
-  padding: 6px 18px 18px;
+  padding: 12px 20px 20px;
 }
 
 @media (max-width: 959px) {
   .welcome-hero {
     grid-template-columns: 1fr;
-    gap: 32px;
+    min-height: 0;
+    gap: 40px;
     padding-top: 40px;
   }
 
   .welcome-hero__panel {
-    max-width: 360px;
+    max-width: 560px;
     width: 100%;
-    margin: 0 auto;
+    margin: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .welcome-hero {
+    gap: 26px;
+    padding-top: 30px;
+    padding-bottom: 28px;
+  }
+
+  .welcome-hero__title {
+    font-size: 46px;
+  }
+
+  .welcome-hero__lead {
+    font-size: 21px;
+  }
+
+  .welcome-hero__panel-body {
+    padding: 6px 14px 12px;
   }
 }
 </style>

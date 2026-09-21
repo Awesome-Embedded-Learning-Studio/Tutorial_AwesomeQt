@@ -61,7 +61,7 @@ onMounted(() => {
   width: 22px;
   height: 22px;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--aq-radius-sm);
   background: transparent;
   color: var(--vp-c-text-3);
   cursor: pointer;
@@ -133,7 +133,7 @@ onMounted(() => {
   padding: 1px 9px;
   color: var(--vp-c-brand-1);
   border: 1px solid var(--vp-c-brand-1);
-  border-radius: 3px;
+  border-radius: var(--aq-radius-sm);
   font-size: 11px;
 }
 </style>

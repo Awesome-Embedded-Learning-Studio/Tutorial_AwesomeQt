@@ -7,6 +7,7 @@
 // 点击开关 → LED 亮灭，caption 实时显示这条 connect 与信号参数——
 // 「信号槽」这个 Qt 最核心的概念，在教程首页就能摸到。
 import { ref, computed } from 'vue'
+import { withBase } from 'vitepress'
 
 const on = ref(false)
 
@@ -53,8 +54,8 @@ function toggle() {
     </p>
 
     <p class="demo__src">
-      复刻自实例库 <a href="#/engineering/instances/widget/toggle-switch/">widget/toggle-switch</a>
-      与 <a href="#/engineering/instances/widget/status-led/">widget/status-led</a>
+      复刻自实例库 <a :href="withBase('/engineering/instances/widget/toggle-switch/')">widget/toggle-switch</a>
+      与 <a :href="withBase('/engineering/instances/widget/status-led/')">widget/status-led</a>
       成品，参数取自源码
     </p>
   </div>
@@ -172,7 +173,7 @@ function toggle() {
   margin: 0;
   padding: 10px 14px;
   border: 1px solid var(--ide-border);
-  border-radius: 4px;
+  border-radius: var(--aq-radius-sm);
   background: var(--vp-c-bg-soft);
   font-family: var(--aq-mono);
   font-size: 11.5px;
@@ -217,6 +218,21 @@ function toggle() {
   .demo__led,
   .demo__wire-arrow {
     transition: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .demo {
+    gap: 10px;
+  }
+
+  .demo__stage {
+    padding-top: 12px;
+    padding-bottom: 6px;
+  }
+
+  .demo__src {
+    display: none;
   }
 }
 </style>

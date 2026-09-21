@@ -9,6 +9,7 @@
 import type { MarkdownIt } from 'markdown-it'
 import { cppTemplateEscapePlugin } from '../plugins/escape-cpp-templates'
 import { codeFoldPlugin } from '../plugins/code-fold-plugin'
+import { codeLabelPlugin } from '../plugins/code-label-plugin'
 import { kbdPlugin } from '../plugins/kbd-plugin'
 import { mermaidPlugin } from '../plugins/mermaid-plugin'
 import { viteCppEscape } from '../plugins/vite-escape-cpp'
@@ -51,7 +52,7 @@ export const sharedBase = {
     // 可拖拽抽屉侧栏首屏防闪：hydration 前从 localStorage 还原宽度 CSS 变量。
     // 272 只是近似值——挂载后 ResizableSidebar 会按当前卷最长条目自适应实测（未存过宽度时）。
     // 与 theme/components/ResizableSidebar.vue 的 CONF（key=vp-sidebar-width）一致。
-    // （右大纲栏拖拽已砍，TOC 固定 256，不再注入 --vp-aside-width。）
+    // （右大纲栏拖拽已砍，TOC 固定 248px，不再注入 --vp-aside-width。）
     [
       'script',
       {},
@@ -71,6 +72,7 @@ export const sharedMarkdown = {
     cppTemplateEscapePlugin(md)
     md.use(mermaidPlugin)
     md.use(codeFoldPlugin) // 必须在 mermaid 之后：覆写 fence 要拿到 mermaid 改型后的完整链
+    md.use(codeLabelPlugin) // 在 codeFold 之后：只改 lang 徽章文案，不动兄弟链
     md.use(kbdPlugin)
   },
 }

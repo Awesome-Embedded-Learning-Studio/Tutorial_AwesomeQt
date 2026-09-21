@@ -1,83 +1,41 @@
 ---
-title: "0.0 Qt6 安装踩坑指南"
-description: "说实话，我第一次装 Qt 的时候真的以为双击安装程序就能完事。结果呢？光是一个编译器版本不对就让我折腾了三个小时。后来装了又卸、卸了又装，差不多把能踩的坑都踩了一遍。"
+title: "0.0 安装 Qt6"
+description: "Qt 在线安装器与组件页的选择：Desktop 组件在三平台各自的工具链（MinGW / MSVC / GCC），CMake 与 Qt Creator 的取舍。坑的后果与根因：安装路径带空格、装了 Visual Studio 没勾 C++ 桌面开发工作负载、Linux 只装编译依赖不装 xcb 运行库、WSL2 里手写 DISPLAY。附清华 TUNA 镜像加速（--mirror 参数）与装完后的验证命令。"
 ---
 
-# 现代Qt开发教程（新手篇）0.0——Qt6 安装踩坑指南
+# 而今从头迈步从头越：从Qt6开始安装
 
-## 1. 前言：为什么装个 Qt 都能折腾半夜
+打开 Qt 安装器，登录账号，点完许可协议，迎面就是一屏组件树：Qt 6.9.1 底下挂着 Desktop、Android、WebAssembly 一串分支，工具栏里 CMake、Ninja、Qt Creator 各自打着勾。勾哪些？这一步选歪了，要么硬盘和时间搭进去几十 GB，要么装完打开 IDE 发现连编译器都没有。然后直接红温了。
 
-说实话，我第一次装 Qt 的时候真的以为双击安装程序就能完事。结果呢？光是一个编译器版本不对就让我折腾了三个小时。后来装了又卸、卸了又装，差不多把能踩的坑都踩了一遍。
+## 网络与账号：安装器的两道门槛
 
-所以这一篇我们不是在走过场，而是真的要陪大家把这个环境彻底搭稳。我们会覆盖 Windows、Linux 原生、还有 WSL2 三种场景——因为我知道总有人会在 WSL2 里跑 Qt，然后奇怪为什么界面弹不出来（别笑，我当年就是）。
+国内网络直连官方源，下载慢是常态，进度条能卡到让人怀疑人生。咱们别跟进度条较劲，镜像站早就给出了正解，清华 TUNA 的帮助页写得明明白白：安装器本体从镜像的 `official_releases/online_installers/` 目录下载，启动时加一个 `--mirror` 参数，组件下载也走镜像：
 
-现在我们要做的是：先把地基打牢，后面才能愉快地写代码。不然你会收获一个非常漂亮的编译错误列表，然后对着屏幕发呆。
+```bash
+qt-unified-windows-x64-online.exe --mirror https://mirrors.tuna.tsinghua.edu.cn/qt
+```
 
-## 2. 环境说明
+Linux 同款，文件名换成 `qt-unified-linux-x64-online.run`，咱们跑之前记得 `chmod +x`。手头有稳定代理的话，直连加代理也能走通，两条路挑一条顺手的。
 
-本教程基于 Qt 6.9.1 版本编写，以下平台均已验证：
+## 组件页：真正要做选择的地方
 
-| 平台 | 编译器要求 | 测试状态 |
-|------|-----------|---------|
-| Windows 10/11 | MSVC 2019/2022 或 MinGW 11.2+ | 已验证 |
-| Linux（Ubuntu 22.04+） | GCC 11+ | 已验证 |
-| WSL2 + WSLg | 同 Linux | 已验证 |
+组件树里，Qt 6.9.1 节点下的 Desktop 是桌面开发的工具链与库本体，咱们直接勾上。Windows 在这里要做个选择：MinGW 还是 MSVC。MinGW 随安装器把编译器一并装好，装完就能用；MSVC 调试体验更好、与 Visual Studio 集成更顺，但要求机器上已经有可用的 VS。没装过 VS 的朋友选 MinGW 就好，不必犹豫。Linux 和 WSL2 没有这道选择题，Desktop (GCC 64-bit) 一项搞定。
 
-Qt 6.9 对 CMake 最低版本要求是 3.26，额，其实是我猜测的，当然，Qt的确不支持低版本的CMake，我的建议是为什么不支持新的呢？
+工具栏里 CMake 和 Qt Creator，咱们都勾上。系统里也许已经有 CMake，但安装器带的版本与 Qt 6.9 配对验证过，能省掉版本对不上的排查；Qt Creator 在 0.1 篇虽不作为主力，.ui 界面文件的可视化编辑只有它做得最好，装上备用不亏。剩下的 Android、iOS、WebAssembly、Qt 3D，教程全程用不到，每一项都是实打实的下载时间，以后真要用了回来补装不迟。手上还有 Qt 5 老代码要维护的朋友，单独勾一份 Qt 5.15。
 
-## 3. Qt Online Installer 详解
+装到选择安装路径那一步留个神：路径别带空格，也别带中文。`C:\Program Files\Qt` 看着最正常，偏偏是它容易出事——CMake 和一批构建工具对带空格路径的处理并不完善，真炸起来，报错可能是一次莫名其妙的库查找失败，也可能停在链接器没头没尾的行为上，没人提示病根在路径。咱们装的时候选个 `C:\Qt` 这样的干净路径，这个坑就算绕过去了。
 
-### 3.1 第一步——获取安装程序
+## Windows：装了 Qt 不等于装了编译器
 
-我们要用的是 Qt 官方的在线安装器，它是统一入口，不管你是哪个平台都用它。
+咱们选了 MinGW 的话，到这里基本完事，安装器连编译器都安排好了。选了 MSVC 的还要再对一眼 VS Installer：Visual Studio 2019 或 2022 装了没？“使用 C++ 的桌面开发”这个工作负载勾了没？Windows SDK 随工作负载一起勾上。
 
-官方下载地址：<https://www.qt.io/download-qt-installer>
+这里最容易出的事故是装了 VS 主体、没勾 C++ 工作负载。这样装出来的 Qt 完全正常，但 CMake 探测不到 cl.exe，构建时报 "CMake was unable to find a build program"，报错里一个字不提工作负载的事。对着 Qt 排查半天查不到点子上，其实只要打开 VS Installer，点修改，把“使用 C++ 的桌面开发”勾上就解决了。您要是正被这类报错折磨，先去查这一项，八成就是它。
 
-你可能会看到两个版本：Open Source 和 Commercial。对我们学习和个人项目来说，选 Open Source 就行，它是 LGPL 协议的，商业友好。注册个 Qt 账号就能免费用，不用想太复杂。
+PATH 一般安装器会自动配好。万一咱们敲 `qmake --version` 得到“找不到命令”，就手动补：右键“此电脑”，依次进属性、高级系统设置、环境变量，把 Qt 的 bin 目录加进 PATH，MinGW 版是 `C:\Qt\6.9.1\mingw_64\bin`，MSVC 版是 `C:\Qt\6.9.1\msvc2019_64\bin`，改完重开命令行窗口再试。另有一个运行期的小插曲：工具报 "Error while loading module dependencies" 或提示缺 DLL，装一份微软 VC++ Redistributable 基本就解决；杀毒软件拦截安装目录的情况偶尔也有，临时放行即可。
 
-这里有个非常容易踩的坑——如果你直接从官网下载，大概率会盯着进度条发呆两个小时。国内网络环境下必须用镜像源，不然就是在跟自己过不去。你可以找找国内各大镜像站的 Qt 离线安装包，或者让科学上网的朋友帮你下一份。
+## Linux：一长串依赖，各管各的时段
 
-### 3.2 安装器选项逐行解读
-
-打开安装器后，第一步会让你登录。用你刚才注册的 Qt 账号登录就行，跳不过。
-
-然后到了关键环节——选择安装组件。这里真的很多人会乱选一通，要么装了一堆用不上的东西占几十个 G，要么该装的没装。让我逐个说清楚。
-
-首先说无论如何都要装的。Qt 6.9.1 下的 Desktop 组件是核心中的核心——Windows 用户在 MinGW 和 MSVC 之间二选一就行，MinGW 轻量但 MSVC 调试体验更好；Linux 和 WSL2 用户选 Desktop (GCC)。CMake 也要勾上，虽然你系统里可能已经有了，但 Qt 自带的版本是经过验证的，版本对应 Qt 6.9 要求，省心。Qt Creator 是官方 IDE，虽然后面我们也会教 VS Code 和 CLion 的用法，但至少装一个备用，排错的时候很有用。
-
-然后是根据需求选的。如果你要做 QML 界面，装上 Qt 6.9.1 里的 Qt Quick 2D Renderer，纯 Widgets 应用可以暂时跳过。做网络登录（OAuth）的话需要 Qt Network Authorization。如果你要维护旧代码，装个 Qt 5.15 兼容套件，纯新项目可以不装。
-
-至于 Android / iOS / WebAssembly 这些，除非你要做跨平台移动端，否则别装——装了会显著增加安装时间。Qt 3D / Qt WebGL / Qt SCXML 之类也是特定场景才用到的，真需要的时候再装不迟。
-
-还有一件事千万别手滑——安装路径别带空格。装到 `C:\Qt` 或 `D:\Dev\Qt` 这种简单路径就好，别搞什么 `C:\Program Files\Qt`。CMake 和某些构建工具遇到空格路径会炸，而且报错信息还特别迷惑，你可能都想不到是路径的问题。
-
-### 3.3 安装过程验证
-
-安装完成先别急着关窗口，我们简单验证一下。打开命令行（Windows 用 PowerShell 或 CMD，Linux 用终端），输入 `qmake --version` 或 `cmake --version`，如果能看到版本号输出，说明 PATH 配置成功。
-
-说到这里，你可能会问：Qt Online Installer 里的 Desktop 组件到底是干什么的？为什么 Windows 上有 MinGW 和 MSVC 两个版本？简单来说，Desktop 组件就是开发桌面应用的编译工具链和库。MinGW 是基于 GCC 的 Windows 编译器，开源免费；MSVC 是微软的编译器，与 Visual Studio 集成更好。选哪个看你的实际情况——如果已经装了 Visual Studio，用 MSVC 体验会更好。
-
-## 4. Windows 专题
-
-### 4.1 编译器配置
-
-如果你选了 MinGW，安装器会帮你顺带装好 MinGW 编译器，基本不用额外配置。
-
-但如果你选了 MSVC，你需要确保两件事：一是 Visual Studio 2019 或 2022 已经安装，并且勾选了「使用 C++ 的桌面开发」工作负载；二是 Windows SDK 已安装，在 VS Installer 里找到单个组件，搜索「Windows SDK」，选一个最新版装上。
-
-这一点真的坑了我半天——很多人以为装了 Qt 就等于装了 C++ 编译器，两码事。如果你只装了 VS 主体但没勾 C++ 工作负载，CMake 会找不到 cl.exe，构建的时候一脸懵逼，报错信息还不会直接告诉你"你没装 C++ 组件"。所以一定要打开 VS Installer → 修改 → 确认「使用 C++ 的桌面开发」已经勾上。
-
-### 4.2 环境变量验证
-
-Windows 下安装器一般会自动配 PATH，但万一没配上，就得手动来。右键「此电脑」→ 属性 → 高级系统设置 → 环境变量，在 PATH 里添加你的 Qt bin 目录：MinGW 版本加 `C:\Qt\6.9.1\mingw_64\bin`，MSVC 版本加 `C:\Qt\6.9.1\msvc2019_64\bin`。加完之后重启命令行窗口，再试 `qmake --version`。
-
-来验证一下环境是否正确：在 PowerShell 里跑 `qmake --version` 看 Qt 版本，跑 `cmake --version` 看 CMake 版本，再 `ls C:\Qt\6.9.1\mingw_64\bin` 确认 Qt 库文件都在。三条命令都有正常输出，环境就没问题。
-
-## 5. Linux 专题
-
-### 5.1 系统依赖安装
-
-Ubuntu/Debian 下，Qt 依赖一堆系统库。先装这些：
+Ubuntu/Debian 下咱们先把系统依赖装齐，再跑安装器：
 
 ```bash
 sudo apt update
@@ -89,103 +47,36 @@ sudo apt install -y build-essential libgl1-mesa-dev libxkbcommon-x11-0 \
     libxcb-util-dev libxcb-xinerama0-dev libxcb-xkb-dev libxcb-cursor0-dev
 ```
 
-我知道这串命令看着很长，但缺任何一个都可能编译失败。别偷懒，一次跑完。
+这串包名看着吓人，咱们拆开看就两拨：一拨是 `-dev` 结尾的头文件包，编译期要；一拨是 libxcb 系列的库，运行期 Qt 的 xcb 平台插件要链接它们。有人图省事只装 build-essential 和 mesa，结果编译确实能过，程序一启动就崩，终端里只有一句 `Failed to load platform plugin xcb`——头文件齐了所以编译过，xcb 插件依赖的系统库没跟上所以运行崩。编译过了、运行崩了，这种错位最迷惑人，装依赖这一步别省。
 
-### 5.2 安装器权限问题
+## WSL2：WSLg 把 X Server 那套送进了历史
 
-Linux 下运行 Qt 安装器可能需要可执行权限：
+Windows 11 的 WSL2 自带 WSLg，Linux 侧 GUI 程序的窗口直接出现在 Windows 桌面上，早年 VcXsrv、X410 那套手动搭 X Server 的方案可以整个退休了。确认它生效只要看环境变量：`echo $DISPLAY` 有值就是 WSLg 在工作，这个值由 WSL 自动注入，不用咱们动手。也正因为是自动注入，往 `.bashrc` 里手写 `export DISPLAY=:0` 反而多余，环境一变还可能连不上显示，报 "could not connect to display"。Windows 10 没有 WSLg，要跑 GUI 要么回 X Server 老方案，要么升级系统，本篇按 Win11 走。
 
-```bash
-chmod +x qt-unified-linux-x64-online.run
-./qt-unified-linux-x64-online.run
-```
+咱们在 WSL2 里写 Qt，就按上面 Linux 篇装原生 Linux 版，行为与真机一致。另一条路是 Qt 装 Windows 侧、WSL 里只放代码和编辑器。两条路都通，但别把两边的 Qt 混进同一个 PATH——Windows 编译的程序和 Linux 编译的程序是两套二进制，混了之后出了报错，连从哪边查起都没头绪。
 
-这里有个大坑——如果你看到缺库就装一个然后反复编译，大概率会一直失败。Linux Qt 缺 libxcb 不是开玩笑的，最典型的症状就是程序启动就崩溃，日志里只有一句 "Failed to load platform plugin xcb"。上面那串依赖我真的替你踩过了，一次装齐省心。别想着只装 `build-essential` 和 `libgl1-mesa-dev` 就够了——你确实能编译通过，但运行 GUI 的时候会直接报 "Could not connect to display" 或 "Failed to load platform plugin xcb"。
-
-## 6. WSL2 专题：GUI 的正确打开方式
-
-WSL2 现在已经支持 GUI 了（WSLg），但默认配置下你可能遇到显示问题。
-
-### 6.1 确认 WSLg 可用
-
-在 WSL2 终端里运行：
+## 装完先验证，再撒手
 
 ```bash
-# 检查 WSL 版本
-wsl.exe --version
-
-# 简单测试 GUI
-echo "export DISPLAY=:0" >> ~/.bashrc
+qmake --version   # PATH 里的 Qt 工具就位
+cmake --version   # 构建工具在
+ls ~/Qt/6.9.1/gcc_64/bin   # Windows 换成 C:\Qt\6.9.1\mingw_64\bin，库文件都在
 ```
 
-如果你的 Windows 11 版本够新（Build 22000+），WSLg 应该是默认启用的。
+咱们看到三条命令都有正常输出，工具链层面就绪。至于让这套工具真正编译出一个窗口，那是 0.2 篇第一个工程的任务，那一步跑通了，环境才算彻底交卷。
 
-### 6.2 Qt 环境配置
+## 官方文档参考
 
-WSL2 下推荐直接用 Windows 版的 Qt，这样不用在 Linux 里再装一遍。
+本篇基于 Qt 6.9.1；CMake 用 3.16 及以上皆可（qtbase 源码顶层与官方入门示例写的都是 3.16）。
 
-在 `~/.bashrc` 添加：
+[Qt 文档 · Get and Install Qt](https://doc.qt.io/qt-6/get-and-install-qt.html) · 官方安装总览，各平台安装方式的入口
 
-```bash
-export PATH="/mnt/c/Qt/6.9.1/mingw_64/bin:$PATH"
-export QT_QPA_PLATFORM=xcb
-```
+[Qt 文档 · Supported Platforms](https://doc.qt.io/qt-6/supported-platforms.html) · 各平台支持的系统与编译器清单
 
-但要注意：这样运行的是 Windows 编译的 Qt 程序，如果你想在 WSL2 里原生编译 Linux 版，还是得按 Linux 篇的流程来。
+[Qt 文档 · CMake Get Started](https://doc.qt.io/qt-6/cmake-get-started.html) · 用 CMake 建 Qt 工程的官方入门
 
-Win11 + WSL2 时代，不用折腾 X Server 了。以前那套 VcXsrv、X410 的方案可以丢掉了，直接确认 WSLg 已启用就行。随便设一个 DISPLAY 值或者用旧的 X Server 方案，只会收获一个 "could not connect to display" 的报错。
-
-## 7. 常见安装报错与修复
-
-### 7.1 "Error while loading module dependencies"
-
-这个问题常见于 Windows，通常是三个原因之一：缺少 Visual C++ Redistributable、路径里有中文字符、或者杀毒软件拦截。解决方法就是装最新的 VC++ Redistributable，把安装路径改成纯英文，临时关闭杀毒软件。
-
-### 7.2 "CMake was unable to find a build program"
-
-CMake 找不到编译器。Windows 上检查 MSVC 或 MinGW 是否在 PATH 里，Linux 和 WSL2 上跑一下 `which g++` 看看有没有输出。
-
-### 7.3 安装器卡在 "Downloading"
-
-网络问题，科学上网或者换国内镜像源。
-
-## 8. 最终验证
-
-安装完成，我们来打个收尾。Windows、Linux、WSL2 通用的验证流程：
-
-```bash
-# 1. 检查 qmake
-qmake --version
-
-# 2. 检查 CMake
-cmake --version
-
-# 3. 最重要的一步——创建测试工程
-mkdir qt-test && cd qt-test
-cmake -DCMAKE_PREFIX_PATH=/path/to/Qt/6.9.1/gcc_64 ..
-# Windows 路径示例：-DCMAKE_PREFIX_PATH=C:/Qt/6.9.1/mingw_64
-```
-
-如果以上都能顺利跑通，恭喜你，环境搞定了！接下来就可以正式写 Qt 代码了。
-
-## 9. 练习项目
-
-**练习项目：Hello Qt 环境验证**
-
-创建一个最小化的 Qt 工程，编译运行后弹出一个空窗口，标题显示 "Qt is alive!"。这个项目的目的不是学 Qt API，而是验证你的开发环境真的能跑起来。
-
-完成标准：工程能用 CMake 成功配置，编译无报错，运行后能看到一个空白窗口标题显示正确。如果这一步都跑不通，说明环境还有问题，别着急往后学。
-
-具体来说，新建一个文件夹，里面放 `main.cpp` 和 `CMakeLists.txt`。CMakeLists.txt 里 find_package Qt6 的 Core 和 Widgets 模块，main.cpp 里创建一个 QApplication 和一个空 QWidget，调用 show()。然后用命令行 `cmake -B build && cmake --build build` 来编译。
-
-## 10. 官方文档参考
-
-[Qt 官方安装指南](https://doc.qt.io/qt-6/get-and-install-qt.html) · 包含各平台的详细安装说明
-[Qt 6.9.1 平台要求](https://doc.qt.io/qt-6/supported-platforms.html) · 确认你的系统是否被支持
-[CMake 与 Qt 配置](https://doc.qt.io/qt-6/cmake-get-started.html) · CMake 集成的最佳实践
-
-*（链接已验证，2026-03-17 可访问）*
+[清华 TUNA 镜像 · Qt 使用帮助](https://mirrors.tuna.tsinghua.edu.cn/help/qt/) · 镜像下载地址与 --mirror 参数说明
 
 ---
 
-**到这里就大功告成了！** 环境搭好，下一章我们就能愉快地写第一行 Qt 代码了。如果你在这一步遇到任何奇怪的问题，别慌——我也遇到过，大概率是路径或编译器的问题，对着上面的坑检查一遍基本能解决。
+环境就绪。下一篇 [0.1 IDE 配置](./01-ide-setup-beginner.md) 把 VS Code、CLion、Qt Creator 三家接上这套工具链。哪一步卡住的，咱们回头把这篇提过的坑再对一遍：路径空格、C++ 工作负载、xcb 依赖、DISPLAY 手写，安装期的事故大多落在这几处。第一个工程的完整构建验证，在 [0.2 第一个 CMake Qt6 工程](./02-cmake-first-project-beginner.md) 见。
