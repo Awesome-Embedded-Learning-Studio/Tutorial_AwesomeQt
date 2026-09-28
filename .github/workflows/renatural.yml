@@ -1,0 +1,86 @@
+# renatural 战役验收门（lane: awesomeqt-base）。
+# 对 PR 中被改动的 base 卷文章跑两道门：
+#   1) echo_lint —— 从当前树重建 n-gram 黑名单后逐篇零命中；
+#   2) accept.py --dry-run —— humanizer error 级归零 + invariants 对账 + 战役红线。
+# 通用格式检查由 lint.yml / content-quality.yml / build-examples.yml 承担，本文件不重复。
+# humanizer 规则集不在主仓（.claude/ 被 gitignore）：按 renatural/state/lane.json 钉的
+# content_forge SHA 克隆到 .claude/content_forge，保证 CI 与本地同一套规则。
+name: Renatural Gate
+
+on:
+  pull_request:
+    paths:
+      - 'tutorial/beginner/**'
+      - 'renatural/state/**'
+      - 'scripts/renatural/**'
+      - '.github/workflows/renatural.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'tutorial/beginner/**'
+      - 'renatural/state/**'
+
+jobs:
+  gate:
+    name: Echo + Accept (per changed article)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Collect changed beginner articles
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="$(git rev-parse HEAD~1)" || BASE=""
+          fi
+          if [ -n "$BASE" ]; then
+            git diff --name-only "$BASE" HEAD -- 'tutorial/beginner' | grep '\.md$' | grep -v 'index\.md$' > changed.txt || true
+          else
+            : > changed.txt
+          fi
+          echo "── 改动文章 ──"; cat changed.txt
+
+      - name: Materialize content_forge at lane-pinned SHA
+        run: |
+          SHA=""
+          if [ -f renatural/state/lane.json ]; then
+            SHA=$(python3 -c "import json;print(json.load(open('renatural/state/lane.json'))['content_forge_sha'])")
+          fi
+          git clone --quiet https://github.com/Charliechen114514/content_forge .claude/content_forge
+          if [ -n "$SHA" ]; then
+            git -C .claude/content_forge checkout -q "$SHA"
+          fi
+          echo "content_forge @ $(git -C .claude/content_forge rev-parse HEAD)"
+
+      - name: Echo lint (zero hits per changed article)
+        run: |
+          python3 scripts/renatural/echo_lint.py --build-blacklist
+          FAIL=0
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            python3 scripts/renatural/echo_lint.py --check "$f" || FAIL=1
+          done < changed.txt
+          exit $FAIL
+
+      - name: Accept gate (humanizer + invariants + red lines)
+        run: |
+          FAIL=0
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            slug=$(basename "$f" .md)
+            if [ ! -f "renatural/state/invariants/$slug.json" ]; then
+              echo "[skip] $f：无 invariants 快照（非本战役批改文章），验收门不适用"
+              continue
+            fi
+            python3 scripts/renatural/accept.py --dry-run "$f" || FAIL=1
+          done < changed.txt
+          exit $FAIL
