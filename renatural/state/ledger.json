@@ -1,0 +1,1310 @@
+{
+  "version": 1,
+  "articles": {
+    "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md": {
+      "status": "queued",
+      "wave": "M1A",
+      "batch": "M1A-1",
+      "family": "qtgui",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/02-qtgui/02-coordinate-transform-beginner.md": {
+      "status": "queued",
+      "wave": "M1A",
+      "batch": "M1A-1",
+      "family": "qtgui",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/02-qtgui/03-image-pixmap-beginner.md": {
+      "status": "queued",
+      "wave": "M1A",
+      "batch": "M1A-1",
+      "family": "qtgui",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md": {
+      "status": "queued",
+      "wave": "M1A",
+      "batch": "M1A-1",
+      "family": "qtgui",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/02-qtgui/05-opengl-widget-beginner.md": {
+      "status": "queued",
+      "wave": "M1A",
+      "batch": "M1A-1",
+      "family": "qtgui",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/02-qtgui/06-drag-drop-beginner.md": {
+      "status": "queued",
+      "wave": "M1A",
+      "batch": "M1A-1",
+      "family": "qtgui",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md": {
+      "status": "queued",
+      "wave": "M1B",
+      "batch": "M1B-1",
+      "family": "按钮",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/17-qpushbutton-beginner.md": {
+      "status": "queued",
+      "wave": "M1B",
+      "batch": "M1B-1",
+      "family": "按钮",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/18-qtoolbutton-beginner.md": {
+      "status": "queued",
+      "wave": "M1B",
+      "batch": "M1B-1",
+      "family": "按钮",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/19-qradiobutton-beginner.md": {
+      "status": "queued",
+      "wave": "M1B",
+      "batch": "M1B-1",
+      "family": "按钮",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/20-qcheckbox-beginner.md": {
+      "status": "queued",
+      "wave": "M1B",
+      "batch": "M1B-1",
+      "family": "按钮",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/21-qcommandlinkbutton-beginner.md": {
+      "status": "queued",
+      "wave": "M1B",
+      "batch": "M1B-1",
+      "family": "按钮",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/01-qobject-meta-system-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-1",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-1",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/03-string-encoding-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-1",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/04-container-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-1",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/05-variant-type-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-1",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/06-memory-management-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-1",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/07-event-system-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-2",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/08-file-io-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-2",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/09-multithreading-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-2",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/10-qprocess-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-2",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/11-timer-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-2",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/12-plugin-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-3",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/13-i18n-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-3",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/14-logging-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-3",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/15-regex-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-3",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/16-json-xml-beginner.md": {
+      "status": "queued",
+      "wave": "W3",
+      "batch": "W3-3",
+      "family": "qtbase",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/04-qtnetwork/01-tcp-socket-beginner.md": {
+      "status": "queued",
+      "wave": "W4",
+      "batch": "W4-1",
+      "family": "network",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/04-qtnetwork/02-udp-socket-beginner.md": {
+      "status": "queued",
+      "wave": "W4",
+      "batch": "W4-1",
+      "family": "network",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/04-qtnetwork/03-network-access-manager-beginner.md": {
+      "status": "queued",
+      "wave": "W4",
+      "batch": "W4-1",
+      "family": "network",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/04-qtnetwork/04-websocket-beginner.md": {
+      "status": "queued",
+      "wave": "W4",
+      "batch": "W4-1",
+      "family": "network",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/04-qtnetwork/05-ssl-tls-beginner.md": {
+      "status": "queued",
+      "wave": "W4",
+      "batch": "W4-1",
+      "family": "network",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/04-qtnetwork/06-serial-port-beginner.md": {
+      "status": "queued",
+      "wave": "W4",
+      "batch": "W4-1",
+      "family": "network",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/01-layout-system-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-1",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/02-event-handling-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-1",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/03-model-view-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-1",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/04-qss-stylesheet-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-1",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/05-custom-widget-paint-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-1",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/06-dialog-system-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-1",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/07-main-window-system-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-1",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/08-graphics-view-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-2",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/09-animation-framework-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-2",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/10-mdi-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-2",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/11-qwidget-base-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-2",
+      "family": "主题",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/34-qlabel-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-2",
+      "family": "显示",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/35-qprogressbar-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-2",
+      "family": "显示",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/36-qlcdnumber-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-2",
+      "family": "显示",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/37-qcalendarwidget-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-3",
+      "family": "显示",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/13-qframe-base-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-3",
+      "family": "容器",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/14-qabstractscrollarea-base-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-3",
+      "family": "容器",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/38-qgroupbox-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-3",
+      "family": "容器",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/39-qtabwidget-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-3",
+      "family": "容器",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/40-qtabbar-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-3",
+      "family": "容器",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/41-qstackedwidget-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-3",
+      "family": "容器",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/42-qsplitter-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-4",
+      "family": "容器",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/43-qtoolbox-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-4",
+      "family": "容器",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/44-qscrollarea-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-4",
+      "family": "容器",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/45-qframe-separator-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-4",
+      "family": "容器",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/15-qabstractitemview-base-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-4",
+      "family": "列表树表格",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/46-qlistwidget-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-4",
+      "family": "列表树表格",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/47-qlistview-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-4",
+      "family": "列表树表格",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/48-qtreewidget-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-5",
+      "family": "列表树表格",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/49-qtreeview-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-5",
+      "family": "列表树表格",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/50-qtablewidget-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-5",
+      "family": "列表树表格",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/51-qtableview-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-5",
+      "family": "列表树表格",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/52-qheaderview-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-5",
+      "family": "列表树表格",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/53-qcolumnview-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-5",
+      "family": "列表树表格",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/54-qundoview-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-5",
+      "family": "列表树表格",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/16-qabstractspinbox-base-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-6",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/22-qlineedit-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-6",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/23-qtextedit-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-6",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/24-qplaintextedit-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-6",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/25-qtextbrowser-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-6",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/26-qkeysequenceedit-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-6",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/27-qcombobox-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-6",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/28-qfontcombobox-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-7",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/29-qspinbox-doublespinbox-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-7",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/30-qdatetimeedit-dateedit-timeedit-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-7",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/31-qslider-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-7",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/32-qscrollbar-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-7",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/33-qdial-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-7",
+      "family": "输入",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/55-qmainwindow-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-7",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/56-qmenubar-menu-action-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-8",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/57-qtoolbar-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-8",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/58-qstatusbar-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-8",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/59-qdockwidget-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-8",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/60-qdialog-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-8",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/61-qdialogbuttonbox-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-8",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/62-qmessagebox-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-8",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/63-qinputdialog-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-9",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/64-qcolordialog-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-9",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/65-qfontdialog-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-9",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/66-qfiledialog-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-9",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/67-qprogressdialog-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-9",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/68-qerrormessage-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-9",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/69-qwizard-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-10",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/70-qsplashscreen-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-10",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/71-qmdiarea-mdisubwindow-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-10",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/72-qprinter-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-10",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/73-qprintdialog-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-10",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/74-qprintpreviewdialog-beginner.md": {
+      "status": "queued",
+      "wave": "W5",
+      "batch": "W5-10",
+      "family": "主窗口对话框",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/01-qtsql-database-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-1",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/02-qtsql-tablemodel-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-1",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/03-qtcharts-basic-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-1",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/04-qtmultimedia-player-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-1",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/05-qtmultimedia-camera-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-1",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/06-qtsvg-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-1",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/07-qtprintsupport-overview-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-1",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/08-qtserialbus-modbus-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-2",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/09-qtmqtt-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-2",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/10-qtbluetooth-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-2",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/11-qtnfc-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-2",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/12-qtstatemachine-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-2",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/13-qtscxml-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-2",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/14-qt3d-basic-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-3",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/15-qtquick3d-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-3",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/16-qtquick3d-physics-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-3",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/17-qtpdf-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-3",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/18-qthttpserver-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-3",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/19-qtwebsockets-server-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-3",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/20-qtwebchannel-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-4",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/21-qtwebengine-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-4",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/22-qtremoteobjects-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-4",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/23-qtspatial-audio-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-4",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/24-qttexttospeech-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-4",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/25-qt5compat-migration-beginner.md": {
+      "status": "queued",
+      "wave": "W6",
+      "batch": "W6-4",
+      "family": "other-modules",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/06-qml/01-qml-syntax-basics-beginner.md": {
+      "status": "queued",
+      "wave": "W7",
+      "batch": "W7-1",
+      "family": "qml",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/06-qml/02-property-binding-beginner.md": {
+      "status": "queued",
+      "wave": "W7",
+      "batch": "W7-1",
+      "family": "qml",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/06-qml/03-qtquick-controls-beginner.md": {
+      "status": "queued",
+      "wave": "W7",
+      "batch": "W7-1",
+      "family": "qml",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/06-qml/04-cpp-qml-interop-beginner.md": {
+      "status": "queued",
+      "wave": "W7",
+      "batch": "W7-1",
+      "family": "qml",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/06-qml/05-qml-animation-states-beginner.md": {
+      "status": "queued",
+      "wave": "W7",
+      "batch": "W7-1",
+      "family": "qml",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/06-qml/06-qml-model-delegate-beginner.md": {
+      "status": "queued",
+      "wave": "W7",
+      "batch": "W7-1",
+      "family": "qml",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/06-qml/07-qml-canvas-particles-beginner.md": {
+      "status": "queued",
+      "wave": "W7",
+      "batch": "W7-1",
+      "family": "qml",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/00-environment-setup/00-qt6-install-beginner.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "env",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/00-environment-setup/01-ide-setup-beginner.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "env",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/00-environment-setup/02-cmake-first-project-beginner.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "env",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/00-environment-setup/index.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "index",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/01-qtbase/index.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "index",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/02-qtgui/index.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "index",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/03-qtwidgets/index.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "index",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/04-qtnetwork/index.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "index",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/05-other-modules/index.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "index",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/06-qml/index.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "index",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    },
+    "tutorial/beginner/index.md": {
+      "status": "queued",
+      "wave": "W8",
+      "batch": "W8-1",
+      "family": "index",
+      "attempts": 0,
+      "block_reason": null,
+      "updated": "2026-09-28T18:51:56+08:00"
+    }
+  }
+}

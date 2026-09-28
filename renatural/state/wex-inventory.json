@@ -1,0 +1,1657 @@
+{
+  "generated": "2026-09-28",
+  "chapters": [
+    {
+      "chapter": "examples/beginner/01-qtbase",
+      "rows": [
+        {
+          "dir": "01-qobject-meta-system-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "02-signal-slot-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "03-string-encoding-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "04-container-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "05-variant-type-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "06-memory-management-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "07-event-system-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "08-file-io-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": false,
+            ".gitignore": true
+          },
+          "build": "skip",
+          "build_error": "CMakeLists.txt 缺失，无法配置，跳过构建（cmake -B build -S . 无 CMakeLists 输入）"
+        },
+        {
+          "dir": "09-multithreading-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "10-qprocess-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "11-timer-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "12-plugin-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "13-i18n-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "14-logging-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "15-regex-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "16-json-xml-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": true
+          },
+          "build": "pass",
+          "build_error": ""
+        }
+      ],
+      "notes": "实跑结论（比预期乐观）：15/16 示例 cmake configure + build 全 pass，唯一例外 08-file-io-beginner 缺 CMakeLists.txt 记 skip。债不在编译，在五件套结构——16/16 全缺 widget.h/widget.cpp（证实已知情报）。main.cpp 16/16 齐备、.gitignore 16/16 齐备且内容全部含 build/（另忽略 CMakeCache/CMakeFiles/moc_*.cpp 等），CMakeLists.txt 15/16 齐备。部分示例用自命名头文件代替 widget.h（01: simpleobject.h+taskitem.h+taskmanager.h；02: counter.h/lambdademo.h/slotreceiver.h/worker.h；06: 六个 *demo.h；07: eventreceiver.h/keylogger.h/myeventhandler.h；11: stopwatch.h；12: textprocessor_interface.h+两个 plugin .cpp；13: i18nwindow.h；14: databasemanager.h/networkmanager.h/workerthread.h），03/04/05/08/10/15/16 为 main.cpp 单文件示例——均不符合 AGENTS.md 五件套规范（widget.h+widget.cpp 命名硬约束）。章节根另有聚合用 CMakeLists.txt（/home/charliechen/Tutorial_AwesomeQt/examples/beginner/01-qtbase/CMakeLists.txt，未按任务范围单列）。全部 build/ 目录留置原地，git check-ignore 抽查确认被忽略，章节内 git status 干净；未改动任何源文件。环境：Qt6 (/usr/lib/qt6/cmake)、gcc/ninja/cmake 均按预期工作。"
+    },
+    {
+      "chapter": "examples/beginner/02-qtgui/",
+      "rows": [
+        {
+          "dir": "01-qpainter-basic-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "02-coordinate-transform-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "03-image-pixmap-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "04-font-text-rendering-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "05-opengl-widget-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "06-drag-drop-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        }
+      ],
+      "notes": "章目录 /home/charliechen/Tutorial_AwesomeQt/examples/beginner/02-qtgui/ 实际 6 个示例，与清单一致。构建 6/6 全 pass（cmake configure + build 均无错误，gcc 16.2.1 + Qt6，05 示例仅提示 Vulkan headers 缺失但不影响 OpenGL 构建）。五件套 0/6 达标：所有示例有 main.cpp + CMakeLists.txt，但无一有 widget.h/widget.cpp（各自用领域命名：01=barchartwidget+shapegallerywidget，02=analogclockwidget+transformdemowidget，03=imagedisplaywidget+pixeldemowidget+simpleimageviewer，04=fontdemowidget+metricslayoutwidget+richtextcardwidget，05=mainwindow+triangleglwidget，06=dragsourcewidget+droptargetwidget），且 6 个示例均无自己的 .gitignore（.gitignore 检查项因此全部 false，无法核查是否忽略 build/）。build/ 目录已留在各示例下，git check-ignore 实测被仓库根 .gitignore 第 9 行 `**/build/` 覆盖，git status 无污染——但按项目五件套规则每示例仍应自带 .gitignore。与 01-qtbase 章 16/16 缺 widget 对不同：本章债在「命名不合五件套规范 + 缺 .gitignore」，代码本身全部可编译。章目录另有顶层 CMakeLists.txt（聚合各子目录）。未改动任何源文件。"
+    },
+    {
+      "chapter": "examples/beginner/03-qtwidgets",
+      "rows": [
+        {
+          "dir": "01-layout-system-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "02-event-handling-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "03-model-view-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "04-qss-stylesheet-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "05-custom-widget-paint-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "06-dialog-system-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "07-main-window-system-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "08-graphics-view-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "09-animation-framework-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "10-mdi-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "11-qwidget-base-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "12-qabstractbutton-base-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "13-qframe-base-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "14-qabstractscrollarea-base-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "15-qabstractitemview-base-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "16-qabstractspinbox-base-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "17-qpushbutton-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "18-qtoolbutton-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "19-qradiobutton-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "20-qcheckbox-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "21-qcommandlinkbutton-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "22-qlineedit-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "23-qtextedit-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "24-qplaintextedit-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "25-qtextbrowser-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "26-qkeysequenceedit-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "27-qcombobox-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "28-qfontcombobox-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "29-qspinbox-doublespinbox-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "30-qdatetimeedit-dateedit-timeedit-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "31-qslider-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "32-qscrollbar-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "33-qdial-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "34-qlabel-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "35-qprogressbar-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "36-qlcdnumber-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "37-qcalendarwidget-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "38-qgroupbox-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "39-qtabwidget-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "40-qtabbar-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "41-qstackedwidget-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "42-qsplitter-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "43-qtoolbox-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "44-qscrollarea-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "45-qframe-separator-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "46-qlistwidget-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "47-qlistview-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "48-qtreewidget-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "49-qtreeview-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "50-qtablewidget-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "51-qtableview-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "52-qheaderview-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "53-qcolumnview-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "54-qundoview-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "55-qmainwindow-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "56-qmenubar-menu-action-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "57-qtoolbar-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "58-qstatusbar-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "59-qdockwidget-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "60-qdialog-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "61-qdialogbuttonbox-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "62-qmessagebox-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "63-qinputdialog-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "64-qcolordialog-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "65-qfontdialog-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "66-qfiledialog-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "67-qprogressdialog-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "68-qerrormessage-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "69-qwizard-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "70-qsplashscreen-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "71-qmdiarea-mdisubwindow-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "72-qprinter-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "73-qprintdialog-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "74-qprintpreviewdialog-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        }
+      ],
+      "notes": "实跑 74/74 全部 build pass（cmake 4.4.3 + gcc 16.2.1 + Qt6 于 /usr/lib/cmake/Qt6 自动找到；任务给的 /usr/lib/qt6/cmake 实际不存在，不影响）。每个 build/ 下均生成可执行文件，共 74 个，build/ 目录已按指示保留。git status examples/ 零改动（根 .gitignore 第 9 行 **/build/ 兜底，故无 .gitignore 也不会污染 git 状态）。五件套债务：74/74 缺 .gitignore；74/74 缺字面名的 widget.h/widget.cpp——但并非 01-qtbase 那种残废工程，各示例用了类名命名的等价 widget 文件（如 01 的 mainwindow.h/cpp + 多个 page 类、34 的 labeldemowidget.h/cpp、72 的 MainWindow.h/cpp 大小写混杂），CMakeLists 与之自洽、全部可编译。结论：该章债务是「命名不合五件套规范 + 缺 .gitignore」，不是「缺文件跑不起来」。另：章目录下还有一个章级 CMakeLists.txt（03-qtwidgets/CMakeLists.txt），不属于单示例五件套。所有示例均未修改任何源文件。"
+    },
+    {
+      "chapter": "examples/beginner/04-qtnetwork",
+      "rows": [
+        {
+          "dir": "01-tcp-socket-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "02-udp-socket-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "03-network-access-manager-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "04-websocket-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "CMake Error at CMakeLists.txt:16 (find_package): Failed to find required Qt component \"WebSockets\". Expected Config file at \"/usr/lib/cmake/Qt6WebSockets/Qt6WebSocketsConfig.cmake\" does NOT exist"
+        },
+        {
+          "dir": "05-ssl-tls-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "06-serial-port-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "CMake Error at CMakeLists.txt:16 (find_package): Failed to find required Qt component \"SerialPort\". Expected Config file at \"/usr/lib/cmake/Qt6SerialPort/Qt6SerialPortConfig.cmake\" does NOT exist"
+        }
+      ],
+      "notes": "五件套 0/6 齐全：六个示例都有 main.cpp + CMakeLists.txt（2/5），全部缺 widget.h/widget.cpp/.gitignore。各示例用领域专属类对替代 widget.*（01 为 echoserver+tcpclient，02 为 udpsender+udpreceiver，03 为 httpget/httppost/httpdownloaddemo，04 为 chatclient+chatserver，05 为 httpsrequest+tlsprobe 等，06 为 serialmanager+serialportlist 等）——比 01-qtbase 章（缺 main 债）状态好，代码本体可编译。build 结果 4 pass / 2 fail：两例 fail 均为环境缺包所致、非代码问题——本机 Qt6 实际装在 /usr/lib/cmake/Qt6（非简报所写 /usr/lib/qt6/cmake），Qt6Core/Network/Widgets 在，但 Qt6WebSockets 与 Qt6SerialPort 的 dev 包未安装，04/06 在 find_package 配置阶段即失败（错误首因见 build_error 字段），未到编译步骤；装 qtmODULE 对应包（如 qt6-websockets-dev / qt6-serialport-dev）后大概率可过。build/ 目录全部保留：因六例均无自带 .gitignore（点名：01/02/03/04/05/06 全部缺），靠仓库根 .gitignore 的 **/build/ 规则（第 9 行）兜底，git status 干净，但按五件套规则每例仍应补自己的 .gitignore。另注：章目录本身还有一个聚合用 CMakeLists.txt（/home/charliechen/Tutorial_AwesomeQt/examples/beginner/04-qtnetwork/CMakeLists.txt）。全程未改任何源文件。"
+    },
+    {
+      "chapter": "examples/beginner/05-other-modules",
+      "rows": [
+        {
+          "dir": "01-qtsql-database-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "02-qtsql-tablemodel-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "03-qtcharts-basic-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Charts (missing: Qt6Charts_DIR); CMake Error at CMakeLists.txt:13 (find_package)"
+        },
+        {
+          "dir": "04-qtmultimedia-player-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Multimedia (missing: Qt6Multimedia_DIR); /usr/lib/cmake/Qt6Multimedia/Qt6MultimediaConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "05-qtmultimedia-camera-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Multimedia (missing: Qt6Multimedia_DIR); /usr/lib/cmake/Qt6Multimedia/Qt6MultimediaConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "06-qtsvg-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Svg (missing: Qt6Svg_DIR); CMake Error at CMakeLists.txt:14 (find_package)"
+        },
+        {
+          "dir": "07-qtprintsupport-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "pass",
+          "build_error": ""
+        },
+        {
+          "dir": "08-qtserialbus-modbus-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6SerialBus (missing: Qt6SerialBus_DIR); /usr/lib/cmake/Qt6SerialBus/Qt6SerialBusConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "09-qtmqtt-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Mqtt (missing: Qt6Mqtt_DIR); CMake Error at CMakeLists.txt:13 (find_package)"
+        },
+        {
+          "dir": "10-qtbluetooth-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Bluetooth (missing: Qt6Bluetooth_DIR); CMake Error at CMakeLists.txt:22 (find_package)"
+        },
+        {
+          "dir": "11-qtnfc-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Nfc (missing: Qt6Nfc_DIR); CMake Error at CMakeLists.txt:22 (find_package)"
+        },
+        {
+          "dir": "12-qtstatemachine-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6StateMachine (missing: Qt6StateMachine_DIR); CMake Error at CMakeLists.txt:23 (find_package)"
+        },
+        {
+          "dir": "13-qtscxml-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Scxml (missing: Qt6Scxml_DIR); CMake Error at CMakeLists.txt:23 (find_package)"
+        },
+        {
+          "dir": "14-qt3d-basic-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt63DCore (missing: Qt63DCore_DIR); CMake Error at CMakeLists.txt:23 (find_package)"
+        },
+        {
+          "dir": "15-qtquick3d-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Quick (missing: Qt6Quick_DIR; qt6-declarative 未装); CMake Error at CMakeLists.txt:24 (find_package)"
+        },
+        {
+          "dir": "16-qtquick3d-physics-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Quick (missing: Qt6Quick_DIR; qt6-declarative 未装); CMake Error at CMakeLists.txt:24 (find_package)"
+        },
+        {
+          "dir": "17-qtpdf-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Pdf (missing: Qt6Pdf_DIR); CMake Error at CMakeLists.txt:24 (find_package)"
+        },
+        {
+          "dir": "18-qthttpserver-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6HttpServer (missing: Qt6HttpServer_DIR); /usr/lib/cmake/Qt6HttpServer/Qt6HttpServerConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "19-qtwebsockets-server-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6WebSockets (missing: Qt6WebSockets_DIR); CMake Error at CMakeLists.txt:23 (find_package)"
+        },
+        {
+          "dir": "20-qtwebchannel-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6WebChannel (missing: Qt6WebChannel_DIR); CMake Error at CMakeLists.txt:25 (find_package)"
+        },
+        {
+          "dir": "21-qtwebengine-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6WebEngineWidgets (missing: Qt6WebEngineWidgets_DIR); CMake Error at CMakeLists.txt:24 (find_package)"
+        },
+        {
+          "dir": "22-qtremoteobjects-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6RemoteObjects (missing: Qt6RemoteObjects_DIR); CMake Error at CMakeLists.txt:24 (find_package)"
+        },
+        {
+          "dir": "23-qtspatial-audio-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6SpatialAudio (missing: Qt6SpatialAudio_DIR); /usr/lib/cmake/Qt6SpatialAudio/Qt6SpatialAudioConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "24-qttexttospeech-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6TextToSpeech (missing: Qt6TextToSpeech_DIR); /usr/lib/cmake/Qt6TextToSpeech/Qt6TextToSpeechConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "25-qt5compat-migration-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "Could NOT find Qt6Core5Compat (missing: Qt6Core5Compat_DIR); /usr/lib/cmake/Qt6Core5Compat/Qt6Core5CompatConfig.cmake does NOT exist"
+        }
+      ],
+      "notes": "五件套结论：25/25 缺 widget.h 与 widget.cpp（各示例用类名命名：Demo.h/Demo.cpp、MainWindow.h/cpp、svgviewerwindow.h/cpp 等；15/16-qtquick3d 连 widget 类文件对都没有，仅 main.cpp + Main.qml）；25/25 缺 .gitignore（点名：本示例 01～25 全部无自有 .gitignore，靠仓库根 .gitignore 第 9 行 **/build/ 兜底，实测 git status 干净）；25/25 有 main.cpp 与 CMakeLists.txt，故无 skip。构建结论：3 pass（01-qtsql-database、02-qtsql-tablemodel、07-qtprintsupport，均只依赖 qt6-base 的 Sql/Widgets/PrintSupport，可执行文件已生成于各自 build/）；22 fail 全部死在 configure 阶段的 find_package——本机实际只装了 qt6-base 6.11.2 + qt6-translations（Qt6 CMake 位于 /usr/lib/cmake/Qt6，注意任务给的 /usr/lib/qt6/cmake 路径在本机不存在），缺失模块：Charts、Multimedia、Svg、SerialBus、Mqtt、Bluetooth、Nfc、StateMachine、Scxml、3DCore、Quick(qt6-declarative，15/16 先死在 Qt6Quick 而非 Quick3D)、Pdf、HttpServer、WebSockets、WebChannel、WebEngineWidgets、RemoteObjects、SpatialAudio、TextToSpeech、Core5Compat。因此这 22 个 fail 是环境缺模块所致，代码本身正确性未被检验，不能据此判定示例有代码缺陷；要验证需补装对应 Qt 模块后重跑。build/ 目录按指示全部保留且已被 gitignore；未改动任何源文件。另注：章节级 CMakeLists.txt 存在并对 10～25 号示例按目标名（如 qtbluetooth_beginner）引用，16 号还带 if(TARGET ...) 守卫，说明作者已知部分模块可能缺失。"
+    },
+    {
+      "chapter": "examples/beginner/06-qml",
+      "rows": [
+        {
+          "dir": "01-qml-syntax-basics-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "CMake Error at CMakeLists.txt:9 (find_package): Failed to find required Qt component \"Quick\". Expected Config file at /usr/lib/cmake/Qt6Quick/Qt6QuickConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "02-property-binding-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "CMake Error at CMakeLists.txt:9 (find_package): Failed to find required Qt component \"Quick\". Expected Config file at /usr/lib/cmake/Qt6Quick/Qt6QuickConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "03-qtquick-controls-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "CMake Error at CMakeLists.txt:9 (find_package): Failed to find required Qt component \"Quick\". Expected Config file at /usr/lib/cmake/Qt6Quick/Qt6QuickConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "04-cpp-qml-interop-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "CMake Error at CMakeLists.txt:9 (find_package): Failed to find required Qt component \"Quick\". Expected Config file at /usr/lib/cmake/Qt6Quick/Qt6QuickConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "05-qml-animation-states-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "CMake Error at CMakeLists.txt:9 (find_package): Failed to find required Qt component \"Quick\". Expected Config file at /usr/lib/cmake/Qt6Quick/Qt6QuickConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "06-qml-model-delegate-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "CMake Error at CMakeLists.txt:9 (find_package): Failed to find required Qt component \"Quick\". Expected Config file at /usr/lib/cmake/Qt6Quick/Qt6QuickConfig.cmake does NOT exist"
+        },
+        {
+          "dir": "07-qml-canvas-particles-beginner",
+          "five_piece": {
+            "widget.h": false,
+            "widget.cpp": false,
+            "main.cpp": true,
+            "CMakeLists.txt": true,
+            ".gitignore": false
+          },
+          "build": "fail",
+          "build_error": "CMake Error at CMakeLists.txt:9 (find_package): Failed to find required Qt component \"Quick\". Expected Config file at /usr/lib/cmake/Qt6Quick/Qt6QuickConfig.cmake does NOT exist"
+        }
+      ],
+      "notes": "章 06-qml 共 7 例，与任务清单完全一致（另有章级 CMakeLists.txt 做聚合 add_subdirectory）。五件套 0/7：全部缺 widget.h、widget.cpp、.gitignore（该章为 QML 示例，实际结构是 main.cpp + Main.qml；04 有 app_controller.h/.cpp、06 有 fruit_model.h/.cpp，均未按规范命名 widget.*）。构建 0/7：七例全部在 configure 阶段失败，根因相同且为环境缺口而非源码缺陷——本机 Qt6 的 cmake 配置在 /usr/lib/cmake/Qt6*（43 个组件：Core/Gui/Widgets/Network/Sql/Test/Xml/OpenGL/PrintSupport/Wayland/DBus 等），但未安装 QML/Quick 栈（无 Qt6Qml、Qt6Quick、Qt6QuickControls2，即缺 qt6-declarative/qml 系 dev 包），每例 find_package(Qt6 REQUIRED COMPONENTS Quick) 在 CMakeLists.txt:9 失败；任务简报所述 /usr/lib/qt6/cmake 实际不存在。七例均未到编译阶段，源码本身无法验证。所有 build/ 目录已留存在各示例下，无逐例 .gitignore，但仓库根 .gitignore 的 **/build/ 已覆盖，git status 干净。若要复检本章，需先装 Qt6 Quick/QML 开发包再重跑。未改动任何源文件。"
+    }
+  ],
+  "coverage": {
+    "articles_without_example": [
+      "00-environment-setup/00-qt6-install-beginner",
+      "00-environment-setup/01-ide-setup-beginner",
+      "00-environment-setup/02-cmake-first-project-beginner"
+    ],
+    "examples_without_article": []
+  }
+}

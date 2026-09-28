@@ -1,0 +1,11 @@
+{
+  "slug": "00-qt6-install-beginner",
+  "path": "tutorial/beginner/00-environment-setup/00-qt6-install-beginner.md",
+  "sha256": "983133c58b628b37627eb71c1d0084e1f119a596d94595c277bac80339ea9761",
+  "ts": "2026-09-28T18:36:09+08:00",
+  "example_dir": "examples/beginner/00-environment-setup/00-qt6-install-beginner",
+  "example_files": {},
+  "status": "blocked",
+  "block_reason": "示例目录不存在：examples/beginner/00-environment-setup/00-qt6-install-beginner",
+  "debts": []
+}

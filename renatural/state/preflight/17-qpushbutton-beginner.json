@@ -1,0 +1,58 @@
+{
+  "slug": "17-qpushbutton-beginner",
+  "path": "tutorial/beginner/03-qtwidgets/17-qpushbutton-beginner.md",
+  "sha256": "b160ed2e36f2cca3d4f03e1cad46e383dd823f91336cc56a4b7694b0c5239a98",
+  "ts": "2026-09-28T18:46:00+08:00",
+  "example_dir": "examples/beginner/03-qtwidgets/17-qpushbutton-beginner",
+  "example_files": {
+    "CMakeLists.txt": true,
+    "main.cpp": true,
+    ".gitignore": false,
+    "widget_impl_pair": true
+  },
+  "build": {
+    "configure": {
+      "cmd": "cmake -B build",
+      "ok": true,
+      "returncode": 0,
+      "output_tail": "-- Could NOT find WrapVulkanHeaders (missing: Vulkan_INCLUDE_DIR) -- Configuring done (0.1s) -- Generating done (0.0s) -- Build files have been written to: /home/charliechen/Tutorial_AwesomeQt/examples/beginner/03-qtwidgets/17-qpushbutton-beginner/build"
+    },
+    "build": {
+      "cmd": "cmake --build build",
+      "ok": true,
+      "returncode": 0,
+      "output_tail": "[ 0%] Built target 17-qpushbutton-beginner_autogen_timestamp_deps [ 20%] Built target 17-qpushbutton-beginner_autogen [100%] Built target 17-qpushbutton-beginner"
+    }
+  },
+  "digest": {
+    "prev": {
+      "path": "tutorial/beginner/03-qtwidgets/16-qabstractspinbox-base-beginner.md",
+      "h2": [
+        "1. 前言 / 为什么你需要搞懂 QAbstractSpinBox",
+        "2. 环境说明",
+        "3. 核心概念讲解",
+        "4. 踩坑预防",
+        "5. 练习项目",
+        "6. 官方文档参考链接"
+      ],
+      "first_paragraph": "我们在 Qt 开发中处理数值输入的时候，QSpinBox、QDoubleSpinBox、QDateTimeEdit 这三个控件几乎是标配。它们让用户通过上下箭头按钮或直接键盘输入来调整值，比普通的 QLineEdit 多了一层天然的数值约束"
+    },
+    "next": {
+      "path": "tutorial/beginner/03-qtwidgets/18-qtoolbutton-beginner.md",
+      "h2": [
+        "1. 前言 / 为什么 QToolButton 跟 QPushButton 不一样",
+        "2. 环境说明",
+        "3. 核心概念讲解",
+        "4. 踩坑预防",
+        "5. 练习项目",
+        "6. 官方文档参考链接"
+      ],
+      "first_paragraph": "上一篇文章我们刚把 QPushButton 的默认按钮机制、下拉菜单、图标用法和 QSS 美化全部过了一遍。你可能会想：QPushButton 已经能带菜单了（`setMenu`），也能显示图标了（`setIcon`），那 QToolBut"
+    }
+  },
+  "status": "ok",
+  "block_reason": "",
+  "debts": [
+    ".gitignore 缺失（五件套欠账，归 W-EX 补齐）"
+  ]
+}

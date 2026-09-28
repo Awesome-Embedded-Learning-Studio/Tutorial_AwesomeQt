@@ -1,0 +1,16 @@
+{
+  "slug": "02-signal-slot-beginner",
+  "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md",
+  "sha256": "372a07ce2641b2d47dc8acf9b7fa05ab5cdc77332b144a46a6b08c4309051805",
+  "ts": "2026-09-28T18:05:56+08:00",
+  "example_dir": "examples/beginner/01-qtbase/02-signal-slot-beginner",
+  "five_piece": {
+    "widget.h": false,
+    "widget.cpp": false,
+    "main.cpp": true,
+    "CMakeLists.txt": true,
+    ".gitignore": true
+  },
+  "status": "blocked",
+  "block_reason": "五件套缺失：widget.h、widget.cpp"
+}

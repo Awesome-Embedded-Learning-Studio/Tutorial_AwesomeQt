@@ -1,0 +1,49 @@
+{
+  "schema": "renatural/invariants/1",
+  "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md",
+  "slug": "02-signal-slot-beginner",
+  "captured_at": "2026-09-28T18:11:04+08:00",
+  "metrics": {
+    "qt_src_line_refs": 0,
+    "doc_qt_io_urls": 4,
+    "fenced_code_blocks": 10,
+    "code_block_sha1": [
+      "0b0b65319f3f1275ec11ac0479cf86a303c08f61",
+      "eaf0a9a09b540e6522f743bbf9aee18591b2ab52",
+      "2c8f7190af1e0ed9d54dfda900b3cd5dfac68761",
+      "b3e34fbc783a2240aa541d810f09ad079044a9fb",
+      "b08ccd93a9bc3dc8288101a007062770c6fe9fcd",
+      "17a2a3beb2a8ba429ea3c53fd8d8be145c4d08ff",
+      "09ee69fd1c7788087d9aaaeb97f0795c3515f2ad",
+      "c10bb4d8783c5b99eb93bba0fc9d6a75d92aa521",
+      "0eba04ee7f2b7f82dde2f72bd6c3d53457172778",
+      "dbf8b982641c848363a2af8e7d8836207dccd8ca"
+    ],
+    "code_block_langs": [
+      "cpp",
+      "cpp",
+      "cpp",
+      "cpp",
+      "cpp",
+      "cpp",
+      "cpp",
+      "cpp",
+      "cpp",
+      "cpp"
+    ],
+    "fence_unclosed": 0,
+    "images": 0,
+    "relative_links": 6
+  },
+  "checks": {
+    "frontmatter_present": true,
+    "title_present": true,
+    "description_present": true,
+    "description_differs_from_first_sentence": true
+  },
+  "context": {
+    "title": "1.2 信号与槽",
+    "description": "Qt 对象间解耦通信的机制：信号是事件声明、槽是可调用目标，新式\n函数指针 connect 自带编译期检查，跨线程时 Qt 自动把参数打包排队投递到目标线程。\n四个坑各有各的崩法——Lambda 捕获野指针的偶发崩溃、漏 Q_OBJECT 信号连不上、\n工作线程直接碰 GUI、重载信号连接歧义。配套可跑示例在\nexamples/beginner/01-qtbase/02-signal-slot-beginner/。",
+    "first_sentence": "一个按钮被点击之后，该让谁知道这件事？"
+  }
+}

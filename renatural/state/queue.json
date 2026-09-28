@@ -1,0 +1,1162 @@
+[
+  {
+    "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md",
+    "wave": "M1A",
+    "batch": "M1A-1",
+    "seq": 1,
+    "priority": 1,
+    "reason": "批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 140 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/02-qtgui/02-coordinate-transform-beginner.md",
+    "wave": "M1A",
+    "batch": "M1A-1",
+    "seq": 2,
+    "priority": 1,
+    "reason": "批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 151 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/02-qtgui/03-image-pixmap-beginner.md",
+    "wave": "M1A",
+    "batch": "M1A-1",
+    "seq": 3,
+    "priority": 1,
+    "reason": "批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 134 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md",
+    "wave": "M1A",
+    "batch": "M1A-1",
+    "seq": 4,
+    "priority": 1,
+    "reason": "批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 124 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/02-qtgui/05-opengl-widget-beginner.md",
+    "wave": "M1A",
+    "batch": "M1A-1",
+    "seq": 5,
+    "priority": 1,
+    "reason": "批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 145 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/02-qtgui/06-drag-drop-beginner.md",
+    "wave": "M1A",
+    "batch": "M1A-1",
+    "seq": 6,
+    "priority": 1,
+    "reason": "批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 116 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md",
+    "wave": "M1B",
+    "batch": "M1B-1",
+    "seq": 7,
+    "priority": 1,
+    "reason": "批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 186 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/17-qpushbutton-beginner.md",
+    "wave": "M1B",
+    "batch": "M1B-1",
+    "seq": 8,
+    "priority": 1,
+    "reason": "批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 151 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/18-qtoolbutton-beginner.md",
+    "wave": "M1B",
+    "batch": "M1B-1",
+    "seq": 9,
+    "priority": 1,
+    "reason": "批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 177 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/19-qradiobutton-beginner.md",
+    "wave": "M1B",
+    "batch": "M1B-1",
+    "seq": 10,
+    "priority": 1,
+    "reason": "批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 176 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/20-qcheckbox-beginner.md",
+    "wave": "M1B",
+    "batch": "M1B-1",
+    "seq": 11,
+    "priority": 2,
+    "reason": "批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 214 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/21-qcommandlinkbutton-beginner.md",
+    "wave": "M1B",
+    "batch": "M1B-1",
+    "seq": 12,
+    "priority": 1,
+    "reason": "批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 149 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/01-qobject-meta-system-beginner.md",
+    "wave": "W3",
+    "batch": "W3-1",
+    "seq": 13,
+    "priority": 1,
+    "reason": "试点篇按全零口径回炉（lint-baseline.md §4.2），随 W3 波重写；lint error 命中 147 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md",
+    "wave": "W3",
+    "batch": "W3-1",
+    "seq": 14,
+    "priority": 1,
+    "reason": "试点篇按全零口径回炉（lint-baseline.md §4.2），随 W3 波重写；lint error 命中 119 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/03-string-encoding-beginner.md",
+    "wave": "W3",
+    "batch": "W3-1",
+    "seq": 15,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 169 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/04-container-beginner.md",
+    "wave": "W3",
+    "batch": "W3-1",
+    "seq": 16,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 130 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/05-variant-type-beginner.md",
+    "wave": "W3",
+    "batch": "W3-1",
+    "seq": 17,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 120 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/06-memory-management-beginner.md",
+    "wave": "W3",
+    "batch": "W3-1",
+    "seq": 18,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 137 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/07-event-system-beginner.md",
+    "wave": "W3",
+    "batch": "W3-2",
+    "seq": 19,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 143 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/08-file-io-beginner.md",
+    "wave": "W3",
+    "batch": "W3-2",
+    "seq": 20,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 131 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/09-multithreading-beginner.md",
+    "wave": "W3",
+    "batch": "W3-2",
+    "seq": 21,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 158 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/10-qprocess-beginner.md",
+    "wave": "W3",
+    "batch": "W3-2",
+    "seq": 22,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 127 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/11-timer-beginner.md",
+    "wave": "W3",
+    "batch": "W3-2",
+    "seq": 23,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 129 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/12-plugin-beginner.md",
+    "wave": "W3",
+    "batch": "W3-3",
+    "seq": 24,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 136 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/13-i18n-beginner.md",
+    "wave": "W3",
+    "batch": "W3-3",
+    "seq": 25,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 136 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/14-logging-beginner.md",
+    "wave": "W3",
+    "batch": "W3-3",
+    "seq": 26,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 135 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/15-regex-beginner.md",
+    "wave": "W3",
+    "batch": "W3-3",
+    "seq": 27,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 117 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/16-json-xml-beginner.md",
+    "wave": "W3",
+    "batch": "W3-3",
+    "seq": 28,
+    "priority": 1,
+    "reason": "W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 153 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/04-qtnetwork/01-tcp-socket-beginner.md",
+    "wave": "W4",
+    "batch": "W4-1",
+    "seq": 29,
+    "priority": 1,
+    "reason": "W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 172 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/04-qtnetwork/02-udp-socket-beginner.md",
+    "wave": "W4",
+    "batch": "W4-1",
+    "seq": 30,
+    "priority": 1,
+    "reason": "W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 165 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/04-qtnetwork/03-network-access-manager-beginner.md",
+    "wave": "W4",
+    "batch": "W4-1",
+    "seq": 31,
+    "priority": 1,
+    "reason": "W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 165 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/04-qtnetwork/04-websocket-beginner.md",
+    "wave": "W4",
+    "batch": "W4-1",
+    "seq": 32,
+    "priority": 1,
+    "reason": "W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 147 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/04-qtnetwork/05-ssl-tls-beginner.md",
+    "wave": "W4",
+    "batch": "W4-1",
+    "seq": 33,
+    "priority": 1,
+    "reason": "W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 170 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/04-qtnetwork/06-serial-port-beginner.md",
+    "wave": "W4",
+    "batch": "W4-1",
+    "seq": 34,
+    "priority": 1,
+    "reason": "W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 158 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/01-layout-system-beginner.md",
+    "wave": "W5",
+    "batch": "W5-1",
+    "seq": 35,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 158 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/02-event-handling-beginner.md",
+    "wave": "W5",
+    "batch": "W5-1",
+    "seq": 36,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 129 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/03-model-view-beginner.md",
+    "wave": "W5",
+    "batch": "W5-1",
+    "seq": 37,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 147 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/04-qss-stylesheet-beginner.md",
+    "wave": "W5",
+    "batch": "W5-1",
+    "seq": 38,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 153 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/05-custom-widget-paint-beginner.md",
+    "wave": "W5",
+    "batch": "W5-1",
+    "seq": 39,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 186 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/06-dialog-system-beginner.md",
+    "wave": "W5",
+    "batch": "W5-1",
+    "seq": 40,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 194 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/07-main-window-system-beginner.md",
+    "wave": "W5",
+    "batch": "W5-1",
+    "seq": 41,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 148 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/08-graphics-view-beginner.md",
+    "wave": "W5",
+    "batch": "W5-2",
+    "seq": 42,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 126 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/09-animation-framework-beginner.md",
+    "wave": "W5",
+    "batch": "W5-2",
+    "seq": 43,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 201 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/10-mdi-beginner.md",
+    "wave": "W5",
+    "batch": "W5-2",
+    "seq": 44,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 164 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/11-qwidget-base-beginner.md",
+    "wave": "W5",
+    "batch": "W5-2",
+    "seq": 45,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（主题族）；lint error 命中 202 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/34-qlabel-beginner.md",
+    "wave": "W5",
+    "batch": "W5-2",
+    "seq": 46,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（显示族）；lint error 命中 191 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/35-qprogressbar-beginner.md",
+    "wave": "W5",
+    "batch": "W5-2",
+    "seq": 47,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（显示族）；lint error 命中 224 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/36-qlcdnumber-beginner.md",
+    "wave": "W5",
+    "batch": "W5-2",
+    "seq": 48,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（显示族）；lint error 命中 220 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/37-qcalendarwidget-beginner.md",
+    "wave": "W5",
+    "batch": "W5-3",
+    "seq": 49,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（显示族）；lint error 命中 161 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/13-qframe-base-beginner.md",
+    "wave": "W5",
+    "batch": "W5-3",
+    "seq": 50,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（容器族）；lint error 命中 156 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/14-qabstractscrollarea-base-beginner.md",
+    "wave": "W5",
+    "batch": "W5-3",
+    "seq": 51,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（容器族）；lint error 命中 167 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/38-qgroupbox-beginner.md",
+    "wave": "W5",
+    "batch": "W5-3",
+    "seq": 52,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（容器族）；lint error 命中 219 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/39-qtabwidget-beginner.md",
+    "wave": "W5",
+    "batch": "W5-3",
+    "seq": 53,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（容器族）；lint error 命中 211 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/40-qtabbar-beginner.md",
+    "wave": "W5",
+    "batch": "W5-3",
+    "seq": 54,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（容器族）；lint error 命中 165 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/41-qstackedwidget-beginner.md",
+    "wave": "W5",
+    "batch": "W5-3",
+    "seq": 55,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（容器族）；lint error 命中 184 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/42-qsplitter-beginner.md",
+    "wave": "W5",
+    "batch": "W5-4",
+    "seq": 56,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（容器族）；lint error 命中 156 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/43-qtoolbox-beginner.md",
+    "wave": "W5",
+    "batch": "W5-4",
+    "seq": 57,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（容器族）；lint error 命中 183 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/44-qscrollarea-beginner.md",
+    "wave": "W5",
+    "batch": "W5-4",
+    "seq": 58,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（容器族）；lint error 命中 179 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/45-qframe-separator-beginner.md",
+    "wave": "W5",
+    "batch": "W5-4",
+    "seq": 59,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（容器族）；lint error 命中 170 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/15-qabstractitemview-base-beginner.md",
+    "wave": "W5",
+    "batch": "W5-4",
+    "seq": 60,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 155 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/46-qlistwidget-beginner.md",
+    "wave": "W5",
+    "batch": "W5-4",
+    "seq": 61,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 197 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/47-qlistview-beginner.md",
+    "wave": "W5",
+    "batch": "W5-4",
+    "seq": 62,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 190 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/48-qtreewidget-beginner.md",
+    "wave": "W5",
+    "batch": "W5-5",
+    "seq": 63,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 222 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/49-qtreeview-beginner.md",
+    "wave": "W5",
+    "batch": "W5-5",
+    "seq": 64,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 187 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/50-qtablewidget-beginner.md",
+    "wave": "W5",
+    "batch": "W5-5",
+    "seq": 65,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 225 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/51-qtableview-beginner.md",
+    "wave": "W5",
+    "batch": "W5-5",
+    "seq": 66,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 224 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/52-qheaderview-beginner.md",
+    "wave": "W5",
+    "batch": "W5-5",
+    "seq": 67,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 217 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/53-qcolumnview-beginner.md",
+    "wave": "W5",
+    "batch": "W5-5",
+    "seq": 68,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 185 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/54-qundoview-beginner.md",
+    "wave": "W5",
+    "batch": "W5-5",
+    "seq": 69,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 182 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/16-qabstractspinbox-base-beginner.md",
+    "wave": "W5",
+    "batch": "W5-6",
+    "seq": 70,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 160 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/22-qlineedit-beginner.md",
+    "wave": "W5",
+    "batch": "W5-6",
+    "seq": 71,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 230 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/23-qtextedit-beginner.md",
+    "wave": "W5",
+    "batch": "W5-6",
+    "seq": 72,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 180 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/24-qplaintextedit-beginner.md",
+    "wave": "W5",
+    "batch": "W5-6",
+    "seq": 73,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 172 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/25-qtextbrowser-beginner.md",
+    "wave": "W5",
+    "batch": "W5-6",
+    "seq": 74,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 163 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/26-qkeysequenceedit-beginner.md",
+    "wave": "W5",
+    "batch": "W5-6",
+    "seq": 75,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 186 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/27-qcombobox-beginner.md",
+    "wave": "W5",
+    "batch": "W5-6",
+    "seq": 76,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 155 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/28-qfontcombobox-beginner.md",
+    "wave": "W5",
+    "batch": "W5-7",
+    "seq": 77,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 164 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/29-qspinbox-doublespinbox-beginner.md",
+    "wave": "W5",
+    "batch": "W5-7",
+    "seq": 78,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 217 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/30-qdatetimeedit-dateedit-timeedit-beginner.md",
+    "wave": "W5",
+    "batch": "W5-7",
+    "seq": 79,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 199 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/31-qslider-beginner.md",
+    "wave": "W5",
+    "batch": "W5-7",
+    "seq": 80,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 192 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/32-qscrollbar-beginner.md",
+    "wave": "W5",
+    "batch": "W5-7",
+    "seq": 81,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 146 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/33-qdial-beginner.md",
+    "wave": "W5",
+    "batch": "W5-7",
+    "seq": 82,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（输入族）；lint error 命中 178 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/55-qmainwindow-beginner.md",
+    "wave": "W5",
+    "batch": "W5-7",
+    "seq": 83,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 161 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/56-qmenubar-menu-action-beginner.md",
+    "wave": "W5",
+    "batch": "W5-8",
+    "seq": 84,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 214 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/57-qtoolbar-beginner.md",
+    "wave": "W5",
+    "batch": "W5-8",
+    "seq": 85,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 175 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/58-qstatusbar-beginner.md",
+    "wave": "W5",
+    "batch": "W5-8",
+    "seq": 86,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 198 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/59-qdockwidget-beginner.md",
+    "wave": "W5",
+    "batch": "W5-8",
+    "seq": 87,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 204 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/60-qdialog-beginner.md",
+    "wave": "W5",
+    "batch": "W5-8",
+    "seq": 88,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 237 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/61-qdialogbuttonbox-beginner.md",
+    "wave": "W5",
+    "batch": "W5-8",
+    "seq": 89,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 181 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/62-qmessagebox-beginner.md",
+    "wave": "W5",
+    "batch": "W5-8",
+    "seq": 90,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 247 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/63-qinputdialog-beginner.md",
+    "wave": "W5",
+    "batch": "W5-9",
+    "seq": 91,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 182 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/64-qcolordialog-beginner.md",
+    "wave": "W5",
+    "batch": "W5-9",
+    "seq": 92,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 207 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/65-qfontdialog-beginner.md",
+    "wave": "W5",
+    "batch": "W5-9",
+    "seq": 93,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 168 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/66-qfiledialog-beginner.md",
+    "wave": "W5",
+    "batch": "W5-9",
+    "seq": 94,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 192 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/67-qprogressdialog-beginner.md",
+    "wave": "W5",
+    "batch": "W5-9",
+    "seq": 95,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 218 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/68-qerrormessage-beginner.md",
+    "wave": "W5",
+    "batch": "W5-9",
+    "seq": 96,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 200 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/69-qwizard-beginner.md",
+    "wave": "W5",
+    "batch": "W5-10",
+    "seq": 97,
+    "priority": 2,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 242 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/70-qsplashscreen-beginner.md",
+    "wave": "W5",
+    "batch": "W5-10",
+    "seq": 98,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 180 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/71-qmdiarea-mdisubwindow-beginner.md",
+    "wave": "W5",
+    "batch": "W5-10",
+    "seq": 99,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 195 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/72-qprinter-beginner.md",
+    "wave": "W5",
+    "batch": "W5-10",
+    "seq": 100,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 197 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/73-qprintdialog-beginner.md",
+    "wave": "W5",
+    "batch": "W5-10",
+    "seq": 101,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 187 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/74-qprintpreviewdialog-beginner.md",
+    "wave": "W5",
+    "batch": "W5-10",
+    "seq": 102,
+    "priority": 1,
+    "reason": "W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 189 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/01-qtsql-database-beginner.md",
+    "wave": "W6",
+    "batch": "W6-1",
+    "seq": 103,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 148 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/02-qtsql-tablemodel-beginner.md",
+    "wave": "W6",
+    "batch": "W6-1",
+    "seq": 104,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 139 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/03-qtcharts-basic-beginner.md",
+    "wave": "W6",
+    "batch": "W6-1",
+    "seq": 105,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 149 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/04-qtmultimedia-player-beginner.md",
+    "wave": "W6",
+    "batch": "W6-1",
+    "seq": 106,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 165 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/05-qtmultimedia-camera-beginner.md",
+    "wave": "W6",
+    "batch": "W6-1",
+    "seq": 107,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 137 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/06-qtsvg-beginner.md",
+    "wave": "W6",
+    "batch": "W6-1",
+    "seq": 108,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 156 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/07-qtprintsupport-overview-beginner.md",
+    "wave": "W6",
+    "batch": "W6-1",
+    "seq": 109,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 172 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/08-qtserialbus-modbus-beginner.md",
+    "wave": "W6",
+    "batch": "W6-2",
+    "seq": 110,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 185 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/09-qtmqtt-beginner.md",
+    "wave": "W6",
+    "batch": "W6-2",
+    "seq": 111,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 172 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/10-qtbluetooth-beginner.md",
+    "wave": "W6",
+    "batch": "W6-2",
+    "seq": 112,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 182 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/11-qtnfc-beginner.md",
+    "wave": "W6",
+    "batch": "W6-2",
+    "seq": 113,
+    "priority": 2,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 210 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/12-qtstatemachine-beginner.md",
+    "wave": "W6",
+    "batch": "W6-2",
+    "seq": 114,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 190 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/13-qtscxml-beginner.md",
+    "wave": "W6",
+    "batch": "W6-2",
+    "seq": 115,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 198 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/14-qt3d-basic-beginner.md",
+    "wave": "W6",
+    "batch": "W6-3",
+    "seq": 116,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 176 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/15-qtquick3d-beginner.md",
+    "wave": "W6",
+    "batch": "W6-3",
+    "seq": 117,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 169 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/16-qtquick3d-physics-beginner.md",
+    "wave": "W6",
+    "batch": "W6-3",
+    "seq": 118,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 184 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/17-qtpdf-beginner.md",
+    "wave": "W6",
+    "batch": "W6-3",
+    "seq": 119,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 156 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/18-qthttpserver-beginner.md",
+    "wave": "W6",
+    "batch": "W6-3",
+    "seq": 120,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 166 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/19-qtwebsockets-server-beginner.md",
+    "wave": "W6",
+    "batch": "W6-3",
+    "seq": 121,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 148 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/20-qtwebchannel-beginner.md",
+    "wave": "W6",
+    "batch": "W6-4",
+    "seq": 122,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 155 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/21-qtwebengine-beginner.md",
+    "wave": "W6",
+    "batch": "W6-4",
+    "seq": 123,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 164 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/22-qtremoteobjects-beginner.md",
+    "wave": "W6",
+    "batch": "W6-4",
+    "seq": 124,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 154 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/23-qtspatial-audio-beginner.md",
+    "wave": "W6",
+    "batch": "W6-4",
+    "seq": 125,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 161 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/24-qttexttospeech-beginner.md",
+    "wave": "W6",
+    "batch": "W6-4",
+    "seq": 126,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 149 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/25-qt5compat-migration-beginner.md",
+    "wave": "W6",
+    "batch": "W6-4",
+    "seq": 127,
+    "priority": 1,
+    "reason": "W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 179 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/06-qml/01-qml-syntax-basics-beginner.md",
+    "wave": "W7",
+    "batch": "W7-1",
+    "seq": 128,
+    "priority": 2,
+    "reason": "W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 208 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/06-qml/02-property-binding-beginner.md",
+    "wave": "W7",
+    "batch": "W7-1",
+    "seq": 129,
+    "priority": 1,
+    "reason": "W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 185 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/06-qml/03-qtquick-controls-beginner.md",
+    "wave": "W7",
+    "batch": "W7-1",
+    "seq": 130,
+    "priority": 1,
+    "reason": "W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 139 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/06-qml/04-cpp-qml-interop-beginner.md",
+    "wave": "W7",
+    "batch": "W7-1",
+    "seq": 131,
+    "priority": 1,
+    "reason": "W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 129 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/06-qml/05-qml-animation-states-beginner.md",
+    "wave": "W7",
+    "batch": "W7-1",
+    "seq": 132,
+    "priority": 1,
+    "reason": "W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 160 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/06-qml/06-qml-model-delegate-beginner.md",
+    "wave": "W7",
+    "batch": "W7-1",
+    "seq": 133,
+    "priority": 1,
+    "reason": "W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 114 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/06-qml/07-qml-canvas-particles-beginner.md",
+    "wave": "W7",
+    "batch": "W7-1",
+    "seq": 134,
+    "priority": 1,
+    "reason": "W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 138 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/00-environment-setup/00-qt6-install-beginner.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 135,
+    "priority": 0,
+    "reason": "W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化；lint error 命中 99 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/00-environment-setup/01-ide-setup-beginner.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 136,
+    "priority": 1,
+    "reason": "W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化；lint error 命中 114 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/00-environment-setup/02-cmake-first-project-beginner.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 137,
+    "priority": 1,
+    "reason": "W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化；lint error 命中 113 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/00-environment-setup/index.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 138,
+    "priority": 0,
+    "reason": "index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/01-qtbase/index.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 139,
+    "priority": 0,
+    "reason": "index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/02-qtgui/index.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 140,
+    "priority": 0,
+    "reason": "index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/03-qtwidgets/index.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 141,
+    "priority": 0,
+    "reason": "index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/04-qtnetwork/index.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 142,
+    "priority": 0,
+    "reason": "index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 4 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/05-other-modules/index.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 143,
+    "priority": 0,
+    "reason": "index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 4 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/06-qml/index.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 144,
+    "priority": 0,
+    "reason": "index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 2 处（排期参考，非放行判断）"
+  },
+  {
+    "path": "tutorial/beginner/index.md",
+    "wave": "W8",
+    "batch": "W8-1",
+    "seq": 145,
+    "priority": 0,
+    "reason": "index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 10 处（排期参考，非放行判断）"
+  }
+]

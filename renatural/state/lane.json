@@ -1,0 +1,21 @@
+{
+  "lane": "awesomeqt-base",
+  "content_forge_remote": "https://github.com/Charliechen114514/content_forge",
+  "content_forge_sha": "156a34be484cef511a815bd061825885291987ab",
+  "humanizer_rules_sha256": "c310dc09206f1acc79ac396efa69879b8cc4a208d9f48b5782dd22d88d94dd41",
+  "prompt_versions": {
+    "sop": "0.9-draft",
+    "theme": "0.9-draft",
+    "detail": "0.9-draft",
+    "qml": "0.9-draft",
+    "light": "0.9-draft"
+  },
+  "persona_version": "0.9",
+  "echo_blacklist": {
+    "path": "renatural/state/echo-blacklist.json",
+    "ngrams": 6638,
+    "built": "2026-09-28"
+  },
+  "frozen_at": "2026-09-28",
+  "note": "变更只落批间窗口，批进行中 lane 冻结；升版需在阶段汇报留痕。CI 按 content_forge_sha 克隆规则集（renatural.yml）。"
+}

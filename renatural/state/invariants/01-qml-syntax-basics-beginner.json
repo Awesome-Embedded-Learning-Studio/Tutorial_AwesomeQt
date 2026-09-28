@@ -1,0 +1,73 @@
+{
+  "schema": "renatural/invariants/1",
+  "path": "tutorial/beginner/06-qml/01-qml-syntax-basics-beginner.md",
+  "slug": "01-qml-syntax-basics-beginner",
+  "captured_at": "2026-09-28T18:49:39+08:00",
+  "metrics": {
+    "qt_src_line_refs": 0,
+    "doc_qt_io_urls": 0,
+    "fenced_code_blocks": 22,
+    "code_block_sha1": [
+      "57f922882e8b01675825261f6c735c80f854b065",
+      "bf7d95508a61cfc6d0d929486f65d457054b7bf3",
+      "086f5d637d9d8c1e08a588036ae5581554d7d7fc",
+      "c2e5bf399e86e761fb4b08532d73f782c59efae8",
+      "ac118787e8f4e6bc46b041fae453d08313d0184d",
+      "4bac814578adc4abf8ff44a129cdf5996414c29f",
+      "b426f7466f9a21de0f1d9b9cb9c5c273e2e0797c",
+      "8ddbad73c72f68db8b116d073527f7e6354e779d",
+      "ffcede241de451673be581b3d5f770d44a657146",
+      "7d379c0aa409a6eb2fc92a999fb8cf97c15cb556",
+      "a60df51c72ef37f0f6302fbb230e876256d834c1",
+      "acd0a7b4a686631df6c132d0ac2f6f72954cc4ad",
+      "5ee7291fd03f9e04593a61d5efc7f23b62baa864",
+      "ea6132c2b8a1c2d58415e8f1b3eaebb20e8f247a",
+      "580c6c364a6e85a51e39a81e5fc4c161861182c0",
+      "d174174ec0a710ec1ff86b50dc19d19aa0d7a7d4",
+      "2d4741f35e398e98da9676bdae898c52cd4b6d88",
+      "aba69d0b3984821d1fa84e05760178c5694dc953",
+      "b92c68bd90a14acceabc2cf467cfddd6032c9186",
+      "a095820146cf9ca6568f24a3f6f2f7be8680727e",
+      "7cd5868803ec848ac5274716c283f7b40e640aa3",
+      "358d2ab1651bfbae8dbdd5a7cb1c4b45ed8158be"
+    ],
+    "code_block_langs": [
+      "cmake",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "qml",
+      "cpp",
+      "text",
+      "cmake",
+      "cpp",
+      "qml"
+    ],
+    "fence_unclosed": 0,
+    "images": 0,
+    "relative_links": 0
+  },
+  "checks": {
+    "frontmatter_present": true,
+    "title_present": true,
+    "description_present": true,
+    "description_differs_from_first_sentence": false
+  },
+  "context": {
+    "title": "6.1 QML 语法基础与类型系统",
+    "description": "如果你跟我一样，是从 QtWidgets 开始接触 Qt 的，那你大概率写过不少这样的代码：先在 C++ 里 new 一个 QPushButton，再 new 一个 QVBoxLayout，",
+    "first_sentence": "如果你跟我一样，是从 QtWidgets 开始接触 Qt 的，那你大概率写过不少这样的代码：先在 C++ 里 new 一个 QPushButton，再 new 一个 QVBoxLayout，然后 addWidget、setLayout、connect......一套下来，一个简单的登录界面就能写掉上百行 C++。"
+  }
+}

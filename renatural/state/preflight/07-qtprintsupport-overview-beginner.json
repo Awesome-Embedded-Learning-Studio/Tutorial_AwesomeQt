@@ -1,0 +1,11 @@
+{
+  "slug": "07-qtprintsupport-overview-beginner",
+  "path": "tutorial/beginner/05-other-modules/07-qtprintsupport-overview-beginner.md",
+  "sha256": "622201ce523dc4282a70b54d67b58665aa45a88a76c8d4673d5fa51599241280",
+  "ts": "2026-09-28T18:46:18+08:00",
+  "example_dir": "examples/beginner/05-other-modules/07-qtprintsupport-overview-beginner",
+  "example_files": {},
+  "status": "blocked",
+  "block_reason": "示例目录不存在：examples/beginner/05-other-modules/07-qtprintsupport-overview-beginner",
+  "debts": []
+}

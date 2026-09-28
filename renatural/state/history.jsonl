@@ -1,0 +1,643 @@
+{"ts": "2026-09-28T18:05:56+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "preflight_blocked", "detail": "五件套缺失：widget.h、widget.cpp"}
+{"ts": "2026-09-28T18:05:56+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "accept_failed", "detail": "humanizer error=112；红线 h1_prefix：H1 / floating title 带「现代Qt开发教程」前缀命中 1 处"}
+{"ts": "2026-09-28T18:06:01+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "invariants_snapshot", "detail": "qtsrc=0 urls=4 code=10 imgs=0 links=6"}
+{"ts": "2026-09-28T18:06:16+08:00", "path": "/tmp/invtest/a.md", "event": "invariants_drift", "detail": "drift=doc_qt_io_urls,fenced_code_blocks,code_block_sha1,code_block_langs,description_differs_from_first_sentence;invalid=description_differs_from_first_sentence"}
+{"ts": "2026-09-28T18:06:33+08:00", "path": "/tmp/invtest/b.md", "event": "invariants_drift", "detail": "drift=qt_src_line_refs"}
+{"ts": "2026-09-28T18:06:49+08:00", "path": "tutorial/beginner", "event": "echo_blacklist_build", "detail": "corpus=145 entries=6638 n=5 min=3"}
+{"ts": "2026-09-28T18:07:32+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "echo_check_hit", "detail": "grams=37 distinct=32 spans=23"}
+{"ts": "2026-09-28T18:07:51+08:00", "path": "/tmp/invtest/fresh-draft.md", "event": "echo_check_hit", "detail": "grams=1 distinct=1 spans=1"}
+{"ts": "2026-09-28T18:08:13+08:00", "path": "tutorial/beginner", "event": "echo_blacklist_build", "detail": "corpus=145 entries=6638 n=5 min=3"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 125 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/02-qtgui/02-coordinate-transform-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 131 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/02-qtgui/03-image-pixmap-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 119 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 108 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/02-qtgui/05-opengl-widget-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 132 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/02-qtgui/06-drag-drop-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 99 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 159 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/17-qpushbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 127 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/18-qtoolbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 149 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/19-qradiobutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 151 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/20-qcheckbox-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 180 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/21-qcommandlinkbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 126 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/01-qobject-meta-system-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：试点篇按全零口径回炉（lint-baseline.md §4.2），随 W3 波重写；lint error 命中 130 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/03-string-encoding-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 152 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/04-container-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 112 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/05-variant-type-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 114 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/06-memory-management-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 121 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/07-event-system-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 131 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/08-file-io-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 114 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/09-multithreading-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 135 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/10-qprocess-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 112 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/11-timer-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 117 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/12-plugin-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 124 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/13-i18n-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 120 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/14-logging-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 121 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/15-regex-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 99 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/16-json-xml-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 140 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/04-qtnetwork/01-tcp-socket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 155 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/04-qtnetwork/02-udp-socket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 148 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/04-qtnetwork/03-network-access-manager-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 149 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/04-qtnetwork/04-websocket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 131 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/04-qtnetwork/05-ssl-tls-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 151 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/04-qtnetwork/06-serial-port-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 143 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/01-layout-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 135 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/02-event-handling-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 116 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/03-model-view-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 128 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/04-qss-stylesheet-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 133 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/05-custom-widget-paint-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 157 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/06-dialog-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 164 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/07-main-window-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 125 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/08-graphics-view-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）；lint error 命中 108 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/09-animation-framework-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）；lint error 命中 172 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/10-mdi-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）；lint error 命中 138 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/11-qwidget-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）；lint error 命中 179 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/34-qlabel-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）；lint error 命中 168 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/35-qprogressbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）；lint error 命中 198 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/36-qlcdnumber-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）；lint error 命中 191 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/37-qcalendarwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（显示族）；lint error 命中 141 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/13-qframe-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 132 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/14-qabstractscrollarea-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 144 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/38-qgroupbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 197 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/39-qtabwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 191 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/40-qtabbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 148 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/41-qstackedwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 168 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/42-qsplitter-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）；lint error 命中 139 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/43-qtoolbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）；lint error 命中 161 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/44-qscrollarea-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）；lint error 命中 162 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/45-qframe-separator-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）；lint error 命中 151 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/15-qabstractitemview-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 130 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/46-qlistwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 181 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/47-qlistview-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 171 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/48-qtreewidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 200 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/49-qtreeview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 165 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/50-qtablewidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 206 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/51-qtableview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 203 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/52-qheaderview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 200 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/53-qcolumnview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 162 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/54-qundoview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 159 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/16-qabstractspinbox-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 134 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/22-qlineedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 194 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/23-qtextedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 153 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/24-qplaintextedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 150 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/25-qtextbrowser-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 141 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/26-qkeysequenceedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 158 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/27-qcombobox-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 133 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/28-qfontcombobox-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 142 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/29-qspinbox-doublespinbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 191 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/30-qdatetimeedit-dateedit-timeedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 176 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/31-qslider-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 167 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/32-qscrollbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 119 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/33-qdial-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 156 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/55-qmainwindow-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 145 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/56-qmenubar-menu-action-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 191 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/57-qtoolbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 153 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/58-qstatusbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 176 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/59-qdockwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 185 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/60-qdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 209 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/61-qdialogbuttonbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 162 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/62-qmessagebox-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 215 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/63-qinputdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 158 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/64-qcolordialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 180 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/65-qfontdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 146 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/66-qfiledialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 171 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/67-qprogressdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 199 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/68-qerrormessage-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 169 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/69-qwizard-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 207 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/70-qsplashscreen-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 161 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/71-qmdiarea-mdisubwindow-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 169 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/72-qprinter-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 177 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/73-qprintdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 167 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/74-qprintpreviewdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 164 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/01-qtsql-database-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 132 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/02-qtsql-tablemodel-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 117 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/03-qtcharts-basic-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 129 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/04-qtmultimedia-player-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 144 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/05-qtmultimedia-camera-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 118 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/06-qtsvg-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 136 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/07-qtprintsupport-overview-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 149 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/08-qtserialbus-modbus-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 165 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/09-qtmqtt-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 154 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/10-qtbluetooth-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 160 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/11-qtnfc-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 190 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/12-qtstatemachine-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 161 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/13-qtscxml-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 175 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/14-qt3d-basic-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 157 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/15-qtquick3d-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 152 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/16-qtquick3d-physics-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 164 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/17-qtpdf-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 137 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/18-qthttpserver-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 148 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/19-qtwebsockets-server-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 134 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/20-qtwebchannel-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 137 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/21-qtwebengine-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 146 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/22-qtremoteobjects-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 136 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/23-qtspatial-audio-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 143 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/24-qttexttospeech-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 133 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/25-qt5compat-migration-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 159 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/06-qml/01-qml-syntax-basics-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 184 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/06-qml/02-property-binding-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 162 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/06-qml/03-qtquick-controls-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 118 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/06-qml/04-cpp-qml-interop-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 112 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/06-qml/05-qml-animation-states-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 135 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/06-qml/06-qml-model-delegate-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 97 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/06-qml/07-qml-canvas-particles-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 118 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/00-environment-setup/00-qt6-install-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化；lint error 命中 96 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/00-environment-setup/01-ide-setup-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化；lint error 命中 109 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/00-environment-setup/02-cmake-first-project-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化；lint error 命中 111 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/00-environment-setup/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/01-qtbase/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/02-qtgui/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/03-qtwidgets/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/04-qtnetwork/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 4 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/05-other-modules/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 4 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/06-qml/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 2 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:08:51+08:00", "path": "tutorial/beginner/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 10 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:11:04+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "invariants_snapshot", "detail": "qtsrc=0 urls=4 code=10 imgs=0 links=6"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/02-qtgui/02-coordinate-transform-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/02-qtgui/03-image-pixmap-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/02-qtgui/05-opengl-widget-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/02-qtgui/06-drag-drop-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/17-qpushbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/18-qtoolbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/19-qradiobutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/20-qcheckbox-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/21-qcommandlinkbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/01-qobject-meta-system-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：试点篇按全零口径回炉（lint-baseline.md §4.2），随 W3 波重写"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：试点篇按全零口径回炉（lint-baseline.md §4.2），随 W3 波重写"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/03-string-encoding-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/04-container-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/05-variant-type-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/06-memory-management-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/07-event-system-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/08-file-io-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/09-multithreading-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/10-qprocess-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/11-timer-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/12-plugin-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/13-i18n-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/14-logging-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/15-regex-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/16-json-xml-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/04-qtnetwork/01-tcp-socket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/04-qtnetwork/02-udp-socket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/04-qtnetwork/03-network-access-manager-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/04-qtnetwork/04-websocket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/04-qtnetwork/05-ssl-tls-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/04-qtnetwork/06-serial-port-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/01-layout-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/02-event-handling-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/03-model-view-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/04-qss-stylesheet-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/05-custom-widget-paint-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/06-dialog-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/07-main-window-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/08-graphics-view-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/09-animation-framework-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/10-mdi-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/11-qwidget-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/34-qlabel-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/35-qprogressbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/36-qlcdnumber-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/37-qcalendarwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（显示族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/13-qframe-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/14-qabstractscrollarea-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/38-qgroupbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/39-qtabwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/40-qtabbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/41-qstackedwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/42-qsplitter-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/43-qtoolbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/44-qscrollarea-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/45-qframe-separator-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/15-qabstractitemview-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/46-qlistwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/47-qlistview-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/48-qtreewidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/49-qtreeview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/50-qtablewidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/51-qtableview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/52-qheaderview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/53-qcolumnview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/54-qundoview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/16-qabstractspinbox-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/22-qlineedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/23-qtextedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/24-qplaintextedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/25-qtextbrowser-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/26-qkeysequenceedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/27-qcombobox-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/28-qfontcombobox-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/29-qspinbox-doublespinbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/30-qdatetimeedit-dateedit-timeedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/31-qslider-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/32-qscrollbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/33-qdial-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/55-qmainwindow-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/56-qmenubar-menu-action-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/57-qtoolbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/58-qstatusbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/59-qdockwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/60-qdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/61-qdialogbuttonbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/62-qmessagebox-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/63-qinputdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/64-qcolordialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/65-qfontdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/66-qfiledialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/67-qprogressdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/68-qerrormessage-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/69-qwizard-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/70-qsplashscreen-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/71-qmdiarea-mdisubwindow-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/72-qprinter-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/73-qprintdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/74-qprintpreviewdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/01-qtsql-database-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/02-qtsql-tablemodel-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/03-qtcharts-basic-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/04-qtmultimedia-player-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/05-qtmultimedia-camera-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/06-qtsvg-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/07-qtprintsupport-overview-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/08-qtserialbus-modbus-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/09-qtmqtt-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/10-qtbluetooth-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/11-qtnfc-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/12-qtstatemachine-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/13-qtscxml-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/14-qt3d-basic-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/15-qtquick3d-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/16-qtquick3d-physics-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/17-qtpdf-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/18-qthttpserver-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/19-qtwebsockets-server-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/20-qtwebchannel-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/21-qtwebengine-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/22-qtremoteobjects-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/23-qtspatial-audio-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/24-qttexttospeech-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/25-qt5compat-migration-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/06-qml/01-qml-syntax-basics-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/06-qml/02-property-binding-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/06-qml/03-qtquick-controls-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/06-qml/04-cpp-qml-interop-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/06-qml/05-qml-animation-states-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/06-qml/06-qml-model-delegate-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/06-qml/07-qml-canvas-particles-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/00-environment-setup/00-qt6-install-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/00-environment-setup/01-ide-setup-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/00-environment-setup/02-cmake-first-project-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/00-environment-setup/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/01-qtbase/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/02-qtgui/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/03-qtwidgets/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/04-qtnetwork/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/05-other-modules/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/06-qml/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:27:29+08:00", "path": "tutorial/beginner/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:27:53+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:27:53+08:00", "path": "tutorial/beginner/02-qtgui/02-coordinate-transform-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:27:53+08:00", "path": "tutorial/beginner/02-qtgui/03-image-pixmap-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:27:53+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:27:53+08:00", "path": "tutorial/beginner/02-qtgui/05-opengl-widget-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:27:53+08:00", "path": "tutorial/beginner/02-qtgui/06-drag-drop-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:28:04+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:28:04+08:00", "path": "tutorial/beginner/02-qtgui/02-coordinate-transform-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:28:04+08:00", "path": "tutorial/beginner/02-qtgui/03-image-pixmap-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:28:04+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:28:04+08:00", "path": "tutorial/beginner/02-qtgui/05-opengl-widget-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:28:04+08:00", "path": "tutorial/beginner/02-qtgui/06-drag-drop-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:28:14+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "block", "detail": "验收测试假理由：假装示例缺失"}
+{"ts": "2026-09-28T18:29:04+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "requeue", "detail": "验收测试：假理由撤销，示例实际在库"}
+{"ts": "2026-09-28T18:29:05+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:29:05+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "review", "detail": "batch.py done：写手完成，进入四走查（声音/保真/连续性/指代）"}
+{"ts": "2026-09-28T18:35:35+08:00", "path": "tutorial/beginner/03-qtwidgets/17-qpushbutton-beginner.md", "event": "preflight_ok", "detail": "示例 examples/beginner/03-qtwidgets/17-qpushbutton-beginner 必需件齐 + 构建通过"}
+{"ts": "2026-09-28T18:35:56+08:00", "path": "tutorial/beginner/01-qtbase/08-file-io-beginner.md", "event": "block", "detail": "preflight：示例缺构建必需件：CMakeLists.txt"}
+{"ts": "2026-09-28T18:36:09+08:00", "path": "tutorial/beginner/00-environment-setup/00-qt6-install-beginner.md", "event": "block", "detail": "preflight：示例目录不存在：examples/beginner/00-environment-setup/00-qt6-install-beginner"}
+{"ts": "2026-09-28T18:36:33+08:00", "path": "tutorial/beginner/00-environment-setup/00-qt6-install-beginner.md", "event": "requeue", "detail": "验收测试副作用清理：env 章无示例是既定事实，是否需要示例归 W8 裁决"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/02-qtgui/02-coordinate-transform-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/02-qtgui/03-image-pixmap-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/02-qtgui/05-opengl-widget-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/02-qtgui/06-drag-drop-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/03-qtwidgets/17-qpushbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/03-qtwidgets/18-qtoolbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/03-qtwidgets/19-qradiobutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/03-qtwidgets/20-qcheckbox-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/03-qtwidgets/21-qcommandlinkbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/01-qtbase/01-qobject-meta-system-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：试点篇按全零口径回炉（lint-baseline.md §4.2），随 W3 波重写"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：试点篇按全零口径回炉（lint-baseline.md §4.2），随 W3 波重写"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/01-qtbase/03-string-encoding-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/01-qtbase/04-container-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/01-qtbase/05-variant-type-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/01-qtbase/06-memory-management-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:51+08:00", "path": "tutorial/beginner/01-qtbase/07-event-system-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/01-qtbase/08-file-io-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/01-qtbase/09-multithreading-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/01-qtbase/10-qprocess-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/01-qtbase/11-timer-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/01-qtbase/12-plugin-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/01-qtbase/13-i18n-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/01-qtbase/14-logging-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/01-qtbase/15-regex-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/01-qtbase/16-json-xml-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/04-qtnetwork/01-tcp-socket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/04-qtnetwork/02-udp-socket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/04-qtnetwork/03-network-access-manager-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/04-qtnetwork/04-websocket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/04-qtnetwork/05-ssl-tls-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/04-qtnetwork/06-serial-port-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/01-layout-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/02-event-handling-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/03-model-view-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/04-qss-stylesheet-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/05-custom-widget-paint-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/06-dialog-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/07-main-window-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/08-graphics-view-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/09-animation-framework-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/10-mdi-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/11-qwidget-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/34-qlabel-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/35-qprogressbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/36-qlcdnumber-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/37-qcalendarwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（显示族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/13-qframe-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/14-qabstractscrollarea-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/38-qgroupbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/39-qtabwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/40-qtabbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/41-qstackedwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/42-qsplitter-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/43-qtoolbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/44-qscrollarea-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/45-qframe-separator-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/15-qabstractitemview-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/46-qlistwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/47-qlistview-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/48-qtreewidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/49-qtreeview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/50-qtablewidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/51-qtableview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/52-qheaderview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/53-qcolumnview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/54-qundoview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/16-qabstractspinbox-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/22-qlineedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/23-qtextedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/24-qplaintextedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/25-qtextbrowser-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/26-qkeysequenceedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/27-qcombobox-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/28-qfontcombobox-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/29-qspinbox-doublespinbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/30-qdatetimeedit-dateedit-timeedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/31-qslider-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/32-qscrollbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/33-qdial-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/55-qmainwindow-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/56-qmenubar-menu-action-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/57-qtoolbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/58-qstatusbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/59-qdockwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/60-qdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/61-qdialogbuttonbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/62-qmessagebox-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/63-qinputdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/64-qcolordialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/65-qfontdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/66-qfiledialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/67-qprogressdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/68-qerrormessage-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/69-qwizard-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/70-qsplashscreen-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/71-qmdiarea-mdisubwindow-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/72-qprinter-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/73-qprintdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/74-qprintpreviewdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/01-qtsql-database-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/02-qtsql-tablemodel-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/03-qtcharts-basic-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/04-qtmultimedia-player-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/05-qtmultimedia-camera-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/06-qtsvg-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/07-qtprintsupport-overview-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/08-qtserialbus-modbus-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/09-qtmqtt-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/10-qtbluetooth-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/11-qtnfc-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/12-qtstatemachine-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/13-qtscxml-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/14-qt3d-basic-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/15-qtquick3d-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/16-qtquick3d-physics-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/17-qtpdf-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/18-qthttpserver-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/19-qtwebsockets-server-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/20-qtwebchannel-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/21-qtwebengine-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/22-qtremoteobjects-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/23-qtspatial-audio-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/24-qttexttospeech-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/25-qt5compat-migration-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/06-qml/01-qml-syntax-basics-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/06-qml/02-property-binding-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/06-qml/03-qtquick-controls-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/06-qml/04-cpp-qml-interop-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/06-qml/05-qml-animation-states-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/06-qml/06-qml-model-delegate-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/06-qml/07-qml-canvas-particles-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/00-environment-setup/00-qt6-install-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/00-environment-setup/01-ide-setup-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/00-environment-setup/02-cmake-first-project-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/00-environment-setup/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/01-qtbase/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/02-qtgui/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/03-qtwidgets/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/04-qtnetwork/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/05-other-modules/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/06-qml/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:43:52+08:00", "path": "tutorial/beginner/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）"}
+{"ts": "2026-09-28T18:45:00+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:45:00+08:00", "path": "tutorial/beginner/02-qtgui/02-coordinate-transform-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:45:00+08:00", "path": "tutorial/beginner/02-qtgui/03-image-pixmap-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:45:00+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:45:00+08:00", "path": "tutorial/beginner/02-qtgui/05-opengl-widget-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:45:00+08:00", "path": "tutorial/beginner/02-qtgui/06-drag-drop-beginner.md", "event": "lock", "detail": "锁入批次 M1A-1（batch.py next）"}
+{"ts": "2026-09-28T18:45:10+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:45:10+08:00", "path": "tutorial/beginner/02-qtgui/02-coordinate-transform-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:45:10+08:00", "path": "tutorial/beginner/02-qtgui/03-image-pixmap-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:45:10+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:45:10+08:00", "path": "tutorial/beginner/02-qtgui/05-opengl-widget-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:45:10+08:00", "path": "tutorial/beginner/02-qtgui/06-drag-drop-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:45:21+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "block", "detail": "验收测试假理由：block 路径演练"}
+{"ts": "2026-09-28T18:45:21+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "requeue", "detail": "验收测试：假理由已处置，恢复"}
+{"ts": "2026-09-28T18:45:21+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "start", "detail": "批次 M1A-1 开写（batch.py start）"}
+{"ts": "2026-09-28T18:45:21+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "review", "detail": "batch.py done：写手完成，进入四走查（声音/保真/连续性/指代）"}
+{"ts": "2026-09-28T18:46:00+08:00", "path": "tutorial/beginner/03-qtwidgets/17-qpushbutton-beginner.md", "event": "preflight_ok", "detail": "示例 examples/beginner/03-qtwidgets/17-qpushbutton-beginner 必需件齐 + 构建通过"}
+{"ts": "2026-09-28T18:46:18+08:00", "path": "tutorial/beginner/05-other-modules/07-qtprintsupport-overview-beginner.md", "event": "block", "detail": "preflight：示例目录不存在：examples/beginner/05-other-modules/07-qtprintsupport-overview-beginner"}
+{"ts": "2026-09-28T18:48:27+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "echo_check_hit", "detail": "grams=37 distinct=32 spans=23"}
+{"ts": "2026-09-28T18:49:06+08:00", "path": "tutorial/beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md", "event": "block", "detail": "验收测试：一轮不过"}
+{"ts": "2026-09-28T18:49:06+08:00", "path": "tutorial/beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md", "event": "block", "detail": "验收测试：二轮不过"}
+{"ts": "2026-09-28T18:49:06+08:00", "path": "tutorial/beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md", "event": "requeue", "detail": "验收测试：处置完回队，attempts 应保留 2"}
+{"ts": "2026-09-28T18:49:06+08:00", "path": "tutorial/beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md", "event": "block", "detail": "attempts>=2 自动 blocked：单篇两轮不过，降级待人工处置"}
+{"ts": "2026-09-28T18:49:06+08:00", "path": "tutorial/beginner/03-qtwidgets/17-qpushbutton-beginner.md", "event": "lock", "detail": "锁入批次 M1B-1（batch.py next）"}
+{"ts": "2026-09-28T18:49:06+08:00", "path": "tutorial/beginner/03-qtwidgets/18-qtoolbutton-beginner.md", "event": "lock", "detail": "锁入批次 M1B-1（batch.py next）"}
+{"ts": "2026-09-28T18:49:06+08:00", "path": "tutorial/beginner/03-qtwidgets/19-qradiobutton-beginner.md", "event": "lock", "detail": "锁入批次 M1B-1（batch.py next）"}
+{"ts": "2026-09-28T18:49:06+08:00", "path": "tutorial/beginner/03-qtwidgets/20-qcheckbox-beginner.md", "event": "lock", "detail": "锁入批次 M1B-1（batch.py next）"}
+{"ts": "2026-09-28T18:49:06+08:00", "path": "tutorial/beginner/03-qtwidgets/21-qcommandlinkbutton-beginner.md", "event": "lock", "detail": "锁入批次 M1B-1（batch.py next）"}
+{"ts": "2026-09-28T18:49:39+08:00", "path": "tutorial/beginner/06-qml/01-qml-syntax-basics-beginner.md", "event": "invariants_snapshot", "detail": "qtsrc=0 urls=0 code=22 imgs=0 links=0"}
+{"ts": "2026-09-28T18:49:52+08:00", "path": "tutorial/beginner/06-qml/01-qml-syntax-basics-beginner.md", "event": "invariants_drift", "detail": "drift=;invalid=description_differs_from_first_sentence"}
+{"ts": "2026-09-28T18:49:52+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "invariants_drift", "detail": "drift=doc_qt_io_urls,fenced_code_blocks,code_block_sha1,code_block_langs,relative_links,description_differs_from_first_sentence"}
+{"ts": "2026-09-28T18:50:01+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "invariants_drift", "detail": "drift=doc_qt_io_urls,fenced_code_blocks,code_block_sha1,code_block_langs,relative_links,description_differs_from_first_sentence"}
+{"ts": "2026-09-28T18:50:11+08:00", "path": "tutorial/beginner", "event": "echo_blacklist_build", "detail": "corpus=145 entries=6638 n=5 min=3"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/02-qtgui/01-qpainter-basic-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 140 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/02-qtgui/02-coordinate-transform-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 151 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/02-qtgui/03-image-pixmap-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 134 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/02-qtgui/04-font-text-rendering-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 124 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/02-qtgui/05-opengl-widget-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 145 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/02-qtgui/06-drag-drop-beginner.md", "event": "queue", "detail": "入队 M1A/M1A-1：批 A：qtgui 旧模板最重、体量最小，验证主题篇全重写打法；lint error 命中 116 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/12-qabstractbutton-base-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 186 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/17-qpushbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 151 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/18-qtoolbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 177 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/19-qradiobutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 176 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/20-qcheckbox-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 214 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/21-qcommandlinkbutton-beginner.md", "event": "queue", "detail": "入队 M1B/M1B-1：批 B：按钮族（12 族长 + 17-21），验证族长导览与条目五拍；lint error 命中 149 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/01-qobject-meta-system-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：试点篇按全零口径回炉（lint-baseline.md §4.2），随 W3 波重写；lint error 命中 147 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/02-signal-slot-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：试点篇按全零口径回炉（lint-baseline.md §4.2），随 W3 波重写；lint error 命中 119 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/03-string-encoding-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 169 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/04-container-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 130 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/05-variant-type-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 120 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/06-memory-management-beginner.md", "event": "queue", "detail": "入队 W3/W3-1：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 137 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/07-event-system-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 143 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/08-file-io-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 131 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/09-multithreading-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 158 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/10-qprocess-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 127 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/11-timer-beginner.md", "event": "queue", "detail": "入队 W3/W3-2：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 129 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/12-plugin-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 136 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/13-i18n-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 136 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/14-logging-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 135 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/15-regex-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 117 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/16-json-xml-beginner.md", "event": "queue", "detail": "入队 W3/W3-3：W3 波：01-qtbase 以试点 1.2 为基准，09/12/05 最僵篇优先；lint error 命中 153 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/04-qtnetwork/01-tcp-socket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 172 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/04-qtnetwork/02-udp-socket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 165 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/04-qtnetwork/03-network-access-manager-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 165 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/04-qtnetwork/04-websocket-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 147 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/04-qtnetwork/05-ssl-tls-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 170 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/04-qtnetwork/06-serial-port-beginner.md", "event": "queue", "detail": "入队 W4/W4-1：W4 波：qtnetwork 六篇，拆全码节归位 examples；lint error 命中 158 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/01-layout-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 158 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/02-event-handling-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 129 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/03-model-view-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 147 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/04-qss-stylesheet-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 153 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/05-custom-widget-paint-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 186 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/06-dialog-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 194 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/07-main-window-system-beginner.md", "event": "queue", "detail": "入队 W5/W5-1：W5 波：03 章其余按族换声（主题族）；lint error 命中 148 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/08-graphics-view-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）；lint error 命中 126 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/09-animation-framework-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）；lint error 命中 201 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/10-mdi-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）；lint error 命中 164 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/11-qwidget-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（主题族）；lint error 命中 202 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/34-qlabel-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）；lint error 命中 191 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/35-qprogressbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）；lint error 命中 224 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/36-qlcdnumber-beginner.md", "event": "queue", "detail": "入队 W5/W5-2：W5 波：03 章其余按族换声（显示族）；lint error 命中 220 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/37-qcalendarwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（显示族）；lint error 命中 161 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/13-qframe-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 156 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/14-qabstractscrollarea-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 167 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/38-qgroupbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 219 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/39-qtabwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 211 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/40-qtabbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 165 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/41-qstackedwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-3：W5 波：03 章其余按族换声（容器族）；lint error 命中 184 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/42-qsplitter-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）；lint error 命中 156 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/43-qtoolbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）；lint error 命中 183 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/44-qscrollarea-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）；lint error 命中 179 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/45-qframe-separator-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（容器族）；lint error 命中 170 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/15-qabstractitemview-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 155 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/46-qlistwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 197 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/47-qlistview-beginner.md", "event": "queue", "detail": "入队 W5/W5-4：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 190 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/48-qtreewidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 222 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/49-qtreeview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 187 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/50-qtablewidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 225 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/51-qtableview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 224 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/52-qheaderview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 217 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/53-qcolumnview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 185 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/54-qundoview-beginner.md", "event": "queue", "detail": "入队 W5/W5-5：W5 波：03 章其余按族换声（列表树表格族）；lint error 命中 182 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/16-qabstractspinbox-base-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 160 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/22-qlineedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 230 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/23-qtextedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 180 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/24-qplaintextedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 172 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/25-qtextbrowser-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 163 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/26-qkeysequenceedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 186 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/27-qcombobox-beginner.md", "event": "queue", "detail": "入队 W5/W5-6：W5 波：03 章其余按族换声（输入族）；lint error 命中 155 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/28-qfontcombobox-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 164 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/29-qspinbox-doublespinbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 217 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/30-qdatetimeedit-dateedit-timeedit-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 199 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/31-qslider-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 192 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/32-qscrollbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 146 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/33-qdial-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（输入族）；lint error 命中 178 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/55-qmainwindow-beginner.md", "event": "queue", "detail": "入队 W5/W5-7：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 161 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/56-qmenubar-menu-action-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 214 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/57-qtoolbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 175 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/58-qstatusbar-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 198 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/59-qdockwidget-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 204 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/60-qdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 237 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/61-qdialogbuttonbox-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 181 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/62-qmessagebox-beginner.md", "event": "queue", "detail": "入队 W5/W5-8：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 247 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/63-qinputdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 182 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/64-qcolordialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 207 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/65-qfontdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 168 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/66-qfiledialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 192 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/67-qprogressdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 218 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/68-qerrormessage-beginner.md", "event": "queue", "detail": "入队 W5/W5-9：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 200 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/69-qwizard-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 242 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/70-qsplashscreen-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 180 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/71-qmdiarea-mdisubwindow-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 195 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/72-qprinter-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 197 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/73-qprintdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 187 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/74-qprintpreviewdialog-beginner.md", "event": "queue", "detail": "入队 W5/W5-10：W5 波：03 章其余按族换声（主窗口对话框族）；lint error 命中 189 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/01-qtsql-database-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 148 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/02-qtsql-tablemodel-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 139 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/03-qtcharts-basic-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 149 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/04-qtmultimedia-player-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 165 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/05-qtmultimedia-camera-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 137 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/06-qtsvg-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 156 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/07-qtprintsupport-overview-beginner.md", "event": "queue", "detail": "入队 W6/W6-1：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 172 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/08-qtserialbus-modbus-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 185 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/09-qtmqtt-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 172 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/10-qtbluetooth-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 182 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/11-qtnfc-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 210 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/12-qtstatemachine-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 190 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/13-qtscxml-beginner.md", "event": "queue", "detail": "入队 W6/W6-2：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 198 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/14-qt3d-basic-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 176 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/15-qtquick3d-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 169 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/16-qtquick3d-physics-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 184 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/17-qtpdf-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 156 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/18-qthttpserver-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 166 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/19-qtwebsockets-server-beginner.md", "event": "queue", "detail": "入队 W6/W6-3：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 148 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/20-qtwebchannel-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 155 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/21-qtwebengine-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 164 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/22-qtremoteobjects-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 154 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/23-qtspatial-audio-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 161 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/24-qttexttospeech-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 149 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/25-qt5compat-migration-beginner.md", "event": "queue", "detail": "入队 W6/W6-4：W6 波：05-other-modules 两阶段（mechanical 剥离 + editorial 换声）；lint error 命中 179 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/06-qml/01-qml-syntax-basics-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 208 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/06-qml/02-property-binding-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 185 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/06-qml/03-qtquick-controls-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 139 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/06-qml/04-cpp-qml-interop-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 129 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/06-qml/05-qml-animation-states-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 160 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/06-qml/06-qml-model-delegate-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 114 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/06-qml/07-qml-canvas-particles-beginner.md", "event": "queue", "detail": "入队 W7/W7-1：W7 波：06-qml 补结构欠账，首篇接住 Widgets 七十篇的来路；lint error 命中 138 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/00-environment-setup/00-qt6-install-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化；lint error 命中 99 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/00-environment-setup/01-ide-setup-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化；lint error 命中 114 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/00-environment-setup/02-cmake-first-project-beginner.md", "event": "queue", "detail": "入队 W8/W8-1：W8 波：00-env 三篇按全零口径回炉（lint-baseline.md §4.2）+ 隐性测验显性化；lint error 命中 113 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/00-environment-setup/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/01-qtbase/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/02-qtgui/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/03-qtwidgets/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 3 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/04-qtnetwork/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 4 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/05-other-modules/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 4 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/06-qml/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 2 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:51:56+08:00", "path": "tutorial/beginner/index.md", "event": "queue", "detail": "入队 W8/W8-1：index 页：部首四要素（您现在在哪 / 本部解决什么 / 用到前面哪几篇 / 读完能做到什么）；lint error 命中 10 处（排期参考，非放行判断）"}
+{"ts": "2026-09-28T18:55:23+08:00", "path": "tutorial/beginner/03-qtwidgets/20-qcheckbox-beginner.md", "event": "echo_check_hit", "detail": "grams=245 distinct=208 spans=100"}

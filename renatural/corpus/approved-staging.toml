@@ -1,0 +1,356 @@
+# 写手可读。这里只放作者逐字原句，不放 AI 改写、风格分析或修稿建议。
+#
+# 本文件是 renatural 战役的暂存区（approved-staging）：candidates-v0.md 的 72 条候选经法医复核，
+# 其中 verdict=author_keep 的 28 条按本体 approved.toml 的格式书写于此，待主控终审后亲手并入
+# .claude/content_forge/tools/humanizer-zh/corpus/approved.toml（本体未动，本文件未并入前不生效）。
+# 复核记录、去重/拒绝清单与文本漂移明细见同目录 REVIEW.md。
+# 提醒：样本句子入文前须过禁词/映射清洗（单字「先」「宿主机」「拆开」等，逐条清单见 REVIEW.md）。
+
+[[samples]]
+id = "compare-journey-rules-opening"
+scene = "opening"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "101-107"
+provenance = "author_verbatim"
+text = """
+# 旅程之前
+
+我们马上就要启程，咱们为了保证这一路不会太过坎坷，一些规范咱们要是尽早建立，可以剩下不少心思滴~。比如说，我们马上编写的测试框架代码和一些base库，现在是在宿主机(对的！也就是您手头的笔记本，或者是炫酷的台式机！)上被测试翻来覆去地被折磨！
+
+也许下一集，我们就要把他们收归到内核上，那个对大部分新手而言非常可怕的，一个连标准库运行时都没有的世界。
+
+所以嘛，哪一些咱们是真的能用，哪一些真不是，是C++ Runtime悄悄给咱们小小的补充的，要盘点一下，否则编译一个大逼兜，大家都不嘻嘻。
+"""
+
+[[samples]]
+id = "compare-lonely-failed-opening"
+scene = "opening"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "218-222"
+provenance = "author_verbatim"
+text = """
+排内核的错，最怕的不是它大大方方地炸给您看，而是日志里只肯留下一个孤零零的 `failed`。谁失败了？为什么失败？坏在了哪一步？对不起，它一概没说。咱们最后能做的，也就是盯着这七个字母，试图和三个月前的自己心灵感应一下。
+
+这种代码通常是怎么来的呢？其实吧，倒也不复杂。因为我们到时候写自己的内核就知道了，我们到处都有可能失败的操作！比如说分配一页内存分不到、按编号找一个槽位发现这地方被人占用了、问一块设备要一点数据发现设备直道歉，对不起没找到！我们只是为了省事，偷懒的给函数返回一个 `int`，成功给 0，失败给 -1。头几天写起来确实痛快，判断一下是不是 -1，直呼一声完事。写起来足够爽吧！
+
+可是，当我们把时间再往后拨掉三个月。可当咱们把时间往后拨三个月。现在有个函数会按照编号查槽位，查到了就返回槽位号。它交回来一个 3，没什么好说的，3 号槽位嘛；它要是交回来一个 -1，麻烦可就来了：这是没有这个槽位，还是查找过程中真的出了错？`int` 本人对此守口如瓶。您只好去翻文档，再祈祷当初写文档的那位——大概率还是您自己——没有忘记更新。
+"""
+
+[[samples]]
+id = "compare-format-decouple-opening"
+scene = "opening"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "331-335"
+provenance = "author_verbatim"
+text = """
+格式引擎刚能工作那几天，改一个细节是件很折磨人的事。比如 `%08x` 少补了一个零，代码改起来不到十秒；想看看改对没有，却得重新编译内核、启动虚拟机，再盯着串口等它把那行字吐出来。几十秒倒也不长，可这种东西一天得试上几十回。等到晚上，您就会开始认真思考：少测这一次，应该也没事吧？自然下一场就是欸欸欸欸欸欸我靠我靠内核炸了内核炸了啊啊啊啊的，开始鬼叫起来了。
+
+问题在哪里呢？问题在于我们没有进行解耦合，实际上，格式化本身根本不需要知道串口长什么样。格式化抓到一个数，欢乐的把它拆成字符，然后一个又一个把他们交出去，欸嘿！这活就干完了。至于字符最后进了内存、上了屏幕，还是从串口线上飞走，那是另一拨人的事情，我们的格式化模块，完全，也没有理由管理。如果您发现您的内核出现了这类问题，最好的办法是立刻停下手头的事情，理清代码的职责。相信我！不合理的耦合只会给您造成无穷无尽的麻烦。
+
+所以，请让咱们先把它们拆开。格式引擎只负责排字，并且接受一个“字符出来以后交给谁”的出口。测试的时候，这个出口接一块普通缓冲区；等串口驱动真的来了，再把同一个出口接到串口上。这样为了看一个补零，终于不用每次都把整个内核叫醒了。
+"""
+
+[[samples]]
+id = "compare-midnight-build-opening"
+scene = "opening"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "526-532"
+provenance = "author_verbatim"
+text = """
+白天的时候，为了一行改动重新启动一次虚拟机，好像也没有多大事。三十秒嘛，喝口水就过去了。
+
+到了深夜，第十次构建又跑起来，咱们的算盘可就精明了：刚才只改了一行，这次不测，大概也不会出问题吧？省下来的确实是三十秒，可 bug 最喜欢的，就是这种“大概”。它只要从中间溜过去一次，第二天就能请咱们花半天把这三十秒连本带利还回去。好一个高利贷啊！
+
+实际上，咱们现在想验证的通常不是整个内核。格式化少补了一个零，`Result` 漏掉一种状态，这些代码在普通宿主机上就能跑。为了看它们对不对，每次都把虚拟机和串口请出来，多少有点杀鸡用虚拟化。
+
+那就先定一个不宏大的目标：敲一条命令，几秒内把这些小块全部跑完。通过时别吵，失败时告诉我哪一个用例、哪一行出了问题。至于这个小框架需要哪些零件，咱们做到哪儿缺了，再补哪儿。
+"""
+
+[[samples]]
+id = "compare-cassert-first-attempt-history"
+scene = "personal_history"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "430-432"
+provenance = "author_verbatim"
+text = """
+在最当初的时候，我们的第一版断言压根就没想这么多，我们直接粗暴的包含 `<cassert>` 了，然后在该停的地方轻飘飘的写了一句 `assert(...)`。宿主机上编译、运行，全都正常。
+
+“太对了哥！代码就该这么写！” 绿绿的测试增长您满满的信心，然后准备编译内核的版本的时候，链接器冷笑一声，安静的递回来一个咱们从没实现过的名字：`__assert_fail`。“What！？”这是您的第一句话。
+"""
+
+[[samples]]
+id = "cinux-assert-first-pass-history"
+scene = "personal_history"
+source = "document/journey/00-armory/05-assert.md"
+lines = "24-26"
+provenance = "author_verbatim"
+text = """
+咱们把时间拨回第一遍。当年笔者做这个内核,断言借的就是 `<cassert>` 的壳,图省事嘛:头文件一包含、该停的地方轻飘飘写一句 `assert(...)`,正常电脑上的编译、运行全都正常,绿绿的测试一路给笔者涨着信心。
+
+坏就坏在咱们把代码编进内核的时候。链接器呢,冷笑一声、递回来一个从没实现过的名字:`__assert_fail`。明明编译过了,凭什么它就不认呢?咱们顺着名字往回找,事情一下子就清楚了。
+"""
+
+[[samples]]
+id = "compare-smallest-program-entry"
+scene = "concept_entry"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "136-142"
+provenance = "author_verbatim"
+text = """
+其实，可能有朋友不太了解什么叫标准库不能用，也不理解我非要用，会出现啥毛病。不着急。咱们抄起您喜欢的编辑器，走一个能多小有多小的程序吧！
+
+我们往vector里面，直接塞上三个整数。然后抓起来就塞到g++去，您自个先享受去吧！
+"""
+
+[[samples]]
+id = "compare-sink-two-exits-entry"
+scene = "concept_entry"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "347-349"
+provenance = "author_verbatim"
+text = """
+让我们来看两个最具体的出口。测试想把字符收进数组里，所以它需要知道数组在哪、已经写到哪里；串口则简单得多，字符来了，直接写寄存器。这两边保存的状态不一样，收到字符以后做的事情也不一样。
+
+格式引擎不该认识这些细节。它只需要两样东西：一个函数，告诉它“这个字符怎么送出去”；再带上一份原样交还给函数的数据。于是就有了这个很小的 `Sink`：
+"""
+
+[[samples]]
+id = "moderncpp-generic-programming-naming"
+scene = "concept_entry"
+source = "Tutorial_AwesomeModernCPP/documents/vol1-fundamentals/ch09/00-why-generics.md"
+lines = "40-42"
+provenance = "author_verbatim"
+text = """
+三个栈这种“逻辑一份、类型多种”的困境，不是咱们运气差撞上的，它普遍到有专门的名字：泛型编程（generic programming）。
+
+这个名字是 David Musser 和 Alexander Stepanov 在 1980 年代叫响的，他们给的定义很实在：从具体、高效的算法里做抽象，得到对一整类类型都成立的算法。落到咱们这两个例子上：写 `smallest`，逻辑真正用到的只有“两个东西能比大小”；写 `Stack`，真正用到的只有“元素能拷贝”。把这些要求留下，把具体类型抽掉，一份逻辑就对所有满足要求的类型成立。泛，广泛；型，类型，名字说的就是这个意思。
+"""
+
+[[samples]]
+id = "compare-temp-string-plus-chain"
+scene = "mechanism"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "40"
+provenance = "author_verbatim"
+text = "这里面的 `\"[\" + level + \"] \" + module + \": \" + detail`，每一步，都会产生新的临时 `std::string` 对象！每做一次 `+`，咱们就会再得到一个临时字符串。您想想，这多可怕！"
+
+[[samples]]
+id = "compare-union-no-second-bed"
+scene = "mechanism"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "243-249"
+provenance = "author_verbatim"
+text = """
+咱们先试试最老实的写法：值放一份，错误也放一份，旁边再摆一个 `bool`，告诉我们现在该看谁。
+
+`Result` 既然只可能成功或者失败，那最好连“两边同时有效”这件事都别让人写出来。于是这里换成了 `union`：值和错误共用同一块地方。成功时让值住进去，失败时换错误来住；想把两个一起塞进去，对不起，咱们这个屋子里，没有为您提供第二张床。想来？没门！满员了！
+
+当然，`union` 也不是白帮忙的。两个成员共用一块内存以后，编译器反而不敢替咱们决定该构造谁、又该析构谁了。想让哪一边活过来，得咱们亲手来。placement new 就是在这个时候进场的。
+"""
+
+[[samples]]
+id = "compare-helpful-neighbor-include"
+scene = "mechanism"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "263-267"
+provenance = "author_verbatim"
+text = """
+`result.hpp` 头顶上的 `#include <new>`，其实是后来补上的。第一版把它漏了，偏偏整个测试照样能过。欸？这个结果就很迷惑了：placement new 的声明明明在 `<new>` 里，咱们没包含它，编译器怎么一点脾气都没有？
+
+顺着测试文件往上翻，才看见它还包含了 `<string>`。这位热心邻居在当前这套标准库实现里，顺路把 placement new 的声明也带了进来。于是 `result.hpp` 自己缺的东西，被测试文件不声不响地补齐了。
+
+可人家只是碰巧帮忙，并没有答应以后天天来。换一个不包含 `<string>` 的文件，问题立刻现形。所以咱们单独喂给编译器一个翻译单元，里面只准出现 `result.hpp`，看看它能不能靠自己站住：
+"""
+
+[[samples]]
+id = "compare-expected-vs-result-experiments"
+scene = "mechanism"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "284-292"
+provenance = "author_verbatim"
+text = """
+咱们起手按最普通的方式编译，把异常给他打开咯！现在，让咱们的程序从一个失败的 `expected` 里硬取值，那么，聪明的大家自然知道，我们的运行库会毫不客气的终止掉我们的程序，当然，咱们的标准库还是会好心的为咱们留下 `bad_expected_access` 这个名字。至少，咱们知道它为什么死掉惹。
+
+接着只改一个条件，把异常关掉。程序仍然会终止，只是刚才那句诊断没了。更麻烦的是，终止前写到标准输出里的内容可能还攒在缓冲区里，连那点线索也未必看得见。
+
+到这里还不能说明它进不了内核。那咱们继续，把独立环境的开关全部加上，先只编译，不链接。嘿，它居然编过了。
+
+别急着高兴，拿 `nm` 看一眼目标文件：里面还欠着 `abort` 和 `__stack_chk_fail`。编译器愿意替咱们生成目标文件，不代表最后真有人替它把这些名字补上。到了链接那一步，这两张欠条还是得还。
+
+最后一组换回咱们自己的 `Result`。同样是忘记检查就取值，它会走进断言，把文件、行号和消息直接送到标准错误流。咱们现在需要比较的，已经不只是“能不能编过”，而是错误真的发生以后，还能给调试的人留下多少东西。
+"""
+
+[[samples]]
+id = "moderncpp-distinct-types-gcc-reply"
+scene = "mechanism"
+source = "Tutorial_AwesomeModernCPP/documents/vol1-fundamentals/ch09/00-why-generics.md"
+lines = "99-107"
+provenance = "author_verbatim"
+text = """
+GCC 的答复：
+
+```text
+distinct.cpp:15:21: error: cannot convert ‘Stack<double>*’ to ‘Stack<int>*’ in initialization
+   15 |     Stack<int>* p = &b;
+      |                     ^~
+```
+
+不同意。编译器在告诉咱们：`Stack<int>` 和 `Stack<double>` 是两个互不相干的类型，跟 `int` 和 `double` 本身一个性质。它们都出自同一份 `Stack` 模板，编译器照着这份模板，给每种类型各生成了一份独立的代码。上一章的继承是让一堆类型变成一家子，`Circle` 是一种 `Shape`；模板正相反，让一份代码变成一堆类型，生成的类型之间没有任何亲缘。所以在 `Stack<int>` 里，元素就是连续排布的裸 `int`，没有虚表指针，没有间接跳转，访问它和访问普通数组没有区别。
+"""
+
+[[samples]]
+id = "compare-each-one-seen"
+scene = "transition"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "20"
+provenance = "author_verbatim"
+text = "每一条，我们都见过。"
+
+[[samples]]
+id = "compare-link-time-cinux-transition"
+scene = "transition"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "195-196"
+provenance = "author_verbatim"
+text = """
+对于咱们正常的上位机而言，甚至还要捎上我们自己写的测试框架自己，一起放到 `test/framework/` 这个目录下。
+而我们自己手搓的Cinux，在将来，会按照“链接期选择”这个机制，纳入到我们的构建中，成为宏大内核的一部分。
+"""
+
+[[samples]]
+id = "compare-registrar-camera-transition"
+scene = "transition"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "579"
+provenance = "author_verbatim"
+text = "`TEST(\"名字\") { ... }` 展开以后，会出现一个测试函数和一个静态的 `Registrar` 对象。让我们先把镜头转移到这个登记器上，当然，还请您稍安勿躁，别急着管函数名是怎么拼出来的。"
+
+[[samples]]
+id = "compare-percent-p-later-transition"
+scene = "transition"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "398"
+provenance = "author_verbatim"
+text = "至于 `%p`，等真正打印地址时再说。它走无符号十六进制，并且带上 `0x`；这不是参数提升，也不是容错策略，只是咱们希望地址最终长成什么样子。"
+
+[[samples]]
+id = "moderncpp-canvas-recap-transition"
+scene = "transition"
+source = "Tutorial_AwesomeModernCPP/documents/vol1-fundamentals/ch09/00-why-generics.md"
+lines = "160-162"
+provenance = "author_verbatim"
+text = """
+两条路不是二选一，实际工程里它们经常配合。咱们回头看上一章的 `Canvas`：它持有 `vector<unique_ptr<Shape>>`，`vector` 本身是模板，管“容器装什么类型”；装进去的 `Shape*` 走虚函数，管“画布怎么画”。一个类里，两套机制各干各的活。
+
+接下来三篇咱们把模板的零件逐个拆开：函数模板把类型推导和几十行报错的读法讲清楚，类模板带咱们亲手实现一个泛型栈，特化则管“通用版本照顾不到的类型”该怎么单独安排。学完这三篇，`vector`、`string` 这些天天在用的东西是怎么造出来的，您就能看明白了——第 10 章的 STL，全靠这一章打底。
+"""
+
+[[samples]]
+id = "compare-flags-cv-engineer-explanation"
+scene = "code_explanation"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "172-174"
+provenance = "author_verbatim"
+text = """
+这个是我的本地AI验证的时候，它起手的操作，可能吓到您了。在我安抚好您惊恐的心灵之后，还请您聚精会神的看看我们传递给编译器的flags，有不少您可能在前置卷见过了！他们分别是：`-ffreestanding`、`-fno-exceptions`、`-fno-rtti`、`-nostdlib`,
+
+笔者可没骗您的！这的确是咱们将来把代码编进内核时的所采纳的flags！至于它们各管什么, 您出发之前跟我说私密马赛！我忘记了，那么您这边请：[工具链课](../../primer/01-toolchain/)逐条讲过，如果还是不理解，这里您可以大胆的当CV工程师，抄就完事了！
+"""
+
+[[samples]]
+id = "compare-09lld-parse-walkthrough"
+scene = "code_explanation"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "378-382"
+provenance = "author_verbatim"
+text = """
+现在，让咱们拿 `%09lld` 真走一次吧！开头的 `%` 告诉解析器：后面不是普通字符了。紧跟着的 `0` 把填充字符改成零，`9` 记下总宽度，两个 `l` 再把参数类型推进到 `long long`，最后的 `d` 才决定按十进制、有符号的方式输出。
+
+走到这里，格式串已经把要求说全了，咱们才去 `va_list` 里取那个参数。注意，是按照 `long long` 去取。可变参数不会替咱们保存一份“调用者当时传的类型说明书”，格式串写什么，取参数的人就信什么。要是调用方实际塞进来一个 `int`，这里却按照 `long long` 去读，事情不是“多出来的高 32 位有点随机”这么温和——这已经是未定义行为了。今天看着只是数字古怪，换个平台、换次优化，它爱怎么坏就怎么坏。
+
+参数拿稳以后，剩下的才是排版：先算十进制数字本身占几位，不够 9 位的部分在左侧补零，再把数字送给 `Sink`。这样一趟走完，前面那五步才算真的落到了代码上。
+"""
+
+[[samples]]
+id = "compare-source-location-default-arg"
+scene = "code_explanation"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "454-456"
+provenance = "author_verbatim"
+text = """
+真失败时，我们看到的报告最好指向这一行，而不是指向 `Check()` 函数体，否则的话，整个工程不管哪里出错，屏幕都只会反复告诉您：错在 `assert.hpp`。这情报不能说毫无用处吧，只能说约等于没有。马上您就会去掉他了。
+
+`std::source_location::current()` 因此被放进了默认参数。调用者虽然没写第三个参数，编译器却会在调用这一行把默认值补上；文件名、行号和函数名，也就在这里被抓住，然后跟着消息一起送进 `Check()`。里去，而咱们的`Check` 自己仍然是个普通函数。能打断点，能单步，参数也有类型。咱们没有为了拿调用位置，先把整个接口变成一个到处展开的宏。
+"""
+
+[[samples]]
+id = "compare-parent-scope-empty-list"
+scene = "code_explanation"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "565-567"
+provenance = "author_verbatim"
+text = """
+最后两行第一次看着有些重复。`list(APPEND ...)` 不是已经加进去了吗，为什么还要 `set` 一回？因为 CMake 的函数有自己的作用域。新目标确实进了 `ALL_HOST_TESTS`，但进的是函数里面那一份；函数一结束，它也跟着没了。`PARENT_SCOPE` 做的，就是把改好的清单递回外面，让最终的 `test_host` 真能依赖这些测试程序。
+
+把这一行删掉再配置，三个测试照样各自存在，`test_host` 手里却是一张空清单。这个现象比把整份 `CMakeLists.txt` 从头解释一遍，更能说明它为什么不能少。
+"""
+
+[[samples]]
+id = "compare-macro-return-ownership"
+scene = "code_explanation"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "616"
+provenance = "author_verbatim"
+text = "这里为什么非得用宏，也是在这一刻才看得出来。普通函数可以打印，也可以修改计数，可函数里的 `return` 只能退出函数自己，没办法替调用者结束当前测试体。宏展开在 `must_fail_body()` 里面，那个 `return` 才真的属于它。"
+
+[[samples]]
+id = "compare-enum-name-check-ending"
+scene = "ending"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "311-313"
+provenance = "author_verbatim"
+text = """
+我们的名字表里，还会有一种错误，咱们是直接抓，抓不住的。那就是枚举顺序没变，可是咱们不小心把两个名字填反了。`switch` 也好，数组也好，他们都是无辜的关键字，自然不会替人判断字符串写得对不对。所以第一个测试很朴素，把六个错误逐个转成名字，再一个个核对。
+
+您可能不太熟悉 `std::to_underlying`，这个可爱的小家伙来自 C++23 的 `<utility>`。这回终于轮到前面那句“语言可以往前走，库依赖仍然得看紧”落到代码上了——不是为了证明咱们紧跟潮流，单纯是这里刚好有个趁手的小工具，那就用它，哈哈！
+"""
+
+[[samples]]
+id = "compare-five-byte-truncation-ending"
+scene = "ending"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "410-416"
+provenance = "author_verbatim"
+text = """
+最后的最后，让我们故意只给它五个字节，再次不好意思的麻烦它输出 `abcdef`。结果缓冲区里留下的是：
+
+```text
+abcd\\0
+```
+
+前四格装字符，最后一格留给结尾的空字符。`e` 和 `f` 没地方住，老老实实被截掉；缓冲区外面的内容也没有遭殃。需要注意一下的是，咱们现在是在宿主机上测的。以后字符真的要往串口走，格式引擎还是这一份，换掉的只有接在后面的那个 `Sink`。
+"""
+
+[[samples]]
+id = "compare-minimal-dependency-ending"
+scene = "ending"
+source = ".claude/content_forge/tools/humanizer-zh/corpus/COMPARE.md"
+lines = "634"
+provenance = "author_verbatim"
+text = "咱们现在，只需要登记用例、做几种断言、跑完以后给出失败位置。更重要的是，这套写法以后还想跟着测试进入内核。依赖越少，框架里每一步在做什么也越容易看清。"
+
+[[samples]]
+id = "moderncpp-preface-rest-ending"
+scene = "ending"
+source = "Tutorial_AwesomeModernCPP/documents/vol1-fundamentals/ch00/00-preface.md"
+lines = "117-123"
+provenance = "author_verbatim"
+text = """
+休息一下吧！大家工作，学习都不容易，喘口气，站起来走两圈，之后的日子咱们就要跟C++爆破了！
+
+还在看，不讲知识，我们不内卷。C++ 我学到今天，下的结论是：C++是一门有深度的语言，学习曲线确实不算平缓（倒不如说平缓在哪里了），这一点笔者不忽悠您。但它也是一门回报丰厚的语言——等您真正把 RAII、模板、零开销抽象这些本事摸透，会发现写 C++ 是一件很痛快的事。
+
+这套教程不会让您一夜之间变成 C++ 专家——**没有任何教程能做到这一点，如果有人宣称它能让你30天精通C++，你最好问问他什么是现代C++**。这条路会很艰辛，但是笔者希望这些教程可以陪您走完：从最基础的类型和变量，到面向对象的设计，再到模板和标准库的使用，耐心和动手的意愿，笔者认为，将会决定我们伟大的征程能走得多远。
+
+休息会，咱们，要上路了。
+"""
