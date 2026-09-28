@@ -50,16 +50,25 @@ jobs:
           echo "── 改动文章 ──"; cat changed.txt
 
       - name: Materialize content_forge at lane-pinned SHA
+        env:
+          CF_TOKEN: ${{ secrets.CONTENT_FORGE_TOKEN }}
         run: |
           SHA=""
           if [ -f renatural/state/lane.json ]; then
             SHA=$(python3 -c "import json;print(json.load(open('renatural/state/lane.json'))['content_forge_sha'])")
           fi
-          git clone --quiet https://github.com/Charliechen114514/content_forge .claude/content_forge
-          if [ -n "$SHA" ]; then
-            git -C .claude/content_forge checkout -q "$SHA"
+          # content_forge 是私有仓：无令牌时进入降级模式（humanizer 跳过，本地全量门为准）
+          if [ -n "$CF_TOKEN" ]; then
+            git clone --quiet "https://x-access-token:${CF_TOKEN}@github.com/Charliechen114514/content_forge" .claude/content_forge
+            if [ -n "$SHA" ]; then
+              git -C .claude/content_forge checkout -q "$SHA"
+            fi
+            echo "HAS_CF=yes" >> "$GITHUB_ENV"
+            echo "content_forge @ $(git -C .claude/content_forge rev-parse HEAD)"
+          else
+            echo "[degraded] 无 CONTENT_FORGE_TOKEN secret：humanizer 跳过（invariants + 红线照跑），本地全量 accept 门为准"
+            echo "HAS_CF=no" >> "$GITHUB_ENV"
           fi
-          echo "content_forge @ $(git -C .claude/content_forge rev-parse HEAD)"
 
       - name: Echo lint (zero hits per changed article)
         run: |
@@ -73,6 +82,8 @@ jobs:
 
       - name: Accept gate (humanizer + invariants + red lines)
         run: |
+          EXTRA=""
+          if [ "$HAS_CF" = "no" ]; then EXTRA="--skip-humanizer"; fi
           FAIL=0
           while IFS= read -r f; do
             [ -z "$f" ] && continue
@@ -81,6 +92,6 @@ jobs:
               echo "[skip] $f：无 invariants 快照（非本战役批改文章），验收门不适用"
               continue
             fi
-            python3 scripts/renatural/accept.py --dry-run "$f" || FAIL=1
+            python3 scripts/renatural/accept.py --dry-run $EXTRA "$f" || FAIL=1
           done < changed.txt
           exit $FAIL
