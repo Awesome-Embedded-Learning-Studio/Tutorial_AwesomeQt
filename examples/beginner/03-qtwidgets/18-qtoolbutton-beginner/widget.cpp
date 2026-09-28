@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+#include "widget.h"
 
 #include <QAction>
 #include <QDate>

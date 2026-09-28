@@ -22,8 +22,8 @@ qt_add_executable(${PROJECT_NAME}
     main.cpp
     CircleButton.h
     CircleButton.cpp
-    DemoWindow.h
-    DemoWindow.cpp
+    widget.h
+    widget.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

@@ -1,6 +1,6 @@
 #include <QApplication>
 
-#include "file_dialog.h"
+#include "widget.h"
 
 // ============================================================================
 // 主函数

@@ -20,8 +20,8 @@ find_package(Qt6 REQUIRED COMPONENTS Gui Widgets)
 
 qt_add_executable(${PROJECT_NAME}
     main.cpp
-    check_box_demo.h
-    check_box_demo.cpp
+    widget.h
+    widget.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

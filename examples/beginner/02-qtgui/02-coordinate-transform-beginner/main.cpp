@@ -3,7 +3,7 @@
 
 #include <QApplication>
 
-#include "transformdemowidget.h"
+#include "widget.h"
 #include "analogclockwidget.h"
 
 int main(int argc, char *argv[])

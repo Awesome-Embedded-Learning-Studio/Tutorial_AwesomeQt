@@ -16,6 +16,8 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt6 REQUIRED COMPONENTS Gui Widgets)
 
 qt_add_executable(${PROJECT_NAME}
+    widget.h
+    widget.cpp
     main.cpp
     dragsourcewidget.h
     dragsourcewidget.cpp

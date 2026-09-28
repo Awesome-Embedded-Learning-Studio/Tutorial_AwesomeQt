@@ -3,7 +3,7 @@
 
 #include <QApplication>
 
-#include "pixeldemowidget.h"
+#include "widget.h"
 #include "simpleimageviewer.h"
 
 // ============================================================================

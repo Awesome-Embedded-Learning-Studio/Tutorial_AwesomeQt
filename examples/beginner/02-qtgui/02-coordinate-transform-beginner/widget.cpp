@@ -1,4 +1,4 @@
-#include "transformdemowidget.h"
+#include "widget.h"
 
 #include <QPainter>
 #include <QPen>

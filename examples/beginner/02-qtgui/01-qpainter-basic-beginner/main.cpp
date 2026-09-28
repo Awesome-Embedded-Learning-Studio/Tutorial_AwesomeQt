@@ -3,23 +3,17 @@
 
 #include <QApplication>
 
-#include "barchartwidget.h"
-#include "shapegallerywidget.h"
+#include "widget.h"
 
 // ============================================================================
-// 主函数：创建窗口展示两种绘图效果
+// 主函数：创建主窗口，聚合展示基本图形与柱状图两种绘图效果
 // ============================================================================
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    // 展示基本图形
-    ShapeGalleryWidget shapes;
-    shapes.show();
-
-    // 展示柱状图
-    BarChartWidget chart;
-    chart.show();
+    Widget widget;
+    widget.show();
 
     return app.exec();
 }

@@ -1,4 +1,4 @@
-#include "file_dialog.h"
+#include "widget.h"
 
 #include <QFont>
 #include <QGroupBox>

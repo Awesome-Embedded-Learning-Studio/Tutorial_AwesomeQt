@@ -4,7 +4,7 @@
 //       与 QAction 关联：setDefaultAction()
 //       在工具栏中自动调整样式的机制
 
-#include "mainwindow.h"
+#include "widget.h"
 
 #include <QApplication>
 

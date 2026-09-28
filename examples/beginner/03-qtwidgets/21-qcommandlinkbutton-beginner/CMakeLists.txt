@@ -19,8 +19,8 @@ find_package(Qt6 REQUIRED COMPONENTS Gui Widgets)
 
 qt_add_executable(${PROJECT_NAME}
     main.cpp
-    project_wizard.h
-    project_wizard.cpp
+    widget.h
+    widget.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}

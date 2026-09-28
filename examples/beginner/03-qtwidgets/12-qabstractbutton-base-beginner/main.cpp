@@ -6,7 +6,7 @@
 
 #include <QApplication>
 
-#include "DemoWindow.h"
+#include "widget.h"
 
 // ============================================================================
 // 主函数

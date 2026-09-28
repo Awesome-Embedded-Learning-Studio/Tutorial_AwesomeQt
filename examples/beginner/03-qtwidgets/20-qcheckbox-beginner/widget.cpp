@@ -1,4 +1,4 @@
-#include "check_box_demo.h"
+#include "widget.h"
 
 #include <QApplication>
 #include <QFont>

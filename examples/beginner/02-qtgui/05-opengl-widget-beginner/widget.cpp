@@ -1,4 +1,4 @@
-#include "triangleglwidget.h"
+#include "widget.h"
 
 #include <QDebug>
 

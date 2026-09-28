@@ -6,7 +6,7 @@
 
 #include <QApplication>
 
-#include "project_wizard.h"
+#include "widget.h"
 
 // ============================================================================
 // 主函数

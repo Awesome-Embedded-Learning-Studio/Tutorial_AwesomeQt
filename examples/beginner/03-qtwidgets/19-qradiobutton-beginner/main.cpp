@@ -6,7 +6,7 @@
 
 #include <QApplication>
 
-#include "settings_widget.h"
+#include "widget.h"
 
 // ============================================================================
 // 主函数

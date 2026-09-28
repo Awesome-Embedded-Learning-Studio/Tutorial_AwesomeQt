@@ -17,6 +17,8 @@ find_package(Qt6 REQUIRED COMPONENTS Gui Widgets)
 
 qt_add_executable(${PROJECT_NAME}
     main.cpp
+    widget.h
+    widget.cpp
     fontdemowidget.h
     fontdemowidget.cpp
     metricslayoutwidget.h

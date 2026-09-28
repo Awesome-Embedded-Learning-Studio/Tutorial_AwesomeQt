@@ -17,8 +17,8 @@ find_package(Qt6 REQUIRED COMPONENTS Gui Widgets)
 
 qt_add_executable(${PROJECT_NAME}
     main.cpp
-    pixeldemowidget.h
-    pixeldemowidget.cpp
+    widget.h
+    widget.cpp
     imagedisplaywidget.h
     imagedisplaywidget.cpp
     simpleimageviewer.h

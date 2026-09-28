@@ -3,25 +3,17 @@
 
 #include <QApplication>
 
-#include "fontdemowidget.h"
-#include "metricslayoutwidget.h"
-#include "richtextcardwidget.h"
+#include "widget.h"
 
+// ============================================================================
+// 主函数：创建主窗口，聚合展示字体属性、度量布局与富文本三种渲染效果
+// ============================================================================
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    // 演示 1: QFont 属性 + drawText 各种用法
-    FontDemoWidget fontDemo;
-    fontDemo.show();
-
-    // 演示 2: QFontMetrics 精确布局
-    MetricsLayoutWidget layoutDemo;
-    layoutDemo.show();
-
-    // 演示 3: QTextDocument 富文本卡片
-    RichTextCardWidget cardDemo;
-    cardDemo.show();
+    Widget widget;
+    widget.show();
 
     return app.exec();
 }

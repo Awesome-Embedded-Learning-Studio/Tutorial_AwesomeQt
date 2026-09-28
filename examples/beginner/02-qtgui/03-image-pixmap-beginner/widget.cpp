@@ -1,4 +1,4 @@
-#include "pixeldemowidget.h"
+#include "widget.h"
 
 #include <QPainter>
 #include <QPaintEvent>

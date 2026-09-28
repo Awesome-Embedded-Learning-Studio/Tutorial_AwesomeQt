@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "triangleglwidget.h"
+#include "widget.h"
 
 #include <QHBoxLayout>
 #include <QLabel>

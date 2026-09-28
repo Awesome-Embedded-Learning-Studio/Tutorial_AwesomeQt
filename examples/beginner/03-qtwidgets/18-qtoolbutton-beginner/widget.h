@@ -4,8 +4,8 @@
 //       与 QAction 关联：setDefaultAction()
 //       在工具栏中自动调整样式的机制
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef WIDGET_H
+#define WIDGET_H
 
 #include <QMainWindow>
 
@@ -37,4 +37,4 @@ private:
     QTextEdit *m_textEdit = nullptr;
 };
 
-#endif // MAINWINDOW_H
+#endif // WIDGET_H

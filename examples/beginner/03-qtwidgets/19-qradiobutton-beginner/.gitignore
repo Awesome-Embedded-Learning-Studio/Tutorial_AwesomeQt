@@ -1,0 +1,35 @@
+# Qt 构建产物
+build/
+cmake-build-*/
+
+# Qt Creator 配置文件
+*.user
+*.autosave
+
+# CMake 生成文件
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# 编译产物
+*.o
+*.obj
+*.so
+*.dll
+*.dylib
+*.exe
+*.app
+
+# IDE 配置目录
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 调试文件
+*.dSYM/
+*.su
+*.idb
+*.pdb

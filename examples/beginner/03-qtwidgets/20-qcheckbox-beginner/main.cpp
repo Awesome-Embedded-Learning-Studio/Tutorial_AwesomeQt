@@ -6,7 +6,7 @@
 
 #include <QApplication>
 
-#include "check_box_demo.h"
+#include "widget.h"
 
 // ============================================================================
 // 主函数
