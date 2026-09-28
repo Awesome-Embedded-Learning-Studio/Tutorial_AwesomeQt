@@ -106,6 +106,9 @@
 3. **00-env 三篇**：不新建五件套示例，检查点用 B/C 形态（D4 附带裁决既定）；02-cmake-first-project 的 A 形态场地挂靠 08-file-io 补齐后的工程——采纳，计入 W3 硬前置的验收项。
 4. **环境补包节奏**：呼应作者「不要全家桶」——M1A/M1B/W3 零补包开工；W4 前装 WebSockets/SerialPort 两包复验 2 例；W6/W7 前按批装对应模块包（约 20 个，Arch 包名形如 qt6-websockets / qt6-multimedia / qt6-svg…届时代理核对），全部计入各波 preflight。
 5. **X 补齐执行序**：第一梯队 = M1A 6 对 + M1B 6 对 + W3 16 对（改名收拢 118 档为主），随各波开工前由 agent 补齐（D9：W-EX 由 agent 承接），复编通过才准该篇 preflight 绿灯——「先实测再写检查点 A」的铁律以补齐后工程为准。
+6. **五件套命名执行细则（R-WEX-1，2026-09-28 第一梯队执行后补裁）**：修复 prompt 原红线「不重命名」修正为「**不破坏工程外引用**」——工程内文件对改名（git mv + 内部 include / CMakeLists 源清单原子更新 + 复编）即 §d「改名收拢」档的正当操作；**类名一律保留**（先例 12 DemoWindow / 19 SettingsWidget / 21 ProjectWizard）。落位三形：单一主窗口类文件对为领域命名 → 改名 widget.*；多控件对并存 → 挑文章主控件对改名 widget.*、其余领域文件并存（先例 advanced/03-qtwidgets/49）；main.cpp 直弹多顶层窗口无主窗口类 → 新增 Widget 复合主窗口（先例 02-qtgui-01/06，窗口组织方式允许变化、领域逻辑零改动）——W-EX 先行于改文，**示例赢，改文批次按示例实况写**。改名前置检查：旧名全仓 grep 仅允许本工程内出现，tutorial/** 或跨工程出现即放弃改名报 blocked。
+   **第一梯队执行记录（2026-09-28，两轮完结，12/12 全过）**：一轮（wf_e8988b86-16f）过 5（01/06 复合主窗口、12/19/21 改名收拢），5 项被一轮过严红线拦住改名、04/05 撞 429 阵亡；二轮（wf_058337ef-799）按本条口径补做 7 项全过——改名收拢 5（02 主控件对 transformdemowidget、03 主控件对 pixeldemowidget、17 file_dialog、18 mainwindow、20 check_box_demo）+ 全量补齐 2（04 复合主窗口聚合三演示控件、05 主控件对 triangleglwidget 改名 + Qt6::OpenGLWidgets 链接复编过）。全部经独立复验 agent 清构建 + 五件套 + 旧名残留三查。**遗留观察**：17 的 include 守卫仍是 FILE_DIALOG_H（18 则已同步改 WIDGET_H，两工程不一致，纯装饰性）——并入 17 内容债清单由 M1B 一并处理；账本文件中的旧名提及（本报告 / wex-inventory.json）系改版前快照的审计历史，裁定不算残留、不回改（回改反而失真）。
+   **内容债新登记（转 M1A/M1B 写手 preflight 核对）**：17-qpushbutton 示例类为 FileDialog（file_dialog.*），与 QPushButton 主题不符、疑复制粘贴出身；20-qcheckbox 示例两处信号名注释互相矛盾（check_box_demo.h 写 checkStateChanged、CMakeLists.txt 写 stateChanged）——与冷读内容债（coldread-baseline §4）并单，由写手以 qt_src 实证裁决。
 
 ---
 
