@@ -4,7 +4,7 @@
 
 ## 1. 示例与实例库代码 —— MIT
 
-`examples/`、`widget/`、`app/`、`model/`、`industrial/`、`scripts/` 下的源代码遵循
+`src/`（含 `examples/`、`widget/`、`app/`、`model/`、`industrial/`）与 `scripts/` 下的源代码遵循
 [MIT License](LICENSE)（仓库根 LICENSE 文件）。可自由使用、修改、分发，附带版权声明即可。
 
 ## 2. 教程文档 —— CC BY-SA 4.0

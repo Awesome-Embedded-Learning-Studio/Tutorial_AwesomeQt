@@ -10,21 +10,13 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'examples/**'
-      - 'widget/**'
-      - 'app/**'
-      - 'model/**'
-      - 'industrial/**'
+      - 'src/**'
       - 'scripts/build_examples.py'
       - '.github/workflows/build-examples.yml'
   push:
     branches: [main]
     paths:
-      - 'examples/**'
-      - 'widget/**'
-      - 'app/**'
-      - 'model/**'
-      - 'industrial/**'
+      - 'src/**'
 
 jobs:
   build:

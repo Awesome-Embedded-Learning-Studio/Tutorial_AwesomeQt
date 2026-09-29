@@ -238,7 +238,7 @@ connect(&server, &QWebSocketServer::newConnection, [&]() {
 
 ## 6. 完整示例代码
 
-本篇的完整示例代码在 `examples/beginner/04-qtnetwork/04-websocket-beginner/` 目录下，包含一个控制台程序，演示了 WebSocket 服务端和客户端的完整通信流程，包括连接建立、文本和二进制消息收发、心跳 ping/pong、以及多客户端管理。
+本篇的完整示例代码在 `src/examples/beginner/04-qtnetwork/04-websocket-beginner/` 目录下，包含一个控制台程序，演示了 WebSocket 服务端和客户端的完整通信流程，包括连接建立、文本和二进制消息收发、心跳 ping/pong、以及多客户端管理。
 
 ## 7. 官方文档参考
 

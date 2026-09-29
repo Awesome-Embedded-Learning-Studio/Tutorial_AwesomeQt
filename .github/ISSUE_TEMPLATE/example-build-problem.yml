@@ -13,7 +13,7 @@ body:
     attributes:
       label: "相关示例或文件"
       description: "请粘贴代码示例路径、章节链接或文件路径。"
-      placeholder: "例如：examples/beginner/01-qtbase/02-signal-slot-beginner/ 或 widget/status-led/"
+      placeholder: "例如：src/examples/beginner/01-qtbase/02-signal-slot-beginner/ 或 src/widget/status-led/"
     validations:
       required: true
 
@@ -26,7 +26,7 @@ body:
         - "示例代码无法编译"
         - "CMake 配置问题"
         - "工具链或编译器兼容问题"
-        - "实例库（widget/app/model/industrial）问题"
+        - "实例库（src/ 下 widget/app/model/industrial）问题"
         - "其他"
     validations:
       required: true

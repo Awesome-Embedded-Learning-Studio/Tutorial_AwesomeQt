@@ -160,7 +160,7 @@ void switchCamera(const QCameraDevice &device)
 
 把前面学的串起来，我们写一个包含摄像头预览、设备切换、截图保存的完整工具。程序使用 `QCamera` + `QMediaCaptureSession` + `QVideoWidget` 构建采集管线，通过 `QImageCapture` 实现截图功能，使用 `QComboBox` 让用户选择摄像头设备。
 
-完整代码见 `examples/beginner/05-other-modules/05-qtmultimedia-camera-beginner/`，下面是关键部分的讲解。
+完整代码见 `src/examples/beginner/05-other-modules/05-qtmultimedia-camera-beginner/`，下面是关键部分的讲解。
 
 CMake 配置和上一篇一样：
 

@@ -275,7 +275,7 @@ connect(serverSocket, &QSslSocket::encrypted, [=]() {
 
 ## 6. 完整示例代码
 
-本篇的完整示例代码在 `examples/beginner/04-qtnetwork/05-ssl-tls-beginner/` 目录下，包含一个控制台程序，演示了 QSslSocket 客户端的加密连接、证书信息获取、SSL 错误处理、以及 SSL 支持状态检查。
+本篇的完整示例代码在 `src/examples/beginner/04-qtnetwork/05-ssl-tls-beginner/` 目录下，包含一个控制台程序，演示了 QSslSocket 客户端的加密连接、证书信息获取、SSL 错误处理、以及 SSL 支持状态检查。
 
 ## 7. 官方文档参考
 
