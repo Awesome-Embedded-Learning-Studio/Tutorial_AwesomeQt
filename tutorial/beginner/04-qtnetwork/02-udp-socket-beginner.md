@@ -262,7 +262,7 @@ connect(&socket, &QUdpSocket::readyRead, [&]() {
 
 ## 6. 完整示例代码
 
-本篇的完整示例代码在 `examples/beginner/04-qtnetwork/02-udp-socket-beginner/` 目录下，包含一个控制台程序，演示了 UDP 单播、广播以及数据报收发的完整流程。
+本篇的完整示例代码在 `src/examples/beginner/04-qtnetwork/02-udp-socket-beginner/` 目录下，包含一个控制台程序，演示了 UDP 单播、广播以及数据报收发的完整流程。
 
 ## 7. 官方文档参考
 

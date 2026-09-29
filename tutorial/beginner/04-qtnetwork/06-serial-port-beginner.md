@@ -255,7 +255,7 @@ connect(&serial, &QSerialPort::readyRead, [&]() {
 
 ## 6. 完整示例代码
 
-本篇的完整示例代码在 `examples/beginner/04-qtnetwork/06-serial-port-beginner/` 目录下，包含一个控制台程序，演示了串口枚举、配置打开、异步收发、错误处理等完整流程。由于串口需要硬件设备配合，示例代码包含了模拟模式，可以在没有真实串口设备的情况下验证逻辑正确性。
+本篇的完整示例代码在 `src/examples/beginner/04-qtnetwork/06-serial-port-beginner/` 目录下，包含一个控制台程序，演示了串口枚举、配置打开、异步收发、错误处理等完整流程。由于串口需要硬件设备配合，示例代码包含了模拟模式，可以在没有真实串口设备的情况下验证逻辑正确性。
 
 ## 7. 官方文档参考
 

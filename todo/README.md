@@ -14,7 +14,7 @@ examples 275✅ · 基建 P0✅ 基本清完
 
 - **已合入 main**：
   - **PR#14（fcde408）** — widget 栏 13/13 全收齐（status-led/toggle-switch/circle-progress/speed-meter/range-slider/line-chart/editable-table/checkbox-tree/checkbox-list/log-viewer/password-edit/ip-edit/fade-animation）
-  - **PR#16（764f035）** — app 栏 7 件整机成品（image-viewer/json-editor/sqlite-browser/serial-tool/network-tool/tetris/cpu-memory-monitor）+ 双文档 + app/CMakeLists 纳入 + 累计清单 instance-batch-log.md
+  - **PR#16（764f035）** — app 栏 7 件整机成品（image-viewer/json-editor/sqlite-browser/serial-tool/network-tool/tetris/cpu-memory-monitor）+ 双文档 + src/app/CMakeLists 纳入 + 累计清单 instance-batch-log.md
   - **PR#17（de7eeb4）** — 站点样式大更新（侧栏拖拽 + Qt 绿身份 + 字号切换 + 代码折叠 + 阅读进度条）
 
   每件实例构建门零 warning + offscreen 验证 + 对抗 review 修正 + Full 导览 + Handbook。**widget/app 双范式 + 双文档范式已立**。

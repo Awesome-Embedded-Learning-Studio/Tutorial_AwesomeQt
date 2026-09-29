@@ -89,7 +89,7 @@ description: "一句话描述"
 
 ## 代码示例规范
 
-`examples/` 下每个示例最少五件套，且 `cmake -B build && cmake --build build` 必须直接成功：
+`src/examples/` 下每个示例最少五件套，且 `cmake -B build && cmake --build build` 必须直接成功：
 
 ```
 01-signal-slot-beginner/
@@ -103,7 +103,7 @@ description: "一句话描述"
 - **C++17**，遵循根 `.clang-format`（LLVM / 4 空格 / 100 列）
 - 一个示例只展示一个核心知识点，**禁止 TODO 占位**和无关代码
 - `find_package(Qt6 REQUIRED COMPONENTS ...)` 指明用到的 Qt 模块
-- 实例库（`widget/` `app/` `model/` `industrial/`）统一用 `AwesomeQt::` 命名空间
+- 实例库（`src/` 下 `widget/` `app/` `model/` `industrial/`）统一用 `AwesomeQt::` 命名空间
 
 ## 本地预览
 
