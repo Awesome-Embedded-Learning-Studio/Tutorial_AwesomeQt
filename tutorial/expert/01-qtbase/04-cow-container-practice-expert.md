@@ -119,7 +119,7 @@ QString 是三个容器中最值得细看的，因为它有自己的 `reallocDat
 > }
 > ```
 
-这段有三个值得注意的地方。第一，`alloc == 0` 时直接回到 `fromRawData(&_empty, 0)`——空字符串 detach 后仍然是空字符串，不分配堆内存。`_empty` 是一个静态的 `char16_t` 常量，所有空 QString 共享这个地址，ref 永远是 -1（静态对象）。第二，需要 detach 时用 `memcpy` 做深拷贝，然后在末尾写一个 null 终止符 `dd.data()[dd.size] = 0`——这是 QString 和 QList 的关键区别。第三，如果不需要 detach 且没有 `freeSpaceAtBegin`（prepend 预留空间），可以原地 `reallocate()`，不需要拷贝数据——这是独占时的快路径。
+这段有三个值得注意的地方。第一，`alloc == 0` 时直接回到 `fromRawData(&_empty, 0)`——空字符串 detach 后仍然是空字符串，不分配堆内存。`_empty` 是一个静态的 `char16_t` 常量，所有空 QString 共享这个地址，`fromRawData(&_empty, 0)` 的 `d` 是 `nullptr`，没有头部、也没有引用计数。第二，需要 detach 时用 `memcpy` 做深拷贝，然后在末尾写一个 null 终止符 `dd.data()[dd.size] = 0`——这是 QString 和 QList 的关键区别。第三，如果不需要 detach 且没有 `freeSpaceAtBegin`（prepend 预留空间），可以原地 `reallocate()`，不需要拷贝数据——这是独占时的快路径。
 
 非 const 的 `operator[]` 不直接调 detach()，而是通过 `data()` 间接触发：
 

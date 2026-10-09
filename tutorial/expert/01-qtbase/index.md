@@ -1,6 +1,6 @@
 ---
 title: "01 · QtBase 核心模块（专家）"
-description: "深入 QtBase 源码：QObject 元对象系统拆解、信号槽 activate 调用链、QString SSO/COW 内存模型、容器隐式共享、QVariant 类型擦除、事件循环平台抽象、QIODevice 缓冲机制、QThread 平台封装，以及 MOC 编译器、信号槽深度拆解、COW 全解、事件循环深度源码等 4 个专家专属章节，另有对象树所有权源码拆解。共 21 篇。"
+description: "深入 QtBase 源码：QObject 元对象系统拆解、信号槽 activate 调用链、QString 无 SSO 的源码证明与 COW 内存模型、容器隐式共享、QVariant 类型擦除、事件循环平台抽象、QIODevice 缓冲机制、QThread 平台封装，以及 MOC 编译器、信号槽深度拆解、COW 全解、事件循环深度源码等 4 个专家专属章节，另有对象树所有权源码拆解。共 21 篇。"
 ---
 
 # 01 · QtBase 核心模块（专家）
@@ -11,7 +11,7 @@ description: "深入 QtBase 源码：QObject 元对象系统拆解、信号槽 a
 
 - **01 QObject 元对象系统源码拆解** — `QObjectPrivate` d 指针、`QMetaObject` 结构体、`qt_metacall` 分发
 - **02 信号槽底层** — `QMetaObject::activate` 调用链、`ConnectionData` 连接列表、跨线程 `QMetaCallEvent`
-- **03 QString 内存模型** — `QArrayDataPointer` 内部结构、SSO 触发条件、`detach()` 写时复制
+- **03 QString 内存模型** — `QArrayDataPointer` 内部结构、无 SSO 的源码证明、`detach()` 写时复制
 - **04 容器隐式共享（COW）源码** — `QSharedData` 引用计数、`QListData` 增长策略、`QHash` 开放地址法
 - **05 QVariant 类型擦除** — `QVariant::Private` 联合体、`QMetaType` 函数指针表、自定义类型注册 vtable
 - **06 引用计数与内存模型** — `QAtomicInt` 无锁引用计数、`ExternalRefCountData`、`QObject::~QObject` 子对象析构
