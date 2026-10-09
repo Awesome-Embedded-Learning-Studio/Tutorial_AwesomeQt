@@ -1,11 +1,11 @@
 ---
 title: "01 · QtBase 核心模块（专家）"
-description: "深入 QtBase 源码：QObject 元对象系统拆解、信号槽 activate 调用链、QString SSO/COW 内存模型、容器隐式共享、QVariant 类型擦除、事件循环平台抽象、QIODevice 缓冲机制、QThread 平台封装，以及 MOC 编译器、信号槽深度拆解、COW 全解、事件循环深度源码等 4 个专家专属章节。共 20 篇。"
+description: "深入 QtBase 源码：QObject 元对象系统拆解、信号槽 activate 调用链、QString SSO/COW 内存模型、容器隐式共享、QVariant 类型擦除、事件循环平台抽象、QIODevice 缓冲机制、QThread 平台封装，以及 MOC 编译器、信号槽深度拆解、COW 全解、事件循环深度源码等 4 个专家专属章节，另有对象树所有权源码拆解。共 21 篇。"
 ---
 
 # 01 · QtBase 核心模块（专家）
 
-> 规划中（20 篇），敬请期待...
+> 规划中（21 篇），敬请期待...
 
 ## 章节规划
 
@@ -29,3 +29,4 @@ description: "深入 QtBase 源码：QObject 元对象系统拆解、信号槽 a
 - **18【专属】信号槽深度拆解** — `Connection`/`ConnectionList` 数据结构、信号重入处理、性能基准
 - **19【专属】COW 隐式共享全解** — `QExplicitlySharedDataPointer` vs `QSharedDataPointer`、自定义共享类模板
 - **20【专属】事件循环深度源码** — `QSocketNotifier` 集成、`processEvents` flags 语义、嵌套事件循环重入安全
+- **21 对象树所有权源码** — `setParent_helper` 三段式增删子对象、`deleteChildren` 手写循环防 double-free、`deleteLater` 投递 `DeferredDelete`、对象树同线程约束
