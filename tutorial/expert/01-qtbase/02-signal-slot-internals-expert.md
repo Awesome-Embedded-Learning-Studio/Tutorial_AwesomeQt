@@ -17,7 +17,7 @@ description: Qt 6 信号槽的源码级拆解——从 emit 空宏到 QMetaObjec
 
 ## 环境说明
 
-咱们本篇的所有源码引用基于 `qt_src/qt6.9.1`，行号可能随 Qt 版本升级而漂移，您对照阅读时发现对不上，您拿函数名或字段名在对应文件里搜索定位就行。涉及 `moc/generator.cpp` 的行号尤其脆弱，那是 moc 工具的生成器模板，笔者都挂了脚注 `[^moc-gen]` 提醒。
+咱们本篇的所有源码引用基于 `qt_src/qt6.9.1`，行号可能随 Qt 版本升级而漂移，发现对不上的时候，您拿函数名或字段名在对应文件里搜索定位就行。涉及 `moc/generator.cpp` 的行号尤其脆弱，那是 moc 工具的生成器模板，笔者都挂了脚注 `[^moc-gen]` 提醒。
 
 咱们本篇会碰到的源码文件，按它们出现的顺序列在下面：
 
@@ -54,11 +54,11 @@ flowchart TD
     DEST --> DONE
 ```
 
-链上有几个要紧的站，咱们顺着走，它的源头是 `emit`。
+链上有几个要紧的站，咱们从源头 `emit` 一站一站走。
 
 ### emit 的真相：空宏，活儿都是 moc 干的
 
-笔者刚学 Qt 的那会儿，一直以为 `emit` 是个特殊的关键字，追着它琢磨了很久，它到底触发了什么机制。直到笔者翻到它的定义（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtmetamacros.h:49-52`），人愣住了：
+笔者刚学 Qt 的那会儿，一直以为 `emit` 是个特殊的关键字，追着它琢磨了很久：它到底触发了什么机制？直到翻到它的定义（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtmetamacros.h:49-52`），人愣住了：
 
 ```cpp
 # define Q_EMIT
@@ -78,7 +78,7 @@ if (def->arguments.isEmpty() && def->normalizedType == "void" && !def->isPrivate
             "}\n", constQualifier, thisPtr.constData(), index);
 ```
 
-这段是 moc 生成器的逻辑，它对每一个无参信号的处理都一样：用 `fprintf` 打印出一份函数体，里面装的只有一行：`QMetaObject::activate(this, &staticMetaObject, index, nullptr)`。所以咱们写 `emit mySignal()` 的时候，实际执行的是 moc 生成的 `mySignal()` 函数体，里面调了 `QMetaObject::activate`。信号发射的本质，其实就是调 `activate`。有参信号的函数体复杂一些，要把参数准备齐了再传进去，末尾那一句 `QMetaObject::activate` 调用倒是没有变。
+这段是 moc 生成器的逻辑，每一个无参信号走的都是同一套：用 `fprintf` 打印出一份函数体，里面装的只有一行 `QMetaObject::activate(this, &staticMetaObject, index, nullptr)`。所以咱们写 `emit mySignal()` 的时候，实际执行的是 moc 生成的 `mySignal()` 函数体，里面调了 `QMetaObject::activate`。信号发射的本质，其实就是调 `activate`。有参信号的函数体复杂一些，要把参数准备齐了再传进去，末尾那一句 `QMetaObject::activate` 调用倒是没有变。
 
 这里要和上一篇的 `metacall` 做个区分，笔者觉得这是整篇最容易混的地方，卡在这儿的话后面都读不顺。`metacall` 是按索引调一个方法的通用框架，`QMetaObject::invokeMethod` 的反射调用、属性读写，走的都是它。`activate` 是信号发射的专用链路，它的工作是把一次信号通知给所有连上来的槽。两条链路后面会汇合：`activate` 遍历到一个用元方法方式连接的槽时，那个槽的执行会走 `metacall` 的 `InvokeMetaMethod` 分支。但源头咱们分得清楚，`emit` 触发的只有 `activate`。
 
@@ -101,11 +101,11 @@ void QMetaObject::activate(QObject *sender, const QMetaObject *m, int local_sign
 
 您看这个函数，它干的活儿不多。它一头把传进来的局部信号索引 `local_signal_index` 加上了 `signalOffset(m)`，转成了全局信号索引 `signal_index`。为什么要转？一个类的信号索引，是本类自己声明的信号从 0 开始数的，可要在对象的整张连接表里定位，得用包含基类继承偏移的全局索引，而 `signalOffset` 装的就是这个继承偏移。另一头则把活儿整个委托给了 `doActivate`。
 
-咱们来认清 `doActivate` 的身份：它是个模板函数，模板的参数是 `bool`，咱们去查两个版本的差别，查到的只有一处：要不要回调 `signal_spy`，它是 Qt 内部的信号监听钩子，GammaRay 这类调试工具的底层就靠它吃饭。正常的路径走 `doActivate<false>`，开了 spy 才走 `doActivate<true>`。三个公开重载的落点分别在 4198、4212、4226 行，无一例外地收敛到了 `doActivate`，后面的遍历和分流全在它里面发生。
+咱们来认清 `doActivate` 的身份：它是个模板函数，模板的参数是 `bool`，咱们去查两个版本的差别，查到的只有一处：要不要回调 `signal_spy`，它是 Qt 内部的信号监听钩子，GammaRay 这类调试工具的底层就靠它吃饭。正常的路径走 `doActivate<false>`，开了 spy 才走 `doActivate<true>`。三个公开重载的落点分别在 4198 行、`qobject.cpp:4212`、`qobject.cpp:4226`，无一例外地收敛到了 `doActivate`，后面的遍历和分流全在它里面发生。
 
 ### 连接表：信号到槽的映射存哪
 
-`doActivate` 要把信号通知给所有连上来的槽，咱们得让它知道，这个信号到底连上了哪些槽。答案存在每个 QObject 对象自己的连接表里。咱们把连接表的数据结构理清楚。笔者第一次读这段的时候绕了好一阵，但后面的一切都踩在它上面，咱们把它啃下来，后面就顺了。
+`doActivate` 要把信号通知给所有连上来的槽，那它得摸清这个信号名下都连了哪些槽。答案存在每个 QObject 对象自己的连接表里。咱们把这套数据结构理清楚。笔者第一次读这段的时候绕了好一阵，但后面的一切都踩在它上面，啃下来后面就顺了。
 
 咱们看 `doActivate` 一进门拿的东西，就是连接表的快照（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.cpp:4061-4068`）：
 
@@ -120,7 +120,7 @@ else
     list = &signalVector->at(-1);
 ```
 
-咱们像剥洋葱一样，一层一层地看。最外面的一层是 `sp->connections`，每个 QObject 的私有数据里，都持有一个指向 `ConnectionData` 的指针。而 `loadAcquire()` 干的是原子读，保证咱们后续对连接表的读，能看到所有在此之前发生的连接写入。拿到了 `ConnectionData` 以后，咱们从里面取 `signalVector`，一个按信号索引组织的向量，再拿全局的 `signal_index` 当下标，取出对应的 `ConnectionList`。咱们一路走到头，拿到的就是连到这个信号的所有槽组成的链表。
+咱们一层一层往里看。最外面的一层是 `sp->connections`，每个 QObject 的私有数据里，都持有一个指向 `ConnectionData` 的指针。而 `loadAcquire()` 干的是原子读，保证咱们后续对连接表的读，能看到所有在此之前发生的连接写入。拿到了 `ConnectionData` 以后，咱们从里面取 `signalVector`，一个按信号索引组织的向量，再拿全局的 `signal_index` 当下标，取出对应的 `ConnectionList`。咱们一路走到头，拿到的就是连到这个信号的所有槽组成的链表。
 
 这些数据结构都定义在 Qt 更内层的私有头 `qobject_p_p.h` 里，咱们注意它带着两个 `_p`，比 `qobject_p.h` 还要更里面的一层。咱们从最贴着手的 `ConnectionList` 看起（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject_p_p.h:28-33`）：
 
@@ -150,9 +150,9 @@ struct QObjectPrivate::Connection : public ConnectionOrSignalVector
     ushort connectionType : 2; // 0 == auto, 1 == direct, 2 == queued, 3 == blocking
 ```
 
-咱们看 `Connection` 节点是怎么同时挂上两条链的。一条链按信号组织：`nextConnectionList` 和 `prevConnectionList` 把连到同一个信号的所有 `Connection` 串起来，就是上面 `ConnectionList` 里装着的链。另一条链按接收者组织：`prev` 和 `next`（`next` 在基类 `ConnectionOrSignalVector` 里）把同一个 receiver 接收的所有连接串起来，挂在 receiver 的 `senders` 链上。为什么这么设计？咱们到析构清理一节看那两类清理就明白了：断开某个信号的所有连接，断开某个对象接收的所有连接，两边的断开都要能高效办到，析构清理的两头全指着它们。
+咱们看 `Connection` 节点是怎么同时挂上两条链的。一条链按信号组织：`nextConnectionList` 和 `prevConnectionList` 把连到同一个信号的所有 `Connection` 串起来，就是上面 `ConnectionList` 里装着的链。另一条链按接收者组织：`prev` 和 `next`（`next` 在基类 `ConnectionOrSignalVector` 里）把同一个 receiver 接收的所有连接串起来，挂在 receiver 的 `senders` 链上。为什么这么设计？咱们到析构清理一节看那两类清理就明白了：断开某个信号的所有连接，断开某个对象接收的所有连接，这两类清理咱们都要高效办到，靠的就是这套双链。
 
-咱们把末尾的 `connectionType : 2` 单独认一下，它是个 2-bit 的位域，里面存着四种连接类型的编号，编号的 0、1、2、3，分别对应的是 Auto、Direct、Queued、Blocking。一个连接的类型在 `connect` 时就定死了，发射期分流靠的就是这个字段，四类连接一节里咱们马上会用到它。
+咱们把末尾的 `connectionType : 2` 单独认一下。它是个 2-bit 的位域，里面存着四种连接类型的编号，编号的 0、1、2、3，分别对应的是 Auto、Direct、Queued、Blocking。一个连接的类型在 `connect` 时就定死了，发射期分流靠的就是这个字段，四类连接一节里咱们马上会用到它。
 
 最外层的 `ConnectionData`，咱们把它想成整张连接表的入口（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject_p_p.h:136-145`）：
 
@@ -169,7 +169,9 @@ struct QObjectPrivate::ConnectionData
     std::atomic<TaggedSignalVector> orphaned = {};
 ```
 
-`ConnectionData` 手里管的东西，咱们挑要紧的认：`currentConnectionId` 是递增的连接 id，重入保护要靠的也就是它，咱们到重入保护一节再见。`ref` 装的是引用计数，它让正在发射信号时的连接表不被析构。`signalVector` 是按信号索引的连接向量。`senders` 是本对象作为接收者挂着的所有连接链。旁边的那个 `orphaned`，暂存的是已经断开、还没到安全清理时机的连接。咱们把注释里那句 `When the object gets deleted it's set to 0, so that signal emission stops` 单独念一遍，它值得咱们多看一眼：`currentConnectionId` 在析构时会被置 0，这是重入保护的第二道防线，咱们到重入保护一节回来接它。
+`ConnectionData` 手里管的东西，咱们挑要紧的认：`currentConnectionId` 是递增的连接 id，重入保护要靠的也就是它，咱们到重入保护一节再见。`ref` 装的是引用计数，它让正在发射信号时的连接表不被析构。`signalVector` 是按信号索引的连接向量。`senders` 是本对象作为接收者挂着的所有连接链。旁边的那个 `orphaned`，暂存的是已经断开、还没到安全清理时机的连接。
+
+咱们把注释里那句 `When the object gets deleted it's set to 0, so that signal emission stops` 单独念一遍，它值得咱们多看一眼：`currentConnectionId` 在析构时会被置 0，这是重入保护的第二道防线，咱们到重入保护一节回来接它。
 
 咱们把这套结构画出来，连接表的全貌长这样：
 
@@ -201,7 +203,7 @@ c->slotObj = slotObj.release();
 QObjectPrivate::get(s)->addConnection(signal_index, c.get());
 ```
 
-咱们看 `connectImpl` 干的事：new 出一个 `Connection` 节点，把字段填好了。`sender` 记的是发送者，`signal_index` 存的是信号全局索引，`connectionType` 标的是连接类型，`isSlotObject` 加 `slotObj` 管的是函数对象式连接，lambda 或 `std::bind` 的结果会包成一个 `SlotObj`。字段填完了就去调 `addConnection`，把节点插到了连接表里。
+咱们看 `connectImpl` 干的事：new 出一个 `Connection` 节点，把字段一个个填上了。`sender` 记的是发送者，`signal_index` 存的是信号全局索引，`connectionType` 标的是连接类型，`isSlotObject` 加 `slotObj` 管的是函数对象式连接，lambda 或 `std::bind` 的结果会包成一个 `SlotObj`。字段填完了就去调 `addConnection`，把节点插到了连接表里。
 
 咱们接着看 `addConnection`，它的插入有前后两段，方向是不一样的（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.cpp:282-300`）：
 
@@ -220,11 +222,11 @@ c->next = *c->prev;
 *c->prev = c;
 ```
 
-咱们分开看。前一段插的是信号链：找到这个信号对应的 `ConnectionList`，把新节点尾插到了链尾，也就是更新 `last` 的 `nextConnectionList`。插的时候还给它发了张身份证，`c->id = ++cd->currentConnectionId`，一个递增的 id，到了重入保护一节，咱们拿它当判定的凭据。后一段插的是接收者链：把新节点头插到 receiver 的 `senders` 链表头部。这两步走完了，连接表一节说的双链就齐了，新连接一边挂在 sender 的信号链上，一边挂在 receiver 的 `senders` 链上。等到了下次信号发射，`doActivate` 顺着信号链就能摸到它了。
+咱们分开看。前一段插的是信号链，找到这个信号对应的 `ConnectionList`，把新节点尾插到了链尾，也就是更新 `last` 的 `nextConnectionList`。插的时候还给它发了张身份证，`c->id = ++cd->currentConnectionId`，一个递增的 id，到了重入保护一节，咱们拿它当判定的凭据。后一段插的是接收者链，把新节点头插到 receiver 的 `senders` 链表头部。这两步走完了，连接表一节说的双链就齐了，新连接一边挂在 sender 的信号链上，一边挂在 receiver 的 `senders` 链上。等到了下次信号发射，`doActivate` 顺着信号链就能摸到它了。
 
 ### 四类连接：发射期怎么分流
 
-连接表建好了，咱们回到 `doActivate` 的主循环。它遍历当前信号的 `ConnectionList`，按每个 `Connection` 节点的 `connectionType` 决定怎么调槽。四类连接落到代码里的是三条执行路径，而 Auto 在发射期现判，归进了 Direct 或 Queued，咱们把三条路径读通以后，自动切线程、同线程死锁之类的怪现象，就全都解释得通了。
+连接表建好了，咱们回到 `doActivate` 的主循环。它遍历当前信号的 `ConnectionList`，按每个 `Connection` 节点的 `connectionType` 决定怎么调槽。四类连接落到代码里的是三条执行路径，而 Auto 在发射期现判，归进了 Direct 或 Queued。咱们把三条路径读通以后，自动切线程、同线程死锁之类的怪现象就都解释得通了。
 
 咱们看 Direct 连接，它走的是快路径（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.cpp:4141-4159`）：
 
@@ -271,7 +273,7 @@ if (argumentTypes == &DIRECT_CONNECTION_ONLY) // cannot activate
     return;
 ```
 
-这一小段咱们单独指出来，因为它是风险一节里第二类风险的源头。`c->argumentTypes` 是连接自带的参数元类型表，字符串版 `connect`（`SIGNAL()`/`SLOT()` 宏的写法）会在建立连接时就把它查好。PMF 版 `connect`（`&Sender::signal` 函数指针写法）拿不到已注册的类型时，会静默地留一个空。到了发射这一刻，表还是空的，于是现场调了 `queuedConnectionTypes(m)` 补查，补不出来的话，拿到的就是 `DIRECT_CONNECTION_ONLY`，接下来的动作就是直接 return，这个连接本轮就被跳过了，而且以后每一轮也都跳过。两条路径各自怎么走，咱们留到风险一节再展开。
+这一小段咱们单独指出来，因为它是风险一节里第二类风险的源头：跨线程 Queued 连接传了没注册的自定义类型，槽就永远不触发了。`c->argumentTypes` 是连接自带的参数元类型表，字符串版 `connect`（`SIGNAL()`/`SLOT()` 宏的写法）会在建立连接时就把它查好。PMF 版 `connect`（`&Sender::signal` 函数指针写法）拿不到已注册的类型时，会静默地留一个空。到了发射这一刻，表还是空的，于是现场调了 `queuedConnectionTypes(m)` 补查，补不出来的话，拿到的就是 `DIRECT_CONNECTION_ONLY`，接下来的动作就是直接 return，这个连接本轮就被跳过了，而且以后每一轮也都跳过。两条路径各自怎么走，咱们留到风险一节再展开。
 
 查表过关了，咱们把事件怎么构造、怎么投递的这一段拎出来看（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.cpp:3989-4020`）：
 
@@ -286,7 +288,7 @@ QMetaCallEvent *ev = c->isSlotObject ?
 QCoreApplication::postEvent(receiver, ev);
 ```
 
-咱们看 `queued_activate` new 出一个 `QMetaCallEvent`，跨线程调用的载体，咱们到 QMetaCallEvent 一节详讲它。然后有一段代码值得咱们停下来看，就是那个从下标 1 起跑的循环，`args[n] = types[n].create(argv[n])`，它对每个参数都做了深拷贝。为什么必须拷？参数要跨线程传递，原 `argv` 在发送线程的栈上，而 Queued 是异步的，发送线程投递完了就继续跑，而且不会等接收线程把槽执行完，栈一退了，参数就没了。所以必须复制一份存进事件里，复制出来的数据生存期跟着事件走：在队列里排多久都行，处理或丢弃的时候也就由它释放了。到了最后一步，`QCoreApplication::postEvent(receiver, ev)` 把事件投进 receiver 线程的事件队列，sender 这边到这儿就算发射完了，它头也不回地往下走、谁也不等。
+咱们看 `queued_activate` new 出一个 `QMetaCallEvent`，跨线程调用的载体，咱们到 QMetaCallEvent 一节详讲它。然后有一段代码值得咱们停下来看，就是那个从下标 1 起跑的循环，`args[n] = types[n].create(argv[n])`，它对每个参数都做了深拷贝。为什么必须拷？参数要跨线程传递，原 `argv` 在发送线程的栈上，而 Queued 是异步的，发送线程投递完了就继续跑，而且不会等接收线程把槽执行完，栈一退了，参数就没了。所以必须复制一份存进事件里，复制出来的数据生存期跟着事件走：在队列里排多久都行，处理或丢弃的时候也就由它释放了。到了最后一步，`QCoreApplication::postEvent(receiver, ev)` 把事件投进 receiver 线程的事件队列。sender 这边到这儿就算发射完了，头也不回地往下走、谁也不等。
 
 咱们最后请出 BlockingQueued，而它会把发送线程整个拖住，咱们看它是怎么办到的（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.cpp:4107-4131`）：
 
@@ -308,7 +310,7 @@ QCoreApplication::postEvent(receiver, ev);
     continue;
 ```
 
-咱们看它的逻辑：构造一个带 `QSemaphore` 的 `QMetaCallEvent`，投进了 receiver 线程的事件队列，然后咱们看 `semaphore.acquire()` 把发送线程挂起，等 receiver 线程执行完了槽函数，release 了信号量，而 sender 这才继续走。跨线程的同步调用，就是这么实现的。
+咱们看它的逻辑：构造一个带 `QSemaphore` 的 `QMetaCallEvent` 投进 receiver 线程的事件队列，然后咱们看 `semaphore.acquire()` 把发送线程挂起。等 receiver 线程执行完了槽函数、release 了信号量，而 sender 这才继续走。跨线程的同步调用，就是这么实现的。
 
 开头那个 `if (receiverInSameThread)` 是冲着死锁来的，可惜的是它只喊不拦。要是 sender 和 receiver 用的是同一个线程，`postEvent` 把事件投进当前线程的队列，而当前线程此刻正阻塞在 `acquire()` 上等这个事件被处理，所以事件永远轮不到处理，而 `acquire` 永远等不到 `release`，结果就是死锁。Qt 在这里用 `qWarning` 报了警，warning 里带完整的 Sender 和 receiver 类名加指针，算是给咱们留了定位线索。风险一节的第一类风险，咱们还会回来接着说。
 
@@ -349,7 +351,7 @@ for (int signal = -1; signal < receiverCount; ++signal) {
                 cd->removeConnection(c);
 ```
 
-咱们看这段，它遍历自己的整张连接表，它的 `signal` 从 -1 起跑到 receiverCount，-1 是一个特殊的桶，装的是不分信号的连接。每个 `ConnectionList` 里的节点，咱们看它们被逐个 `removeConnection` 摘掉。回想连接表一节的双链设计，这里清的就是按信号组织的一条链。
+咱们看这段，它遍历自己的整张连接表，循环变量的取值从 -1 起跑到 receiverCount。这个 -1 是个特殊的桶，装的是不分信号的连接。每个 `ConnectionList` 里的节点，咱们看它们被逐个 `removeConnection` 摘掉。回想连接表一节的双链设计，这里清的就是按信号组织的一条链。
 
 咱们看第二类，清的是接收侧（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.cpp:1077-1105`）：
 
@@ -381,7 +383,7 @@ for (int signal = -1; signal < receiverCount; ++signal) {
 uint highestConnectionId = connections->currentConnectionId.loadRelaxed();
 ```
 
-`doActivate` 一进门就把当前的 `currentConnectionId` 拍成了快照，存进了 `highestConnectionId`。到了后面遍历连接链的时候，有一个 while 条件检查的是 `c->id <= highestConnectionId`，只有 id 不超过快照的连接才触发。检查的那一行在 4178 行，和上面的声明隔了大约一百行，咱们把它单独拎出来看（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.cpp:4178`）：
+`doActivate` 一进门就把当前的 `currentConnectionId` 拍成了快照，存进了 `highestConnectionId`。到了后面遍历连接链的时候，do-while 的循环条件里查的是 `c->id <= highestConnectionId`，只有 id 不超过快照的连接才触发。检查的那一行在 4178 行，和上面的声明隔了大约一百行，咱们把它单独拎出来看（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.cpp:4178`）：
 
 ```cpp
 } while ((c = c->nextConnectionList.loadRelaxed()) != nullptr && c->id <= highestConnectionId);
@@ -397,7 +399,7 @@ uint highestConnectionId = connections->currentConnectionId.loadRelaxed();
 cd->currentConnectionId.storeRelaxed(0);
 ```
 
-咱们看这是在 ~QObject 里执行的。而置 0 之后，要是此刻正好有别的线程在发射指向这个对象的信号、遍历它的连接表，激活循环会在 4184-4185 行检测到 `currentConnectionId` 变成了 0，于是设置了 `senderDeleted` 标志，4187 行的 `if (!senderDeleted)` 就不再去做 orphan 连接清理，避免析构途中再去碰已经不完整的连接表。
+咱们看这是在 ~QObject 里执行的。而置 0 之后，要是此刻正好有别的线程在以这个对象为 sender 发射信号、遍历它的连接表，激活循环会在 `qobject.cpp:4184-4185` 检测到 `currentConnectionId` 变成了 0，于是设置了 `senderDeleted` 标志。而标志一立，`qobject.cpp:4187` 的 `if (!senderDeleted)` 就不再去做 orphan 连接清理了，避免析构途中再去碰已经不完整的连接表。
 
 最后咱们补一个和生命周期相关的细节，`Connection` 节点靠的是引用计数管理（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject_p_p.h:85-118`）：
 
@@ -443,9 +445,9 @@ if ((type == Qt::QueuedConnection) && !(types = queuedConnectionTypes(signal)))
 
 PMF 版的 connect，咱们看它的路数：connect 时 `QtPrivate::ConnectionTypes<...>::types()` 对未注册类型静默返回 nullptr，调用点的位置在 `qobject.h:257-259`，`qobject_impl.h:34-35` 是那个不吭声的特化，连接还是正常建立了。等到了第一次 emit，`queued_activate` 头部的补查失败，警告在那时候打了出来，然后 `argumentTypes` 就被换成了 `DIRECT_CONNECTION_ONLY`、直接 return。它从此每次 emit 都被静默地跳过，警告其实只在第一次打一次，因为 `testAndSetOrdered` 把结果缓存住了。
 
-失败的模式只有一种：槽不触发。您不会收到垃圾数据，更不存在参数损坏的情况，因为执行路径根本走不到 `types[n].create(argv[n])` 那一行的深拷贝，在 3973-3974 行就提前返回了。这类问题阴险的地方在同线程测试全部通过：Direct 路径不查表也不深拷贝，倒是一切正常，一上多线程就哑了。四类连接一节末尾咱们指过一句对照，这里咱们补上行号证据：BlockingQueued 分支完全不查元类型表，4107-4131 一路没有 `argumentTypes` 的影子，未注册的类型也能传过去，当然同线程死锁的风险您还是得自己扛。解法：跨线程信号槽要传的每个自定义类型，初始化时咱们用 `qRegisterMetaType<MyStruct>()` 注册上。大对象咱们尽量传 `const MyStruct&`，Direct 路径走的是零拷贝，Queued 路径还是会拷一次的，但至少类型是已知的。您传指针就得自己管好对象的生命周期。
+失败的模式只有一种：槽不触发。您不会收到垃圾数据，更不存在参数损坏的情况，因为执行路径根本走不到 `types[n].create(argv[n])` 那一行的深拷贝，在 3973-3974 行就提前返回了。这类问题阴险的地方在同线程测试全部通过：Direct 路径不查表也不深拷贝，倒是一切正常，一上多线程就哑了。四类连接一节末尾咱们指过一句对照，这里咱们补上行号证据：BlockingQueued 分支完全不查元类型表，4107-4131 一路没有 `argumentTypes` 的影子，未注册的类型也能传过去，当然同线程死锁的风险您还是得自己扛。解法也简单：跨线程信号槽要传的每个自定义类型，初始化时咱们用 `qRegisterMetaType<MyStruct>()` 注册上。大对象咱们尽量传 `const MyStruct&`，Direct 路径走的是零拷贝，Queued 路径还是会拷一次的，但至少类型是已知的。您传指针就得自己管好对象的生命周期。
 
-第三类风险：把 `QMetaObject::Connection` 句柄的存活，当成连接的存活。重入保护一节末尾咱们留了一个话头，这里咱们摊开讲。有一种流传的讲法是，连接断了以后，手里的句柄转成布尔值可能还是真，所以不能用 `if (connection)` 判断有效性。笔者这次把 6.9.1 的源码翻透了，这个说法其实是站不住的，而行为恰好相反：断开之后，布尔值是可靠返回 false 的。证据链咱们走一遍。所有的断开路径，句柄版 disconnect、按 signal/receiver/method 的各重载、任一端对象析构，而最后都经过 `ConnectionData::removeConnection`。它的第一个动作就是清空 receiver，咱们看源码（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.cpp:303-307`）：
+第三类风险：把 `QMetaObject::Connection` 句柄的存活，当成连接的存活。重入保护一节末尾咱们留了一个话头，这里咱们摊开讲。有一种流传的讲法是，连接断了以后，手里的句柄转成布尔值可能还是真，所以不能用 `if (connection)` 判断有效性。笔者这次把 6.9.1 的源码翻透了，这个说法其实是站不住的，而行为恰好相反：断开之后，布尔值会可靠地返回 false。证据链咱们走一遍。所有的断开路径，句柄版 disconnect、按 signal/receiver/method 的各重载、任一端对象析构，而最后都经过 `ConnectionData::removeConnection`。它的第一个动作就是清空 receiver，咱们看源码（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.cpp:303-307`）：
 
 ```cpp
 void QObjectPrivate::ConnectionData::removeConnection(QObjectPrivate::Connection *c)
@@ -467,7 +469,7 @@ bool QMetaObject::Connection::isConnected_helper() const
 }
 ```
 
-返回的就是 `c->receiver`。receiver 在摘链的第一步就被清空了，所以布尔值想不为 `false` 都难。那真正的混淆点在哪？在重入保护一节那套 `ref_` 引用计数：摘链只是 deref，节点内存要等您的句柄也析构才释放。于是同一个 `QMetaObject::Connection` 就有了两重身份：它作为对象是合法的、能安全持有，您再调一次 `disconnect(connection)` 也不会出事，只是返回 false 罢了。而作为连接，它可能早就没了。所以咱们管连接生命周期，别指着攥句柄：要么用带 context 的 connect，让连接随 context 的析构自动断开。要么存下句柄、主动 `disconnect(connection)` 管理。而至于布尔值本身，单线程里倒是能放心用。
+返回的就是 `c->receiver`。receiver 在摘链的第一步就被清空了，所以布尔值想不为 `false` 都难。那真正的混淆点在哪？在重入保护一节那套 `ref_` 引用计数：摘链只是 deref，节点内存要等您的句柄也析构才释放。于是同一个 `QMetaObject::Connection` 就有了两重身份：它作为对象是合法的、能安全持有，您再调一次 `disconnect(connection)` 也不会出事，只是返回 false 罢了。而作为连接，它可能早就没了。所以咱们管连接生命周期，别指着攥句柄：要么用带 context 的 connect，让连接随 context 的析构自动断开，要么存下句柄、主动 `disconnect(connection)` 管理。不过布尔值本身，单线程里倒是能放心用。
 
 ## 练习项目
 
