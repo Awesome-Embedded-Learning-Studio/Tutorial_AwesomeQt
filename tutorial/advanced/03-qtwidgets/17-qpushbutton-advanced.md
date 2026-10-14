@@ -1,27 +1,31 @@
 ---
 title: "3.17 QPushButton 进阶"
-description: "入门篇我们学会了 QPushButton 的基本用法——创建、设文字、连 clicked 信号。进阶篇我们要深入 QPushButton 在 QDialog 中的键盘拦截机制、带菜单按钮的信号抑制行为，以及 flat 样式的状态管理细节。"
+description: "入门篇会调 setDefault、setMenu、setIcon、setFlat，进阶篇看 QPushButton 在 QDialog 里怎么接管 Enter 键。autoDefault 升为默认按钮的两条路径、带菜单按钮对 clicked 的抑制、flat 跟 QStyle 与 QSS 的三方关系，配套示例在 examples/advanced/03-qtwidgets/17-qpushbutton-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.17——QPushButton 进阶
 
-## 1. 前言 / QPushButton 在对话框里藏着什么猫腻
+[入门篇 QPushButton 基础](../../beginner/03-qtwidgets/17-qpushbutton-beginner.md) 把 setDefault、setMenu、setIcon、setFlat 连同 QSS 美化过了一遍，写小工具界面够用。控件基类六篇在 [3.16 QAbstractSpinBox 基类进阶](./16-qabstractspinbox-base-advanced.md) 收了官，从本篇起咱们转到具体控件，QPushButton 打头，QToolButton、QRadioButton、QCheckBox、QCommandLinkButton 随后，凑成按钮五连。QPushButton 在普通窗口里没什么脾气，一放进 QDialog，键盘行为就超出直觉：表单里明明摆着好几个输入框，焦点也停在输入框里，按 Enter，触发的却是某个按钮的 clicked。您要是在带多个 QLineEdit 和多个 QPushButton 的表单对话框里遇到过，别急着怀疑信号连错了地方。这是 QPushButton 在 QDialog 环境里的既定行为，来历能查到 Qt 1.x 时代，那时为了兼容 Motif 风格的对话框，Qt 引入了 autoDefault 机制。[3.12 QAbstractButton 基类进阶](./12-qabstractbutton-base-advanced.md) 讲键盘路径时留过一个尾巴，Enter 是例外，QPushButton 对它另有一套处理，本篇来兑现。
 
-入门篇我们把 QPushButton 的基本能力过了一遍——setDefault、setMenu、setIcon、setFlat 加上 QSS 美化。说实话，如果只是做做小工具界面，这些知识确实够用。但如果你写过稍微复杂一点的对话框——比如一个包含多个 QLineEdit 和多个 QPushButton 的表单对话框——你大概率踩过这样的坑：明明焦点在输入框里，按 Enter 却触发了某个按钮的 clicked 信号；或者你给一个按钮设了 setMenu，然后发现 clicked 信号莫名其妙不触发了。这些问题不是 bug，而是 QPushButton 在 QDialog 环境中的设计妥协——它们来自 Qt 1.x 时代为了兼容 Motif 风格对话框而引入的 autoDefault 机制。这一篇我们就把 QPushButton 在对话框中的键盘行为、菜单按钮的信号抑制、以及 flat 状态管理这几个进阶问题拆透。
+笔者把最容易把人问住的三个场面摆出来。焦点停在 QLineEdit 里，按 Enter，clicked 却从一个没碰过的按钮里冒出来。给按钮挂上 `setMenu()`，菜单能弹，连着的 clicked 槽一次都没进来过。flat 按钮看着干净，点一下，一圈焦点指示收不回去，文字链接的伪装当场穿帮。三个场面各有一套根因，本篇把三件事讲明白：autoDefault 在 QDialog 里跟焦点链怎么互动，`setMenu()` 之后 clicked 为什么沉默，flat 的状态管理跟 QStyle 与 QSS 怎么纠缠。
 
-## 2. 环境说明
+## 焦点在输入框，Enter 却点了按钮：autoDefault 的接管
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。所有内容依赖 QtWidgets 模块，涉及 QMenu 和 QStyle。示例可在任何支持 Qt6 的桌面平台上编译运行，但 autoDefault 的行为只在 QDialog 中生效。
+入门篇提过 autoDefault 在 QDialog 中默认为 true，焦点停在输入框里按 Enter、按钮的 clicked 跟着响的现象，连同把 autoDefault 显式设为 false 的修法，当时也当场给过。本篇接着往机制层走，Enter 的传播次序、默认按钮的认定依据、默认边框的视觉细节，这三处入门篇都没碰。咱们跟着一枚 Enter 从输入框一路走到按钮，看它经过谁、被谁消费。
 
-## 3. 核心概念讲解
+键盘事件总是先送到焦点控件手上，Enter 也不意外。焦点停在 QLineEdit 里时，输入框先处理，发一串完成输入的信号出来，returnPressed 就在其中，发完把事件标记为 ignore，让它沿着父控件链继续向上走。QDialog 的 keyPressEvent 收到这枚上传的 Enter，遍历按钮时只认 isDefault() 为真且可见的那一个，找到就 click() 它。咱们翻 qdialog.cpp 能看到，这段查找从头到尾没查过 autoDefault，查的是默认按钮这个最终身份。
 
-### 3.1 autoDefault 在 QDialog 中的焦点链交互
+那 autoDefault 在哪里起作用？它管的是谁有资格被提升成默认按钮，提升有两条路。第一条路在对话框显示的时候，QDialog 沿着焦点链找第一个 autoDefault 为 true 的按钮，把它设为默认，这段逻辑写在 qdialog.cpp 里。第二条路在按钮自己身上，autoDefault 按钮获得焦点时，QPushButton 的 focusInEvent 会把自己升为对话框的默认按钮，写在 qpushbutton.cpp 里。咱们摆一个 QDialog，放一个 QLineEdit 和一个提交按钮进去，一行 setDefault 都没写，对话框一显示，提交按钮的 isDefault() 就已经是 true 了，这就是第一条路干的活。
 
-入门篇我们提到过 autoDefault 在 QDialog 中默认为 true 这个事实，但没有深入它跟焦点链之间的交互机制。现在我们把这件事彻底搞清楚。
+Enter 最终落在谁头上，咱们把常见状态列一张表：
 
-QPushButton 在 QDialog 中有一个特殊的事件处理路径：当 QDialog 收到 Key_Return 或 Key_Enter 事件时，它不会像普通 QWidget 那样把按键事件传递给当前焦点的控件，而是先检查是否存在"默认按钮"。检查的优先级是这样的：首先找有没有通过 setDefault(true) 显式设置的默认按钮，如果有就直接触发它的 clicked 信号；如果没有显式的默认按钮，就找当前焦点控件——如果焦点在一个 autoDefault 为 true 的 QPushButton 上，就触发这个按钮。
+| 按下 Enter 时对话框里的状态 | 触发对象 |
+| -------- | -------- |
+| 焦点停在 autoDefault 为 true 的 QPushButton 上 | 焦点所在按钮的 clicked，keyPressEvent 当场消费，事件不再上传 |
+| 焦点在别处，对话框里存在默认按钮（显式设的或提升上来的都算） | 默认按钮的 clicked |
+| 焦点在别处，也没有默认按钮 | 没有按钮被触发，输入框的信号在这之前已照常发过 |
 
-这就带来了一个非常隐蔽的问题：当焦点在一个 autoDefault 按钮上时，Enter 键被按钮消费了，不会传递给其他控件。举个例子，你有一个 QDialog 包含一个 QLineEdit 和一个 autoDefault 为 true 的 QPushButton，用户在 QLineEdit 中输入文字时焦点仍然在 QLineEdit 上，但此时按 Enter 键会被按钮拦截——因为 QDialog 的事件过滤器先于 QLineEdit 处理了这个按键。
+表里第一行值得单独看。焦点停在 autoDefault 按钮上时，qpushbutton.cpp 的 keyPressEvent 先于 QDialog 见到 Enter，咱们能在分支里直接读到判断条件，autoDefault() 或 defaultButton 为真就 click() 自己，事件就地消费。所以显式 setDefault(true) 的按钮也压不住焦点按钮，谁握着焦点谁说了算。
 
 ```cpp
 auto *dialog = new QDialog();
@@ -35,18 +39,24 @@ layout->addWidget(input);
 layout->addWidget(submitBtn);
 
 connect(input, &QLineEdit::returnPressed, []() {
-    qDebug() << "输入框的 returnPressed 触发";  // 可能不会被触发
+    qDebug() << "输入框的 returnPressed 触发";  // 先触发，早于按钮的 clicked
 });
 connect(submitBtn, &QPushButton::clicked, []() {
     qDebug() << "按钮的 clicked 触发";
 });
 ```
 
-这段代码中，如果 submitBtn 没有被显式设为 setDefault(true)，焦点在 QLineEdit 中按 Enter 时，QDialog 会查找所有 autoDefault 为 true 的按钮，找到 submitBtn 后触发它的 clicked。而 QLineEdit 的 returnPressed 信号就不会触发了。解决方案是把 submitBtn 的 autoDefault 显式设为 false——这样 QDialog 就不会把它当作 Enter 键的候选目标。
+咱们把焦点放进输入框，按 Enter，两条日志都会出现，returnPressed 在前，clicked 紧跟其后。returnPressed 是输入框先发的。事件标记为 ignore 向上走，QDialog 一查，对话框里有默认按钮，click() 就落在 submitBtn 头上。这个默认身份没人显式设过，是显示时那条提升路径把它顶上去的。两个信号都到，要提防的反而是双响应：表单同时连着 returnPressed 和 clicked 各干各的活，一回车，提交逻辑跑了两次。只有输入框带着校验器且当前输入不合规的时候，returnPressed 才会缺席，日志里只剩按钮那一条。
 
-还有一个容易忽略的细节：autoDefault 按钮在获得焦点时会自动绘制一个额外的边框（表示它是"临时默认按钮"），失去焦点时这个边框消失。这个视觉反馈由 QStyle 的 PE_FrameDefaultButton 绘制元素负责，跟 QSS 中设置的 border 是独立的。如果你用 QSS 自定义了按钮的 border，可能会覆盖掉这个默认边框——导致用户无法通过视觉判断哪个按钮是当前的 autoDefault 按钮。
+您要是想让 Enter 只归输入框，得把按钮从默认位置上撤下来。在对话框显示之前把 autoDefault 设为 false，显示时那条提升路径就轮不到它。对话框已经显示过、按钮已经顶着默认身份的场合，光 setAutoDefault(false) 撤不干净，默认身份是单独一份状态，setAutoDefault 动不到它，得连 setDefault(false) 一起调。
 
-现在有一道调试题给大家。下面这段代码在 QDialog 中运行，用户在输入框里按 Enter，为什么什么信号都没触发？
+还有一个容易忽略的细节跟视觉有关。默认按钮会比别的按钮多画一圈边框，视觉反馈由 QStyle 的 PE_FrameDefaultButton 绘制元素负责，跟 QSS 里设置的 border 是独立的。咱们要是用 QSS 给按钮自定义了 border，可能把这圈默认边框盖掉，用户就没法从视觉上判断哪个按钮正顶着默认身份。这圈边框的去留也值得单独说一句。autoDefault 按钮获得焦点时升为默认、画上边框，焦点移走后边框并不消失，对话框记着自己的主默认按钮，会把失焦的那个恢复回默认身份，isDefault() 实测保持为 true。想让边框挪个地方，得有另一个 autoDefault 按钮来接棒，接棒的瞬间边框从旧按钮挪到新按钮。
+
+配套示例的窗口按本篇三件事分成三个分区，第一个分区摆的就是这个实验，文件在 examples/advanced/03-qtwidgets/17-qpushbutton-advanced/，可执行文件 17-qpushbutton-advanced。咱们跑一轮实验，焦点放进输入框，按 Enter，日志区多出 [returnPressed] 与 [clicked] 各一条，先后顺序一眼可辨。勾掉“autoDefault = true”复选框再按一次，这回只剩 [returnPressed]，按钮那条没了。复选框连着 auto_default_demo.cpp 里 submitBtn 的 setAutoDefault 与 setDefault 两行，勾选时两个都设 true，勾掉时两个都设 false，把正文里那条连默认身份一起撤的修法做成了手动开关。要看默认身份的那圈边框，把复选框勾回来，再用 Tab 把焦点送进提交按钮，留意按钮边缘，那圈边框就画在那一带。
+
+### 一道调试题：autoDefault 全关，Enter 落不到按钮上
+
+咱们再看一段摆在 QDialog 里的代码，用户在输入框里按 Enter，日志里有 [returnPressed]，按钮那边一条动静都没有，您先自己找找原因：
 
 ```cpp
 auto *dialog = new QDialog();
@@ -58,11 +68,11 @@ btn2->setAutoDefault(false);
 // 没有按钮设为 setDefault(true)
 ```
 
-问题出在所有按钮的 autoDefault 都被关掉了，而且没有任何按钮被设为默认按钮。QDialog 收到 Enter 键后找不到任何候选按钮，也没有将事件传递给 QLineEdit（因为 QDialog 的 keyPressEvent 在检查默认按钮失败后不会再把事件传给子控件）。解决方案是保留至少一个按钮的 autoDefault 为 true，或者显式设一个 setDefault(true)。
+咱们把毛病定位到候选全空上。两个按钮的 autoDefault 都被关掉，对话框显示时那条提升路径找不到候选人，代码里也没有谁被显式设为默认，Enter 上传到 QDialog 的 keyPressEvent 之后，isDefault 的检查落空，事件就此打住，按钮侧一条日志都不会有。输入框那边一切照常，returnPressed 在事件上传之前就发过了。这里顺手把传播方向交代清楚，键盘事件只从焦点控件往父级走，QDialog 从不把键转发回子控件。想让 Enter 重新落到按钮上，保留至少一个按钮的 autoDefault 为 true，或者显式设一个 `setDefault(true)`。
 
-### 3.2 setMenu() 后 clicked() 信号的抑制行为
+## 挂上菜单，clicked 沉默：释放被菜单接管
 
-入门篇我们提到过带菜单的 QPushButton 点击时不会触发 clicked 信号，但没有展开背后的机制。QPushButton 在 setMenu() 之后，它的鼠标按下事件处理逻辑会发生变化：当你按下鼠标时，QPushButton 不会进入"按下"状态（pressed 信号不触发），而是直接调用 QMenu::exec() 来弹出菜单。等菜单关闭后，按钮回到正常状态。整个过程跳过了 clicked 信号的触发条件（pressed 后 released）。
+入门篇提过带菜单的 QPushButton 点击时不触发 clicked，机制没有展开，咱们把按下之后的路径顺一遍。`setMenu()` 内部干的第一件事有点出人意料，它把按钮自己的 pressed 信号连接到一个内部槽上。按下鼠标，按钮照常进入按下状态、发出 pressed，正是这个信号把内部槽唤起来，槽里调 `menu->popup()` 把菜单异步弹出，走的不是 `QMenu::exec()` 那个同步模态循环。clicked 沉默的原因藏在释放那一步：菜单一经弹出就抓取了鼠标，随后的鼠标释放事件归菜单管，按钮凑不齐 clicked 要求的“按下后原地释放”条件，信号就一直不来。
 
 ```cpp
 auto *btn = new QPushButton("操作");
@@ -76,17 +86,19 @@ connect(btn, &QPushButton::clicked, []() {
 });
 ```
 
-这个行为是 QPushButton 的 paintEvent 和 mousePressEvent 共同决定的。QPushButton 在绘制时会检查是否有关联的 menu，如果有，点击区域的行为会被改写为"弹出菜单"而不是"触发按钮"。这跟 QToolButton 的 DelayedPopup 模式有本质区别——QToolButton 的 DelayedPopup 允许快速点击触发 clicked、长按弹出菜单，而 QPushButton 没有这个中间态。
+这套行为跟绘制无关，咱们把界线划清楚。QPushButton 没有重写 mousePressEvent，点击路径上看不见它的手笔，抑制完全出自 setMenu() 安装的那条信号连接。paintEvent 那一头只管画。initStyleOption 见到按钮带着 menu，就置上 HasMenu 特性，告诉样式这个按钮带着菜单，QStyle 据此在文字旁边多画一个下拉箭头，仅此而已。它跟 QToolButton 的 DelayedPopup 模式走的是两条路：DelayedPopup 允许快速点击触发 clicked、长按弹出菜单，QPushButton 没有这个中间态，点击只有弹菜单一条路。
 
-如果你确实需要"点击按钮主体执行默认操作，同时有菜单提供更多选项"这种交互，方案有两个。第一个方案是用 QToolButton 替代 QPushButton，设置 MenuButtonPopup 模式——按钮主体和箭头分成两个独立的点击区域，主体点击触发 clicked，箭头点击弹出菜单。第二个方案是不用 setMenu()，而是自己处理 mousePressEvent——在事件中判断点击位置，如果点击的是按钮主体就手动触发 clicked，如果点击的是按钮右侧的一个自定义箭头区域就弹出菜单。第二种方案需要更多的代码量，但灵活性更高。
+pressed 不但活着，还是弹菜单的扳机，这条路咱们前面已经走过。想赶在菜单弹出前更新菜单项，连 pressed 做准备工作在机制上是通的，按下瞬间它先于菜单可见。更稳的入口是 QMenu 的 `aboutToShow` 信号，菜单每次将弹未弹时发出，不依赖按钮侧的信号时序，笔者建议优先用它。
 
-还有一个跟信号抑制相关的细节：pressed() 信号在带菜单的 QPushButton 上同样不会触发。有些开发者会试图用 pressed 信号来"预加载"菜单内容，但实际情况是 pressed 根本不会被调用——因为 mousePressEvent 直接跳到了 QMenu::exec()。如果你需要在菜单弹出前动态更新菜单项，应该在 QMenu 的 aboutToShow 信号中完成，而不是依赖 QPushButton 的 pressed。
+要是您确实需要“点按钮主体执行默认操作，菜单只管更多选项”，路有两条。一条是改用 QToolButton，设 MenuButtonPopup 模式，按钮主体和箭头是两个独立的点击区域，主体点击触发 clicked，箭头点击弹出菜单。另一条是不用 `setMenu()`，自己处理 mousePressEvent，在事件里判断点击位置，点在主体上就手动触发 clicked，点在右侧自定义的箭头区域就弹菜单。第二条要多写不少代码，换来的灵活性也更高。
 
-### 3.3 flat 状态管理与 QStyle 的交互
+配套示例的第二个分区把“带菜单按钮”和“普通按钮（对照）”并排放着。咱们按下带菜单按钮，手先别松开，菜单已经弹出，日志里 [pressed] 先落一笔，这就是扳机的现场。松开、选一项，日志再记 [menu]。[clicked] 那条从头到尾不会来，释放那一下归了菜单。再点普通按钮看正常路径的样子，[clicked] 立刻就到。日志区每行带时间戳，比对起来方便。
 
-setFlat(true) 不只是"去掉边框和背景"这么简单。flat 属性影响的是 QStyle 对 PE_PanelButtonCommand 这个绘制元素的处理策略。当 flat 为 true 时，QStyle 在按钮处于正常状态（未悬停、未按下、未获焦）时会跳过背景和边框的绘制，只在悬停和按下状态时显示一个轻量的背景高亮。
+## flat 的里子：跳过的绘制、残留的焦点框、不变的尺寸
 
-但这里有一个微妙的状态管理问题：flat 按钮在按下并释放后，某些 QStyle 实现会残留一个"焦点框"——因为按钮在按下时获得了焦点（Qt::TabFocus 策略），释放后焦点仍在按钮上，QStyle 会绘制一个焦点指示器。如果你不希望 flat 按钮显示焦点框，需要设置 `setFocusPolicy(Qt::NoFocus)`。
+入门篇把 `setFlat(true)` 当“去掉边框和背景”来用，这说的是正常状态下的效果，按钮一变到按下或选中状态，背景又会画回来一部分。咱们从绘制那一层看起。flat 属性影响的是 QStyle 对 PE_PanelButtonCommand 绘制元素的处理策略，正常状态（未按下）时跳过背景和边框的绘制，按下与选中时恢复背景绘制。悬停的反馈则要看样式，CommonStyle 和 Fusion 下压根不画背景，想要悬停效果得靠 QSS 自己补。笔者翻了 qcommonstyle.cpp 的 CE_PushButtonBevel，Flat 特性一挂上，PE_PanelButtonCommand 的绘制调用就被跳过了。
+
+状态管理上另有一个微妙的问题。flat 按钮按下并释放后，某些 QStyle 实现会残留一个“焦点框”。按钮为什么一按就有焦点？QPushButton 的默认焦点策略是 StrongFocus，这个默认值来自 QStyle 的样式提示 SH_Button_FocusPolicy，qcommonstyle.cpp 里给的就是 StrongFocus。StrongFocus 同时包含 TabFocus 与 ClickFocus，Tab 能把焦点切进来，鼠标点击也能，所以手一按焦点就落在按钮上，释放后焦点仍在，QStyle 就会画出焦点指示器。您要是不希望 flat 按钮显示焦点框，把焦点策略改掉：
 
 ```cpp
 auto *flatBtn = new QPushButton("文字链接");
@@ -94,27 +106,19 @@ flatBtn->setFlat(true);
 flatBtn->setFocusPolicy(Qt::NoFocus);  // 防止残留焦点框
 ```
 
-另外一个细节是 flat 按钮的尺寸计算。普通 QPushButton 的 sizeHint 包含了 QStyle 绘制的边框和内边距。flat 按钮虽然不绘制边框，但 sizeHint 的计算并没有改变——它仍然包含这些空间。这意味着一个 flat 按钮和一个非 flat 按钮如果文字相同，它们的 sizeHint 是一样大的。如果你希望 flat 按钮更紧凑，需要手动设置 setContentsMargins 或者用 QSS 的 padding 来减小内边距。
+有个取舍咱们得交代：NoFocus 意味着用户没法用 Tab 切到这个按钮，界面有无障碍访问要求时，焦点能力得保留，改用 QSS 的 `outline: none` 隐藏焦点框更合适。
 
-flat 状态跟 QSS 也有一个交互问题。入门篇提到过 QSS 设置 background 和 border 后会覆盖 flat 的效果。原因在于 QSS 的绘制优先级高于 QStyle 的默认绘制——当 QSS 定义了 background 和 border，QStyle 的绘制逻辑会被完全绕过，flat 属性自然也就失去了意义。如果你需要根据状态动态切换 flat 和非 flat 外观，不要用 setFlat()——用 QSS 的伪状态选择器（:hover、:pressed、:checked 等）来控制 background 和 border 的显示与隐藏更可靠。
+尺寸计算是另一处反直觉。普通 QPushButton 的 sizeHint 含着 QStyle 绘制的边框和内边距，flat 按钮不画边框，sizeHint 的计算却没有变，照样含着这些空间。咱们拿两个文字相同的按钮对比，一个 flat 一个不 flat，sizeHint 一样大。想让 flat 按钮紧凑些，得手动 `setContentsMargins`，或者用 QSS 的 padding 把内边距压小。
 
-一个在实际项目中常见的 flat 按钮使用模式是"导航栏中的文字按钮"。这类按钮通常是 flat 的、纯文字、无焦点框，鼠标悬停时显示浅色背景。实现时除了 setFlat(true) 和 setFocusPolicy(Qt::NoFocus) 之外，还需要通过 QSS 控制 hover 状态的背景色——因为 flat 按钮的默认 hover 效果在某些 QStyle 下非常微弱，几乎看不出来。一个推荐的 QSS 模板是：正常状态透明背景，hover 时加一个浅灰色背景（比如 rgba(0,0,0,0.05)），pressed 时加一个稍深的背景。这样 flat 按钮在视觉上就跟普通文字有了明确的区分。
+flat 跟 QSS 还有一层交互。入门篇提过 QSS 设置 background 和 border 后会覆盖 flat 的效果，原因还是在绘制权的归属上。QSS 定义了 background 和 border，QStyle 的绘制逻辑就被完全绕过，flat 开关从此不参与绘制，拨不拨都一个样。您要是需要按状态动态切换 flat 与非 flat 外观，别用 `setFlat()`，用 QSS 的伪状态选择器（`:hover`、`:pressed`、`:checked`）控制 background 和 border 的显隐更可靠。
 
-## 4. 踩坑预防
+实际项目里 flat 按钮最常见的用法是导航栏里的文字按钮：flat、纯文字、无焦点框，鼠标悬停时浮一层浅色背景。做出来除了 `setFlat(true)` 和 `setFocusPolicy(Qt::NoFocus)`，还得用 QSS 控制 hover 状态的背景色，flat 按钮默认的悬停效果指望不上，CommonStyle 和 Fusion 下干脆不画，这层 QSS 基本省不掉。笔者推荐的 QSS 模板是正常状态透明背景，hover 时加浅灰色背景（比如 rgba(0,0,0,0.05)），pressed 时加深一档。这样 flat 按钮跟普通文字在视觉上就有了明确的区分。
 
-第一个坑是 autoDefault 在 QDialog 中意外拦截 Enter 键导致 QLineEdit 的 returnPressed 信号不触发。原因前面已经详细分析过了——QDialog 的 keyPressEvent 优先处理默认按钮，Enter 键根本到不了 QLineEdit。解决方案是在所有不需要响应 Enter 的按钮上调用 setAutoDefault(false)，同时最多保留一个按钮作为默认按钮。
+配套示例第三个分区摆了两个 flat 按钮，右边那个出厂就是 NoFocus。咱们点左边的“flat 按钮（可获焦）”，点完看边缘，焦点指示停在按钮上收不回去。勾上“左侧按钮启用 NoFocus”复选框再点，边缘干净了。两个按钮的 clicked 都会进日志，焦点框的差别得用眼睛看。
 
-第二个坑是 setMenu() 之后 clicked() 信号完全不触发。这是一个设计上的行为——带菜单的 QPushButton 点击时直接弹出菜单，不进入正常的按下-释放流程。如果你需要同时有 clicked 响应和菜单，必须改用 QToolButton 的 MenuButtonPopup 模式，或者不使用 setMenu() 而自己管理菜单的弹出逻辑。
+## 官方文档参考
 
-第三个坑是 flat 按钮在某些 QStyle 下点击后残留焦点框。flat 按钮在按下时获得焦点，QStyle 会为获焦状态绘制一个焦点指示器——这在视觉上可能不符合你期望的"文字链接"风格。解决方案是给 flat 按钮设置 setFocusPolicy(Qt::NoFocus)，阻止它获得焦点。但要注意 NoFocus 意味着用户无法通过 Tab 键切换到这个按钮——如果你的界面有无障碍访问需求，可能需要保留焦点能力，改用 QSS 的 outline: none 来隐藏焦点框。
-
-## 5. 练习项目
-
-练习项目：表单对话框的键盘交互调试器。我们要实现一个 QDialog，上面有两个 QLineEdit（用户名和密码输入框）和三个 QPushButton（登录、注册、取消）。要求 Enter 键在焦点位于输入框时触发输入框的 returnPressed 信号（而不是按钮的 clicked），焦点在"登录"按钮上时按 Enter 触发登录操作，"注册"按钮带一个下拉菜单（提供"邮箱注册"和"手机号注册"两个选项），"取消"按钮使用 flat 样式且不显示焦点框。完成标准是键盘交互完全符合预期，没有信号被意外拦截，flat 按钮点击后无残留视觉效果。
-
-提示几个关键点：所有按钮的 autoDefault 需要显式管理，"登录"按钮保持 autoDefault 为 true 作为默认按钮；"注册"按钮用 setMenu() 关联菜单，不需要响应 clicked；"取消"按钮 setFlat(true) + setFocusPolicy(Qt::NoFocus)。
-
-## 6. 官方文档参考链接
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17。QPushButton 属于 QtWidgets 模块，内容涉及 QMenu 和 QStyle 的协作，示例可在任何支持 Qt 6 的桌面平台上编译运行，autoDefault 的行为只在 QDialog 中生效。
 
 [Qt 文档 · QPushButton](https://doc.qt.io/qt-6/qpushbutton.html) -- 推送按钮，包含 default/autoDefault 属性说明
 
@@ -122,8 +126,8 @@ flat 状态跟 QSS 也有一个交互问题。入门篇提到过 QSS 设置 back
 
 [Qt 文档 · QDialog](https://doc.qt.io/qt-6/qdialog.html) -- 对话框基类，默认按钮的键盘事件处理机制
 
-[Qt 文档 · QMenu](https://doc.qt.io/qt-6/qmenu.html) -- 菜单控件，exec() 弹出行为
+[Qt 文档 · QMenu](https://doc.qt.io/qt-6/qmenu.html) -- 菜单控件，popup() 与 exec() 两种弹出行为
 
 ---
 
-到这里，QPushButton 的进阶内容就过完了。autoDefault 在 QDialog 中的焦点链交互搞清楚了，以后遇到"Enter 键被按钮拦截"就不会抓瞎。setMenu() 对 clicked 信号的抑制行为理解了，就不会在带菜单按钮上白费力气连信号。flat 状态跟 QStyle 和 QSS 的交互关系理顺了，写出来的文字链接按钮就不会带着奇怪的焦点框。QPushButton 虽然是最基础的控件，但它在对话框环境下的细节处理远比表面看起来复杂。
+3.12 留下的 Enter 话题到这里有了着落。想再动手的，请您把配套示例（examples/advanced/03-qtwidgets/17-qpushbutton-advanced/，可执行文件 17-qpushbutton-advanced）完整玩一轮。输入框里按 Enter，勾掉复选框再按一次，两轮日志对照看。带菜单按钮和普通按钮各点一遍，看两类按钮的日志差别。flat 按钮在勾选 NoFocus 前后各点一次，焦点框的来去肉眼比对。日志区带时间戳，每条信号几时到的都留了底。下一篇 [3.18 QToolButton 进阶](./18-qtoolbutton-advanced.md) 讲按钮五连的第二个 QToolButton，本篇两处请您留意的替代方案都落在它身上，DelayedPopup 与 MenuButtonPopup 的弹出模式比 QPushButton 细分得多。

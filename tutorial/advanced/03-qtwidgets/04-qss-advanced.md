@@ -1,47 +1,50 @@
 ---
 title: "3.4 QSS 进阶"
-description: "入门篇我们学会了用 QSS 给控件改颜色、设边框、调字体，但到了真实项目里，QSS 的坑远不止语法层面。选择器优先级冲突、动态主题切换、高 DPI 缩放失真——这些才是真正让你头疼的问题。"
+description: "规则明明写了，按钮还是老颜色。qproperty 配上 QSizeF 类型的属性，静默失败，一行警告都没有。主题切换完，总有几个控件还是旧配色。界面搬上 4K 屏，px 值不跟着 DPI 缩放走。这些现象的根子分别在样式表的作用域边界、qproperty 的类型限制、polish/unpolish 的刷新链路和 QSS 像素值的 DPI 语义里，本篇逐个讲清。配套示例在 examples/advanced/03-qtwidgets/04-qss-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.4——QSS 进阶
 
-## 1. 前言 / QSS 的坑不在语法，在工程
+[入门篇 QSS 基础](../../beginner/03-qtwidgets/04-qss-stylesheet-beginner.md) 把选择器、伪状态、子控件选择器过了一遍，也从文件加载过 QSS，做过亮暗主题切换的小练习。只做内部工具，那些知识确实够用。可项目一大，麻烦就不在语法上了。明明 QSS 写了，样式就是不生效，咱们排查一个下午，最后发现两条规则一条在全局样式表里，一条在控件自己的 setStyleSheet() 里，特异性根本没上场。动态切完主题，界面上总有几个控件还是旧配色，因为它们在 C++ 代码里被单独设过样式。界面放到 4K 显示器上跑，控件尺寸缩了一圈，QSS 里硬编码的 px 值没跟着 DPI 走。咱们把四个维度走完整：特异性在哪个范围内作数，qproperty-* 的类型边界在哪里，polish/unpolish 怎么决定主题切换刷不刷得干净，高 DPI 下的 px 值怎么处理。
 
-入门篇我们把 QSS 的选择器、伪状态、子控件选择器过了一遍，也做了从文件加载 QSS 和亮暗主题切换的小练习。说实话，如果你只是做一个内部工具，那些知识确实够用了。但如果你接过稍微大一点的项目——比如一个几十个页面、上百个控件的企业级桌面应用——你大概率会遇到这些场景：明明 QSS 写了但样式就是不生效，花了一个下午排查发现是选择器优先级被其他规则覆盖了；动态切换主题之后某些控件纹丝不动，因为你在代码里偷偷调了 `setStyleSheet()`；在 4K 显示器上跑起来控件尺寸缩了一半，所有的 `px` 值都没有跟随 DPI 缩放。
+## 样式不生效的根子：特异性只在同一张样式表里作数
 
-我之前接手过一个桌面端的配置管理工具，两套主题加起来 2000 多行 QSS。第一次做主题切换的时候，切完发现界面上有三四个控件还是亮色的，排查到最后发现是它们在 C++ 代码里被单独设了样式，全局的 `QApplication::setStyleSheet()` 根本覆盖不了控件级别的样式。那次经历让我把 QSS 的优先级机制、动态刷新策略和高 DPI 适配从头到尾踩了一遍，这篇文章就是这些踩坑的总结。我们把选择器特异性、`qproperty-*` 机制、动态主题切换的正确姿势以及高 DPI 适配这四个维度吃透，以后再遇到 QSS 问题就不至于两眼一抹黑了。
+入门篇讲过 QSS 优先级的雏形：控件级别的 setStyleSheet() 优先于全局的 QApplication::setStyleSheet()，更具体的选择器优先于更宽泛的选择器。进阶要把边界补齐。官方文档没有给出 CSS 那样的权重公式，咱们手里只有一组相对关系，摆成一张表。
 
-## 2. 环境说明
+| 选择器类型 | 写法                          | 特异性关系                 |
+| ---------- | ----------------------------- | -------------------------- |
+| ID 选择器  | QPushButton#deleteButton      | 远高于属性选择器和类选择器 |
+| 属性选择器 | QPushButton[flat="true"]      | 低于 ID 选择器             |
+| 类选择器   | QPushButton                   | 基准档                     |
+| 后代选择器 | QGroupBox QPushButton         | 比单独的类选择器更具体     |
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。所有内容依赖 QtWidgets 模块，动态主题部分涉及 QStyle 的 polish/unpolish 机制，高 DPI 部分涉及 QScreen 的 devicePixelRatio。示例可在任何支持 Qt6 的桌面平台上编译运行。
+组合选择器的权重是各档相加，QGroupBox QPushButton#deleteButton 就能压过单用的 QPushButton#deleteButton。两条规则的特异性完全相同时怎么算，得看它们住哪儿。同一张样式表里，后加载的覆盖先加载的，入门篇教的规则照旧成立。跨表就没有“后写”可讲了，比的是出身层级，应用级的全局样式表算浅一层，控件自己 setStyleSheet() 写的那张算深一层，层级深的压过层级浅的。还有时机要留意：QSS 的样式解析发生在控件第一次被 show 或者样式表被 set 的时候，不是每次重绘都重新来一遍。咱们在窗口构造函数里设了全局样式表，又在某个按钮的初始化里调了 setStyleSheet()，控件级别的样式从此就落在这个按钮身上，对它设过的属性，之后再改全局样式表都不响应，控件级别的优先级更高。
 
-## 3. 核心概念讲解
-
-### 3.1 选择器特异性——为什么你的样式写了但不生效
-
-入门篇我们提到过 QSS 的优先级规则：控件级别的 `setStyleSheet()` 优先于全局的 `QApplication::setStyleSheet()`，更具体的选择器优先于更宽泛的选择器。但这里面有一个很多人踩的坑：同级别内的选择器特异性计算并不像 CSS 那样有明确的权重公式。QSS 的特异性解析规则是：ID 选择器（`#objectName`）优先于属性选择器和类选择器，后代选择器比单独的类选择器更具体，控件级别的样式表比全局的优先。但关键在于——当两条规则的特异性完全相同时，后加载的不一定覆盖先加载的。
-
-事情到这里还没完。QSS 的样式解析发生在控件第一次被 show 或者样式表被 set 的时候，而不是在每次重绘的时候。所以如果你在窗口构造函数里先设了全局样式表，然后在某个按钮的初始化里又调了 `setStyleSheet()`，这个按钮级别的样式会"钉死"在这个控件上——之后你再改全局样式表，这个按钮都不会响应，因为控件级别的优先级更高。
-
-现在有一道调试题给大家。看下面这段 QSS：
+咱们拿一道调试题把作用域的问题演出来。全局样式表里放着最具体的一条，按钮自己身上又调了 setStyleSheet()，写的是最宽泛的一条：
 
 ```css
+/* 全局样式表：最具体的规则 */
+QPushButton#deleteButton {
+    background-color: #E74C3C;
+}
+
+/* 按钮自身 setStyleSheet()：最宽泛的规则 */
 QPushButton {
     background-color: #3498DB;
     color: white;
     border-radius: 4px;
 }
-
-QPushButton#deleteButton {
-    background-color: #E74C3C;
-}
 ```
 
-你期望 `deleteButton` 是红色（因为 ID 选择器更具体），但实际运行发现它还是蓝色。问题出在哪里？原因在于这两条规则分别写在不同的地方——第一条在全局样式表里，第二条在这个按钮自身的 `setStyleSheet()` 里。按照 Qt 的解析顺序，当全局样式表和控件级别样式表同时匹配到同一个属性时，如果全局样式表中也有更具体的选择器命中了该控件，Qt 的样式解析器在合并时可能出现优先级判断不如你预期的情况。正确的做法是把这两条规则都放在同一张样式表里——要么都放全局，要么都放控件级别，不要混用。同一张样式表内的特异性规则是确定可预测的：`QPushButton#deleteButton` 一定优先于 `QPushButton`。
+按“ID 选择器更具体”的直觉，咱们会赌红色赢，实际跑起来按钮是蓝色。跨表时特异性不参赛，比的是出身层级。两类表的选择器会进同一张加权规则表一起排序，可每条规则的权重里，出身占的分量压过特异性一大截，控件自己的表永远压过全局表，全局表里那条 ID 规则再具体也翻不了盘。特异性只在各自的表内决定先后，咱们把两条规则挪进同一张样式表，它才说了算。开篇那个“排查一个下午”的场景，根子就出在把规则写进了两张样式表。
 
-### 3.2 qproperty-* —— 用 QSS 设置自定义属性值
+正确的做法是把两条规则放进同一张样式表，要么都放全局，要么都放控件级别，不要混用。同一张样式表内的特异性是确定可预测的，QPushButton#deleteButton 一定优先于 QPushButton。往工程里推一步就是一条纪律：所有样式规则都收进同一张样式表，最好是全局的，用 objectName 和选择器区分控件，不在 C++ 代码里散落 setStyleSheet() 调用。控件级别样式表里的选择器要是写得不够具体，还可能匹配不到咱们想改的那个控件，排查起来又是一轮。
 
-QSS 有一个不太为人知但非常有用的能力：通过 `qproperty-<属性名>` 语法直接在样式表里设置控件的 Q_PROPERTY 值。这意味着你可以把一些原本需要在 C++ 代码里设置的属性值下沉到 QSS 里，让设计师或最终用户通过修改 QSS 文件来定制控件行为，而不需要重新编译代码。
+配套示例在 `examples/advanced/03-qtwidgets/04-qss-advanced/`，`cmake -B build && cmake --build build` 构建后运行。示例程序叫 ThemeSwitcher，窗口从上到下三个演示区：动态主题切换、选择器特异性、样式级联。选择器特异性演示区把三条规则全写在同一张全局 QSS 里。左边按钮只由 QPushButton 匹配，是默认蓝色。中间按钮的 objectName 是 descendantButton，由 QGroupBox QPushButton#descendantButton 匹配，紫色底加虚线边框。右边按钮的 objectName 是 deleteButton，由 QPushButton#deleteButton 匹配，红色。咱们挨个点过去，下方说明标签会把每个按钮命中的规则原样报出来，谁压过谁一目了然。
+
+## qproperty-*：把属性值搬进样式表，类型对不上就静默失败
+
+QSS 有一个不太为人知但很有用的能力：通过 `qproperty-<属性名>` 语法，直接在样式表里设置控件的 Q_PROPERTY 值。咱们把原本要在 C++ 代码里设的属性值下沉到 QSS 里，设计师或最终用户改一个 QSS 文件就能定制控件行为，不用重新编译代码。
 
 ```css
 MyCustomProgressBar {
@@ -51,17 +54,27 @@ MyCustomProgressBar {
 }
 ```
 
-这段 QSS 前提是你的 `MyCustomProgressBar` 类用 `Q_PROPERTY` 声明了这些属性，并且属性类型是 QSS 能够解析的类型。QSS 能解析的类型包括 `QString`、`int`、`double`、`bool`、`QColor`、`QFont` 以及通过 `Q_DECLARE_METATYPE` 注册的枚举类型。如果你声明了一个 `QSizeF` 类型的属性然后试图用 QSS 来设置它，结果就是静默失败——控件行为不变，无任何报错提示。
+这段 QSS 的前提是 MyCustomProgressBar 类用 Q_PROPERTY 声明了这些属性，而且属性类型得是 QSS 能解析的。咱们把类型边界摆成表：
 
-使用 `qproperty-*` 还有一个限制：属性的设置时机。QSS 的属性赋值发生在 `polish()` 阶段，也就是控件第一次被样式化的时候。如果你在 C++ 代码里先设置了属性值，然后 QSS 又设了同一个属性，QSS 的值会覆盖你的代码设置。但反过来——如果你在 QSS 设了值之后又在代码里改了属性，代码的修改会生效，直到下一次样式刷新（比如调用 `style()->unpolish(widget)` 再 `style()->polish(widget)`）才会重新被 QSS 值覆盖。这个时序问题在动态主题切换时尤其需要注意。
+| 属性类型                             | qproperty-* 的结果        |
+| ------------------------------------ | ------------------------- |
+| QString / int / double / bool        | 能正常设置                |
+| QColor / QFont                       | 能正常设置                |
+| QIcon / QImage / QPixmap / QRect / QBrush / QKeySequence | 能正常设置 |
+| 用 Q_ENUM 声明的枚举（按常量名写值） | 能正常设置                |
+| QSizeF / QRectF                      | 静默失败，不生效也不报错  |
 
-### 3.3 polish / unpolish —— 动态主题切换的正确姿势
+“静默失败”值得您多看一眼。咱们要是把属性声明成 `Q_PROPERTY(QSizeF iconSize READ iconSize WRITE setIconSize)`，再在 QSS 里写 `qproperty-iconSize: 32px 32px`，它就无声无息地没了：QSizeF 没有专门的解析分支，落进默认分支被静默忽略，不报错不警告，控件行为不变，调试时完全找不到线索。QSize 反而有专门分支，同样的 `32px 32px` 能正常设上，一字母之差，一个能设一个没动静。对策也直白，只对表里能解析的类型用 qproperty-*，复杂类型的自定义属性要么拆成多个简单类型的属性，要么放弃 QSS 设置，改用 C++ 代码赋值。
 
-入门篇我们做的主题切换很简单——读一个 QSS 文件然后调 `QApplication::setStyleSheet()` 就完了。在小型应用中这确实够用，但在复杂应用中你很快会发现一个问题：切换主题后，某些控件的样式没有完全刷新。这是因为 Qt 的样式系统内部有一套 polish/unpolish 机制来管理控件的样式状态。
+类型之外还有设置时机。QSS 的属性赋值发生在 polish() 阶段，也就是控件第一次被样式化的时候。咱们在 C++ 代码里先设了属性值，QSS 又设了同一个属性，QSS 的值会覆盖代码设置。反过来，QSS 设完之后咱们又改了属性，代码的修改会一直生效，直到下一次样式刷新，比如调用 style()->unpolish(widget) 再 style()->polish(widget)，QSS 的值才重新接管。动态主题切换正好会触发样式刷新，这个时序您得提前想清楚。
 
-当一个控件的样式需要被应用时，QStyle 的 `polish(QWidget*)` 方法会被调用，它负责初始化控件的视觉属性——比如设置调色板、安装事件过滤器等。当样式需要被移除或更换时，`unpolish(QWidget*)` 负责清理之前 polish 设置的东西。当你调用 `QApplication::setStyleSheet()` 替换全局样式表时，Qt 会自动对所有现有控件执行 unpolish 然后重新 polish，理论上所有控件都应该刷新。但实际上，如果你有控件级别的样式表（通过 `setStyleSheet()` 设置的），这些控件在 unpolish/polish 过程中只会重新应用控件级别的样式，不会应用全局样式——因为控件级别样式表的存在阻止了全局样式的匹配。
+## 主题切换切不干净：polish/unpolish 与控件级样式表的残留
 
-解决这个问题的根本方法是：彻底避免在 C++ 代码里对单个控件调用 `setStyleSheet()`。所有的样式规则都应该写在全局样式表里，通过选择器来区分不同控件。如果确实需要对某个控件单独设样式，用 `setObjectName()` + `#id` 选择器在全局 QSS 中定位它。
+入门篇的主题切换很直接，读一个 QSS 文件，调一次 QApplication::setStyleSheet() 就完了。小应用里这么做没毛病，应用一大咱们就会碰到切换后部分控件不刷新的问题，根子在 Qt 样式系统的 polish/unpolish 机制。
+
+两个函数各自管什么，咱们分开看。控件的样式要被应用时，QStyle 的 polish(QWidget*) 会被调用，负责初始化控件的视觉属性，比如设置调色板、安装事件过滤器。样式要被移除或更换时，unpolish(QWidget*) 负责清理之前 polish 设置的东西。咱们调用 QApplication::setStyleSheet() 替换全局样式表时，Qt 会自动对所有现有控件执行 unpolish 然后重新 polish，理论上所有控件都应该刷新。实际上，控件级样式表的声明权重更高，它设过的属性，全局表改不动，它没设的属性，全局表照样生效。主题切不干净的残留，正是控件级表设过的那几个属性一直压着新主题。
+
+咱们能做的根治办法只有一件，就是彻底避免在 C++ 代码里对单个控件调用 setStyleSheet()，所有样式规则都写在全局样式表里，通过选择器区分控件。您确实要对某个控件单独设样式，用 setObjectName() 配 #id 选择器在全局 QSS 里定位它：
 
 ```cpp
 void apply_theme(QApplication &app, const QString &theme_name)
@@ -81,25 +94,27 @@ void apply_theme(QApplication &app, const QString &theme_name)
 }
 ```
 
-手动遍历所有控件执行 unpolish/polish 是一个比较暴力的做法，在控件数量特别多的时候可能有一瞬间的闪烁。如果你的应用结构允许，更好的方案是让所有控件都响应 `QEvent::StyleChange` 事件自行刷新，而不是依赖手动触发。不过对于大多数中型项目来说，上面的暴力方案已经够用了。
+手动遍历所有控件执行 unpolish/polish 是比较暴力的做法，控件数量特别多时可能有一瞬间的闪烁。应用结构允许的话，更好的方案是让所有控件响应 QEvent::StyleChange 事件自行刷新，不依赖手动触发。不过对大多数中型项目来说，咱们用上面的暴力方案就应付得来了。
 
-### 3.4 高 DPI 下的 QSS 像素值问题
+配套示例走的就是根治路线。theme_switcher.cpp 里亮、暗两套主题各是一整段全局 QSS，同一个选择器在两套里各对应一份颜色值，applyTheme() 里只有 qApp->setStyleSheet() 这一招，整个工程找不到第二处样式设置。咱们在下拉框里把 Light 切成 Dark，三个演示区连同输入框、按钮一起当场换装，没有任何控件留在旧主题里。最下面的级联演示区还能多看一层父子关系：#cascadeParent 容器有自己的底色和边框，里面的 QLabel 把背景设成 transparent，透出容器底色，同容器里的 QPushButton 走 QPushButton 规则自己的背景色，不吃继承，主题切换时连容器带子控件一起变。
 
-这是 QSS 在工程实践中最隐蔽的坑之一。你在 1080p 的屏幕上调得好好的界面，放到 4K 屏幕上（150% 或 200% 缩放）一看，控件尺寸全部缩了一半。原因在于 QSS 里的 `px` 值是设备无关像素（device-independent pixels），Qt 的自动缩放机制会处理布局管理器中的尺寸、字体大小等，但 QSS 中硬编码的 `px` 值在某些 Qt 版本和平台组合下不会自动跟随 DPI 缩放。
+## 4K 屏上控件缩了一半：QSS 的 px 值与 DPI 缩放脱节
 
-比如你在 QSS 里写了 `padding: 8px;`，在 1x 缩放下看起来正好，但在 2x 缩放下这个 8px 可能仍然是 8 个物理像素而不是 16 个——控件的内容区域会比预期的小。这不是 Qt 的 bug，而是 QSS 的像素值语义在不同渲染后端中行为不一致导致的。
+QSS 在工程实践里最隐蔽的问题之一就出在高 DPI 上。咱们在 1080p 屏幕上调得好好的界面，放到 4K 屏（150% 或 200% 缩放）上，控件尺寸全缩了，间距变小，字体大小正常但边框和 padding 不对，按钮看起来比文字小了一圈，整块界面的视觉比例失调。开发机上完全看不出来，部署到高缩放率的设备上才原形毕露。
 
-解决方案有两个方向。第一，尽量使用相对单位而非绝对 `px`。QSS 本身对相对单位的支持很有限——它不像 CSS 有 `em` 和 `rem`——但你可以利用 `font-size` 做间接缩放。比如把关键的间距值和 `font-size` 挂钩，然后在代码里根据 DPI 动态设置字体大小，间距跟着字体走。
+原因得从 px 的名义语义说起。QSS 里的 px 名义上是设备无关像素（device-independent pixels），Qt 的自动缩放机制会处理布局管理器中的尺寸、字体大小这一类，但 QSS 里硬编码的 px 值在某些 Qt 版本和平台组合下，不会自动跟随 DPI 缩放。咱们写了 `padding: 8px`，1x 缩放下看起来正好，2x 缩放下它可能还是 8 个物理像素而不是 16 个，控件的内容区域就比预期小。它不算 Qt 的 bug，来由是 QSS 的像素值语义在不同渲染后端中行为不一致。
+
+一个方向是尽量用相对单位替代绝对 px。QSS 对相对单位的支持很有限，没有 CSS 的 em 和 rem，咱们能借道的是 font-size：把关键的间距值和 font-size 挂钩，在代码里根据 DPI 动态设置字体大小，间距跟着字体走。
 
 ```cpp
 // 根据 DPI 计算基础字号，所有 QSS 中的尺寸基于此缩放
+// dark.qss 里的基础字号占位写作 font-size: %1px
 qreal dpr = screen()->devicePixelRatio();
 int base_font_size = qRound(13 * dpr);
-app.setStyleSheet(QString(":/themes/dark.qss")
-    .arg(base_font_size));  // QSS 中用 %1 占位
+app.setStyleSheet(load_qss(":/themes/dark.qss").arg(base_font_size));
 ```
 
-第二，在 QSS 文件里使用 Qt 的 `env()` 或在代码里做预处理。一个更务实的做法是：在加载 QSS 文件后，用一个简单的字符串替换函数把所有 `px` 值乘以当前的 DPI 缩放系数。
+另一个方向是在代码里做预处理：咱们在加载 QSS 文件之后，用一个简单的字符串替换函数把所有 px 值乘上当前的 DPI 缩放系数。
 
 ```cpp
 QString scale_qss(const QString &qss, qreal factor)
@@ -121,25 +136,11 @@ QString scale_qss(const QString &qss, qreal factor)
 }
 ```
 
-这个方案有点粗暴，但对于大多数项目来说是最快见效的。如果你的应用只在固定的几个 DPI 档位上运行（比如 1x、1.5x、2x），可以直接准备三套不同 `px` 值的 QSS 文件，运行时根据 DPI 选择加载哪一套，省去运行时字符串替换的开销。
+替换方案有点粗暴，但对大多数项目来说最快见效。咱们要是知道应用只跑在固定的几个 DPI 档位（比如 1x、1.5x、2x），还可以直接准备三套不同 px 值的 QSS 文件，运行时按 DPI 选一套加载，省掉运行时字符串替换的开销。再退一步，尽量减少 QSS 里硬编码的绝对尺寸，能不写死的就不写死。
 
-## 4. 踩坑预防
+## 官方文档参考
 
-第一个坑是 QSS 选择器特异性冲突。当你有多条规则匹配到同一个控件的同一个属性时，特异性的判断并不总是"后写的覆盖先写的"。如果你在全局样式表里用 `QPushButton` 写了背景色，然后在某个按钮上用 `setStyleSheet("QPushButton#myBtn { background-color: red; }")` 单独设了红色，你期望红色生效，但实际可能还是全局的蓝色。原因在于控件级别样式表里的选择器和全局样式表里的选择器不在同一个作用域中比较——它们各自解析、各自应用，最后 Qt 取控件级别的结果，但控件级别样式表里如果选择器写得不够具体，可能匹配不到你想要的控件。解决方案是：所有样式规则都放在同一张样式表里（最好是全局的），用 `objectName` 和选择器来区分控件，不要在 C++ 代码里散落 `setStyleSheet()` 调用。
-
-第二个坑是 `qproperty-*` 设置的属性值类型不匹配。比如你声明了一个 `Q_PROPERTY(QSize iconSize READ iconSize WRITE setIconSize)`，然后在 QSS 里写 `qproperty-iconSize: 32px 32px;`——这不会生效，因为 QSS 无法解析 `QSize` 类型。QSS 只支持有限的数据类型转换，对于不支持的类型它会静默忽略，不报错不警告，控件行为不变，你在调试时完全找不到线索。解决方案是：只对 `int`、`double`、`bool`、`QString`、`QColor`、`QFont` 这些 QSS 原生支持的类型使用 `qproperty-*`。如果你的自定义属性是复杂类型，考虑把它拆成多个简单类型的属性，或者干脆放弃 QSS 设置，改用 C++ 代码赋值。
-
-第三个坑是高 DPI 下 `px` 值不随缩放导致布局错乱。这个问题在 1080p 开发机上完全看不出来，但部署到 4K 或高缩放率的设备上就原形毕露——控件之间的间距变小、字体大小正常但边框和 padding 不对、按钮看起来比文字小了一圈。后果是整个界面的视觉比例失调，用户体验非常差。解决方案前面已经讲过了：要么用预处理替换 `px` 值，要么准备多套 QSS 文件，要么尽量减少 QSS 中硬编码的绝对尺寸。
-
-## 5. 练习项目
-
-练习项目：支持亮色/暗色主题动态切换的设置面板。我们要实现一个完整的设置界面，左侧是一个导航栏（几个导航按钮），右侧是对应的设置页面。界面右上角有一个主题切换按钮，点击后在亮色和暗色主题之间切换，所有控件包括导航栏、设置页面、按钮、输入框、下拉框等都要即时更新。
-
-完成标准是：主题切换时所有控件的背景色、文字色、边框、hover/pressed 反馈全部即时更新，没有残影或闪烁；切换过程不调用任何控件级别的 `setStyleSheet()`，所有样式都通过全局 QSS 中的选择器管理；在 150% DPI 缩放下界面比例正确，没有控件被截断或缩小。
-
-提示几个关键点：导航栏里的按钮用 `setObjectName("navButton")` 统一命名，在 QSS 中用 `QPushButton#navButton` 定位；设置页面的不同区域用 QGroupBox 包裹，给 QGroupBox 设不同的 `objectName` 做差异化样式；主题切换时调用 `QApplication::setStyleSheet()` 即可，Qt 会自动触发所有控件的样式刷新——前提是你没有在 C++ 代码里偷偷给控件单独设样式；高 DPI 适配可以用占位符方案，在加载 QSS 时替换 `px` 值。
-
-## 6. 官方文档参考链接
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，内容依赖 QtWidgets 模块，动态主题部分涉及 QStyle 的 polish/unpolish 机制，高 DPI 部分涉及 QScreen 的 devicePixelRatio，示例可在任何支持 Qt6 的桌面平台上编译运行。
 
 [Qt 文档 · Qt Style Sheets](https://doc.qt.io/qt-6/stylesheet.html) -- QSS 完整参考，包含选择器和属性列表
 
@@ -153,4 +154,4 @@ QString scale_qss(const QString &qss, qreal factor)
 
 ---
 
-到这里，QSS 进阶的四个核心问题就过了一遍。选择器特异性搞清楚了，以后样式不生效你就知道从哪里查起。qproperty-* 机制让你能把属性值下沉到样式表里，但别忘了类型限制。polish/unpolish 的动态主题切换思路掌握了，关键是不要在 C++ 代码里散落控件级别的样式设置。高 DPI 下的 px 缩放虽然是个隐蔽的坑，但有了预处理替换和多套 QSS 的方案，应对起来并不难。下一篇我们来看自定义绘制——当 QSS 的能力边界到了的时候，paintEvent 才是最终的武器。
+QSS 进阶就到这里。想再动手的，请您把 ThemeSwitcher 完整玩一轮：在下拉框里把主题切成 Dark 再切回 Light，看全局样式表怎么把三个演示区一次换干净，再把“选择器特异性”区的三个按钮各点一遍，对照下方说明标签看每个按钮命中了哪条规则，最后看级联演示区里 transparent 的 QLabel 怎么透出父容器的底色。上一篇 [3.3 Model/View 进阶](./03-model-view-advanced.md) 讲数据与视图的分工，下一篇 [3.5 自定义控件进阶](./05-custom-widget-advanced.md) 把绘制拿到自己手里，QSS 覆盖不到的效果，要去 paintEvent 里画。

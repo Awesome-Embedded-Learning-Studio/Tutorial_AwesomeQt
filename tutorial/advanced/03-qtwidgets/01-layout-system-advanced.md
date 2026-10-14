@@ -1,32 +1,11 @@
 ---
 title: "3.1 布局系统进阶"
-description: "入门篇我们学会了用 QHBoxLayout/QVBoxLayout/QGridLayout 拼界面，但到了工程实践里，布局系统暴露的问题远不止'控件排不齐'这么简单。"
+description: "stretch 设了 1 控件却纹丝不动，动态加完控件取 geometry 拿到旧值，嵌套四五层之后 resize 掉帧，页面切换缺一个顺滑的过渡，这些现象的根子都在布局系统的内层机制里。本篇讲明白六种 QSizePolicy 策略怎么参与空间分配、脏标记与 activate 怎么决定重算时机、QPropertyAnimation 怎么驱动页面滑动切换，以及 resize 卡顿为什么来自递归的 sizeHint 计算。配套示例在 examples/advanced/03-qtwidgets/01-layout-system-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.1——布局系统进阶
 
-## 1. 前言 / 为什么要重新审视布局系统
-
-入门篇我们把五大布局管理器过了一遍，学会了用 QHBoxLayout、QVBoxLayout、QGridLayout 拼界面，也知道了 stretch 和 spacing 怎么调。说实话，如果只是做做小工具，这些知识确实够用了。但如果你参与过稍微大一点的项目——比如一个几百个控件的企业级管理面板——你大概率会遇到这些让人血压飙升的场景：某个面板动态添加了一组控件之后界面布局完全错乱，嵌套了四五层布局之后窗口 resize 明显卡顿，或者明明设了 stretch 系数但控件就是不听话地不按比例分配空间。
-
-
-## 2. 环境说明
-
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。所有内容依赖 QtWidgets 模块，动画部分额外依赖 QtCore 中的 QPropertyAnimation。示例可在任何支持 Qt6 的桌面平台上编译运行。
-
-## 3. 核心概念讲解
-
-### 3.1 QSizePolicy 深度——六种策略到底在算什么
-
-入门篇我们提到 sizePolicy 决定了控件"愿不愿意接受额外空间"，但没有展开它具体怎么影响布局的空间分配。现在我们把这件事搞透。
-
-QSizePolicy 定义了六种策略：Fixed、Minimum、Maximum、Preferred、Expanding、Ignored。布局管理器在分配空间时，对每种策略的处理逻辑完全不同。Fixed 表示控件只要 sizeHint 指定的大小，多了不要少了不行。Minimum 表示控件至少需要 sizeHint 的大小，但可以更大。Maximum 表示控件最多接受 sizeHint 的大小，不能再大。Preferred 表示控件希望得到 sizeHint 的大小，但比它大或比它小都能接受——这是绝大多数控件的默认策略。Expanding 和 Preferred 类似，但它会主动要求尽可能多的空间。Ignored 最特殊——它完全忽略 sizeHint，控件的大小完全由布局决定。
-
-布局的空间分配算法大致分三轮。第一轮：遍历所有子项，收集每个子项的 sizeHint、sizePolicy 和 stretch。第二轮：根据 sizePolicy 筛选出哪些子项可以接受额外空间（Expanding 和 Preferred 参与，Fixed 不参与），然后按 stretch 比例把剩余空间分配给这些子项。第三轮：检查分配结果是否满足每个子项的 minimumSizeHint 和 maximumSize 约束，如果有冲突就做二次调整。
-
-这里面有一个容易忽略的细节：expandingDirections() 这个函数。QSizePolicy 的 hasHeightForWidth() 和 expandingDirections() 共同决定了一个控件在哪些方向上可以膨胀。水平方向的 Expanding 策略意味着 expandingDirections() 会包含 Qt::Horizontal，布局管理器看到这个标记就知道要优先给这个控件分配水平方向的额外空间。这也是为什么 QTextEdit 默认在垂直方向是 Expanding——它需要尽可能多的纵向空间来显示文本。
-
-现在有一道调试题给大家。看下面这段代码：
+[入门篇布局基础](../../beginner/03-qtwidgets/01-layout-system-beginner.md) 把五大布局管理器过了一遍：QHBoxLayout、QVBoxLayout、QGridLayout 怎么拼界面，stretch 和 spacing 怎么调。做静态界面，这些对咱们确实够用。可界面一旦动起来，这些就不太够用了。动态添加一组控件之后布局错乱，嵌套四五层之后拖窗口明显掉帧，明明设了 stretch 系数控件就是不按比例分空间，页面切换还常常缺一个顺滑的过渡动画。本篇就沿着这些现象往下挖，从一段让人疑惑的代码开始。
 
 ```cpp
 auto *layout = new QHBoxLayout;
@@ -38,17 +17,46 @@ edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 layout->addWidget(edit, 1);   // stretch = 1
 ```
 
-label 和 edit 的 stretch 都是 1，但为什么 resize 窗口时 label 的大小纹丝不动，所有额外空间都被 edit 吃掉了？原因就在于空间分配的第一轮筛选：Fixed 策略的控件不参与额外空间分配，所以 stretch=1 对它没有意义。stretch 只对愿意接受额外空间的策略生效。如果你确实想让 label 获得一定比例的空间，应该把它的水平策略改为 Preferred 或 Minimum，而不是 Fixed。
+label 和 edit 的 stretch 都是 1，按直觉，resize 窗口时两者该按比例分享多余空间。实际跑起来，label 的宽度纹丝不动，额外空间全被 edit 吃掉。咱们把这个反差记在心里，往下看布局怎么分空间，答案自己会浮出来。
 
-### 3.2 动态布局操作——增删控件的正确姿势
+## 空间分配的三轮计算：stretch 只对过了筛子的策略生效
 
-静态界面布局一次就完事了，但实际项目中大量场景需要动态增删控件——设置面板添加新的分组、表格动态插入行、向导页面切换内容。这些操作背后涉及布局的刷新机制，搞不清楚很容易踩坑。
+入门篇说过，sizePolicy 决定控件“愿不愿意接受额外空间”，当时没有展开它具体怎么影响空间分配，现在咱们把这件事算清楚。
 
-QBoxLayout 提供了 `insertWidget(int index, QWidget*)` 在指定位置插入控件，对应的 `removeWidget(QWidget*)` 移除控件。QGridLayout 的操作更细粒度，`addItem()` 可以在指定行列放置子项。但关键不在于这些 API 本身，而在于操作完之后布局怎么刷新。
+QSizePolicy 定义了六种策略，布局管理器对每一种的处理逻辑都不一样，咱们把语义摆齐：
 
-布局管理器内部维护了一个"脏标记"机制。当你添加或移除子项时，布局会被标记为"需要重新计算"，但不会立即执行计算。真正的计算发生在下一次事件循环迭代时，或者在你主动调用 `invalidate()` / `activate()` 时。`invalidate()` 清空所有缓存的几何信息，让布局在下一次布局时机重新计算。`activate()` 则是立即触发一次布局计算并应用结果。
+| 策略      | 语义                                                                               |
+| --------- | ---------------------------------------------------------------------------------- |
+| Fixed     | 控件只要 sizeHint 指定的大小，多了不要，少了不行                                   |
+| Minimum   | 控件至少需要 sizeHint 的大小，但可以更大                                           |
+| Maximum   | 控件最多接受 sizeHint 的大小，不能再大                                             |
+| Preferred | 控件希望得到 sizeHint 的大小，比它大或比它小都能接受，绝大多数控件的默认策略就是它 |
+| Expanding | 和 Preferred 类似，但它会主动要求尽可能多的空间                                    |
+| Ignored   | 完全忽略 sizeHint，控件的大小完全由布局决定                                        |
 
-这意味着如果你在一个函数里连续添加了五个控件，布局不会计算五次——它会在函数返回后的下一次事件循环中统一计算一次。这个设计是合理的，避免了频繁的重计算。但如果你需要在添加控件之后立刻获取控件的实际几何位置（比如用来定位一个 overlay），你就必须手动调用 `activate()` 强制立即计算。
+空间的分配大致分三轮，咱们跟着走一遍。第一轮，布局遍历所有子项，收集每个子项的 sizeHint，连同 sizePolicy 和 stretch 一起记下。第二轮做筛选，看哪些子项可以接受额外空间，Expanding 和 Preferred 参与分配，Fixed 不参与，然后按 stretch 比例把剩余空间分给这些子项。第三轮，检查分配结果是否满足每个子项的 minimumSizeHint 和 maximumSize 约束，有冲突就做二次调整。
+
+现在咱们回头看开篇那段代码。label 是 Fixed 策略，第二轮的筛选没把它算进去，它根本进不了“按 stretch 比例分配”的环节，stretch=1 对它没有意义。stretch 只对愿意接受额外空间的策略生效。您要是确实想让 label 分到一定比例的空间，把它的水平策略改成 Preferred 或 Minimum，stretch 才有参与的资格。
+
+stretch 的作用范围还有一条边界，它只作用于一个布局的直接子项。嵌套布局里这一点特别容易出问题，因为 setStretch 设错了不报任何错误，stretch 就是安静地不生效。比如 QVBoxLayout 里套了一个 QHBoxLayout，您对 QVBoxLayout 调 setStretch(1, 2)，设置的是内层 QHBoxLayout 这个子布局在垂直方向的 stretch，影响不到 QHBoxLayout 里面的任何控件。发现 stretch 不生效时，排查分两步：先确认自己操作的是正确的那个布局对象，再确认目标控件的 sizePolicy 确实允许它接受额外空间，别是 Fixed。
+
+六种策略之外，还有两个函数也参与布局和控件的尺寸协商，咱们来看 expandingDirections()。水平方向的 Expanding 策略意味着 expandingDirections() 会包含 Qt::Horizontal，布局管理器看到这个标记，就知道要优先给这个控件分配水平方向的额外空间。hasHeightForWidth() 管的是另一件事，它告诉布局这个控件的高度会不会随宽度变化，自动换行的文本控件是典型场景。QTextEdit 默认在垂直方向是 Expanding，也是同一个道理，它需要尽可能多的纵向空间来显示文本。
+
+### Ignored 的失效方式：没有下限的控件能被压到 0
+
+六种策略里 Ignored 最特殊，也最容易让界面凭空少一个控件。“完全忽略 sizeHint，大小由布局决定”听起来没毛病，但您给一个没有内容的控件（比如空文本的 QLabel）设了 Ignored，它的 sizeHint 是 (0, 0)，minimumSizeHint 也是 (0, 0)，布局在没有任何约束的情况下会把它的尺寸压到 0，控件直接从界面上消失。更糟的是它要是跟别的控件并排在一个水平布局里，消失之后布局重排，整行看起来都可能不对。笔者的建议是，只在确实需要布局完全控制大小的场景用 Ignored，并且给它一个 minimumSize 兜底，或者干脆改用 Minimum，Minimum 至少保证 sizeHint 作为下限。
+
+配套示例在 `examples/advanced/03-qtwidgets/01-layout-system-advanced/`，示例程序叫 SizePolicyDemo，`cmake -B build && cmake --build build` 构建后运行，窗口里有三个演示区，每个演示区下方都有自己的说明标签。最上面一排六根色条对应六种策略，咱们拖宽窗口就能看到红色 Fixed 条宽度不变，蓝色 Expanding 条把多余空间吃掉。
+
+中间的演示区可以下拉切换中间那根色条的 sizePolicy，把它切到 Fixed 再拖窗口，它会立刻从跟着伸缩变成定住不动。最下面三根色条都是 Expanding，旁边的三个 spinbox 控制各自的 stretch，默认 1:2:3。咱们把三个值全归零，三根条平分空间，改成 1:1:8，第三根明显占大头。下方的说明标签还会顺带提示一句：stretch 只对 Expanding、Preferred 这类策略生效，对 Fixed 无效。
+
+## 增删控件之后：重算发生在下一次事件循环
+
+静态界面的布局一次就完事，咱们在实际项目里会大量遇到动态增删：设置面板添加新分组，表格动态插入行，向导页面切换内容。QBoxLayout 提供 `insertWidget(int index, QWidget*)` 在指定位置插入控件，对应的 `removeWidget(QWidget*)` 移除控件，QGridLayout 的 `addItem()` 还能在指定行列放置子项。接口本身不难记，难的是弄清楚操作完之后，布局什么时候真的重算。
+
+布局管理器内部维护着一套脏标记机制。咱们添加或移除子项时，布局只是被标记成“需要重新计算”，并不会立即执行计算。计算发生在下一次事件循环迭代时，或者您主动调用 `invalidate()` / `activate()` 时。`invalidate()` 清空所有缓存的几何信息，让布局在下一次布局时机重新计算。`activate()` 更进一步，立即触发一次布局计算并应用结果。
+
+这个设计意味着，咱们在一个函数里连续添加五个控件，布局不会计算五次，它会等函数返回后的下一次事件循环统一算一次。合并计算是合理的，避免了频繁重算。但要是您需要在添加控件之后立刻拿到它的实际几何位置，比如用它定位一个覆盖层（overlay），就必须手动调用 `activate()` 强制立即计算：
 
 ```cpp
 layout->addWidget(new_panel);
@@ -56,13 +64,17 @@ layout->activate();  // 立即计算，之后才能拿到 new_panel 的正确 ge
 auto pos = new_panel->pos();  // 否则这里拿到的是旧值或零值
 ```
 
-还有一个细节：`removeWidget()` 只是让布局不再管理这个控件，但不会删除控件本身。如果你不手动 delete 它，它就变成一个没有 parent 的游离控件，造成内存泄漏。正确的做法是 remove 之后立刻 delete，或者用 `QObject::deleteLater()` 延迟删除（如果你的代码还在其他地方引用这个控件，延迟删除更安全）。
+反过来，addWidget 之后什么都不做，也有它隐蔽的风险。新控件可能在下一次事件循环之前完全不显示，或者显示在错误的位置。这在同步代码里最容易误判，您以为函数执行完控件就该出现了，实际布局还没来得及重算。新控件的位置或大小要是还参与后续的逻辑判断（比如根据它的位置来放置另一个元素），拿到的就是错误的值。选择也简单：需要立即取几何信息，调 `layout->activate()`，只是希望控件正确显示，`layout->invalidate()` 让事件循环代劳就够了。
 
-### 3.3 QStackedLayout + QPropertyAnimation 实现滑动切换动画
+配套示例里就有一处现成的用法。stretch 演示区的 `updateStretchValues()` 在三个 spinbox 变动之后先 `invalidate()` 再 `activate()`，把新的 stretch 立刻反映到三根色条上。咱们拨一下 spinbox，色条宽度当场变化，这两行调用就是直接原因。
 
-入门篇我们用 QStackedLayout 做了页面切换，但切换是瞬间完成的，没有任何过渡效果。在产品级的界面中，页面切换通常需要一个滑动或淡入淡出的动画来提升体验。Qt 没有直接提供带动画的 StackedLayout，但我们可以用 QPropertyAnimation 手动实现。
+还有一个细节值得您留意：`removeWidget()` 之后，控件去了哪儿。布局只是不再管理它，它的所有权还和加入时一样，仍挂在原来的父对象上，并且不会自动隐藏，会停在原来的位置继续显示。咱们接下来怎么处置它，得看需求。只想让它从界面上消失，显式调用 hide() 就够。控件确实不要了，就手动 delete，或者用 `QObject::deleteLater()` 延迟删除。您的代码要是还在其他地方引用这个控件，延迟删除更安全。
 
-核心思路是：不直接用 QStackedLayout 的 setCurrentIndex 切换，而是把 QStackedLayout 换成自定义的切换逻辑——在切换时把旧页面和新页面同时可见，用 QPropertyAnimation 驱动它们的 geometry 属性从旧位置滑动到新位置，动画结束后再隐藏旧页面。
+## 页面切换滑起来：让新旧两个 geometry 一起动
+
+动态增删说的是内容变了之后布局怎么追上来，页面切换也一样，只是换的是整页的内容。入门篇用 QStackedLayout 做过页面切换，切换是瞬间完成的，没有任何过渡效果。产品级的界面通常需要一个滑动或淡入淡出的动画来衔接。Qt 没有直接提供带动画的 StackedLayout，咱们可以用 QPropertyAnimation 手动实现一个。
+
+咱们的做法是绕开 QStackedLayout 的 setCurrentIndex，自己接管页面切换：切换时让旧页面和新页面同时可见，咱们再用 QPropertyAnimation 驱动两者的 geometry 属性从旧位置滑动到新位置，动画结束后再隐藏旧页面。
 
 ```cpp
 void slideToWidget(QWidget* target, int direction)
@@ -90,33 +102,21 @@ void slideToWidget(QWidget* target, int direction)
 }
 ```
 
-这个方案的要点在于同时操作两个页面的 geometry，让一个滑出去的同时另一个滑进来。direction 参数控制滑动方向，实现左进右出或右进左出的效果。注意动画期间两个控件都必须可见，所以你需要用 raise() 控制层叠顺序。动画的 duration 建议设 200-300ms，再长用户会觉得卡，再短看不清过渡。QEasingCurve::OutCubic 是一个比较自然的缓动曲线，适合页面切换。
+这个方案靠的是同时操作两个页面的 geometry，让一个滑出去的同时另一个滑进来。direction 参数控制滑动方向，实现左进右出或右进左出。动画期间两个控件都必须可见，所以您需要用 raise() 控制层叠顺序。动画的时长建议设在 200 到 300 毫秒，再长用户会觉得卡，再短看不清过渡。QEasingCurve::OutCubic 是一个比较自然的缓动曲线，适合页面切换。
 
-### 3.4 嵌套布局性能——深层嵌套下的开销与优化
+## resize 卡顿的来源：每帧一次的递归 sizeHint 计算
 
-前面提到过那次六层嵌套布局卡顿的经历，这里我们拆开看看 activate() 在嵌套结构中的递归行为。
+咱们大概见过这样的界面：设置面板里布局套布局，四五个层级往下叠，拖动窗口边缘时刷新明显掉帧。表象是卡，咱们把 activate() 在嵌套结构里的行为一层层看下去，原因就清楚了。
 
-布局的 activate() 会触发一次从顶层到底层的递归 sizeHint 计算。每一层布局需要先知道所有子项的 sizeHint，才能计算自己的 sizeHint，然后一层层向上汇报。如果你有 N 层嵌套，每次 activate 就是一个 O(N * M) 的计算（M 是每层的平均子项数）。在窗口 resize 时，这个计算每一帧都会执行一次。
+布局的 activate() 会触发一次递归 sizeHint 计算，从顶层一直算到底层。每一层布局得先知道所有子项的 sizeHint，才能计算自己的 sizeHint，然后一层层向上汇报。N 层嵌套，每次 activate 就是一次 O(N * M) 的计算，M 是每层的平均子项数。咱们再把它放进 resize 的场景：窗口拖动时，这个计算每一帧执行一次。
 
-优化策略有三个方向。第一，尽量减少嵌套层级。能用一个 QGridLayout 搞定的排版，不要拆成多层 QBoxLayout 嵌套。第二，给固定大小的控件设置 `setFixedSize()` 而不是只设 minimumSize。因为固定大小的控件在 sizeHint 计算时可以跳过某些约束检查，减少计算量。第三，对于特别复杂的布局（比如列表项中嵌套了大量控件的场景），考虑用自定义布局类替代多层标准布局嵌套——直接重写 QLayoutItem 的 sizeHint 和 setGeometry，在一次计算中完成所有子项的定位，避免递归。
+想给这样的结构减负，最直接的一招是减少嵌套层级，能用一个 QGridLayout 排下的版面，就别用多层 QBoxLayout 套出来。接着，咱们可以给固定大小的控件用 `setFixedSize()`，而不是只设 minimumSize，固定大小的控件在 sizeHint 计算时可以跳过某些约束检查，计算量小一些。真到了特别复杂的场景，比如列表项里嵌了大量控件，可以考虑用自定义布局类替代多层标准布局嵌套：直接重写 QLayoutItem 的 sizeHint 和 setGeometry，在一次计算中完成所有子项的定位，避免递归。
 
-另外一个实用的技巧是在大量动态增删操作期间临时断开布局和 Widget 的连接：调用 `setLayout(nullptr)` 暂时剥离布局，完成所有增删操作后再 `setLayout(layout)` 重新绑定。这样可以避免每次增删都触发一次 invalidate，把所有变更合并成一次布局计算。不过这个操作比较重，只在确实有明显性能问题时才值得用。
+还有一个批量增删时能用的招：临时禁用布局。调用 `setEnabled(false)`，禁用中的布局如同不存在，期间不会响应增删和尺寸变化去做重排，等全部变更完成，再 `setEnabled(true)`，补一次 `activate()`，把所有变更合并成一轮计算。不过这套开关得咱们自己配对好，中间忘了重新启用，界面就停在不刷新的状态，实测确实碰到明显的性能问题时再用它也不迟。
 
-## 4. 踩坑预防
+## 官方文档参考
 
-第一个坑是 QSizePolicy::Ignored 导致控件消失。Ignored 策略的语义是"完全忽略 sizeHint，大小由布局决定"。听起来没问题，但如果你给一个没有内容（比如空文本的 QLabel）的控件设了 Ignored，它的 sizeHint 就是 (0, 0)，minimumSizeHint 也是 (0, 0)，布局在没有任何约束的情况下会把它的尺寸压缩到 0——控件直接从界面上消失。更糟的情况是：如果这个控件在一个水平布局中和其他控件并列，它消失后布局的重排可能让整个行看起来完全不对。解决方案是：只在确实需要让布局完全控制大小的场景下使用 Ignored，而且要确保该控件有 minimumSize 兜底，或者改用 Minimum 策略代替——Minimum 至少保证 sizeHint 作为下限。
-
-第二个坑是嵌套布局中 setStretch 系数不生效。这是一个特别坑人的问题，因为它不会报任何错误，就是 stretch 设了跟没设一样。原因在于 setStretch 设置的是当前布局的子项的 stretch，但如果你在外层布局上调 setStretch 指望它影响内层布局的子项，那是不会生效的——stretch 只作用于直接子项。比如你有一个 QVBoxLayout 里面套了一个 QHBoxLayout，你对 QVBoxLayout 调 setStretch(1, 2) 是指内层 QHBoxLayout 这个子布局在垂直方向的 stretch，而不是 QHBoxLayout 里面某个控件的 stretch。如果 stretch 不生效，先确认你是在正确的布局对象上操作的，再确认目标控件的 sizePolicy 确实允许它接受额外空间（不是 Fixed）。
-
-第三个坑是动态添加控件后忘记触发布局刷新。前面讲了 invalidate/activate 的机制，这里再强调一下后果：如果你 addWidget 之后什么都不做，新控件可能在下一次事件循环之前完全不显示，或者显示在错误的位置。这在同步代码中尤其隐蔽——你以为代码执行完控件就该出现了，但实际上布局还没来得及重新计算。如果新控件的位置或大小参与了你后续代码的逻辑判断（比如根据新控件的位置来放置另一个元素），你拿到的就是错误的值。解决方案：添加完控件后如果需要立即获取几何信息，调用 `layout->activate()`；如果只是希望控件正确显示，调用 `layout->invalidate()` 让事件循环帮你处理就够了。
-
-## 5. 练习项目
-
-练习项目：可折叠动态设置面板。我们要实现一个设置界面，界面左侧有一个"添加面板"按钮，每次点击会向右侧的主区域添加一个新的可折叠面板。每个面板有一个标题栏（显示面板编号和折叠/展开按钮），点击标题栏可以折叠或展开面板内容区。折叠时内容区高度动画过渡到 0，展开时动画恢复。面板右上角有一个删除按钮，删除后面板从布局中移除，剩余面板自动重排。
-
-完成标准是：动态增删面板时布局自动调整无闪烁，折叠/展开动画流畅，删除面板后无内存泄漏，窗口 resize 时所有面板正确重排。提示几个关键点：每个面板用 QWidget 做容器，内部 QVBoxLayout 包含标题栏和内容区，折叠时对内容区用 QPropertyAnimation 驱动 maximumHeight 从实际高度过渡到 0；删除面板时先 removeWidget 再 deleteLater；添加面板后调用 activate 确保布局立即刷新。
-
-## 6. 官方文档参考链接
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，依赖 QtWidgets 模块，动画部分额外用到 QtCore 的 QPropertyAnimation，示例可在任何支持 Qt6 的桌面平台上编译运行。
 
 [Qt 文档 · QSizePolicy](https://doc.qt.io/qt-6/qsizepolicy.html) -- 六种空间策略的完整定义和 stretch 因子说明
 
@@ -132,4 +132,4 @@ void slideToWidget(QWidget* target, int direction)
 
 ---
 
-到这里，布局系统的进阶内容我们就过了一遍。QSizePolicy 的六种策略不只是枚举值，它们直接影响空间分配的数学计算。动态增删控件背后的刷新机制搞清楚了，以后遇到"控件加进去不显示"就不会抓瞎。QStackedLayout 的动画切换和嵌套布局的性能优化，则是工程实践中真正能拉开差距的地方。下一篇我们来看事件处理与传播机制——那是理解 Qt 应用"怎么响应用户操作"的核心。
+布局系统的内层机制就看到这里。想再动手的，请您把 SizePolicyDemo 的三个演示区挨个玩一遍，尤其试试在动态切换区把六种策略轮着选，再对照每个演示区下方的说明标签，看咱们预判的现象和标签的解释对不对得上。下一篇 [3.2 事件处理进阶](./02-event-handling-advanced.md) 讲事件处理与传播机制，也就是 Qt 应用怎么响应用户操作的那一层。

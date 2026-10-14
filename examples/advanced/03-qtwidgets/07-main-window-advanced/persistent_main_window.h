@@ -18,27 +18,27 @@ class QPlainTextEdit;
 /// - saveGeometry/restoreGeometry 保存窗口几何信息
 /// - saveState/restoreState 保存 Dock 和工具栏布局
 /// - setCorner 配置角落区域归属，toggleViewAction 集成到"视图"菜单
-class PersistentMainWindow : public QMainWindow
-{
+class PersistentMainWindow : public QMainWindow {
     Q_OBJECT
 
-public:
+  public:
     /// @brief 构造函数，创建 Dock、工具栏、菜单并恢复上次布局。
     /// @param[in] parent 父控件指针。
     explicit PersistentMainWindow(QWidget* parent = nullptr);
 
     /// @brief 从 QSettings 恢复窗口几何和 Dock 布局。
-    /// @note restoreState 必须在 show() 之后调用才能正确还原停靠位置。
+    /// @note 构造期（show() 之前）调用同样可行：窗口不可见时恢复结果由布局引擎保留，show() 时应用。
     void restoreLayout();
 
-protected:
+  protected:
     /// @brief 关闭事件——保存窗口几何与 Dock 布局到 QSettings。
     /// @param[in,out] event 关闭事件对象。
     void closeEvent(QCloseEvent* event) override;
 
-private:
+  private:
     /// @brief 配置四个角落区域归属左侧和右侧 Dock 区域。
-    /// @note 必须在 addDockWidget 之前调用，否则已有 Dock 不会重新计算布局。
+    /// @note 与 addDockWidget 的先后不影响生效（setCorner 内部会触发布局重算）。restoreState
+    /// 会用存档中的 corner 配置覆盖这里的设置。
     void setupCorners();
 
     /// @brief 创建四个 Dock 面板并添加到对应区域。
@@ -58,10 +58,10 @@ private:
     /// @param[in] area 目标停靠区域。
     void reDock(QDockWidget* dock, Qt::DockWidgetArea area);
 
-private:
-    QPlainTextEdit* m_editor;          // 中央代码编辑区
-    QDockWidget* m_fileExplorerDock;   // 左侧文件浏览器
-    QDockWidget* m_propertyDock;       // 右侧属性面板
-    QDockWidget* m_toolBoxDock;        // 右侧工具箱
-    QDockWidget* m_outputDock;         // 底部编译输出
+  private:
+    QPlainTextEdit* m_editor;        // 中央代码编辑区
+    QDockWidget* m_fileExplorerDock; // 左侧文件浏览器
+    QDockWidget* m_propertyDock;     // 右侧属性面板
+    QDockWidget* m_toolBoxDock;      // 右侧工具箱
+    QDockWidget* m_outputDock;       // 底部编译输出
 };

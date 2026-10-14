@@ -1,23 +1,17 @@
 ---
 title: "3.14 QAbstractScrollArea 基类进阶"
-description: "入门篇我们把滚动条、ScrollBarPolicy、scrollContentsBy 和 viewport 这四件事过了一遍。进阶篇要解决的是工程实战中真正让人头疼的滚动问题：双滚动区同步、视口坐标的正确计算、动态切换滚动条策略、以及内容缓存与性能优化。"
+description: "入门篇把滚动条控制、ScrollBarPolicy、scrollContentsBy 和 viewport 过了一遍，进阶篇看 QAbstractScrollArea 替子类统管的滚动机制。两个滚动区联动要防信号绕环，视口坐标与内容坐标靠滚动偏移换算，滚动条显隐牵动视口宽度，重画的内容走缓存，配套示例在 examples/advanced/03-qtwidgets/14-qabstractscrollarea-base-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.14——QAbstractScrollArea 基类进阶
 
-## 1. 前言 / 为什么滚动区域还有这么多坑
+[入门篇 QAbstractScrollArea 基础](../../beginner/03-qtwidgets/14-qabstractscrollarea-base-beginner.md) 把滚动条控制、ScrollBarPolicy、scrollContentsBy、viewport 概念过了一遍，拿现成控件滚一滚，入门篇的内容够用。控件基类部分走到第四篇，咱们看 QScrollArea、QTextEdit、QPlainTextEdit、QGraphicsView、QAbstractItemView 共同的祖先 QAbstractScrollArea。水平垂直两个滚动条、显示策略、视口管理、内容滚动时的回调，全由它统一管着，咱们在子类上调的 verticalScrollBar()、scrollContentsBy() 也全是从它继承来的。
 
-入门篇我们把 QAbstractScrollArea 的基础架构拆了一遍——viewport 是什么、scrollContentsBy 怎么用、滚动条策略怎么配。如果你只是用 QScrollArea 包一个 QWidget、或者用 QTextEdit 显示一段文本，那些知识确实够用。但当你开始做更复杂的滚动场景——比如让两个滚动区域同步滚动、在自定义滚动控件里做高性能的内容渲染、或者动态控制滚动条的显示隐藏——你就会发现入门篇没讲到的那些细节全变成了拦路虎。这篇进阶就是来填这些坑的。
+平时拿现成控件，内容一超，滚动条自己冒出来自己消失，咱们不必过问。一旦要让两个区域联动、要继承它画自己的内容，细节就都摆到眼前了。咱们把最容易把人问住的三个场面摆出来：两个滚动区互相连了信号槽，滚动抖动，信号绕成了环。自定义 paintEvent 里画的东西位置不对，或者被滚动条挡住，分不清自己站在哪套坐标系里。滚动条策略一切换，界面跳一下，视口宽度悄悄变了。三个场面病根各不相同，本篇把四件事讲明白：信号环怎么断，视口坐标与内容坐标怎么换算，滚动条显隐怎么牵动视口宽度，重画的内容怎么靠缓存与 viewport()->update() 省下来。
 
-## 2. 环境说明
+## 两个滚动区联动：信号环在 setValue 处断开
 
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。依赖 QtWidgets 模块，涉及 QScrollBar、QScrollArea、QAbstractScrollArea 的子类化。双滚动区同步部分需要信号槽的 lambda 连接。所有内容在桌面平台上行为一致，但 macOS 的 overlay scrollbar 可能在视觉效果上与 Windows/Linux 有差异。
-
-## 3. 核心概念讲解
-
-### 3.1 双滚动区域同步——两个 QScrollArea 联动滚动
-
-在表格对比、对照查看、主从联动等场景中，经常需要两个滚动区域同步滚动。实现思路并不复杂：监听一个区域的滚动条 valueChanged 信号，在槽函数中设置另一个区域的滚动条值。但魔鬼在细节里——如果你只是简单地互相连接信号，就会形成信号循环：A 的值变了触发 B 变，B 变了又触发 A 变，虽然最终值不会无限增长（因为 setValue 到同一个值不会重复触发 valueChanged），但这个循环在某些边界条件下会导致滚动不流畅或者内容抖动。
+表格对比、对照查看、主从联动，经常要两个滚动区同步滚。思路不复杂，监听一个区域滚动条的 valueChanged，在槽里把值设给另一个区域。咱们要是把两边直接互连，麻烦就来了。A 的值变了触发 B 变，B 变了又反过来触发 A，信号绕成一个环。环倒不会无限转下去，笔者翻了 QAbstractSlider 的实现文件 qabstractslider.cpp，里面的 setValue 值没变它直接返回，valueChanged 根本不发，绕一圈碰到相同的值就停了。可这个环在某些边界条件下会让滚动不流畅，内容会抖。
 
 ```cpp
 // 双向同步的正确做法：用 blockSignals 打破循环
@@ -32,7 +26,8 @@ void sync_vertical_scroll(QScrollArea *source, QScrollArea *target)
     tgtBar->blockSignals(false);
 }
 
-// 连接时注意只在 A->B 方向做同步，不要双向互连
+// 双向同步就连两条，设值一律走上面 blockSignals 包裹的 sync_vertical_scroll，
+// 只需要单向同步时，把第二个 connect 删掉即可
 connect(area_a->verticalScrollBar(), &QScrollBar::valueChanged,
     this, [this]() { sync_vertical_scroll(area_a, area_b); });
 
@@ -40,13 +35,25 @@ connect(area_b->verticalScrollBar(), &QScrollBar::valueChanged,
     this, [this]() { sync_vertical_scroll(area_b, area_a); });
 ```
 
-这里 blockSignals(true) 在 setValue 之前调用，确保 target 的 valueChanged 信号不会被发出，从而打破 A->B->A 的循环。但更好的做法是只做单向同步——让一个作为主控，另一个作为从属。用户在主控区滚动时从属区跟随，但从属区滚动时不反向同步主控。如果你的业务场景确实需要双向同步，那就用 blockSignals 方案，但要测试快速拖动滑块时是否出现抖动。
+咱们对着代码看这个环是怎么被断开的。blockSignals(true) 在 setValue 之前调，target 的 valueChanged 被按住，setValue 引不起回声，A 到 B 再回 A 的路就断了，设完值再用 blockSignals(false) 放回来。更省心的做法是只做单向同步，一个当主控、一个当从属，用户在主控区滚，从属区跟着动，从属区自己滚时不反向同步主控。业务上确实要双向，就用 blockSignals 方案，并测一测快速拖动滑块时抖不抖。
 
-同步滚动还需要注意一个细节：两个区域的滚动条 maximum 必须在相同的量级上，否则一个区域的滚动范围很大、另一个很小，同步效果会让用户困惑——A 刚滚了一小截 B 就到底了。如果两个区域的内容高度不同但需要"同步滚动比例"而不是"同步像素值"，你应该用 `double ratio = double(value) / maximum` 做比例换算。
+同步还有个量级问题要咱们提前算。两个区域的滚动条 maximum 得在同一个量级上，一边范围很大、一边很小，A 刚滚一小截 B 就到头了，用户只会更困惑。内容高度不同又要同步，别同步像素值，改同步比例，拿 `double ratio = double(value) / maximum` 换算过去。
 
-### 3.2 视口坐标与内容坐标——搞清楚你在哪个坐标系里
+配套示例把整套机制做成了能跑的工程，文件在 examples/advanced/03-qtwidgets/14-qabstractscrollarea-base-advanced/，可执行文件 14-qabstractscrollarea-base-advanced。咱们把界面数一遍：窗口里左右两个 SyncTextArea 并排，各自渲染 100 行文本，底部一条控制栏上摆着 Synchronize Scrolling 复选框（默认勾上）、Reset to Top 按钮、一个实时报位置的标签，百分比按 value 除以 maximum 乘 100 算。SyncTextArea 继承 QAbstractScrollArea，重写 scrollContentsBy，滚动时发出 scrollChanged 信号。静默设值走 setScrollValueSilently，blockSignals 包住 setValue，外面再拿 m_syncing 标志挡一层嵌套。
 
-入门篇我们说了视口坐标从 (0,0) 开始，不包含滚动偏移。现在我们把这件事讲得更精确一些。视口坐标系的原点在视口的左上角，x 向右增长，y 向下增长，范围是 (0, 0) 到 (viewportWidth, viewportHeight)。内容坐标系的原点在内容的左上角，范围是 (0, 0) 到 (contentWidth, contentHeight)。滚动偏移量就是这两个坐标系之间的位移：内容坐标 = 视口坐标 + scrollOffset。
+静默设值之后为什么还得自己调 viewport()->update()？咱们翻 qabstractscrollarea.cpp 的 QAbstractScrollAreaPrivate::init 就能看到，滚动条的 valueChanged 连着内部槽 _q_vslide，scrollContentsBy 正是从那里被调用的。blockSignals 一按，不只是环断了，目标区域自己的 scrollContentsBy 也被跳过，视口不会自动重画，所以 setScrollValueSilently 在设完值之后自己补了一次 viewport()->update()。
+
+咱们跑一个实验。滚到中部，取消勾选 Synchronize Scrolling，左右两边各滚各的，互不牵扯。重新勾上，右面板立刻跳到左面板当前的位置。干这件事的是示例主窗口 sync_scroll_widget.cpp 里的 toggleSyncMode，它拿 setScrollValueSilently(m_leftArea->scrollValue()) 把两边拉回同一位置，同步恢复的头一步就是对齐。
+
+## 内容坐标加滚动偏移：translate 移的是画笔，裁剪留在原地
+
+入门篇说过视口坐标从 (0,0) 开始，不包含滚动偏移。咱们把边界画准。视口坐标系的原点在视口左上角，x 向右增长，y 向下增长。内容坐标系的原点在内容左上角。滚动偏移量就是两个坐标系之间的位移，内容坐标 = 视口坐标 + scrollOffset。三套容易搅在一起的空间，咱们列成表：
+
+| 坐标系 | 原点 | 覆盖范围 |
+| -------- | -------- | -------- |
+| 视口坐标 | 视口左上角 | (0, 0) 到 (viewportWidth, viewportHeight) |
+| 内容坐标 | 内容左上角 | (0, 0) 到 (contentWidth, contentHeight) |
+| 控件自身坐标 | 控件左上角 | 整个 rect，滚动条与边角都在内 |
 
 ```cpp
 // 在 paintEvent 中正确做坐标映射
@@ -68,13 +75,15 @@ void paintEvent(QPaintEvent *event) override
 }
 ```
 
-这里有一个常见的思维陷阱：translate 之后 painter 的逻辑坐标变成了内容坐标，但 QPainter 的裁剪区域（clipRegion）仍然是视口的矩形范围。这意味着你不需要自己计算"哪些内容在视口可见"——QPainter 会自动裁剪不可见的部分。你只需要把全部内容在内容坐标系里画出来，Qt 会帮你处理裁剪。但如果你有大量的绘制元素（比如几万条线），虽然不可见的会被裁剪，但你在 paintEvent 里遍历它们的循环开销仍然存在。对于这种场景，你需要自己做粗粒度的可见性判断——只遍历在视口范围内的元素。
+代码里最容易想岔的一处：translate(-scrollX, -scrollY) 之后，painter 的逻辑坐标变成了内容坐标系，可 QPainter 的裁剪区域（clipRegion）仍然是视口的矩形范围。这恰好是咱们要的分工，不必自己算哪些内容落在视口里，把全部内容在内容坐标系里画出来，裁剪交给 Qt。但裁剪省的是绘制，不是遍历。绘制元素多到几万条线时，不可见的虽然一条都不画，paintEvent 里遍历它们的循环开销照样在，咱们得自己做粗粒度的可见性判断，只遍历落在视口范围内的元素。
 
-### 3.3 动态滚动条策略切换——运行时切换的注意事项
+表里第三行最容易让咱们画错位置。QAbstractScrollArea 自身的空间里，滚动条、角落、边框都占着位置，viewport() 返回的那个 QWidget 才是扣掉它们之后显示内容的区域。咱们在 paintEvent 里开画笔，要用 QPainter(viewport())，不是 QPainter(this)。算布局也一样，宽度从 viewport() 上取，viewport()->width() 才是内容真正可用的宽度。qabstractscrollarea.cpp 里 paintEvent 的文档注释专门提醒了一句，创建的 QPainter 必须作用在 viewport() 上。两套空间一混，内容要么画不到正确位置，要么被滚动条遮住。配套示例 SyncTextArea 的 paintEvent 解决的是同一个坐标换算问题，只是入口不同。它不平移坐标系，拿 scrollY 除以行高算出第一可见行，最后一行在视口能容纳的行数上再多取两行余量，每帧画的就是视口内那几十行，正是前面说的粗粒度可见性判断的现成实现。
 
-有些场景下你需要在运行时动态切换滚动条的显示策略。比如一个可折叠的面板，展开时内容溢出需要显示滚动条，折叠后内容在视口内就把滚动条隐藏。切换策略本身很简单——调用 `setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff)` 就行。但切换之后你可能遇到一个容易忽略的副作用：滚动条的显示/隐藏会改变视口的大小。
+咱们改一行看现象。sync_text_area.cpp 的 updateScrollBarRange 里，把 setRange(0, qMax(0, m_totalHeight - viewport()->height())) 的减法去掉，写成 setRange(0, m_totalHeight)，重新编译滚到底。最后一行继续上移滚出视口顶部，滚到最底时整个视口一片空白。滚动范围是内容高减视口高，多报了一个视口高，就多滚出一屏。看完记得改回去。
 
-滚动条占据的空间是从 QAbstractScrollArea 的 rect 中扣除的。当滚动条出现时，视口变窄；当滚动条隐藏时，视口变宽。这个变化会触发 resizeEvent，如果你的 paintEvent 里依赖 viewport()->width() 来做布局计算，内容会自动重排。但在某些场景下，这种"宽度突然变化"会让用户感到界面跳动。
+## 滚动条出现，视口就变窄：策略切换牵动的是布局
+
+咱们拿最常见的可折叠面板来说，面板一展开，内容溢出，要滚动条。折叠回去，内容收进视口，滚动条该藏起来。切换本身一句 setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff) 就够，容易漏的是副作用。滚动条占的空间是从 QAbstractScrollArea 的 rect 中扣除的，滚动条出现，视口变窄，滚动条隐藏，视口变宽。这一变化会触发 resizeEvent，咱们写在 paintEvent 里、依赖 viewport()->width() 的布局计算就自动重排。重排不是错，宽度突然变化时用户看到的界面跳一下，才是要您当心的地方。
 
 ```cpp
 // 平滑切换滚动条策略：先固定视口大小再切换
@@ -92,15 +101,21 @@ void set_scrollbar_shown(QScrollArea *area, bool show)
 }
 ```
 
-更实用的做法是在设计阶段就确定滚动条策略，而不是频繁切换。如果你确实需要动态切换，建议配合 `setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff)` 固定水平滚动条的状态，这样至少水平方向的视口宽度是确定的。
+更实用的做法是在设计阶段把策略定下来，不频繁切换。确实要动态切，咱们可以配合 setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff) 固定水平滚动条的状态，至少水平方向的视口宽度是确定的。
 
-现在有一道场景题给大家。你的 QScrollArea 当前垂直滚动条是 AlwaysOff，内容高度 2000 像素，视口高度 400 像素。用户通过鼠标滚轮滚动到了内容中间位置，此时你把策略切换为 ScrollBarAsNeeded。切换后垂直滚动条出现了，视口宽度变窄了。问题是：滚动条的 value 还是之前滚动的值吗？答案是——不一定是。因为策略切换可能导致 Qt 内部重新计算滚动条的范围，而 value 可能被钳位到新的 maximum 范围内。如果你的内容绘制依赖 value，切换策略后最好主动设置一次 value 确保位置正确。
+被扣走的宽度，咱们也得心里有数。滚动条出现时占大约 16-20 像素的宽度，具体随平台和 QStyle 变，全都从视口里扣。内容的最小宽度要是恰好等于滚动区的宽度，垂直滚动条一出现视口变窄，内容就被压缩，或者干脆触发水平滚动。设计内容时给最小宽度留出滚动条的余量，或者禁用水平滚动，两个方向选一个。
 
-### 3.4 内容缓存与 viewport()->update() 的性能考量
+内容是一个 widget 时（QScrollArea 的用法），视口宽度的变化还多一层牵连。setWidgetResizable 默认 false，widget 不会自动放大填满视口。想让它随视口缩放、不需要滚动，设 true，它和子控件尺寸策略的交互咱们放到 [3.44 QScrollArea 进阶](./44-qscrollarea-advanced.md) 展开。设了 true，widget 的最小大小约束（minimumSize）仍然生效，minimumWidth 大于视口宽度时 widget 照样被裁剪。本篇守在基类。
 
-当你继承 QAbstractScrollArea 实现自定义控件时，paintEvent 的调用频率可能很高——滚动时每一帧都会调用，resize 时也会调用。如果你的绘制逻辑比较重（比如渲染大量数据点、复杂图形），每次 paintEvent 都从头计算就会成为性能瓶颈。
+### 一道场景题：切换策略后，滚动位置还在吗
 
-优化思路是把内容缓存到 QPixmap 中。当内容数据变化时重新渲染缓存，滚动时只需要把缓存的对应区域 blit 到视口上，不需要重绘。
+咱们的滚动区当前垂直策略是 AlwaysOff，内容高 2000 像素，视口高 400 像素。用户拿滚轮滚到了内容中间，此时把策略切成 ScrollBarAsNeeded，垂直滚动条出现了，视口变窄了。滚动条的 value 还是刚才滚到的值吗？答案是不一定。策略切换可能导致 Qt 内部重新计算滚动条的范围，value 可能被钳位到新的 maximum 之内。您要是把内容绘制挂在 value 上，切换策略后最好主动设置一次 value，确保位置正确。
+
+咱们拿示例复现场景的前半段，也就是策略还挂在 AlwaysOff、用户单靠滚轮滚到中部的那一段。在 SyncTextArea 构造函数末尾加一句 setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff)，重新编译，滚动条不见了，滚轮照样滚。原因是 wheelEvent 把滚轮事件直接转发给垂直滚动条，paintEvent 读的还是它的 value，底部位置百分比标签也照常更新。策略管的是显隐，滚动条对象和它的值一直都在。看完把新加的一行删掉，恢复原状。
+
+## 重活画进缓存：滚动一帧只是搬运像素
+
+咱们继承 QAbstractScrollArea 做自定义控件，paintEvent 的调用频率不低，滚动时每一帧都来，resize 时也来。绘制逻辑重（渲染大量数据点、复杂图形）时，每次 paintEvent 都从头计算，瓶颈就出在这里。优化思路是把内容缓存进 QPixmap，内容数据变化时重新渲染缓存，滚动时把缓存里对应视口的区域贴到视口上，不重画。
 
 ```cpp
 void paintEvent(QPaintEvent *event) override
@@ -127,25 +142,13 @@ void rebuild_cache()
 }
 ```
 
-这种方案的关键权衡是内存消耗——缓存 pixmap 占用的是 GPU 或系统内存，内容越大消耗越多。对于超大的内容（比如上万像素的画布），你需要做分块缓存——把内容切成多个较小的 pixmap 块，只缓存当前可见区域附近的块，滚动时按需加载新块。QGraphicsView 内部就是用类似的分块渲染策略来处理超大场景的。
+这个方案的代价是内存，缓存 pixmap 占的是 GPU 或系统内存，内容越大消耗越多。内容大到上万像素的画布，整块缓存不现实，咱们做分块缓存，把内容切成多个较小的 pixmap 块，只缓存当前可见区域附近的块，滚动时按需加载新块。QGraphicsView 处理超大场景靠的是另一招，它的 cacheMode 只缓存背景，每帧用 BSP 空间索引查询与暴露区域相交的图元，只画这些图元，思路正对应前面说的粗粒度可见性判断。
 
-另外要注意 viewport()->update() 和 update() 的区别。前者只在视口区域触发重绘，后者在整个 QAbstractScrollArea（包括滚动条区域）触发重绘。绝大多数情况下你应该用 viewport()->update()——滚动条的重绘由 QScrollBar 自己管理，不需要你操心。用 update() 只会导致不必要的滚动条重绘，浪费性能。
+还有一对容易混的接口要您分清。viewport()->update() 只在视口区域触发重绘，update() 在整个 QAbstractScrollArea（包括滚动条区域）上触发重绘。绝大多数情况下咱们要前者，滚动条的重绘由 QScrollBar 自己管理，用不着咱们操心，调 update() 只换来不必要的滚动条重绘，浪费性能。
 
-## 4. 踩坑预防
+## 官方文档参考
 
-第一个坑是视口 widget 和 QScrollArea 的坐标混淆。在 QScrollArea 中，viewport() 返回的 QWidget 就是显示内容的那块区域，而 QScrollArea 自身的坐标空间包含了滚动条。在 paintEvent 里用 QPainter(viewport()) 而不是 QPainter(this)，在计算布局时用 viewport()->width() 而不是 width()。如果你在继承 QAbstractScrollArea 时搞混了这两个坐标，内容要么画不到正确位置，要么被滚动条遮住。
-
-第二个坑是滚动条的可见性影响内容宽度。当垂直滚动条出现时，它会占据大约 16-20 像素的宽度（具体取决于平台和 QStyle），这些宽度是从视口中扣除的。如果你的内容 widget 的最小宽度恰好等于 QScrollArea 的宽度，滚动条出现后视口变窄，内容 widget 就会被压缩或者触发水平滚动。解决方案是在设计内容 widget 时给它的最小宽度留出滚动条的余量，或者在 QScrollArea 上设置 `setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff)` 禁用水平滚动。
-
-第三个坑是 setWidgetResizable(false) 导致内容被裁剪。QScrollArea 的 setWidgetResizable 默认是 false——这意味着内容 widget 不会自动调整大小来填满视口。如果你在 QScrollArea 里放了一个固定大小的 widget（比如 800x600），但 QScrollArea 的视口只有 400x300，widget 不会被缩放，你只能通过滚动来查看完整内容。如果你希望 widget 自动缩放到视口大小（不需要滚动），需要设 `setWidgetResizable(true)`。但要注意，设了 true 之后 widget 的最小大小约束（minimumSize）仍然生效——如果 widget 的 minimumWidth 大于视口宽度，widget 仍然会被裁剪。
-
-## 5. 练习项目
-
-练习项目：双面板同步图片对比查看器。窗口左右各一个自定义的 ImageScrollArea（继承 QAbstractScrollArea），加载两张尺寸相同的图片。两个面板的垂直和水平滚动条同步联动——在左侧面板滚动时右侧面板同步滚动到相同位置，反之亦然。窗口底部有一个控制栏：一个复选框切换"锁定同步/独立滚动"，一个按钮"重置到左上角"把两个面板的滚动条值都设为 0，一个标签实时显示当前视口在图片中的位置百分比。
-
-完成标准是同步滚动时两个面板显示的图片区域完全一致，切换到独立模式后各自滚动互不影响，切回同步模式时从属面板自动跳到主控面板的当前位置。提示几个关键点：同步滚动用 blockSignals 避免循环；位置百分比用 `double(value) / maximum * 100` 计算；图片缓存到 QPixmap 中避免每次 paintEvent 都从文件读取。
-
-## 6. 官方文档参考链接
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，QAbstractScrollArea 在 QtWidgets 模块，示例在桌面平台行为一致，macOS 的 overlay 滚动条在视觉效果上可能与 Windows/Linux 有差异。
 
 [Qt 文档 · QAbstractScrollArea](https://doc.qt.io/qt-6/qabstractscrollarea.html) -- 滚动区域基类，viewport/scrollContentsBy 接口
 
@@ -157,4 +160,4 @@ void rebuild_cache()
 
 ---
 
-到这里，QAbstractScrollArea 的进阶内容就搞定了。双滚动区同步的核心是 blockSignals 打破信号循环，视口坐标和内容坐标的映射搞清楚之后 paintEvent 里就不会再画错位置，动态切换滚动条策略要注意视口宽度的变化，内容缓存是高性能滚动渲染的必备手段。这些知识点在实现自定义滚动控件时会反复用到，值得多练几遍。
+viewport 加两个滚动条，就是 QAbstractScrollArea 交给子类的底子，本篇的联动、换算、缓存全是围着它们做的。想再动手的，请您把配套示例（examples/advanced/03-qtwidgets/14-qabstractscrollarea-base-advanced/，可执行文件 14-qabstractscrollarea-base-advanced）完整玩一轮。滚到中部，取消勾选 Synchronize Scrolling，左右各滚各的，重新勾上，右面板跳到左面板的位置，同步与独立的边界就摸到了。再把 sync_text_area.cpp 里 generateSampleText 的 i <= 100 改成 i <= 10000 重新编译，滚动依旧跟手，总行数翻了一百倍，paintEvent 每帧只画视口内那几十行，每帧的活没变，做完改回去。下一篇 [3.15 QAbstractItemView 基类进阶](./15-qabstractitemview-base-advanced.md) 讲 QListView、QTreeView、QTableView 的共同基类，它本身就继承自 QAbstractScrollArea，列表、树、表格的滚动正是从今天这套机制来的。

@@ -20,10 +20,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 ArrowToolDemo::ArrowToolDemo(QWidget* parent)
-    : QMainWindow(parent)
-    , m_historyCount(0)
-    , m_iconOnlyMode(true)
-{
+    : QMainWindow(parent), m_historyCount(0), m_iconOnlyMode(true) {
     // 创建顶部工具栏
     createToolBar();
 
@@ -34,8 +31,7 @@ ArrowToolDemo::ArrowToolDemo(QWidget* parent)
     mainLayout->addWidget(createPopupModeSection());
 
     // 日志区域
-    auto* logTitle =
-        new QLabel(QStringLiteral("操作日志（观察不同 PopupMode 的信号触发时机）"));
+    auto* logTitle = new QLabel(QStringLiteral("操作日志（观察不同 PopupMode 的信号触发时机）"));
     logTitle->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 14px;"));
     m_logEdit = new QTextEdit;
     m_logEdit->setReadOnly(true);
@@ -56,8 +52,7 @@ ArrowToolDemo::ArrowToolDemo(QWidget* parent)
 // 工具栏创建
 // ─────────────────────────────────────────────────────────────────────────────
 
-void ArrowToolDemo::createToolBar()
-{
+void ArrowToolDemo::createToolBar() {
     m_toolBar = addToolBar(QStringLiteral("Navigation"));
     // 初始为 IconOnly 模式，稍后可通过按钮切换
     m_toolBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
@@ -97,11 +92,10 @@ void ArrowToolDemo::createToolBar()
 
     // --- 第二组：历史记录按钮（DelayedPopup）---
     // DelayedPopup：快速点击触发 clicked，长按弹出菜单
-    // 必须先 setMenu 再 setPopupMode，否则菜单无处可弹
+    // setMenu 与 setPopupMode 谁先谁后都行，没挂菜单时长按只是普通点击
     m_historyBtn = new QToolButton;
     m_historyBtn->setText(QStringLiteral("History"));
-    m_historyBtn->setToolTip(
-        QStringLiteral("快速点击 = 撤销 | 长按 = 弹出历史记录"));
+    m_historyBtn->setToolTip(QStringLiteral("快速点击 = 撤销 | 长按 = 弹出历史记录"));
     m_historyBtn->setAutoRaise(true);
 
     m_historyMenu = new QMenu(m_historyBtn);
@@ -116,8 +110,7 @@ void ArrowToolDemo::createToolBar()
     // 主体和箭头是两个独立的点击区域
     m_exportBtn = new QToolButton;
     m_exportBtn->setText(QStringLiteral("Export"));
-    m_exportBtn->setToolTip(
-        QStringLiteral("点击主体 = 默认导出 | 点击箭头 = 选择格式"));
+    m_exportBtn->setToolTip(QStringLiteral("点击主体 = 默认导出 | 点击箭头 = 选择格式"));
     m_exportBtn->setAutoRaise(true);
 
     m_exportMenu = new QMenu(m_exportBtn);
@@ -134,8 +127,7 @@ void ArrowToolDemo::createToolBar()
     // --- 风格切换按钮 ---
     // 使用 addAction 方式添加到工具栏，对比 addWidget 的区别
     // addAction 返回的 QToolButton 由 QToolBar 自动管理 autoRaise
-    auto* toggleStyleAction =
-        new QAction(QStringLiteral("Toggle Style"), this);
+    auto* toggleStyleAction = new QAction(QStringLiteral("Toggle Style"), this);
     toggleStyleAction->setToolTip(
         QStringLiteral("在 IconOnly 和 TextBesideIcon 之间切换工具栏风格"));
     m_toolBar->addAction(toggleStyleAction);
@@ -152,32 +144,26 @@ void ArrowToolDemo::createToolBar()
             [this]() { onArrowClicked(QStringLiteral("右")); });
 
     // 历史记录按钮：clicked 只在快速点击时触发
-    connect(m_historyBtn, &QToolButton::clicked, this,
-            &ArrowToolDemo::onHistoryClicked);
+    connect(m_historyBtn, &QToolButton::clicked, this, &ArrowToolDemo::onHistoryClicked);
     // aboutToShow 在菜单弹出前触发，用于动态更新菜单内容
-    connect(m_historyMenu, &QMenu::aboutToShow, this,
-            &ArrowToolDemo::onHistoryMenuAboutToShow);
+    connect(m_historyMenu, &QMenu::aboutToShow, this, &ArrowToolDemo::onHistoryMenuAboutToShow);
 
     // 导出按钮：MenuButtonPopup 下主体点击触发 clicked
-    connect(m_exportBtn, &QToolButton::clicked, this,
-            &ArrowToolDemo::onExportClicked);
+    connect(m_exportBtn, &QToolButton::clicked, this, &ArrowToolDemo::onExportClicked);
 
     // 风格切换
-    connect(toggleStyleAction, &QAction::triggered, this,
-            &ArrowToolDemo::onToggleStyle);
+    connect(toggleStyleAction, &QAction::triggered, this, &ArrowToolDemo::onToggleStyle);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 独立 PopupMode 对比演示区
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* ArrowToolDemo::createPopupModeSection()
-{
+QWidget* ArrowToolDemo::createPopupModeSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
-    auto* sectionTitle =
-        new QLabel(QStringLiteral("三种 PopupMode 独立对比（工具栏外）"));
+    auto* sectionTitle = new QLabel(QStringLiteral("三种 PopupMode 独立对比（工具栏外）"));
     sectionTitle->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 14px;"));
 
     // --- DelayedPopup ---
@@ -197,7 +183,7 @@ QWidget* ArrowToolDemo::createPopupModeSection()
     delayedRow->addWidget(delayedLabel, 1);
 
     // --- InstantPopup ---
-    // 点击直接弹出菜单，pressed 和 clicked 都不会触发
+    // 点击直接弹出菜单：clicked 不触发，pressed 照发且正是它驱动弹菜单
     auto* instantRow = new QHBoxLayout;
     auto* instantLabel =
         new QLabel(QStringLiteral("InstantPopup: 点击直接弹菜单 | clicked 不触发"));
@@ -215,9 +201,7 @@ QWidget* ArrowToolDemo::createPopupModeSection()
     // --- MenuButtonPopup ---
     // 按钮分成两个区域：主体 + 箭头
     auto* menuRow = new QHBoxLayout;
-    auto* menuLabel =
-        new QLabel(QStringLiteral(
-            "MenuButtonPopup: 主体 = clicked | 箭头 = 弹菜单"));
+    auto* menuLabel = new QLabel(QStringLiteral("MenuButtonPopup: 主体 = clicked | 箭头 = 弹菜单"));
     m_menuBtn = new QToolButton;
     m_menuBtn->setText(QStringLiteral("MenuBtn"));
     auto* menuBtnMenu = new QMenu(m_menuBtn);
@@ -232,8 +216,7 @@ QWidget* ArrowToolDemo::createPopupModeSection()
     // 行为说明标签
     m_popupInfoLabel = new QLabel;
     m_popupInfoLabel->setWordWrap(true);
-    m_popupInfoLabel->setStyleSheet(
-        QStringLiteral("color: gray; font-style: italic;"));
+    m_popupInfoLabel->setStyleSheet(QStringLiteral("color: gray; font-style: italic;"));
 
     layout->addWidget(sectionTitle);
     layout->addLayout(delayedRow);
@@ -243,25 +226,21 @@ QWidget* ArrowToolDemo::createPopupModeSection()
 
     // --- 信号连接：观察各模式的信号触发差异 ---
     // DelayedPopup：快速点击触发 clicked，长按不触发
-    connect(m_delayedBtn, &QToolButton::clicked, this, [this]() {
-        appendLog(QStringLiteral("[DelayedPopup] clicked 触发（快速点击）"));
-    });
-    connect(m_delayedBtn, &QToolButton::pressed, this, [this]() {
-        appendLog(QStringLiteral("[DelayedPopup] pressed 触发"));
-    });
+    connect(m_delayedBtn, &QToolButton::clicked, this,
+            [this]() { appendLog(QStringLiteral("[DelayedPopup] clicked 触发（快速点击）")); });
+    connect(m_delayedBtn, &QToolButton::pressed, this,
+            [this]() { appendLog(QStringLiteral("[DelayedPopup] pressed 触发")); });
 
-    // InstantPopup：clicked 和 pressed 都不触发，只有菜单弹出
-    connect(m_instantBtn, &QToolButton::clicked, this, [this]() {
-        appendLog(QStringLiteral("[InstantPopup] clicked 触发（不应出现）"));
-    });
+    // InstantPopup：clicked 不触发，pressed 照发且正是它驱动弹菜单
+    connect(m_instantBtn, &QToolButton::clicked, this,
+            [this]() { appendLog(QStringLiteral("[InstantPopup] clicked 触发（不应出现）")); });
     connect(m_instantBtn, &QToolButton::pressed, this, [this]() {
-        appendLog(QStringLiteral("[InstantPopup] pressed 触发（不应出现）"));
+        appendLog(QStringLiteral("[InstantPopup] pressed 触发（照发，正是它驱动弹菜单）"));
     });
 
     // MenuButtonPopup：只有主体区域点击触发 clicked
-    connect(m_menuBtn, &QToolButton::clicked, this, [this]() {
-        appendLog(QStringLiteral("[MenuButtonPopup] clicked 触发（主体区域）"));
-    });
+    connect(m_menuBtn, &QToolButton::clicked, this,
+            [this]() { appendLog(QStringLiteral("[MenuButtonPopup] clicked 触发（主体区域）")); });
 
     return container;
 }
@@ -270,76 +249,62 @@ QWidget* ArrowToolDemo::createPopupModeSection()
 // 槽函数实现
 // ─────────────────────────────────────────────────────────────────────────────
 
-void ArrowToolDemo::appendLog(const QString& message)
-{
+void ArrowToolDemo::appendLog(const QString& message) {
     m_logEdit->append(message);
 }
 
-void ArrowToolDemo::onArrowClicked(const QString& direction)
-{
-    const QString msg =
-        QStringLiteral("导航方向: %1").arg(direction);
+void ArrowToolDemo::onArrowClicked(const QString& direction) {
+    const QString msg = QStringLiteral("导航方向: %1").arg(direction);
     statusBar()->showMessage(msg);
     appendLog(QStringLiteral("[ArrowType] 点击方向: %1").arg(direction));
 }
 
-void ArrowToolDemo::onHistoryClicked()
-{
+void ArrowToolDemo::onHistoryClicked() {
     // DelayedPopup 模式下，快速点击触发此槽函数
     ++m_historyCount;
-    appendLog(QStringLiteral("[DelayedPopup] 快速点击 -> 撤销操作 #%1")
-                  .arg(m_historyCount));
+    appendLog(QStringLiteral("[DelayedPopup] 快速点击 -> 撤销操作 #%1").arg(m_historyCount));
 }
 
-void ArrowToolDemo::onHistoryMenuAboutToShow()
-{
+void ArrowToolDemo::onHistoryMenuAboutToShow() {
     // 每次弹出前动态更新菜单内容，模拟最近操作记录
     m_historyMenu->clear();
     const int kMaxHistoryItems = 10;
-    const int startIdx =
-        std::max(1, m_historyCount - kMaxHistoryItems + 1);
+    const int startIdx = std::max(1, m_historyCount - kMaxHistoryItems + 1);
 
     for (int i = m_historyCount; i >= startIdx; --i) {
-        m_historyMenu->addAction(
-            QStringLiteral("操作记录 #%1").arg(i),
-            this, [this, i]() {
-                appendLog(QStringLiteral("[历史] 选择操作记录 #%1").arg(i));
-            });
+        m_historyMenu->addAction(QStringLiteral("操作记录 #%1").arg(i), this, [this, i]() {
+            appendLog(QStringLiteral("[历史] 选择操作记录 #%1").arg(i));
+        });
     }
 
     if (m_historyCount == 0) {
         // 禁用空菜单项，避免用户困惑
-        auto* emptyAction = m_historyMenu->addAction(
-            QStringLiteral("（暂无历史记录）"));
+        auto* emptyAction = m_historyMenu->addAction(QStringLiteral("（暂无历史记录）"));
         emptyAction->setEnabled(false);
     }
 }
 
-void ArrowToolDemo::onExportClicked()
-{
+void ArrowToolDemo::onExportClicked() {
     // MenuButtonPopup 模式下，主体区域点击触发此槽函数
     appendLog(QStringLiteral("[MenuButtonPopup] 默认导出（主体区域点击）"));
 }
 
-void ArrowToolDemo::onExportPdf()
-{
+void ArrowToolDemo::onExportPdf() {
     appendLog(QStringLiteral("[导出] 选择格式: PDF（箭头区域菜单）"));
 }
 
-void ArrowToolDemo::onExportPng()
-{
+void ArrowToolDemo::onExportPng() {
     appendLog(QStringLiteral("[导出] 选择格式: PNG（箭头区域菜单）"));
 }
 
-void ArrowToolDemo::onExportSvg()
-{
+void ArrowToolDemo::onExportSvg() {
     appendLog(QStringLiteral("[导出] 选择格式: SVG（箭头区域菜单）"));
 }
 
-void ArrowToolDemo::onToggleStyle()
-{
+void ArrowToolDemo::onToggleStyle() {
     // 在 IconOnly 和 TextBesideIcon 之间切换，观察工具栏按钮外观变化
-    // QToolBar::setToolButtonStyle 全局覆盖所有工具栏内按钮的显示风格
+    // QToolBar::setToolButtonStyle 只覆盖 addAction 代建的按钮，
+    // addWidget 放入的自有按钮不跟随（教程正文 3.18 的收窄说明）
     if (m_iconOnlyMode) {
         m_toolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         appendLog(QStringLiteral("[风格] 切换为 TextBesideIcon"));
@@ -350,6 +315,6 @@ void ArrowToolDemo::onToggleStyle()
         m_iconOnlyMode = true;
     }
 
-    // ArrowType 按钮在 TextBesideIcon 下仍只显示箭头（没有 text）
-    // 非 ArrowType 按钮会显示 text + icon
+    // ArrowType 按钮在 TextBesideIcon 下仍只显示箭头（没 text 也没 icon，也不跟随）
+    // 代建的 Toggle Style 会跟着变（只有 text 可显）；addWidget 的 History/Export 不变
 }

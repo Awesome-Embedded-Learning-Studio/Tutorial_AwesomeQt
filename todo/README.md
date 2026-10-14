@@ -8,7 +8,12 @@
 入门 137✅ · 进阶 134✅ · 专家 19/102 审结（2026-08-26 作者确认全审结 · QtBase 卷剩 18/20 两篇，见 expert.md）
 实例库 widget 13/13 ✅收齐（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅ + editable-table✅ + checkbox-tree✅ + checkbox-list✅ + log-viewer✅ + password-edit✅ + ip-edit✅ + fade-animation✅），app image-viewer✅ + json-editor✅ + sqlite-browser✅ + serial-tool✅ + network-tool✅ + tetris✅ + cpu-memory-monitor✅(7 件整机成品·已合 main PR#16 · Windows 路径待作者实机复验) · model 首波 5 件已产(MV3 proxy/custom/tree-drag-move + observer + toast·待审) / industrial 骨架已立
 examples 275✅ · 基建 P0✅ 基本清完
+进阶层文风优化 20/75（content_forge 五道关梭哈连跑：01✅验声 · 02-20✅ 四走查+Recheck 全过；20 含 pending 信号断言按源码改写+死循环挂守卫条件；按钮五连 4/5），待作者统一验声后从 21-qcommandlinkbutton 续推）
 ```
+
+## 进阶层文风优化（2026-10-08 起 · 长程逐篇）
+
+03-qtwidgets 卷 75 篇按 content_forge 五道关流水线逐篇改造（散文流 + 去模板 + 保真核源码）：01 已完成待作者验声；技术修正三处（setLayout(nullptr) 无效→setEnabled 路线 / removeWidget 所有权 / hasHeightForWidth 归类，均 qt_src 行号证据）与 H1 卷名前缀冲突、机器降级口径三项待作者拍板后，从 02-event-handling 逐篇续推。流水线深坑与降级裁决存 memory。
 
 ## 接力点（下次会话从这里接 · 2026-07-07 更）
 

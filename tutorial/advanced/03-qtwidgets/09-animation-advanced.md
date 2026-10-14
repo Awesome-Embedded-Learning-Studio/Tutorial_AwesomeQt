@@ -1,27 +1,23 @@
 ---
 title: "3.9 动画进阶"
-description: "入门篇我们学会了 QPropertyAnimation 做属性动画和 QEasingCurve 做缓动。但到了产品级动画——状态切换、并行组合、自定义插值——这些基础操作就不够了。"
+description: "手动 new 一个动画再 start，登录页一类的多状态界面撑不住，聚焦放大、按钮旋转、密码输错抖动各自为政，乱象的根子在状态管理。本篇用 QStateMachine 把切换条件和过渡动画分开声明，讲并行动画组的时长纪律与嵌套编排，再用 QVariantAnimation 的两个虚函数做自定义路径插值，顺带查清一例动画在跑控件却不动的毛病。QQuickWidget 嵌 QML 的场合两套动画管线并存，末节讲让一侧当时钟源、另一侧跟随的主从协调。配套示例在 examples/advanced/03-qtwidgets/09-animation-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.9——动画进阶
 
-## 1. 前言 / 为什么入门篇的动画还不够用
+[入门篇动画框架](../../beginner/03-qtwidgets/09-animation-framework-beginner.md) 把 QPropertyAnimation 驱动属性、QEasingCurve 调缓动过了一遍，串行并行的动画组也摸过。写静态页面，存货够用。可您要是做过正式一点的界面（登录页最典型，输入框聚焦时放大，按钮点击后旋转，密码输错时整个表单抖动），很快会发现“手动 new 动画然后 start”的模式撑不住。代码一行行多起来，哪个动画管聚焦、哪个管报错，过几个月连自己都数不清。咱们把毛病看准一点，单个动画没写错，错在没人管状态。哪种界面状态下该播哪组动画，一组动画没播完用户又点了按钮怎么办，靠信号槽硬连，漏一处就是一次视觉事故。本篇把四件事接上：QStateMachine 驱动状态切换，动画组编排时序，自定义 QVariantAnimation 做非线性插值，最后讲 Widgets 混 QML 的两套动画管线怎么协调。
 
-入门篇我们学会了 `QPropertyAnimation` 驱动单个属性从 A 变到 B，也学会了用动画组做串行/并行编排。但如果你做过正式一点的界面——比如登录页，输入框聚焦时放大、按钮点击时旋转、密码错误时表单抖动——你会发现光靠"手动 new 动画然后 start"的模式，代码很快变成意大利面。问题不在动画本身，而在状态管理：哪种状态下播哪组动画、动画没播完用户又点了按钮怎么办，这些靠信号槽硬连不但容易漏，而且后续维护简直是灾难。
+## QStateMachine：切换条件和过渡动画，分开声明
 
-这一篇我们用 `QStateMachine` 驱动动画、用动画组编排时序、用自定义 `QVariantAnimation` 做非线性插值。
+QStateMachine 把界面的每种视觉状态建成一个 QState，状态之间怎么走由 addTransition() 声明，写清谁的什么信号触发、切到哪个状态。属性怎么落地也有声明的地方，assignProperty() 写明进入状态时把哪个属性设成什么值，动画则挂到 transition 上，addTransition() 会返回 transition 指针，接着对它调 addAnimation() 把 QPropertyAnimation 关联上去。切换触发时动画跟着起步，属性平滑滑到目标值，没挂动画的 transition 就是硬切。三个接口的分工咱们摆成表：
 
-## 2. 环境说明
+| 接口 | 管什么 | 缺了它会怎样 |
+| ---- | ------ | ------------ |
+| `addTransition` | 切换条件，谁的信号触发、切到哪个状态 | 状态永远停在原地 |
+| transition 上的 `addAnimation` | 切换过程中的过渡动画 | 属性瞬间跳到目标值 |
+| `assignProperty` | 进入状态时的属性目标值 | 状态切了，界面没跟上 |
 
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。动画框架在 QtCore 中，状态机需要额外链接 `Qt6::StateMachine` 模块。CMake 中添加 `find_package(Qt6 REQUIRED COMPONENTS StateMachine)` 并在 `target_link_libraries` 中加入 `Qt6::StateMachine` 即可。
-
-## 3. 核心概念讲解
-
-### 3.1 QStateMachine + QPropertyAnimation——状态驱动动画
-
-`QStateMachine` 把界面的每种视觉状态建模为一个 `QState`，状态之间的切换通过 `addTransition()` 定义触发条件。每个 `QState` 可以通过 `assignProperty()` 设置目标对象在进入该状态时的属性值，也可以通过 `addAnimation()` 关联 `QPropertyAnimation`，让属性值平滑过渡而不是瞬间跳变。
-
-我们用一个三状态的例子说明：Normal（宽度 200）-> Focused（宽度 260，平滑放大）-> Error（回到 200）。
+咱们把登录页的三状态写出来（Normal 宽 200，Focused 平滑放大到 260，Error 收回 200）：
 
 ```cpp
 auto *machine = new QStateMachine(this);
@@ -29,15 +25,18 @@ auto *s_normal  = new QState();
 auto *s_focused = new QState();
 auto *s_error   = new QState();
 
-// Focused 态关联动画 + 属性赋值
+// Focused 态声明属性目标值
+s_focused->assignProperty(input_edit, "geometry", focused_rect);
+
+// 过渡动画挂在 transition 上：Normal -> Focused 平滑放大
 auto *grow_anim = new QPropertyAnimation(input_edit, "geometry");
 grow_anim->setDuration(200);
 grow_anim->setEasingCurve(QEasingCurve::OutCubic);
-s_focused->addAnimation(grow_anim);
-s_focused->assignProperty(input_edit, "geometry", focused_rect);
+auto *to_focused =
+    s_normal->addTransition(input_edit, &QLineEdit::cursorPositionChanged, s_focused);
+to_focused->addAnimation(grow_anim);
 
-// 信号驱动状态转换
-s_normal->addTransition(input_edit, &QLineEdit::cursorPositionChanged, s_focused);
+// 其余切换只声明触发信号，不带动画就是硬切
 s_focused->addTransition(input_edit, &QLineEdit::editingFinished, s_normal);
 s_focused->addTransition(this, &LoginWidget::loginFailed, s_error);
 
@@ -48,15 +47,19 @@ machine->setInitialState(s_normal);
 machine->start();
 ```
 
-你会发现关键设计在于：状态转换条件（哪个信号触发切换）和动画效果（切换过程中怎么过渡）是解耦的。`addTransition` 只管"什么时候切"，`addAnimation` 只管"切的时候怎么动"。`assignProperty` 则确保进入某个状态时属性值被正确设置——即使动画被中途打断，状态机也会把属性强制设为目标值。
+切换条件和过渡效果在这儿是解耦的。咱们想换缓动曲线，改动画那几行，想换触发条件，改 transition 那几行，互不牵连。聚焦放大、错误抖动从前散落在各处的 new 和 start 里，现在摆成一张图上的几份声明。
 
-### 3.2 动画组的编排——QParallelAnimationGroup 和 QSequentialAnimationGroup
+咱们顺着推一个问题：过渡动画播到一半，用户又触发了新的切换，属性正停在中间值，接下来怎么办。Qt 6.9.1 的源码（qstatemachine.cpp）给的行为分两支。新的切换触发时，旧状态挂着的动画被直接停掉，同一属性要是没有新的赋值声明，状态机把它一次写到目标值，有新的赋值就按新状态来。视觉跳变出在没有新动画接手的场合，值一步跨到位。咱们可能会猜，给 transition 关联了动画，状态机总会等它播完再切吧。实际不会。addAnimation 的语义只是切换触发时把动画 start 起来，切换本身不等人，下一次切换照样能把它打断。真要不可打断，办法退回 UI 层，动画期间禁用触发按钮，或者让新切换也带上动画，从中间值接着动。
 
-入门篇我们介绍了这两种动画组的基本用法，这里补充工程实践中真正需要注意的时序协调问题。
+配套示例在 `examples/advanced/03-qtwidgets/09-animation-advanced/`，可执行文件叫 09-animation-advanced，窗口类是 StateMachineDemo，`cmake -B build && cmake --build build` 构建后运行，窗口里一个蓝色方块，配“聚焦”“动画”“重置”三个按钮，底部状态标签实时报当前状态名。示例没把第三态做成 Error，做成了 Animated，点“动画”按钮切进去的就是并行动画态，下一节正好拿它当素材。两处对照值得您亲手做。把 buildStateMachine() 里 `tToFocused->addAnimation(focusAnim);` 注释掉重新编译，点“聚焦”，方块瞬间跳到放大位置，属性赋值照样生效，只是没了过渡。恢复后再看“重置”：从聚焦态点它是硬切回原位，因为 Focused 到 Normal 的 transition 没挂动画。从动画态点它则平滑收回，Animated 到 Normal 的 transition 挂了恢复动画。同一个目标状态，两条 transition 两种走法，动画挂在 transition 上，不挂在状态上。
 
-`QParallelAnimationGroup` 让所有子动画同时开始，总时长等于子动画中最长的 duration。短的那个播完后停在 endValue，长的继续播。如果你在并行组中混入了不同 duration 的动画，视觉上就会出现"节奏不统一"——比如一个 200ms 的位移动画播完了，一个 600ms 的透明度动画还在继续，控件已经到位了但还在慢慢变透明，看起来像卡了一帧。
+另外您再看三个按钮的可用性，它们也写在各状态的 assignProperty 里，Normal 态“重置”是灰的，Animated 态锁到只剩“重置”能点。状态机管的不止动画属性，一套界面状态快照都可以交给它。
 
-解决方法有两种：统一并行组中所有动画的 duration，差别只体现在缓动曲线上；或者把不同时长的动画拆分到串行组中嵌套编排，让每个并行组内部的时间轴一致。
+## 并行动画组：时长不齐，节奏就散
+
+入门篇把 QParallelAnimationGroup 和 QSequentialAnimationGroup 的基本用法过了一遍，咱们这里补工程实践里的时序协调。并行组让所有子动画同时起步，组的总时长等于子动画里最长的 duration，短的那路播完停在 endValue，陪长的一起收尾。听着无害，混入不同 duration 就出事：一个 200ms 的位移动画播完了，一个 600ms 的透明度动画还在走，控件位置到位了，透明度还在慢慢变，看起来像卡了一帧。功能上挑不出错，体验上很难受，而且代码审查看不出来，跑起来肉眼才见。
+
+咱们手上有两条治理路线：要么统一并行组内所有动画的 duration，节奏差异交给缓动曲线去表达，要么把不同时长的阶段归进串行组嵌套编排，让每个并行阶段内部的时间轴一致。
 
 ```cpp
 auto *seq = new QSequentialAnimationGroup(this);
@@ -79,11 +82,13 @@ seq->addAnimation(scale);
 seq->start(QAbstractAnimation::DeleteWhenStopped);
 ```
 
-`QSequentialAnimationGroup` 的 `addPause(int msecs)` 也很实用——在两个动画之间插入静默间隔让视觉上有呼吸感。
+串行组里有个顺手的工具 addPause(int msecs)，咱们可以用它在两个动画之间垫一段静默，视觉上多一口呼吸。
 
-### 3.3 自定义 QVariantAnimation——updateCurrentValue 实现非线性插值
+配套示例的“动画”按钮就是统一时长的写法。state_machine_demo.cpp 里几何、透明度两路动画共用 kAnimateDuration，时长都是 600ms。几何一路把位移和缩放并进同一个 QRect 的起止值，走 OutBounce。透明度一路不能驱动 windowOpacity，那个属性只对顶层窗口生效，方块是舞台里的子控件，淡入淡出得靠挂上的 QGraphicsOpacityEffect，动画驱动它的 opacity，走 InOutQuad。您把 geometryAnim 的 setDuration 改成 200 重新编译再点“动画”，方块 200ms 就弹跳到位，剩下 400ms 只有透明度还在慢慢变淡，节奏当场散掉，改回 600ms 整组又齐了。
 
-`QPropertyAnimation` 的插值逻辑是固定的：根据 `QEasingCurve` 映射时间进度，然后在 startValue 和 endValue 之间做线性插值。但有些场景你需要"按自定义路径从 A 到 B"——比如让控件沿贝塞尔曲线运动，或者颜色按 HSL 空间渐变。这时候需要继承 `QVariantAnimation`，重写 `interpolated()` 虚函数来完全控制"进度 progress 时值应该是多少"。`updateCurrentValue` 在每一帧被调用，拿到插值结果后你可以手动设置到目标对象上。
+## 自定义插值：interpolated() 定路径，updateCurrentValue() 管落地
+
+QPropertyAnimation 的插值逻辑固定，QEasingCurve 把时间进度映射成缓动进度，再在 startValue 和 endValue 之间做线性插值，两点之间只有一条直线。可咱们要让控件沿贝塞尔曲线运动，要让颜色按 HSL 空间渐变，直线插不出来。路子是继承 QVariantAnimation，重写 interpolated() 虚函数，把“进度 progress 时值该是多少”整个接管。updateCurrentValue() 则在每一帧带着插值结果被调（qvariantanimation.cpp 的 tick 路径逐帧调它），咱们在里面把值发出去或设到目标上：
 
 ```cpp
 class CurvePathAnimation : public QVariantAnimation {
@@ -107,9 +112,11 @@ private:
 };
 ```
 
-这个例子用 `QPainterPath::pointAtPercent()` 让控件沿任意曲线路径运动，progress 经过 `OutCubic` 缓动后再去路径上取点，所以移动速度也是"快启慢停"的节奏。
+progress 先过一遍 OutCubic 再去路径上取点，所以控件沿线移动的速度也是快启慢停的节奏。用法上有一处讲究，起止值仍然要设，您随手给两个同类型的占位值就行。QVariantAnimation 的推进逻辑要见到至少两个关键值才肯走，Qt 6.9.1 的 qvariantanimation.cpp 里，recalculateCurrentInterval 数不够就直接返回，updateCurrentValue 一次都不会被调。例子里重写的 interpolated() 根本不看 from 和 to，占位值只是给推进机器一个起步的理由。
 
-现在有一道调试题给大家。下面这段代码运行之后动画没有任何效果，控件纹丝不动，为什么？
+### 一道调试题：动画在跑，控件纹丝不动
+
+咱们来看一段没效果的代码，控件纹丝不动，您先自己找找原因：
 
 ```cpp
 class MyWidget : public QWidget {
@@ -129,33 +136,23 @@ anim->setEndValue(2.0);
 anim->start(QAbstractAnimation::DeleteWhenStopped);
 ```
 
-问题出在两个地方。第一，`Q_PROPERTY` 声明缺少 `NOTIFY` 信号——缺少它会导致属性系统在某些路径下无法正确识别这个属性为"可动画的"。第二，`setScale` 里没有调用 `update()`，即使 scale 值在变化控件也不会重绘。正确做法是声明 NOTIFY 信号，在 WRITE 函数里 emit 它，并在 `paintEvent` 中根据 m_scale 做绘制变换。
+咱们先别急着怪 Q_PROPERTY 少了 NOTIFY。在 setScale 里加一行 qDebug 或下一个断点，跑起来会看到它每帧都被调，m_scale 确实从 1.0 一路走到 2.0，动画没停工。Qt 6.9.1 的源码可以作证：QPropertyAnimation 认属性只查两样，属性存在、属性可写（qpropertyanimation.cpp 的 updateMetaProperty 就查这两项），逐帧写值走 QMetaObject::metacall 直调 WRITE 函数，全程与 NOTIFY 无关。NOTIFY 缺席在纯 Widgets 里不拦动画，它管的是绑定一侧的变更通知，属性要暴露给 QML 时才是必须。
 
-### 3.4 Widgets 和 QML 混合界面中的动画协调
+纹丝不动的病根在另一处：setScale 只改了 m_scale，没调 update()，控件没有理由重绘。就算重绘了，paintEvent() 也没用过 m_scale，画出来的仍是原样。咱们把修法分两步，setScale 里补 update()（NOTIFY 信号等属性要上 QML 或进绑定时再声明），paintEvent 里按 m_scale 做绘制变换，动画这才看得见。
 
-如果你在项目中混合使用了 QtWidgets 和 QML（比如用 `QQuickWidget` 嵌入 QML 界面），动画协调会变成一个让人头疼的问题。核心矛盾在于两者使用了不同的渲染管线：Widgets 的动画依赖 `QPropertyAnimation` + 定时器回调，QML 的动画依赖声明式的 `PropertyAnimation` + 场景图合成。两侧的动画帧不一定是同一时刻触发的，即使 duration 相同也会有时序不同步的问题。
+## Widgets 混 QML 的动画：一边当时钟，另一边跟随
 
-工程上可行的协调策略是把动画的主控制器放在一侧——以 Widgets 为主就用 `QPropertyAnimation` 做主控，通过信号通知 QML 侧启动对应动画，反过来也一样。关键是不要让两侧各自独立驱动，而是让一侧作为"时钟源"，另一侧跟随。如果确实需要精确同步，可以用 `QElapsedTimer` 做共享时间基准。
+项目里用 QQuickWidget 嵌了 QML 界面的话，动画协调会让您头疼。两套渲染管线各走各的：Widgets 的动画是 QPropertyAnimation 加定时器回调，QML 的动画是声明式的 PropertyAnimation 加场景图合成，两侧的动画帧不一定在同一时刻触发，duration 相同也可能时序对不齐。
 
-## 4. 踩坑预防
+工程上可行的策略是主从结构，主控制器放一侧。以 Widgets 为主就拿 QPropertyAnimation 做主控，通过信号通知 QML 侧启动对应动画，反过来同理。咱们别让两侧各自独立驱动，让一侧当时钟源，另一侧跟随。确实需要精确同步的场合，用 QElapsedTimer 做共享时间基准。
 
-第一个坑是 `Q_PROPERTY` 没有 NOTIFY 信号导致动画看起来没效果。这个坑前面调试题里已经讲过了——后果是动画确实在驱动属性值变化，但控件表面毫无反应。解决方案：所有需要做动画的自定义属性，必须声明 NOTIFY 信号，并且在 WRITE 函数中 emit 它。
+## 官方文档参考
 
-第二个坑是并行动画组中子动画 duration 差异导致视觉节奏错乱。并行组中短动画提前结束，控件"到位"后长时间静止等待长动画完成，看起来像卡顿。这个后果不是功能错误而是体验很差，而且很难在代码审查中发现——只有跑起来才能看到。解决方案：并行组中的动画尽量统一 duration，或者用嵌套串行组把不同时长的阶段隔开。
-
-第三个坑是状态机 transition 中动画未结束就切换状态。用户快速操作可能在一个状态的入场动画还没播完时就触发了新的 transition，属性当前值（可能还在中间态）被新状态的 `assignProperty` 覆盖，导致视觉瞬间跳变。解决方案是给需要"不可打断"的 transition 通过 `QAbstractTransition::addAnimation()` 关联动画——状态机会等待动画播完后再执行切换。或者在 UI 层面禁用按钮直到动画结束。
-
-## 5. 练习项目
-
-练习项目：带状态机的登录界面动画。实现一个登录窗口，包含用户名输入框、密码输入框和登录按钮。输入框聚焦时缓缓放大（宽度 200->260），失去焦点时缩回。点击登录按钮后按钮旋转 360 度并显示加载动画。登录失败时整个表单水平抖动。
-
-完成标准是状态切换流畅无闪烁，快速点击不导致动画叠加或属性跳变，抖动结束后自动回正常态。提示几个关键点：用 `QStateMachine` 建模 Normal / Focused / LoggingIn / Error 四个状态，Error 态用自定义 `QVariantAnimation` 做水平偏移往复抖动（在 `updateCurrentValue` 中用正弦函数计算偏移量）。
-
-## 6. 官方文档参考链接
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17。动画框架在 QtCore 里，状态机要额外装 StateMachine 模块，`find_package(Qt6 REQUIRED COMPONENTS StateMachine)` 之后，在 `target_link_libraries` 里加上 `Qt6::StateMachine`。
 
 [Qt 文档 · QStateMachine](https://doc.qt.io/qt-6/qstatemachine.html) -- 分层有限状态机，状态图的核心驱动类
 
-[Qt 文档 · QState](https://doc.qt.io/qt-6/qstate.html) -- 状态类，addTransition / assignProperty / addAnimation 接口
+[Qt 文档 · QState](https://doc.qt.io/qt-6/qstate.html) -- 状态类，addTransition / assignProperty 接口
 
 [Qt 文档 · QVariantAnimation](https://doc.qt.io/qt-6/qvariantanimation.html) -- 动画基类，interpolated 虚函数用于自定义插值
 
@@ -169,4 +166,4 @@ anim->start(QAbstractAnimation::DeleteWhenStopped);
 
 ---
 
-到这里，动画进阶的内容就过了一遍。`QStateMachine` + `QPropertyAnimation` 的组合把"什么时候播动画"和"播什么动画"彻底解耦了，动画组的嵌套编排让复杂时序变得可控，自定义 `QVariantAnimation` 子类则打开了任意插值路径的大门。产品级动画的核心难点从来不在单个动画怎么写，而在多个动画之间怎么协调、怎么管理状态切换时的边界情况——这些才是真正拉开差距的地方。下一篇我们来看 Qt 的多文档界面（MDI）。
+动画的进阶内容就到这里。想再动手的，请您打开 StateMachineDemo 的 buildStateMachine()，五条 transition 排在一起，挑一条给它挂上或撤掉动画，重新编译看方块怎么走，挂与不挂的差别一趟就试全了。下一篇 [3.10 MDI 进阶](./10-mdi-advanced.md) 讲多文档界面，一个主窗口里铺开多份子文档的那套机制。

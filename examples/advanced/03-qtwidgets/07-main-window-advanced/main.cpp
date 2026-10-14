@@ -1,8 +1,9 @@
 /// @file    main.cpp
 /// @brief   QMainWindow 布局持久化演示程序入口。
 ///
-/// 创建 PersistentMainWindow 并在 show() 之后调用 restoreLayout，
-/// 确保 restoreState 能正确还原 Dock 的停靠位置。
+/// 创建 PersistentMainWindow 并在 show() 之后调用 restoreLayout。
+/// 构造期恢复同样受支持：窗口不可见时，恢复结果由布局引擎保留，
+/// show() 时应用。
 ///
 /// 对应教程：进阶层 03-QtWidgets/07-主窗口进阶。
 
@@ -10,8 +11,7 @@
 
 #include <QApplication>
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
     // 设置组织名和应用名，供 QSettings 默认构造使用
@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
     QCoreApplication::setApplicationName(QStringLiteral("MainWindowDemo"));
 
     PersistentMainWindow window;
-    // show() 必须在 restoreLayout 之前，否则 restoreState 无法正确还原 Dock 停靠位置
+    // restoreLayout 在 show() 前后调用均可：窗口不可见时布局引擎保留恢复结果，show() 时应用
     window.show();
     window.restoreLayout();
 

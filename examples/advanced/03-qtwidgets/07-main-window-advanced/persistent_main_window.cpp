@@ -28,17 +28,14 @@ static constexpr auto kStateKey = "main_window/state";
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-PersistentMainWindow::PersistentMainWindow(QWidget* parent)
-    : QMainWindow(parent)
-{
+PersistentMainWindow::PersistentMainWindow(QWidget* parent) : QMainWindow(parent) {
     // 中央编辑区
     m_editor = new QPlainTextEdit;
-    m_editor->setPlaceholderText(
-        QStringLiteral("代码编辑区域——拖拽周围的 Dock 面板来调整布局，"
-                       "关闭后重新打开即可看到布局被完整恢复。"));
+    m_editor->setPlaceholderText(QStringLiteral("代码编辑区域——拖拽周围的 Dock 面板来调整布局，"
+                                                "关闭后重新打开即可看到布局被完整恢复。"));
     setCentralWidget(m_editor);
 
-    // setCorner 必须在 addDockWidget 之前调用
+    // setCorner 与 addDockWidget 先后皆可，内部会触发布局重算
     setupCorners();
     setupDockWidgets();
     setupToolBars();
@@ -46,15 +43,15 @@ PersistentMainWindow::PersistentMainWindow(QWidget* parent)
 
     setWindowTitle(QStringLiteral("QMainWindow Layout Persistence Demo"));
     resize(1100, 700);
-    statusBar()->showMessage(QStringLiteral("就绪 — 拖拽 Dock 面板调整布局，关闭窗口后布局自动保存"));
+    statusBar()->showMessage(
+        QStringLiteral("就绪 — 拖拽 Dock 面板调整布局，关闭窗口后布局自动保存"));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // setCorner——角落区域归属
 // ─────────────────────────────────────────────────────────────────────────────
 
-void PersistentMainWindow::setupCorners()
-{
+void PersistentMainWindow::setupCorners() {
     // 左侧 Dock 占据左上角和左下角，让左侧面板延伸到窗口顶部和底部
     setCorner(Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
@@ -67,8 +64,7 @@ void PersistentMainWindow::setupCorners()
 // Dock 面板创建
 // ─────────────────────────────────────────────────────────────────────────────
 
-void PersistentMainWindow::setupDockWidgets()
-{
+void PersistentMainWindow::setupDockWidgets() {
     // 左侧文件浏览器——objectName 是 restoreState 识别 Dock 的唯一标识
     m_fileExplorerDock = new QDockWidget(QStringLiteral("文件浏览器"), this);
     m_fileExplorerDock->setObjectName(QStringLiteral("fileExplorer"));
@@ -106,8 +102,7 @@ void PersistentMainWindow::setupDockWidgets()
 // 工具栏
 // ─────────────────────────────────────────────────────────────────────────────
 
-void PersistentMainWindow::setupToolBars()
-{
+void PersistentMainWindow::setupToolBars() {
     auto* fileToolBar = addToolBar(QStringLiteral("文件"));
     fileToolBar->setObjectName(QStringLiteral("fileToolBar"));
     fileToolBar->addAction(QStringLiteral("新建"), this, [this]() {
@@ -123,8 +118,7 @@ void PersistentMainWindow::setupToolBars()
 // 菜单栏
 // ─────────────────────────────────────────────────────────────────────────────
 
-void PersistentMainWindow::setupMenuBar()
-{
+void PersistentMainWindow::setupMenuBar() {
     // 文件菜单
     auto* fileMenu = menuBar()->addMenu(QStringLiteral("文件(&F)"));
     fileMenu->addAction(QStringLiteral("退出(&Q)"), this, &QWidget::close);
@@ -144,16 +138,14 @@ void PersistentMainWindow::setupMenuBar()
 // 布局恢复
 // ─────────────────────────────────────────────────────────────────────────────
 
-void PersistentMainWindow::restoreLayout()
-{
+void PersistentMainWindow::restoreLayout() {
     QSettings settings(QStringLiteral("AwesomeQt"), QStringLiteral("MainWindowDemo"));
 
     // 先恢复窗口几何信息（位置、大小、最大化状态）
     restoreGeometry(settings.value(kGeometryKey).toByteArray());
 
-    // restoreState 必须在窗口 show() 之后调用才能正确还原停靠位置
-    const bool restored =
-        restoreState(settings.value(kStateKey).toByteArray(), kStateVersion);
+    // 窗口不可见时恢复结果由布局引擎保留，show() 时应用
+    const bool restored = restoreState(settings.value(kStateKey).toByteArray(), kStateVersion);
 
     if (!restored) {
         // 首次运行：默认隐藏编译输出面板，模拟 IDE 行为
@@ -168,8 +160,7 @@ void PersistentMainWindow::restoreLayout()
 // 重置默认布局
 // ─────────────────────────────────────────────────────────────────────────────
 
-void PersistentMainWindow::resetToDefaultLayout()
-{
+void PersistentMainWindow::resetToDefaultLayout() {
     // 清除 QSettings 中保存的状态数据
     QSettings settings(QStringLiteral("AwesomeQt"), QStringLiteral("MainWindowDemo"));
     settings.remove(kGeometryKey);
@@ -197,8 +188,7 @@ void PersistentMainWindow::resetToDefaultLayout()
     statusBar()->showMessage(QStringLiteral("已重置为默认布局"), 3000);
 }
 
-void PersistentMainWindow::reDock(QDockWidget* dock, Qt::DockWidgetArea area)
-{
+void PersistentMainWindow::reDock(QDockWidget* dock, Qt::DockWidgetArea area) {
     // 先设为浮动再停靠，确保能从任意状态回到目标区域
     dock->setFloating(false);
     addDockWidget(area, dock);
@@ -208,8 +198,7 @@ void PersistentMainWindow::reDock(QDockWidget* dock, Qt::DockWidgetArea area)
 // closeEvent——保存布局
 // ─────────────────────────────────────────────────────────────────────────────
 
-void PersistentMainWindow::closeEvent(QCloseEvent* event)
-{
+void PersistentMainWindow::closeEvent(QCloseEvent* event) {
     // 保存窗口几何信息和 Dock/工具栏布局到 QSettings
     QSettings settings(QStringLiteral("AwesomeQt"), QStringLiteral("MainWindowDemo"));
     settings.setValue(kGeometryKey, saveGeometry());
