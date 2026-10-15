@@ -1,6 +1,6 @@
 ---
 title: QIODevice 抽象基类与 QFile/QSaveFile 源码索引
-description: QIODevice 双继承与 OpenMode 标志、随机/顺序双模式与 seek 守卫、readData/writeData 纯虚契约、QRingBuffer 缓冲与两路径 read、readLine 与 Text 模式、信号发射方（readyRead/bytesWritten 子类 emit、aboutToClose 自 emit）、QFile→QFileDevice→FileEngine 三层与平台 open 映射、QSaveFile 原子写四件套。
+description: QIODevice 双继承与 OpenMode 标志、随机/顺序双模式与 seek 守卫、readData/writeData 纯虚契约、write 公共壳与 QFileDevice 写缓冲、QRingBuffer 缓冲与两路径 read、readLine 与 Text 模式、信号发射方（readyRead/bytesWritten 子类 emit、aboutToClose 自 emit）、QFile→QFileDevice→FileEngine 三层与平台 open 映射、QSaveFile 原子写四件套。
 ---
 
 # QIODevice 抽象基类与 QFile/QSaveFile 源码索引
@@ -27,13 +27,14 @@ description: QIODevice 双继承与 OpenMode 标志、随机/顺序双模式与 
 
 ## readData/writeData 纯虚契约（子类核心）
 
-源码文件：`qtbase/src/corelib/io/qiodevice.h` / `qiodevice.cpp`
+源码文件：`qtbase/src/corelib/io/qiodevice.h` / `qiodevice.cpp` / `qfiledevice.cpp`
 
 | 论点 | 行号 | 原文摘要 | 解读 |
 |---|---|---|---|
 | readData 是纯虚 = 0 | qiodevice.h:132 | `virtual qint64 readData(char *data, qint64 maxlen) = 0;` | 不是「默认返回 -1」（那是 Qt4/5 旧印象）。QIODevice 是抽象类，qiodevice.cpp 仅 `\fn` doc 无函数体；子类 QFileDevice::readData（qfiledevice.cpp:462）才是真身。 |
 | writeData 也是纯虚 = 0 | qiodevice.h:135 | `virtual qint64 writeData(const char *data, qint64 len) = 0;` | 同 readData。write() 主路径调 writeData，Win 平台 `#ifdef Q_OS_WIN` 的 Text 模式按块扫描 `\n` 分次 writeData 做 `\n→\r\n` 转换（仅 Win）。 |
 | read 公共薄壳 + getChar 快捷 | qiodevice.cpp:996-1039 | `CHECK_READABLE(read, qint64(-1)); if (maxSize == 1 && ...) { while ((chint = d->buffer.getChar()) != -1) {...} } ... const qint64 readBytes = d->read(data, maxSize);` | maxSize==1 的 getChar 快捷路径仍调 readData(data,0) 预填缓冲（非绕过）；真逻辑在 QIODevicePrivate::read。Text 模式吃掉 `\r`。 |
+| write 公共壳直通 writeData；写缓冲在 QFileDevice::writeData | qiodevice.cpp:1763-1829, qfiledevice.cpp:547-575, :15-16 | `CHECK_WRITABLE(write, qint64(-1)); ... qint64 written = writeData(data, maxSize);` / `if (buffered && (d->writeBuffer.size() + len) > d->writeBufferChunkSize) { if (!flush()) return -1; } if (!buffered \|\| len > d->writeBufferChunkSize) { ... return d->fileEngine->write(data, len); } d->writeBuffer.append(data, len);`（`#define QFILE_WRITEBUFFER_SIZE 16384`） | 基类 write 自己不做写缓冲：守卫 + 位置对齐后主干就一行 writeData（Win 开 Text 才按块转 `\r\n` 分次调），写完挪 pos/devicePos。写缓冲挪到文件子类——QFileDevice::writeData 把小块攒进 d->writeBuffer，攒着的快溢出 writeBufferChunkSize（16KB）先 flush()；开 Unbuffered 或单块超 16KB 直写引擎。 |
 
 ## QRingBuffer 缓冲与两路径 read
 
@@ -41,7 +42,7 @@ description: QIODevice 双继承与 OpenMode 标志、随机/顺序双模式与 
 
 | 论点 | 行号 | 原文摘要 | 解读 |
 |---|---|---|---|
-| 缓冲结构：QRingBufferRef（引用）+ QVarLengthArray（拥有）+ chunkSize 16384 | qiodevice_p.h:105-116, :30-31 | `QRingBufferRef buffer; QRingBufferRef writeBuffer; int readBufferChunkSize = QIODEVICE_BUFFERSIZE; QVarLengthArray<QRingBuffer, 2> readBuffers; QVarLengthArray<QRingBuffer, 1> writeBuffers;`（`#define QIODEVICE_BUFFERSIZE 16384`） | QRingBufferRef 持裸指针 m_buf（引用非拥有），真实所有权在 readBuffers/writeBuffers。setCurrentReadChannel 把 `&readBuffers[channel]` 挂到 buffer.m_buf。 |
+| 缓冲结构：QRingBufferRef（引用）+ QVarLengthArray（拥有）+ chunkSize 16384 | qiodevice_p.h:105-116, :30-31, :147-151, qiodevice.h:61 | `QRingBufferRef buffer; QRingBufferRef writeBuffer; int readBufferChunkSize = QIODEVICE_BUFFERSIZE; QVarLengthArray<QRingBuffer, 2> readBuffers; QVarLengthArray<QRingBuffer, 1> writeBuffers;`（`#define QIODEVICE_BUFFERSIZE 16384`） | QRingBufferRef 持裸指针 m_buf（引用非拥有），真实所有权在 readBuffers/writeBuffers。setCurrentReadChannel 公共接口声明在 qiodevice.h:61，私有实现（qiodevice_p.h:147-151）把 `&readBuffers[channel]` 挂到 buffer.m_buf。 |
 | read 两路径：大块直读 vs 填充缓冲 | qiodevice.cpp:1048, :1082-1116 | `const bool buffered = (readBufferChunkSize != 0 && (openMode & Unbuffered) == 0); if ((!buffered \|\| maxSize >= readBufferChunkSize) && !keepDataInBuffer) readFromDevice = q->readData(data, maxSize); else readFromDevice = q->readData(buffer.reserve(bytesToBuffer), bytesToBuffer);` | maxSize>=16KB 或 Unbuffered → 直读用户缓冲绕过 ring；小读 → 先填 ring，下次 read 命中 buffer。 |
 
 ## readLine 与 Text 模式

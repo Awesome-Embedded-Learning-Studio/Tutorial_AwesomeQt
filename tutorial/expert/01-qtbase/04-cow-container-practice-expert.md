@@ -7,7 +7,7 @@ description: QString、QByteArray、QList 各自的 detach 触发点，const 与
 
 ## 前言：从怎么实现到怎么触发
 
-上一篇咱们把 COW 的机制拆了个遍。在 [COW 隐式共享机制一篇](./19-cow-implicit-sharing-expert.md) 里咱们从原子操作一路看到 detach_helper，知道了 QList 的拷贝构造只花一次原子加法，知道了 detach 分配新内存然后 swap，也知道了 QArrayDataPointer 要等到析构，deref 归零了才真正释放。机制层面的事，那一篇算是交代完了。
+COW 的机制，咱们在前面的 [COW 隐式共享机制一篇](./19-cow-implicit-sharing-expert.md) 里已经拆了个遍：从原子操作一路看到 detach_helper，知道了 QList 的拷贝构造只花一次原子加法，知道了 detach 分配新内存然后 swap，也知道了 QArrayDataPointer 要等到析构，deref 归零了才真正释放。机制层面的事，那一篇算是交代完了。
 
 但那一篇刻意绕开了一个问题：到底哪些操作会触发 detach？咱们当时只说了非 const 方法会触发，剩下的细节留给了本篇。这一篇要翻的是 QString、QByteArray、QList 三个主力容器，咱们把它们逐个过一遍，看清楚每个方法在源码层面是怎么处理 COW 的。这件事弄清楚了，您写代码时就能精确判断这一行会不会导致深拷贝，而不是凭感觉猜。
 
@@ -22,15 +22,16 @@ description: QString、QByteArray、QList 各自的 detach 触发点，const 与
 | `qt_src/qt6.9.1/qtbase/src/corelib/text/qbytearray.h` | QByteArray 接口与内联实现 |
 | `qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h` | QList 接口与内联实现 |
 | `qt_src/qt6.9.1/qtbase/src/corelib/tools/qarraydataops.h` | QList 底层操作（emplace 等） |
+| `qt_src/qt6.9.1/qtbase/src/corelib/tools/qarraydatapointer.h` | QArrayDataPointer 与 fromRawData 的实现 |
 | `qt_src/qt6.9.1/qtbase/src/corelib/tools/qvarlengtharray.h` | QVarLengthArray（对比） |
 
 ## 核心概念讲解
 
-咱们动身翻容器以前，把本篇要覆盖的范围对一遍。上一篇讲的是原子计数、数据头部、智能指针这一整套底层机制，本篇咱们要把这些机制放进三个主力容器里，看它们各自是怎么被调用的：
+咱们动身翻容器以前，把本篇要覆盖的范围对一遍。机制一篇讲的是原子计数、数据头部、智能指针这一整套底层机制，本篇咱们要把这些机制放进三个主力容器里，看它们各自是怎么被调用的：
 
 ```mermaid
 flowchart TD
-    M["上篇已讲\nCOW 机制原理"] --> C1["QString\ndetach 完整图景"]
+    M["机制一篇已讲\nCOW 机制原理"] --> C1["QString\ndetach 完整图景"]
     M --> C2["QByteArray\n镜像对照"]
     M --> C3["QList\n细节差异"]
     C1 & C2 & C3 --> R["const 正确性\n实战场景"]
@@ -39,7 +40,7 @@ flowchart TD
 
 ### detach 的触发模式：三个容器共用一条路
 
-三个容器身上有一条共同的规律，咱们动手翻源码以前把它摆出来：所有 detach 触发走的都是同一条路，非 const 的方法调 detach()，const 的方法则不调。这其实不是巧合，它背后是 Qt 有意定下的设计规范，三种容器遵守的是同一套规则，差别只在具体实现的细节上。
+三个容器身上有一条共同的规律，咱们动手翻源码以前把它摆出来：所有 detach 触发走的都是同一条路，非 const 的方法调 detach()，const 的方法则不调。这是 Qt 有意定下的设计规范，差别只在具体实现的细节上。
 
 咱们把这套判断画成一幅流程图放在下面。
 
@@ -66,7 +67,7 @@ flowchart TD
 
 ### QString：detach 的完整图景
 
-QString 是三个容器里最值得细看的一个，因为它有自己的 `reallocData()`，而不是直接用 QArrayDataPointer 的 `reallocateAndGrow()`。原因上一篇咱们提过：QString 要处理尾部的 null 终止符（QChar(0)），处理它的逻辑比 QList 多一步。
+QString 是三个容器里最值得细看的一个，因为它有自己的 `reallocData()`，而不是直接用 QArrayDataPointer 的 `reallocateAndGrow()`。原因咱们在 [03 QString 内存模型一篇](./03-qstring-memory-expert.md) 拆 reallocData 时提过：QString 要处理尾部的 null 终止符（QChar(0)），处理它的逻辑比 QList 多一步。
 
 咱们从头一个看起：拷贝构造，确认它是 O(1) 的浅拷贝（`qt_src/qt6.9.1/qtbase/src/corelib/text/qstring.h:1340-1341`）：
 
@@ -77,7 +78,7 @@ QString::QString(const QString &other) noexcept : d(other.d)
 
 您看到的就一行：用 QArrayDataPointer 的拷贝构造去初始化 d，浅拷贝和 ref() 的活全在这一行里。开销永远是 O(1) 的水平，跟字符串的长度没有关系。
 
-然后咱们看 detach 的入口。非 const 的 `data()` 是最常见的触发点（`qt_src/qt6.9.1/qtbase/src/corelib/text/qstring.h:1326-1330`）：
+然后是 detach 的入口。最常见的触发点就是非 const 的 `data()`，咱们把它单独拎出来（`qt_src/qt6.9.1/qtbase/src/corelib/text/qstring.h:1326-1330`）：
 
 ```cpp
 QChar *QString::data()
@@ -88,7 +89,7 @@ QChar *QString::data()
 }
 ```
 
-进门的头一行就是 `detach()`。要是 `d.needsDetach()` 返回了 true（ref_ > 1），深拷贝的活就轮到 `reallocData()` 来干，咱们直接看它的源码（`qt_src/qt6.9.1/qtbase/src/corelib/text/qstring.cpp:2781-2802`）：
+进门的头一行就是 `detach()`。要是 `d.needsDetach()` 返回了 true（ref_ > 1），深拷贝的活就轮到 `reallocData()` 来干，咱们把它的源码整个搬过来（`qt_src/qt6.9.1/qtbase/src/corelib/text/qstring.cpp:2781-2802`）：
 
 ```cpp
 void QString::reallocData(qsizetype alloc, QArrayData::AllocationOption option)
@@ -122,7 +123,7 @@ QChar &QString::operator[](qsizetype i)
 
 `data()` 里调了 detach()，返回的是可写指针，然后咱们用 `[i]` 取偏移。const 版本的 `operator[]` 走的是 `at()`，直接读 `d.data()[i]` 里的数据，也就不触发任何 detach 了。
 
-咱们接着看非 const 的 `begin()` 和 `end()`，它们的做法同样如此（`qt_src/qt6.9.1/qtbase/src/corelib/text/qstring.h:1435-1444`）：
+接着咱们翻非 const 的 `begin()` 和 `end()`，它们的做法跟 `data()` 一样（`qt_src/qt6.9.1/qtbase/src/corelib/text/qstring.h:1435-1444`）：
 
 ```cpp
 QString::iterator QString::begin()
@@ -131,9 +132,9 @@ QString::iterator QString::end()
 { detach(); return reinterpret_cast<QChar*>(d.data() + d.size); }
 ```
 
-而 const 版本的 `begin() const` 和 `end() const` 直接返回 `const_iterator`，而不调 detach。这也就给咱们解释了一件事：为什么 `for (auto& c : str)` 会在循环开始前触发一次 detach（str 被共享的话），而 `for (const auto& c : str)` 不会。
+而 const 版本的 `begin() const` 和 `end() const` 直接返回 `const_iterator`，而不调 detach。这也就给咱们解释了一件事：为什么 `for (auto& c : str)` 会在循环开始前，就触发一次 detach（前提是 str 的 ref_ 大于 1）。这里有个容易想岔的地方，您把循环变量写成 `const auto&`，也拦不住这次 detach 的。重载决议看的是 str 这个容器本身是不是 const，循环变量的 const 只管元素这一层，所以 str 不是 const 的时候，选中的永远是上面会 detach 的 `begin()` 和 `end()`。想不触发的话，咱们就得让容器以 const 的身份去调 begin()。直接的做法是换用 `cbegin()`/`cend()`，Qt 官方文档给的另一条路是拿 `std::as_const()` 把 str 包一层，让它以 const 引用的身份去调 `begin() const`。
 
-还有个细节咱们也看一眼，默认构造的 QString 不分配任何内存（`qt_src/qt6.9.1/qtbase/src/corelib/text/qstring.h:1410`）：
+还有个细节咱们顺带记下，默认构造的 QString 不分配任何内存（`qt_src/qt6.9.1/qtbase/src/corelib/text/qstring.h:1410`）：
 
 ```cpp
 constexpr QString::QString() noexcept {}
@@ -154,7 +155,7 @@ inline QByteArray::QByteArray(const QByteArray &a) noexcept : d(a.d)
 
 您看这一行，跟 QString 的做法一样，干的就是浅拷贝的活。
 
-非 const 的 `data()` 也是触发 detach 的入口，咱们看源码（`qt_src/qt6.9.1/qtbase/src/corelib/text/qbytearray.h:616-620`）：
+非 const 的 `data()` 也是触发 detach 的入口，咱们翻过去验证（`qt_src/qt6.9.1/qtbase/src/corelib/text/qbytearray.h:616-620`）：
 
 ```cpp
 inline char *QByteArray::data()
@@ -175,7 +176,7 @@ inline const char *QByteArray::data() const noexcept
 }
 ```
 
-咱们再看 `constData()`，它就是 `data() const` 的别名（`qt_src/qt6.9.1/qtbase/src/corelib/text/qbytearray.h:124`）：
+咱们再往旁边走一步，`constData()` 就是 `data() const` 的别名（`qt_src/qt6.9.1/qtbase/src/corelib/text/qbytearray.h:124`）：
 
 ```cpp
 const char *constData() const noexcept { return data(); }
@@ -185,11 +186,11 @@ const char *constData() const noexcept { return data(); }
 
 ### QList：detach 的细节差异
 
-QList 跟 QString 有一个咱们要注意的重要区别：QList 直接用 QArrayDataPointer 的 `detach()`（上一篇分析过的那个），不需要自己的 `reallocData()`，这让 QList 的 detach 路径更简洁。
+QList 跟 QString 有一个咱们要注意的重要区别：QList 直接用 QArrayDataPointer 的 `detach()`（机制一篇分析过的那个），不需要自己的 `reallocData()`，这让 QList 的 detach 路径更简洁。
 
 拷贝构造和赋值的做法跟 QString 完全对称，干的还是浅拷贝加 ref 的活，咱们就不重复贴了。下面咱们看几个 QList 独有的细节。
 
-头一个咱们看 detach 的入口，QList 的 `detach()` 就是直接委托（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h:457`）：
+detach 的入口咱们头一个看，QList 的 `detach()` 就是直接委托（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h:457`）：
 
 ```cpp
 void detach() { d.detach(); }
@@ -197,14 +198,14 @@ void detach() { d.detach(); }
 
 没有 QString 那样的 `reallocData()`，直接走的就是 `QArrayDataPointer::detach()`，再往下就落到了 `reallocateAndGrow()` 身上。原因咱们前面说过，QList 没有要处理的 null 终止符。
 
-非 const 的 `begin()`/`end()` 跟 QString 一个路数：进门直接调 detach()，咱们看源码（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h:656-657`）：
+非 const 的 `begin()`/`end()` 跟 QString 一个路数，进门头一行调的还是 detach()，咱们把源码摆在下面（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h:656-657`）：
 
 ```cpp
 iterator begin() { detach(); return iterator(d->begin()); }
 iterator end() { detach(); return iterator(d->end()); }
 ```
 
-const 的版本不触发，咱们对照看（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h:659-660`）：
+const 的版本不触发，咱们换到另一边看（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h:659-660`）：
 
 ```cpp
 const_iterator begin() const noexcept { return const_iterator(d->constBegin()); }
@@ -213,7 +214,7 @@ const_iterator end() const noexcept { return const_iterator(d->constEnd()); }
 
 这里有个 noexcept 的差异值得咱们停一下：const 的版本是 noexcept，非 const 的版本不是，因为 detach() 有抛异常的可能（分配内存失败）。
 
-QList 的 `operator[]` 跟 QString 一个路数，也是通过 `data()` 间接触发的，咱们看源码（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h:482-488`）：
+QList 的 `operator[]` 跟 QString 一个路数，也是通过 `data()` 间接触发的，咱们把两版放在一起读（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h:482-488`）：
 
 ```cpp
 reference operator[](qsizetype i)
@@ -232,7 +233,7 @@ const_reference at(qsizetype i) const noexcept
 { /* bounds check */ return d->data()[i]; }
 ```
 
-咱们再看 `replace()` 的安全 detach，它是 QList 一个值得单说的模式（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h:574-580`）：
+`replace()` 的安全 detach 是 QList 里一个值得单说的模式，咱们就单独说它（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qlist.h:574-580`）：
 
 ```cpp
 void replace(qsizetype i, parameter_type t)
@@ -246,7 +247,7 @@ void replace(qsizetype i, parameter_type t)
 
 这一句把旧数据指针交换到了 oldData 里，而不是让临时对象当场析构。咱们要问一句为什么？因为 `d.data()[i] = t` 执行的时候，旧数据必须还是活的。要是 t 是一个引用了旧数据中元素的值，旧数据提前释放的话，这行赋值读到的就是已释放的内存。oldData 要等到 `replace()` 返回的时候才析构，那时候赋值已经完成了，旧数据被安全地 deref。
 
-咱们再看 emplace 的快路径，QList 的 `emplaceBack()` 有一条不需要 detach 的优化路径（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qarraydataops.h:142-167`）：
+emplace 的快路径是最后一个细节，QList 的 `emplaceBack()` 有一条不需要 detach 的优化路径，咱们看它是怎么省的（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qarraydataops.h:142-167`）：
 
 ```cpp
 void emplace(qsizetype i, Args &&... args)
@@ -273,7 +274,7 @@ void emplace(qsizetype i, Args &&... args)
 
 ### const 正确性：性能就藏在这里
 
-前面三个容器的源码咱们都翻过了，它们遵循的是同一个模式：非 const 的方法调 detach()，const 的方法不调。这表明 const 不只是一个编译器的检查，它在运行时直接决定您的代码会不会触发一次深拷贝。咱们看一张总结图：
+三个容器的源码翻到这里，咱们换个角度看 const。它不只是一个编译器的检查，它在运行时直接决定您的代码会不会触发一次深拷贝。咱们把两边的接口归成一张总结图：
 
 ```mermaid
 flowchart LR
@@ -289,7 +290,7 @@ flowchart LR
         D1["data() 非const"]
         D2["begin() / end()"]
         D3["operator[] 非const"]
-        D4["range-for\n(auto& x : c)"]
+        D4["range-for\n（容器非 const 时）"]
     end
 ```
 
@@ -307,7 +308,7 @@ void process(const QString& s) { /* 只读访问，零开销 */ }
 
 咱们按值传参，调用的时候会 ref+1（O(1) 不做深拷贝），但函数内部对 s 的非 const 操作会触发 detach。传 const 引用的话，咱们连 ref+1 都省了。
 
-咱们再看 range-based for 的场景：
+咱们把第二个场景放到 range-based for 上，三种循环写法挨个跑给您看：
 
 ```cpp
 QString str = computeBigString();
@@ -316,14 +317,18 @@ auto copy = str;  // ref_ = 2
 // 触发 detach！非 const begin() → memcpy 全部字符串数据
 for (auto& c : str) { /* ... */ }
 
-// 不触发。const begin() → 直接读
+// 照样触发：循环变量的 const 不参与重载决议，
+// str 仍被共享的话，选中的还是非 const begin()
 for (const auto& c : str) { /* ... */ }
 
-// 等价写法：std::as_const() 把左值转成 const 引用
+// 不触发：std::as_const() 把 str 转成 const 引用，
+// 选中 begin() const
 for (auto& c : std::as_const(str)) { /* ... */ }
 ```
 
-咱们再看只读遍历 QList 的场景：
+您要是把这三段照着顺序连跑，头一遍 detach 完 str 就独占了，第二遍的指针自然不动，容易误读成 `const auto&` 安全了。要单独验证中间那遍的话，咱们就得给它另备一份新的共享容器。
+
+QList 的只读遍历是第三个场景，咱们把 iterator 和 const 两个版本各跑一遍：
 
 ```cpp
 QList<int> list = {1, 2, 3, 4, 5};
@@ -336,11 +341,11 @@ for (auto it = list.begin(); it != list.end(); ++it) { /* 只读，但 detach �
 for (auto it = list.cbegin(); it != list.cend(); ++it) { /* 纯读，零开销 */ }
 ```
 
-这里的教训很直白：您不打算修改容器，就一定要用 const 的接口。这不是代码风格的问题，而是性能的问题——在共享状态下，一次非 const 的 `begin()` 就能触发一次完整的深拷贝。
+这里的教训很直白：您不打算修改容器，就一定要用 const 的接口。而只要共享还在，一次非 const 的 `begin()` 就能触发一次完整的深拷贝。
 
 ### fromRawData：不拥有数据的视图
 
-Qt 容器还有一种特殊的构造方式：`fromRawData()`。它让容器指向一块外部的内存，不拥有也不管理它的生命周期。它在 QArrayDataPointer 里的实现，咱们直接看源码（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qarraydatapointer.h:63`）：
+Qt 容器还有一种特殊的构造方式：`fromRawData()`。它让容器指向一块外部的内存，不拥有也不管理它的生命周期。它在 QArrayDataPointer 里的实现不长，咱们直接翻过去（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qarraydatapointer.h:63`）：
 
 ```cpp
 static QArrayDataPointer fromRawData(const T *rawData, qsizetype length) noexcept
@@ -349,7 +354,7 @@ static QArrayDataPointer fromRawData(const T *rawData, qsizetype length) noexcep
 }
 ```
 
-`fromRawData()` 创建的 QArrayDataPointer，它的 d 是 nullptr。咱们还记得上一篇的 `needsDetach()` 吗？它的实现是 `!d || d->needsDetach()`，d 为 nullptr 的时候会直接返回 true。这带来一个直接的推论：对 fromRawData 创建的容器做任何非 const 操作，都会触发一次完整的内存分配和数据拷贝。原因其实很直白，fromRawData 只是把外部数据看了一眼，它没有自己的 QArrayData 头部，原地修改也就无从谈起了。
+`fromRawData()` 创建的 QArrayDataPointer，它的 d 是 nullptr。咱们还记得机制一篇的 `needsDetach()` 吗？它的实现是 `!d || d->needsDetach()`，d 为 nullptr 的时候会直接返回 true。这带来一个直接的推论：对 fromRawData 创建的容器做任何非 const 操作，都会触发一次完整的内存分配和数据拷贝。原因其实很直白，fromRawData 只是把外部数据看了一眼，它没有自己的 QArrayData 头部，原地修改也就无从谈起了。
 
 这个设计的用途是：您有一块已有的内存（比如网络收到的原始字节、mmap 映射的文件内容），想用 QByteArray 的接口读它，又不想付出拷贝的代价。只要咱们只做 const 操作，fromRawData 就是零拷贝的。一旦您需要修改，Qt 会自动把它升级成一块真正拥有的内存，这和 COW 的 detach 逻辑完全一致，只是触发的原因从被共享变成了不拥有数据。
 
@@ -357,11 +362,11 @@ static QArrayDataPointer fromRawData(const T *rawData, qsizetype length) noexcep
 
 Qt 还有一个经常被咱们忽略的容器：`QVarLengthArray`。它跟 QList 的设计哲学完全相反，咱们在它身上找不到 COW、引用计数、detach 的任何影子，每次拷贝都是实打实的深拷贝。
 
-咱们把 `qt_src/qt6.9.1/qtbase/src/corelib/tools/qvarlengtharray.h` 全文 1063 行从头到尾翻了一遍，再拿 `detach`、`ref`、`deref`、`QSharedData`、`QAtomicInt`、`isShared` 这几个关键词 grep 了一遍，结果其实一个匹配都没有。
+咱们把 `qt_src/qt6.9.1/qtbase/src/corelib/tools/qvarlengtharray.h` 全文 1063 行从头到尾翻了一遍，再拿 `detach`、`ref`、`deref`、`QSharedData`、`QAtomicInt`、`isShared` 这几个关键词 grep 了一遍，口径用的是词边界匹配（`grep -w`）。您要是不带 `-w` 直接搜 `ref`，命中的就包括 `reference` 这样的子串，咱们实测多出 12 行。等咱们加上词边界，六个词就全部零命中了。
 
 QVarLengthArray 的策略，咱们看下来就一条：在栈上预分配一块固定大小的缓冲区，默认的大小是 256 个元素。元素少的时候直接用栈内存，堆分配都省了，只有超出预分配的大小了才去堆上申请。引用计数、共享、detach 的开销在这里一概不存在。
 
-什么时候该选 QVarLengthArray 而不是 QList？咱们挑它的时候看的是这几条：临时性的、局部的、不会被拷贝的短数组。函数内部的临时缓冲区、算法中的中间结果存储、OpenGL 顶点数据组装，都是它的典型场景。这些场景吃不到 COW 拷贝 O(1) 的好处，反而要交原子操作的开销：每次做非 const 访问的时候都要查一次 needsDetach()，单次只是一下 loadRelaxed() 的水平，热循环里积少成多也就攒出了可观的代价。
+什么时候该选 QVarLengthArray 而不是 QList？咱们挑它的时候看的是这几条：临时性的、局部的、不会被拷贝的短数组。函数内部的临时缓冲区、算法中的中间结果存储、OpenGL 顶点数据组装，都是它的典型场景。这些场景吃不到 COW 拷贝 O(1) 的好处，反而要交原子操作的开销。每次做非 const 访问的时候都要查一次 needsDetach()，单次只是一下 loadRelaxed() 的水平。但是热循环里积少成多，也就攒出了可观的代价。
 
 咱们再把容器放到多个对象之间传递、拷贝、当返回值，QList 的 COW 优势就显出来了：拷贝是 O(1) 的，修改的时候才付出代价。
 
@@ -374,7 +379,7 @@ QString::iterator QString::begin()
 { detach(); return reinterpret_cast<QChar*>(d.data()); }
 ```
 
-`detach()` 在循环开始之前就被调用了一次。这一下的代价取决于 str 是否被共享（ref_ > 1），共享着的话就会触发 memcpy 拷贝整个字符串。循环本身不会再触发额外的 detach（detach 之后 ref_ 变成了 1），但要是多处代码都在同一个共享字符串上做 range-based for 的话，每处都会触发一次 detach 的深拷贝，性能也就在不知不觉里塌了下去。后果是程序变慢而不是崩溃，排查的难度也特别高，因为每处代码看上去都只多做了一次深拷贝、合情合理。解法咱们也看得清楚：任何不需要修改的遍历，都换成 `const auto&` 或 `std::as_const()` 的写法。
+`detach()` 在循环开始之前就被调用了一次。这一下的代价取决于 str 是否被共享（ref_ > 1），共享着的话就会触发 memcpy 拷贝整个字符串。循环本身不会再触发额外的 detach（detach 之后 ref_ 变成了 1），但要是多处代码都在同一个共享字符串上做 range-based for 的话，每处都会触发一次 detach 的深拷贝，性能也就在不知不觉里塌了下去。后果是程序变慢而不是崩溃，排查的难度也特别高，因为每处代码看上去都只多做了一次深拷贝、合情合理。解法在前面的场景里已经摆出来了：任何不需要修改的遍历，咱们都让容器以 const 的身份去调 begin()。您要么拿 `std::as_const()` 把容器包一层，要么直接换成 `cbegin()`/`cend()` 的写法。
 
 第二类的风险是 detach 之后迭代器失效。入门篇的那一篇也提过它，这里咱们补一个实战场景：
 
@@ -406,11 +411,11 @@ fromRawData 创建的容器和原始数据共享内存，但您对它做任何�
 
 ## 练习项目
 
-本篇和 [01.qobject 篇](./01-qobject-meta-system-expert.md) 一样走的是纯源码拆解的路子，练习咱们就走验证的路，三道题咱们都只给方向和验证手段，完整工程留给您自己搭。
+本篇和 [QObject 元对象系统拆解一篇](./01-qobject-meta-system-expert.md) 一样走的是纯源码拆解的路子，练习咱们就走验证的路，三道题咱们都只给方向和验证手段，完整工程留给您自己搭。
 
 头一道题咱们亲眼看一次 detach 的发生。您准备一个几百 KB 的 QString 和它的一份拷贝，对比两份的 `constData()` 指针，此刻它俩指的应该是同一块内存。然后您只对其中一份调 `data()` 改一个字符，咱们再对比一次，改过的那个指针挪了窝，另一份还待在原来的地方。您亲眼见到的这一幕，对应的就是 QString 一节里 `reallocData` 的深拷贝路。
 
-第二道题把 range-for 的两种写法放在同一份共享容器上跑。您准备一个被共享的 QList，咱们分别用 `auto&` 和 `const auto&` 各走一遍循环，每遍循环的前后都打印一次 `constData()` 指针。`auto&` 的那遍会看到指针挪窝，detach 已经发生了，`const auto&` 的那遍指针原封不动。您再拿 `std::as_const()` 的写法比一比，三种写法的差别就都摆在眼前了。
+第二道题把 range-for 的三种写法各放在一份独立的共享容器上跑。`const auto&` 到底拦不拦得住 detach？这个疑问也是最容易想岔的一个，实验会让您亲眼看到答案。您准备三份一模一样的 QList，每份都配上一个共享的副本（ref_ 都是 2），再分别用 `auto&`、`const auto&` 和 `std::as_const()` 包裹的写法各走一遍循环，每遍循环的前后都打印一次 `constData()` 指针。头两份的指针都会挪窝，detach 都发生了，因为循环变量的 const 不参与 begin() 的重载决议。只有包了 `std::as_const()` 的第三份，指针原封不动地待在原地。三份的结果摆在一起，哪种写法真正防住了 detach，您一眼就分清了。
 
 第三道题验证 fromRawData 一写就深拷贝的本性。您在栈上放一个 char 数组，咱们用 `QByteArray::fromRawData` 把它包起来，读一次它的 `constData()`，指针应该就落在那块栈内存的地址上。然后您对 ba 做一次非 const 访问，再读一次 `constData()` 的返回，指针已经换成新分配的堆地址了，而原始数组从头到尾一个字节没动。两步的指针都打出来印证，本篇 fromRawData 一节的判断也就落了地。
 
@@ -428,6 +433,6 @@ fromRawData 创建的容器和原始数据共享内存，但您对它做任何�
 
 ---
 
-走到了这里，Qt COW 从机制原理到容器实战的路，咱们就算完整拆完了。从 `fetch_add` 的原子操作，到 `reallocateAndGrow` 的内存管理，再到三个容器各自的 detach 触发点和 const 正确性的性能影响，这些都是写高性能 Qt 代码时要精确掌握的东西。临走前咱们把最简单的规则再念一遍：不修改的时候就用 const 接口，要修改就看好手里的迭代器。
+走到了这里，Qt COW 从机制原理到容器实战的路，咱们就算完整走完了。从 `fetch_add` 的原子操作，到 `reallocateAndGrow` 的内存管理，再到三个容器各自的 detach 触发点和 const 正确性的性能影响，这些都是写高性能 Qt 代码时要精确掌握的东西。什么时候该用 const 接口、什么时候要看好手里的迭代器，咱们在三节风险里也都给过解法。
 
 您要是想把本篇涉及的全部行号证据拿来一一核对，这些证据咱们已经归好了类：[源码索引 · QArrayDataPointer](../code-index/qtbase/qarraydatapointer.md) 收录的是 QArrayDataPointer 相关的行号证据，[源码索引 · 边界情况](../code-index/qtbase/cow-edge-cases.md) 收录的是边界与对比类的证据，您带着行号直接去 `qt_src/qt6.9.1` 翻原文就行。
