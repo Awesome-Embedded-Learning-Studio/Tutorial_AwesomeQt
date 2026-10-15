@@ -3,23 +3,23 @@ title: QTranslator 与 QM 文件格式源码拆解
 description: tr 凭啥是静态的、context 是编译期类名还是运行期的、tr 找不到翻译返回空还是原文、translators 列表后装的为啥优先、installTranslator 去不去重、QM 文件开头那 16 字节到底是啥、消息查找是哈希表还是二分、translation 字段是 UTF-8 还是 UTF-16、复数 %n 怎么走、disambiguation 和 comment 啥关系、QTranslator 析构会不会自摘除——从源码拆透。
 ---
 
-# 现代Qt开发教程（专家篇）1.13——QTranslator 与 QM 文件格式源码拆解
+# QTranslator 与 QM 文件格式源码拆解
 
-## 1. 前言——国际化里几个答不上来的问题
+## 前言：国际化里几个答不上来的问题
 
-Qt 的国际化，入门用法简单：源码里 `tr("Hello")`，`lupdate` 抽成 `.ts`，翻译完 `lrelease` 编成 `.qm`，运行时 `QTranslator::load` 加载、`installTranslator` 装上，「Hello」就变成「你好」。但这套流程底下藏着不少让人卡壳的细节。
+Qt 的国际化，入门用法是不复杂的：咱们在源码里写 `tr("Hello")`，`lupdate` 把字符串抽成了 `.ts`，翻译完了 `lrelease` 把它编成了 `.qm`，运行时咱们拿 `QTranslator::load` 加载、`installTranslator` 装上，“Hello”就变成了“你好”。不过这套流程底下藏着不少能让人卡壳的细节，咱们这一篇就是冲着它们去的。
 
-笔者先把当年自己答不上来的几个问题摆出来。`tr()` 这个函数，您在 `QObject` 子类里直接写 `tr(...)`，它凭啥是静态的？`context` 这个参数到底是哪来的——是运行时的类名，还是编译期就定了的？`tr("Hello")` 在没装翻译的时候返回啥，空字符串还是原文？装多个 translator 时，谁优先？还有那个 `.qm` 文件，拿十六进制工具打开，开头那 16 个字节是什么，是可读的标记串还是二进制？最隐蔽的一个：消息查找到底是哈希表还是别的，教材都含糊。
+笔者把当年自己答不上来的问题摆出来。`tr()` 凭啥是个静态的函数？您在 `QObject` 子类里直接写 `tr(...)`，写的时候没加任何 static，它凭啥是静态的？`context` 这个参数是哪来的，是运行时的类名，还是编译期就定好了的？`tr("Hello")` 在没装翻译的时候返回的是啥，空字符串吗，还是原文？装了多个 translator 的时候，谁的译文排在前头？还有，您拿十六进制工具打开 `.qm` 文件，文件开头的那 16 个字节是什么，是可读的标记串还是二进制？最隐蔽的一个是消息查找，它是哈希表吗，还是别的什么？教材讲到这儿都是含糊的。
 
-这些问题，压在 Qt i18n 的几条主轴上：`tr` 的来源（`Q_OBJECT` 宏植入，context 是 moc 编译期烧进 `staticMetaObject` 的类名）、查找链（遍历 `translators` 列表，`prepend` 故后装优先，全 miss 返原文）、QM 文件格式（16 字节随机 magic、TLV 分节、无版本号字段）、查找算法（context 走哈希桶、消息走预排序数组二分）、内部编码（translation 是 UTF-16BE 不是 UTF-8）。
+这些问题不是散着的，它们落在 Qt i18n 的几根主轴上：`tr` 的来源（`Q_OBJECT` 宏植入的，context 是 moc 在编译期烧进 `staticMetaObject` 的类名），查找链（遍历的是 `translators` 列表，`prepend` 让后装的排前面，全查不到的时候返回的就是原文），QM 文件格式（16 字节的随机 magic、tag-length-value（TLV）分节、没有版本号的字段），查找算法（context 走哈希桶、消息走预排序数组的二分），内部编码（translation 是 UTF-16BE 的，而不是 UTF-8）。这几根轴咱们一根一根地过。
 
-入门篇教了 `tr`/`QTranslator` 怎么用，进阶篇补了 `lupdate`/`lrelease` 流程和复数。本篇要往源码里捅：咱们打开 `qtranslator.cpp` 和 `qcoreapplication.cpp`，看看 `tr` 怎么一路走到 `QTranslator::translate`、`.qm` 文件二进制长啥样、消息是怎么被二分搜索找出来的。
+入门篇的 [国际化](../../beginner/01-qtbase/13-i18n-beginner.md) 教了 `tr` 和 `QTranslator` 怎么用，进阶篇的 [国际化进阶：复数规则与动态语言切换](../../advanced/01-qtbase/13-i18n-advanced.md) 补了 `lupdate`/`lrelease` 的流程和复数。本篇咱们要往源码里走，咱们打开 `qtranslator.cpp` 和 `qcoreapplication.cpp`，看 `tr` 是怎么一路走到 `QTranslator::translate` 的，看 `.qm` 文件的二进制长什么样子，看一条消息是怎么被二分搜索找出来的。
 
-边界先划清楚。`tr` 经 `staticMetaObject`（moc 生成）拿 context 的机制——`className()` 从元对象的 stringdata 表里取类名——咱们只在「编译期烧入类名」这个层面点到，`staticMetaObject` 的完整七字段结构是 [1.01 QObject 元对象系统篇](./01-qobject-meta-system-expert.md) 和 [17.MOC 编译器原理篇](./17-moc-compiler-expert.md) 的范畴。`lupdate`/`lrelease` 工具（`.ts` 转 `.qm`、XML 解析、字节码生成）是工具链主题，本篇讲的是运行时 `QTranslator` 怎么读 `.qm` 查找，不讲工具怎么生成 `.qm`。具体应用的 `retranslateUi` 实践只点到 `installTranslator` 发 `LanguageChange` 事件触发，不展开 UI 重译模式。
+边界咱们也划清楚。`tr` 经 `staticMetaObject`（moc 生成）拿 context 的机制，也就是 `className()` 从元对象的 stringdata 表里取类名这一段，咱们只讲编译期烧入类名这个层面。再往深了走，`staticMetaObject` 完整的七字段结构是 [QObject 元对象系统](./01-qobject-meta-system-expert.md) 和 [MOC 编译器原理](./17-moc-compiler-expert.md) 的范畴，本篇就不展开了。`lupdate`/`lrelease` 工具（`.ts` 转 `.qm`、XML 解析、字节码生成）是工具链的主题，本篇讲的是运行时的 `QTranslator` 怎么读 `.qm` 做查找，工具怎么生成 `.qm` 咱们不讲。具体应用里的 `retranslateUi` 实践，咱们只点到 `installTranslator` 发 `LanguageChange` 事件触发这一层，UI 重译的模式就不展开了。
 
-## 2. 环境说明
+## 环境说明
 
-本篇源码引用基于 `qt_src/qt6.9.1`，行号随 Qt 版本会漂移，对照阅读时拿函数名定位最稳。i18n 涉及的关键文件：
+本篇的源码引用都基于 `qt_src/qt6.9.1`，行号是会随 Qt 版本漂移的，您对照着读的时候，拿函数名去定位是最稳的办法。i18n 涉及的关键文件，咱们列在下面：
 
 | 文件 | 角色 |
 |---|---|
@@ -32,11 +32,11 @@ Qt 的国际化，入门用法简单：源码里 `tr("Hello")`，`lupdate` 抽�
 | `qtbase/src/corelib/kernel/qmetaobject.cpp` | QMetaObject::tr / className |
 | `qtbase/src/corelib/global/qttranslation.h` | QT_TR_NOOP / qtTrId 等 |
 
-本篇无配套 example，原因和前几篇一样：纯源码拆解，对照 `qt_src` 翻代码就是最好的实验。
+本篇没有配套的 example，原因和前几篇是一样的，它是纯源码的拆解，您对照着 `qt_src` 翻代码，就是最好的实验。
 
-## 3. 核心概念讲解
+## 核心概念讲解
 
-下源码之前，咱们先把 `tr` 从源码到翻译结果的完整链路对一下。这张图能帮您看清中间发生了什么：
+咱们动笔讲源码以前，把 `tr` 从源码到翻译结果的完整链路对一遍，下图能帮您看清中间都发生了什么：
 
 ```mermaid
 flowchart TD
@@ -51,13 +51,11 @@ flowchart TD
     H --> I
 ```
 
-`tr` 是 `Q_OBJECT` 宏植入的 inline static，转发给 `staticMetaObject.tr`，后者把 context 填成 moc 编译期烧入的类名，交给 `QCoreApplication::translate` 遍历所有已安装的 `QTranslator`。命中返回译文，全 miss 返回原文。咱们这一篇就顺着这条链拆。
+`tr` 是 `Q_OBJECT` 宏植入的 inline static，它转发给了 `staticMetaObject.tr`，后者把 context 填成 moc 在编译期烧入的类名，交给 `QCoreApplication::translate` 去遍历所有已安装的 `QTranslator`。查到了就返回译文，全部落空了就返回原文。咱们这一篇就顺着它往下拆。
 
-### 3.1 tr 是 Q_OBJECT 植入的，context 是编译期类名
+### tr 是 Q_OBJECT 植入的，context 是编译期类名
 
-先看 `tr` 到底从哪来。很多人以为 `QObject::tr` 是 `QObject` 类自己定义的方法——不是。它是由 `Q_OBJECT` 宏植入的：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtmetamacros.h:84-92`
+`tr` 到底是从哪来的？这是咱们要回答的头一个问题。不少人以为 `QObject::tr` 是 `QObject` 类自己定义的方法，不是的，它是 `Q_OBJECT` 宏植进去的（证据在 `qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtmetamacros.h:84-92`），咱们看：
 
 ```cpp
 #ifndef QT_NO_TRANSLATION
@@ -71,9 +69,7 @@ flowchart TD
 #endif
 ```
 
-`QT_TR_FUNCTIONS` 宏展开成一个 inline static 函数，转发给 `staticMetaObject.tr`。这个宏被 `Q_OBJECT` 宏塞进每个 `QObject` 子类的类体：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtmetamacros.h:133-146`
+咱们看 `QT_TR_FUNCTIONS` 宏，它展开出来的是一个 inline static 函数，转发给了 `staticMetaObject.tr`。这个宏被 `Q_OBJECT` 塞进了每个 `QObject` 子类的类体里（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtmetamacros.h:133-146`）：
 
 ```cpp
 #define Q_OBJECT \
@@ -89,11 +85,9 @@ private: \
     ...
 ```
 
-所以每个声明了 `Q_OBJECT` 的类，都有自己的 `tr`——它不是继承来的，是宏在类体里展开出来的。这带来一个直接后果：没声明 `Q_OBJECT` 的类，压根就没有 `tr`，调它会编译失败。
+所以每个声明了 `Q_OBJECT` 的类，都有自己的 `tr`，它不是继承来的，是宏在类体里展开出来的。这带来一个直接的后果：没声明 `Q_OBJECT` 的类压根就没有 `tr`，您硬要去调，编译期就报错了。
 
-`tr` 转发到 `QMetaObject::tr`，这里有个关键动作——填 context：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qmetaobject.cpp:416-419`
+咱们顺着 `tr` 往下走，它转到了 `QMetaObject::tr` 这里，这一步有个要紧的动作是填 context（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qmetaobject.cpp:416-419`）：
 
 ```cpp
 QString QMetaObject::tr(const char *s, const char *c, int n) const
@@ -102,11 +96,9 @@ QString QMetaObject::tr(const char *s, const char *c, int n) const
 }
 ```
 
-context 不是运行时的类名，是 `className()` 返回的——而 `className()` 是从 `staticMetaObject` 的 stringdata 表里按索引取出来的字符串，那个字符串是 moc 在编译期写进去的类名。换句话说，您写 `MyClass::tr("Hello")`，最终 `translate` 收到的 context 是字符串 `"MyClass"`，这个绑定在编译期就完成了，运行时改不了。
+context 不是运行时才拿的类名，它是从 `className()` 来的，而 `className()` 是从 `staticMetaObject` 的 stringdata 表里按索引取出来的字符串，那个字符串是 moc 在编译期写进去的类名。换个直白一点的说法，您写 `MyClass::tr("Hello")`，`translate` 最终收到的 context 就是字符串 `"MyClass"`，这个绑定在编译期就完成了，运行时改不了它。
 
-非 `QObject` 派生的类（工具类、命名空间）也想用 `tr` 怎么办？用 `Q_DECLARE_TR_FUNCTIONS`：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication.h:257-261`
+不是 `QObject` 派生的类（工具类、命名空间）也想用 `tr`，怎么办？咱们就用 `Q_DECLARE_TR_FUNCTIONS`（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication.h:257-261`）：
 
 ```cpp
 #define Q_DECLARE_TR_FUNCTIONS(context) \
@@ -116,11 +108,9 @@ public: \
 private:
 ```
 
-宏参数 `context` 被 `#context` 字符串化，直接传给 `translate`，绕过 `staticMetaObject`。这是给非 `QObject` 类开的口子。
+宏参数 `context` 被 `#context` 字符串化了，直接传给了 `translate`，它根本不沾 `staticMetaObject` 的边。这是 Qt 给非 `QObject` 类留的口子，咱们用工具类的时候走的就是它。
 
-还有个边角：如果编译时定义了 `QT_NO_TRANSLATION`（完全禁用翻译），`tr` 还在吗？在，但退化了：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.h:119-122`
+边角的情况咱们也看一眼：编译时定义了 `QT_NO_TRANSLATION`（把翻译整个禁掉）的时候，`tr` 还在吗？在的，只是退化了（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qobject.h:119-122`）：
 
 ```cpp
 #if defined(QT_NO_TRANSLATION) || defined(Q_QDOC)
@@ -129,15 +119,13 @@ private:
 #endif
 ```
 
-`tr` 直接返回 `QString::fromUtf8(sourceText)`，啥也不查。所以您代码里那些 `tr(...)` 调用，禁用翻译时不用 `#ifdef` 包裹，照样能编译、能跑，只是不翻译。
+此时的 `tr` 直接返回 `QString::fromUtf8(sourceText)`，什么也不查。所以您代码里那些 `tr(...)` 调用，在禁用翻译的构建里不用 `#ifdef` 包裹，照样是能编译、能跑的，只是不翻译而已。
 
-### 3.2 translate 遍历 translators 列表，全 miss 返原文
+### translate 遍历 translators 列表，全查不到就返原文
 
-接下来是本篇第一个大纠偏点。`tr` 找不到翻译时返回什么——空字符串？笔者当年也是这么以为的，错。
+本篇的头一个大纠偏点就在这儿了。`tr` 找不到翻译的时候返回的是什么？空字符串吗？笔者当年也是这么以为的，错了。
 
-看 `QCoreApplication::translate` 的实现：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication.cpp:2283-2311`
+咱们看 `QCoreApplication::translate` 的实现（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication.cpp:2283-2311`）：
 
 ```cpp
 QString QCoreApplication::translate(const char *context, const char *sourceText,
@@ -171,17 +159,15 @@ QString QCoreApplication::translate(const char *context, const char *sourceText,
 }
 ```
 
-逻辑分两段。第一段遍历 `translators` 列表，对每个已安装的 `QTranslator` 调它的 `translate`，命中（`result.isNull()` 为 false）就 break。第二段是关键兜底——如果遍历完还是 null，`result = QString::fromUtf8(sourceText)`，返回的是源文本的 UTF-8 解码，也就是英文原文。
+逻辑咱们分成两段看。头一段遍历的是 `translators` 列表，对每个已安装的 `QTranslator` 调它的 `translate`，命了中（`result.isNull()` 为 false）就 break。第二段是兜底的，遍历完了 `result` 还是 null 的话，走的就是 `result = QString::fromUtf8(sourceText)`，返回的是源文本按 UTF-8 解出来的结果，也就是咱们看到的英文原文。
 
-所以 `tr` 找不到翻译，返回的不是空字符串，是源文本本身。这就是为啥应用即便没装任何翻译，界面也能正常显示英文——`tr("Hello")` 在没 translator 时返回 `"Hello"`。只有 `sourceText == nullptr` 这个极端情况才返回空 `QString`。
+所以 `tr` 找不到翻译，返回的不是空字符串，其实就是源文本本身。这就是为什么应用就算没装任何翻译，界面也能照常显示英文的，您看，`tr("Hello")` 在没有 translator 的时候返回的就是 `"Hello"`。只有 `sourceText == nullptr` 这个极端的情况才返回空的 `QString`。
 
-末尾那个 `replacePercentN(&result, n)` 是处理复数里的 `%n` 占位符的，3.7 节细讲。
+末尾那个 `replacePercentN(&result, n)` 是处理复数里 `%n` 占位符的，咱们放到复数一节细讲。
 
-### 3.3 installTranslator：后装优先，不去重
+### installTranslator：后装的排前面，不去重
 
-`translators` 列表怎么维护的，决定了多个 translator 谁先查。看 `installTranslator`：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication.cpp:2165-2176`
+`translators` 列表是怎么维护的，决定了多个 translator 谁的译文能被查到。咱们看 `installTranslator`（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication.cpp:2165-2176`）：
 
 ```cpp
 bool QCoreApplication::installTranslator(QTranslator *translationFile)
@@ -198,13 +184,11 @@ bool QCoreApplication::installTranslator(QTranslator *translationFile)
     }
 ```
 
-`prepend`——放列表头部。结合 3.2 节的 `constBegin → constEnd` 正向遍历，列表头部是最先被查的。所以「后装的 translator 优先级更高」。官方文档说的「queries in reverse installation order」（逆安装顺序查询）就是这么来的：安装顺序是 A→B→C，列表变成 C B A，查询顺序就是 C B A。
+`prepend`，放到的正是列表头部。结合 translate 一节 `constBegin` 到 `constEnd` 的正向遍历，列表头部是最早被查到的位置，所以后装的 translator 排在前面。官方文档说的 “queries in reverse installation order”（按安装的逆序查询）就是这么来的：您按 A、B、C 的顺序安装，列表就成了 C、B、A，查询的顺序也就是 C、B、A。
 
-这里有个坑，笔者专门拎出来。`installTranslator` 只做了 nullptr 检查和 instance 检查，没有 `contains` 去重。也就是说，同一个 translator 您 install 两次，列表里会出现两条。虽然查询时因为幂等返回结果一样，但这是无意义的重复，而且 `removeTranslator` 用的 `removeAll` 会一次删掉所有匹配项——重复 install 会扰乱您的「装一次卸一次」心智模型。
+这里有个容易栽的地方，笔者专门拎出来讲。`installTranslator` 只做了 nullptr 检查和 instance 检查，是没有 `contains` 去重的，同一个 translator 您 install 两次的话，列表里就会出现两条重复的。查询是幂等的，结果倒是一样的，可这是没有意义的重复，而且 `removeTranslator` 用的 `removeAll` 会一次删掉所有匹配项，您想着卸一次还剩一条，实际是两条一起没了，跟装一次卸一次的预期对不上。
 
-`removeTranslator` 的实现：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication.cpp:2201-2220`
+咱们看 `removeTranslator` 的实现（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication.cpp:2201-2220`）：
 
 ```cpp
 bool QCoreApplication::removeTranslator(QTranslator *translationFile)
@@ -229,11 +213,9 @@ bool QCoreApplication::removeTranslator(QTranslator *translationFile)
 }
 ```
 
-`removeAll` 删全部匹配项（一次清掉重复 install 的所有条目）。返回 bool 表示是否实际移除，没找到不发 `LanguageChange` 事件。注意 `installTranslator` 成功后和 `removeTranslator` 成功后都会 `sendEvent` 一个 `LanguageChange`（同步派发），这是 UI 动态重译的信号源——`QApplication` 把它派发给顶层 widget，触发它们的 `changeEvent`，您在 `changeEvent` 里重写 `retranslateUi` 就能动态切换语言。
+`removeAll` 把匹配项全删掉了，重复 install 留下的条目一次就清干净了。返回的 bool 表示的是不是真的移除了东西，没找到的话就不发 `LanguageChange` 事件。您还要注意，`installTranslator` 成功之后和 `removeTranslator` 成功之后都会 `sendEvent` 一个 `LanguageChange`（同步派发的），这是 UI 动态重译的信号源，`QApplication` 把它派发给顶层的 widget，触发它们的 `changeEvent`，您在 `changeEvent` 里重写 `retranslateUi`，语言就能动态切换了。
 
-`translators` 列表本身受读写锁保护：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication_p.h:158-162`
+咱们再看 `translators` 列表本身，它是受读写锁保护的（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication_p.h:158-162`）：
 
 ```cpp
 #ifndef QT_NO_TRANSLATION
@@ -243,15 +225,13 @@ bool QCoreApplication::removeTranslator(QTranslator *translationFile)
 #endif
 ```
 
-`translate` 用 `QReadLocker`（多线程可并发查），`installTranslator`/`removeTranslator` 用 `QWriteLocker`（独占写）。翻译查询是多线程安全的。
+`translate` 那边用的是 `QReadLocker`，多线程可以并发地查，`installTranslator` 和 `removeTranslator` 用的是 `QWriteLocker`，独占地写。翻译查询是多线程安全的，这一点您可以放心。
 
-### 3.4 QM 文件：16 字节随机 magic，无版本号
+### QM 文件：16 字节随机 magic，没有版本号
 
-重头戏来了。咱们打开 `qtranslator.cpp`，看看 `.qm` 文件二进制到底长啥样。
+咱们打开 `qtranslator.cpp`，看 `.qm` 文件的二进制到底长什么样子。
 
-第一个反直觉的地方：`.qm` 文件开头那 16 个字节，很多人以为是可读的标记串（比如 `<QTMETADATA>` 之类）。笔者第一次 hexdump 一个 qm 文件时也找过可读头，没找着——它是随机二进制：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:51-62`
+头一处反直觉的：`.qm` 文件开头那 16 个字节，不少人以为是可读的标记串（比如 `<QTMETADATA>` 之类）。笔者头一回 hexdump 一个 qm 文件的时候也去找过可读头，结果是没找着的，它是随机的二进制（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:51-62`）：
 
 ```cpp
 /*
@@ -268,19 +248,15 @@ static const uchar magic[MagicLength] = {
 };
 ```
 
-注释里那段 `mcookie` 命令的输出——`3cb86418caef9c95cd211cbf60a1bddd`——就是这 16 字节的来源。`mcookie` 是 Unix 下生成随机 cookie 的工具，Qt 当年拿它随机生成了这串字节，固化成了 QM 文件的 magic number。所以这 16 字节没有任何语义，纯粹是随机数当文件标识。
+咱们看注释里那段 `mcookie` 命令的输出，`3cb86418caef9c95cd211cbf60a1bddd`，就是这 16 字节的来源。`mcookie` 是 Unix 下生成随机 cookie 的工具，Qt 当年拿它随机生成了这串字节，把它固化成了 QM 文件的 magic number。所以这 16 个字节没有任何的语义，纯粹是拿随机数当了文件标识。
 
-第二个反直觉的地方：`.qm` 文件没有显式的版本号字段。magic 之后直接就是一串「tag-length-value」结构：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:260`
+第二处反直觉的，咱们接着看：`.qm` 文件没有显式的版本号字段，magic 的后面，直接跟的就是一串 TLV 的结构。section tag 的枚举（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:260`）是这样的：
 
 ```cpp
     enum { Contexts = 0x2f, Hashes = 0x42, Messages = 0x69, NumerusRules = 0x88, Dependencies = 0x96, Language = 0xa7 };
 ```
 
-这是 section tag 枚举。`do_load` 的解析循环：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:794-836`（节选）
+咱们看 `do_load` 的解析循环长什么样（节选 `qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:794-836`）：
 
 ```cpp
 bool QTranslatorPrivate::do_load(const uchar *data, qsizetype len, const QString &directory)
@@ -318,13 +294,11 @@ bool QTranslatorPrivate::do_load(const uchar *data, qsizetype len, const QString
         } else if (tag == QTranslatorPrivate::Dependencies) {
 ```
 
-跳过 16 字节 magic 后，进入 TLV 循环：1 字节 tag（`read8`）+ 4 字节大端长度（`read32`）+ 数据。识别到的 tag 存进对应字段，未识别的 tag 直接跳过（前向兼容——未来加新 section，老版本 Qt 能跳过不认识的部分）。整个格式没有版本号字段，Qt5 和 Qt6 的 `.qm` 用同一套 magic + section tag，文件级兼容。
+跳过了 16 字节 magic 以后就进了 TLV 循环，1 字节的 tag（`read8`）加 4 字节的大端长度（`read32`）再加数据。认得的 tag 存进对应的字段，不认得的 tag 直接跳过，这是给未来留的余地，往后加了新 section，咱们拿老版本的 Qt 也能把不认识的部分跳过去。整个格式是没有版本号字段的，Qt5 和 Qt6 的 `.qm` 用的是同一套 magic 加 section tag，文件级是兼容的。
 
-注意那个命名错位：`Hashes` 这个 section 在内存里对应的是 `offsetArray`/`offsetLength`，存的是「hash → 消息偏移」的二元组。为啥叫 Hashes 又存 offset？历史遗留，您看源码时要心里有数。
+您还要留意那个命名错位：`Hashes` 这个 section 在内存里对应的是 `offsetArray`/`offsetLength`，存的是 hash 到消息偏移的二元组。为什么叫 Hashes 又存 offset？这是历史遗留的，您看源码的时候心里要有数。
 
-`load` 加载时第一件事就是校验 magic：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:539-544`
+咱们看，`load` 加载的时候头一件事就是校验 magic（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:539-544`）：
 
 ```cpp
         {
@@ -335,11 +309,9 @@ bool QTranslatorPrivate::do_load(const uchar *data, qsizetype len, const QString
         }
 ```
 
-长度不足 16 或 magic 不符，立即返回 false，文件根本不会加载。
+您看，长度不足 16 的，或者 magic 对不上的，就都立即返回 false 了，文件根本就不会被加载的。
 
-加载方式上，Unix 平台优先用 `mmap` 把整个 `.qm` 映射进内存：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:548-581`（节选）
+加载方式上咱们也看一眼，Unix 平台会试着拿 `mmap` 把整个 `.qm` 映射进内存的（节选 `qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:548-581`）：
 
 ```cpp
         int fd = file.handle();
@@ -364,9 +336,7 @@ bool QTranslatorPrivate::do_load(const uchar *data, qsizetype len, const QString
         }
 ```
 
-`PROT_READ + MAP_PRIVATE` 只读私有映射，翻译查询零拷贝——直接在映射的内存上跑查找算法。mmap 失败才回退到 `new` + `read`。如果 `.qm` 在 Qt 资源系统里且未压缩，连 mmap 都省了，直接复用 `QResource::data()` 的指针：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:511-527`
+`PROT_READ` 加 `MAP_PRIVATE` 的只读私有映射，翻译查询是零拷贝的，查找算法直接在映射的内存上跑。mmap 失败了才回退到 `new` 加 `read`。如果您把 `.qm` 放进了 Qt 资源系统而且没有压缩，那连 mmap 都省了，直接复用 `QResource::data()` 的指针（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:511-527`）：
 
 ```cpp
     if (realname.startsWith(u':')) {
@@ -385,15 +355,13 @@ bool QTranslatorPrivate::do_load(const uchar *data, qsizetype len, const QString
     }
 ```
 
-资源内未压缩的 QM，直接拿 `QResource::data()` 的指针用，零拷贝。
+资源里没压缩的 QM，咱们就直接拿 `QResource::data()` 的指针来用，同样是零拷贝的。
 
-### 3.5 查找算法：context 走哈希桶，消息走二分
+### 查找算法：context 走哈希桶，消息走二分
 
-`.qm` 加载进内存后，`translate` 怎么按 (context, sourceText) 找到译文？这是本篇最有「源码含金量」的部分。
+`.qm` 加载进了内存以后，`translate` 怎么按 (context, sourceText) 找到译文？这一段咱们看得细一些。
 
-先看 context 查找。`do_translate` 第一步在 `Contexts` section 里定位 context：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:957-976`
+头一步是 context 的查找，咱们看 `do_translate` 在 `Contexts` section 里怎么定位 context（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:957-976`）：
 
 ```cpp
     if (contextLength) {
@@ -418,11 +386,9 @@ bool QTranslatorPrivate::do_load(const uchar *data, qsizetype len, const QString
     }
 ```
 
-`contextArray` 前 2 字节是桶数 `hTableSize`，算 `elfHash(context) % hTableSize` 落到某个桶。桶里存的是偏移，顺着偏移跳到桶链，然后线性扫——读一个长度、比一次字符串，匹配上就 break，读到长度 0（链尾）还没匹配就返回空。这是个「哈希 + 桶内线性探测」的结构。关键优化：如果 context 在本 QM 里压根不存在，这里立即 `return QString()`，不浪费后续的消息查找。
+`contextArray` 的头 2 字节是桶数 `hTableSize`，咱们拿 `elfHash(context) % hTableSize` 算出落在哪个桶。桶里存的是偏移，咱们顺着偏移跳到桶链上，做读一个长度、比一次字符串的线性扫，比中了就 break，读到长度 0（到了链尾）还没比中就返回空。这就是个哈希加桶内线性探测的结构。有一个要紧的优化：context 在本 QM 里压根不存在的话，这一步就立即 `return QString()` 了，后面的消息查找一步都不用浪费。
 
-消息查找（在 `Hashes`/offsetArray 里）用的是另一套算法——二分搜索，不是哈希桶表：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:985-1023`（节选）
+消息查找（在 `Hashes` 也就是 `offsetArray` 里）用的是另一套算法，咱们看到的是二分搜索，而不是哈希桶表（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:985-1023` 节选）：
 
 ```cpp
     for (;;) {
@@ -470,9 +436,9 @@ bool QTranslatorPrivate::do_load(const uchar *data, qsizetype len, const QString
     }
 ```
 
-这是本篇第二个大纠偏点。笔者翻过的教材笼统说「QM 用哈希表查找」，不准确。实际算法是：`offsetArray` 是一个按 hash 升序预排序的数组，每项 8 字节（hash uint32 + offset uint32）。`while (start <= end)` 那段是教科书式的二分搜索——`middle` 取中点，比 hash 大小调整 `start`/`end`。命中 hash 后，先回头扫所有相同 hash 的项（处理哈希碰撞），逐项调 `getMessage` 验证 sourceText/context/comment 真匹配（哈希只用来缩小范围，不保证唯一）。
+本篇的第二个大纠偏点在这儿。笔者翻过的教材，笼统地说了句 “QM 用哈希表查找”，这其实是不准确的。实际的算法是这样的，`offsetArray` 是一个按 hash 升序排好序的数组，每项占了 8 个字节，装的是 hash 的 uint32 加 offset 的 uint32。`while (start <= end)` 那一段就是教科书式的二分搜索，`middle` 取的是中点，比 hash 的大小调整 `start` 和 `end`。比中了 hash 以后，回头扫过所有相同 hash 的项（处理哈希碰撞的），逐项调 `getMessage` 去验证 sourceText、context、comment 是不是真的匹配，哈希只是拿来缩小范围的，它是保证不了唯一的。
 
-注意 hash 的计算：
+hash 是怎么算出来的，您也要看一眼：
 
 ```cpp
         quint32 h = 0;
@@ -481,9 +447,7 @@ bool QTranslatorPrivate::do_load(const uchar *data, qsizetype len, const QString
         elfHash_finish(h);
 ```
 
-`h` 从 0 开始，先用 `elfHash_continue` 把 sourceText 的字节流喂进去，再继续把 comment 的字节流喂进去（接在同一个哈希状态机上），最后 `elfHash_finish` 收尾。这是「累加哈希」，不是「sourceText 和 comment 各算一个哈希再异或」。`elfHash_continue` 的实现：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:75-101`
+`h` 是从 0 起步的，咱们拿 `elfHash_continue` 把 sourceText 的字节流喂进去，接着把 comment 的字节流也喂进同一个哈希状态机，末了拿 `elfHash_finish` 收尾。这是累加出来的哈希，不是把 sourceText 和 comment 各算一个再异或的。`elfHash_continue` 的实现在 `qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:75-101`：
 
 ```cpp
 static void elfHash_continue(const char *name, uint &h)
@@ -501,15 +465,13 @@ static void elfHash_continue(const char *name, uint &h)
 }
 ```
 
-4 位左移、高 4 位异或——这就是经典的 Unix ELF 符号表哈希（所以叫 elfHash）。`_continue` 设计成可拼接，让 (sourceText, comment) 组合产生单一哈希键。
+4 位的左移、高 4 位的异或回来，咱们熟悉的 Unix ELF 符号表哈希就是它，名字里的 elfHash 就是这么来的。`_continue` 设计成可拼接的样子，就是为了让 (sourceText, comment) 的组合产生单一的哈希键。
 
-外层那个 `for (;;)` 跑两轮：第一轮用原 comment 查；查不到就把 `comment` 清空跑第二轮，让带 disambiguation 的查询也能命中没填 disambiguation 的译文。这是 3.7 节要讲的 disambiguation 回退。
+外层那个 `for (;;)` 是跑两轮的，头一轮是带着原 comment 查的，查不到的话就把 `comment` 清空了再跑一轮，让带了 disambiguation 的查询，也能命中没填 disambiguation 的译文。这正是 disambiguation 回退的机制，咱们放到 disambiguation 一节接着看。
 
-### 3.6 哈希命中后的精确匹配：getMessage 变长 TLV
+### 哈希比中以后的精确匹配：getMessage 的变长 TLV
 
-二分找到匹配的 hash 后，光有 hash 不够——哈希会碰撞。`getMessage` 在 `Messages` section 里解析变长记录做精确匹配：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:870-935`（节选）
+二分找到了匹配的 hash，可光是 hash 还不够的，哈希是会碰撞的。咱们看 `getMessage`，它在 `Messages` section 里解析变长的记录，做的是精确匹配（节选 `qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:870-935`）：
 
 ```cpp
 static QString getMessage(const uchar *m, const uchar *end, const char *context,
@@ -533,7 +495,7 @@ static QString getMessage(const uchar *m, const uchar *end, const char *context,
             if (len & 1)
                 return QString();
             m += 4;
-            if (!numerus--)
+            if (!numerus--) {
                 tn_length = len;
                 tn = m;
             }
@@ -563,9 +525,9 @@ end:
 }
 ```
 
-变长 TLV 结构：每条记录由若干个 `Tag` 开头的字段组成（Tag_Translation / Tag_SourceText / Tag_Context / Tag_Comment / Tag_End）。每个字段带一个 4 字节长度，后面跟数据。`match` 函数做精确字节比对，任何一个字段不匹配立即返回空。这层精确匹配保证了哈希碰撞不会误命中。
+这是变长的 TLV 结构，每条记录由若干个 `Tag` 开头的字段组成（Tag_Translation、Tag_SourceText、Tag_Context、Tag_Comment、Tag_End），咱们看每个字段，它带一个 4 字节的长度，后面跟的是数据。`match` 函数做的是精确的字节比对，任何一个字段对不上的话，就立即返回空的。有了这一层精确匹配，哈希碰撞就不会误命中了。
 
-这里有个本篇第三个大纠偏点，也是笔者手动解析 qm 时踩过的坑——translation 字段的编码。看末尾这几行：
+接着是本篇的第三个大纠偏点，也是笔者手动解析 qm 的时候栽过的地方，translation 字段的编码。咱们看末尾的几行：
 
 ```cpp
     QString str(tn_length / 2, Qt::Uninitialized);
@@ -573,9 +535,9 @@ end:
     return str;
 ```
 
-`tn_length / 2`——字节数除以 2 得字符数。`qFromBigEndian<char16_t>`——把大端字节流的 16 位单元转成 host-endian 的 char16_t，填进 `QString`。这说明 translation 字段在 `.qm` 里是 UTF-16 大端编码，不是 UTF-8。
+`tn_length / 2`，是拿字节数除以 2 得到的字符数。咱们看 `qFromBigEndian<char16_t>`，它把大端字节流的 16 位单元，转成了 host-endian 的 char16_t，填进了 `QString`。这说明 translation 字段在 `.qm` 里是 UTF-16 大端编码的，而不是 UTF-8。
 
-往上翻那个校验也印证了这点：
+您往上翻那个长度校验，也印证了这一点：
 
 ```cpp
         case Tag_Translation: {
@@ -584,26 +546,22 @@ end:
                 return QString();
 ```
 
-`if (len & 1) return QString()`——长度必须是偶数，因为 UTF-16 的单位是 2 字节。奇数长度直接判定非法。
+您看 `if (len & 1) return QString()`，长度必须是偶数的，因为 UTF-16 的单位是 2 个字节，奇数的长度就直接判非法了。
 
-所以 `.qm` 内部编码是不统一的：sourceText、comment、context 这些在 `lupdate` 阶段以 UTF-8 处理（存进 QM 时也是 UTF-8 字节流，靠 `strlen`/`match` 当裸字节比）；Language section（语言代码短串）用 `QString::fromUtf8` 解码；唯独 translation 字段是 UTF-16 大端。您要是手动解析 `.qm`，得记住这个区别。
+所以 `.qm` 的内部编码是不统一的：sourceText、comment、context 这些在 `lupdate` 阶段按 UTF-8 处理，存进 QM 的时候也是 UTF-8 的字节流，靠的是 `strlen` 和 `match` 当裸字节来比。Language section（语言代码的短串）用 `QString::fromUtf8` 解码。唯独 translation 字段是 UTF-16 的大端。您要是手动解析 `.qm`，这个区别您就得记下来。
 
-### 3.7 复数 %n：字节码虚拟机
+### 复数 %n：字节码虚拟机
 
-复数处理是 i18n 里绕不开的话题。笔者第一次知道 Qt 的复数规则存成字节码时还挺意外——`.qm` 的 `NumerusRules` section 里是一段字节码，`QTranslator` 用一个小型栈式虚拟机执行它。
+translate 一节末尾留了个 `replacePercentN` 没细讲，它管的就是复数里的 `%n`，咱们在这儿补上。笔者头一回知道 Qt 的复数规则是存成字节码的时候还挺意外的：`.qm` 的 `NumerusRules` section 里是一段字节码，`QTranslator` 用的是一个小型的栈式虚拟机来执行它。
 
-`translate` 拿到 n 后先算出复数形式索引：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:982-983`
+`translate` 拿到了 n 以后，头一件事就是算出复数形式的索引，咱们看（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:982-983`）：
 
 ```cpp
     if (n >= 0)
         numerus = numerusHelper(n, numerusRulesArray, numerusRulesLength);
 ```
 
-`numerusHelper` 执行字节码：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:177-254`（节选）
+执行字节码的活是 `numerusHelper` 干的，咱们看它的实现（节选 `qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:177-254`）：
 
 ```cpp
 static uint numerusHelper(int n, const uchar *rules, uint rulesSize)
@@ -647,9 +605,7 @@ static uint numerusHelper(int n, const uchar *rules, uint rulesSize)
     }
 ```
 
-操作码是位掩码设计的：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator_p.h:20-41`
+操作码是按位掩码设计的，咱们看 `qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator_p.h:20-41` 里的常量定义：
 
 ```cpp
 enum {
@@ -676,13 +632,11 @@ enum {
 };
 ```
 
-低 3 位是操作（EQ/LT/LEQ/BETWEEN），高位是修饰（MOD_10 取个位、MOD_100 取百位、LEAD_1000 取千位前导、NOT 取反）。虚拟机执行时，`Q_MOD_10` 这类修饰会先变换左操作数（n），再用低 3 位的操作跟右操作数比较。`Q_AND`/`Q_OR` 组合逻辑表达式，`Q_NEWRULE` 分隔多条规则。
+咱们把位掩码一位一位地看：低 3 位是操作用的，装的是 EQ、LT、LEQ、BETWEEN。高位是修饰用的，MOD_10 是取个位的，MOD_100 是取百位的，LEAD_1000 是取千位前导的，NOT 是负责取反的。虚拟机执行的时候，`Q_MOD_10` 这类的修饰会对左操作数（n）做变换，再拿低 3 位的操作去跟右操作数比。`Q_AND` 和 `Q_OR` 负责的是组合逻辑表达式，`Q_NEWRULE` 分隔的是多条规则。
 
-这套字节码能表达各语言的复数规则。英语就两条规则：「n==1 用 singular（索引 0），其余用 plural（索引 1）」。阿拉伯语复杂得多，有「一个」「两个」「少数」「多数」等多种形式，对应多条 `Q_NEWRULE`。`result` 累加命中的规则索引，回传给 `getMessage` 当 `numerus` 用——`getMessage` 里的 `if (!numerus--)` 是个倒计数器，逐个跳过 `Tag_Translation` 字段，到第 `numerus` 个取出来。
+这套字节码是能把各语言的复数规则都表达出来的，咱们拿英语看，它的规则就两条，n==1 的时候用 singular（索引 0），其余的时候用 plural（索引 1）。阿拉伯语就复杂多了，“一个”“两个”“少数”“多数”，对应的是好几条 `Q_NEWRULE`。`result` 累加出的是命中的规则索引，回传给了 `getMessage` 当 `numerus` 用，`getMessage` 里的 `if (!numerus--)` 是个倒计数器，逐个地跳过 `Tag_Translation` 字段，数到命中的那个就把它取出来。
 
-最终 `%n` 占位符的替换发生在 `translate` 末尾的 `replacePercentN`：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication.cpp:2222-2248`（节选）
+最后 `%n` 占位符的替换发生在 `translate` 末尾的 `replacePercentN` 里，咱们看（节选 `qt_src/qt6.9.1/qtbase/src/corelib/kernel/qcoreapplication.cpp:2222-2248`）：
 
 ```cpp
 static void replacePercentN(QString *result, int n)
@@ -704,15 +658,11 @@ static void replacePercentN(QString *result, int n)
 }
 ```
 
-扫译文里的 `%n` 替换成 n 的字符串，`%Ln` 用本地化格式（千分位）。所以 Qt 复数翻译的标准写法是 `tr("%n file(s)", nullptr, count)`——`count` 决定复数形式（经 `numerusHelper`），译文里的 `%n` 再被替换成实际数字。
+咱们看它扫的是译文里的 `%n`，替换成 n 的字符串，`%Ln` 用的是本地化格式（带千分位的）。所以 Qt 复数翻译的标准写法是 `tr("%n file(s)", nullptr, count)`，`count` 经 `numerusHelper` 决定的是复数形式，译文里的 `%n` 再被替换成实际的数字。
 
-### 3.8 disambiguation、依赖链、析构自摘除
+### disambiguation、依赖链、析构自摘除
 
-最后补几个零散但重要的点。
-
-disambiguation（第三参数，Qt5+ 新名；Qt4 叫 comment）的作用是区分「同名 sourceText 在不同场景」。它同时进哈希键和精确匹配：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:986-989,917-923`
+咱们说 disambiguation，它就是咱们传的第三参数，Qt5 起用的是新名字，Qt4 的时候叫 comment，查找算法一节咱们喂进哈希的就是它，起的是区分同名 sourceText 的作用，不同的场景靠它分开。它同时进了哈希键和精确匹配（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:986-989,917-923`）：
 
 ```cpp
 // 哈希
@@ -732,11 +682,9 @@ disambiguation（第三参数，Qt5+ 新名；Qt4 叫 comment）的作用是区�
             break;
 ```
 
-所以「`tr("Open", "File menu")`」和「`tr("Open", "Disk operation")`」会得到不同的 hash、落到不同的桶、被正确区分。注意精确匹配里 `if (*m && ...)` 那个条件——如果 QM 里存的 comment 是空串（首字节 0），不强制匹配，允许「没填 disambiguation 的译文」匹配「查询时带了 disambiguation 的请求」。这是 3.5 节外层 `for (;;)` 两轮回退的配合机制。
+所以 `tr("Open", "File menu")` 和 `tr("Open", "Disk operation")` 会得到不同的 hash、落进不同的桶、被正确地区分开。您再注意精确匹配里 `if (*m && ...)` 那个条件，QM 里存的 comment 是空串（首字节 0）的话，就不强制匹配了，这其实等于允许没填 disambiguation 的译文，去匹配查询时带了 disambiguation 的请求。它跟查找算法一节外层 `for (;;)` 的两轮回退是配套的机制。
 
-`.qm` 还能声明依赖其他 `.qm`（`Dependencies` section，`lrelease` 时指定）：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:1029-1035`
+咱们还能让 `.qm` 声明对别的 `.qm` 的依赖（`Dependencies` section，`lrelease` 的时候指定），依赖命中的转发在 `qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:1029-1035`：
 
 ```cpp
 searchDependencies:
@@ -748,11 +696,9 @@ searchDependencies:
     return QString();
 ```
 
-主 translator 没命中时，向它加载的子 translator（`subTranslators`）转发查询。加载时递归 `load` 所有依赖，任一失败全部清理（fail-fast）。这机制常用于「基础语言包 + 地区变体」的场景。
+咱们再看依赖的部分。主 translator 没查到的时候，就向它加载进来的子 translator（`subTranslators`）转发查询。加载的时候会把所有的依赖递归 `load` 一遍，任何一个失败了就全部清理（fail-fast 的路子）。这个机制常用的场景是“基础语言包加地区变体”。
 
-最后看 `QTranslator` 析构——这是个容易踩的坑：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:406-412`
+最后咱们看 `QTranslator` 的析构，这是一处容易栽的地方（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qtranslator.cpp:406-412`）：
 
 ```cpp
 QTranslator::~QTranslator()
@@ -764,53 +710,48 @@ QTranslator::~QTranslator()
 }
 ```
 
-析构时主动调 `removeTranslator` 把自己从 `QCoreApplication` 摘除。这是因为 `QCoreApplication` 不拥有 `QTranslator` 的所有权（doc 明确写 `does not take ownership`），但 translator 装进去后 `QCoreApplication` 持有它的裸指针——如果 translator 先于 `QCoreApplication` 析构，那个指针就悬空了。所以 `~QTranslator` 自摘除防悬挂（前提是 `QCoreApplication` 还活着）。这也是为啥 translator 通常建议做成栈对象或挂到对象树上——靠生命周期自动管理摘除。
+咱们看到析构的时候，它主动调了 `removeTranslator`，把自己从 `QCoreApplication` 里摘了出去。为什么要这样？`QCoreApplication` 是不拥有 `QTranslator` 所有权的（文档里明确写了 `does not take ownership`），可 translator 装进去了以后，`QCoreApplication` 手里拿的是它的裸指针，translator 要是赶在 `QCoreApplication` 前头析构了，那个指针就悬空了。所以 `~QTranslator` 自己摘除自己来防悬挂（前提是 `QCoreApplication` 还活着的）。这也是 translator 通常建议做成栈对象或者挂到对象树上的原因，靠生命周期自动地管摘除。
 
-## 4. 踩坑预防
+## 风险与故障预防
 
-本篇踩坑只讲源码里能直接对应、笔者自己也栽过的真坑。
+本篇讲的风险都是从源码里能直接对上号的，笔者自己也真栽过，这里咱们把后果和解法一个个交代清楚。
 
-### 4.1 tr 找不到翻译返回原文，不是空串
+头一类的风险是拿 `tr` 的返回值判断翻译生没生效。您写 `if (tr("Hello").isEmpty())`，想判断的是“翻译是否生效”，这个分支是永远进不去的，因为 `tr` 找不到的时候返回的是 `"Hello"` 本身，而不是空串。整个应用看着翻译功能是正常的（界面显示英文），其实您的 translator 根本就没加载成功，您还以为它加载上了。根因是 translate 一节讲的兜底逻辑，`if (result.isNull()) result = QString::fromUtf8(sourceText);`，只有 `sourceText == nullptr` 才返回空的 `QString`，正常的 miss 都返回原文。正确的做法是查 `QTranslator::isEmpty()`（加载完以后里头有没有真内容），或者干脆看界面的文案变没变，别拿 `tr(...).isEmpty()` 当您的判据。
 
-后果：您用 `if (tr("Hello").isEmpty())` 判断「翻译是否生效」，永远进不去分支——因为 `tr` 找不到时返回的是 `"Hello"` 本身，不是空串。整个应用看似翻译功能正常（显示英文），其实您的 translator 根本没加载成功，您却以为加载了。
+第二类是重复的 install。您在某个槽函数里每次响应语言切换都调 `installTranslator(myTranslator)`，想着的是“重新装一下刷新”，实际的列表里，这个 translator 越积越多的（每次 prepend 一条）。查询是幂等的，结果是不变的，可 `translators` 列表是越拉越长的，每次 `translate` 都要多白查几遍的。更糟的是您以为，“卸载一次”就能清掉的，结果 `removeAll` 是一次删光的，行为跟您的预期对不上。根因是 installTranslator 一节讲的，它只做 prepend 不做去重的。正确的做法是 translator 全局只 install 一次，同一个对象您别反复 install。要切换语言的话，把旧的 `removeTranslator` 掉，拿 `load` 把新的 QM 装进同一个 translator 对象，靠的是 `LanguageChange` 事件触发刷新。您也可以走另一条路，remove 掉旧的，再 install 新的。
 
-根因是 3.2 节的兜底逻辑：`if (result.isNull()) result = QString::fromUtf8(sourceText);`。只有 `sourceText == nullptr` 才返空 `QString`，正常的 miss 都返原文。
+第三类是多个 translator 的次序搞反了。您装了两个 translator，A 是通用的翻译，B 是行业术语的补丁，指望的是 A 兜底、B 覆盖特定词条，结果发现 B 的覆盖没生效，查到的是 A 的译文。也有反过来的情况，您不知道谁覆盖谁，翻译的结果看着时好时坏的。根因是 prepend 加了正向遍历，列表的头部放的是最新装的，它是最早被查的，您按 A、B 的顺序安装，查询的顺序就是 B、A，B 比中了就返回，轮不到 A 的。正确的做法是认清“后装的排前面”的次序，想让补丁 translator 覆盖基础的，补丁就得是后 install 的那个。要调整次序的话，把两个都 remove 干净了，按您期望的顺序重新 install，末了装的是最靠前的。
 
-正确做法：判断 translator 是否生效，查 `QTranslator::isEmpty()`（加载后是否真有内容），或者直接看界面文案有没有变。别用 `tr(...).isEmpty()` 当判据。
+第四类是没有 `Q_OBJECT` 的类没有 `tr`。您在一个没继承 `QObject` 的工具类里写 `tr("Hello")`，编译直接就报错了，说的是 “no member named ‘tr’”。或者类继承了 `QObject` 但忘了拍 `Q_OBJECT` 宏，调 `tr` 一样是编译失败的。根因是 tr 植入一节讲的，`tr` 是 `Q_OBJECT` 植入的，没有 `Q_OBJECT` 的话就没有 `tr`。正确的做法是 `QObject` 派生类把 `Q_OBJECT` 拍上，非 `QObject` 的类（工具类、命名空间）用 `Q_DECLARE_TR_FUNCTIONS(ClassName)` 宏注入 `tr`，context 是宏参数字符串化得到的，展开的样子咱们在 `Q_DECLARE_TR_FUNCTIONS` 那里看过。
 
-### 4.2 installTranslator 不去重，重复 install 留重复条目
+## 练习项目
 
-后果：您在某个槽函数里每次响应语言切换都 `installTranslator(myTranslator)`，以为「重新装一下刷新」。实际列表里这个 translator 越积越多（每次 prepend 一条），虽然查询幂等结果不变，但遍历 `translators` 列表越来越长，每次 `translate` 都要白白多查几遍。更糟的是您以为「卸载一次」能清掉，结果 `removeAll` 一次删光，行为和预期不符。
+本篇跟前几篇是一样的，走的是纯源码拆解的路子，练习也就走验证的路子，四道题给的是方向和验证的手段，完整的工程留给您自己搭。
 
-根因是 3.3 节讲的：`installTranslator` 只 prepend 不去重。
+头一道题验的是“`tr` 查不到返回原文”，您亲手过一遍。您写一个最小的 `QObject` 子类，把 `Q_OBJECT` 拍上了，在里头调了 `tr("Hello")`，什么都不装的情况下把返回值打出来，您看到的返回值就是 `"Hello"` 本身的，而不是空串。跟着您再拿 `tr(...).isEmpty()` 判一下，它是恒为 false 的，这正是风险一节讲的误判来源。对照的办法是 `QTranslator::isEmpty()`，加载成功了它是 false，加载失败了（文件不存在、magic 对不上）它就是 true，两条路一比的话，判据该用哪个就清楚了。
 
-正确做法：translator 全局只 install 一次。要切换语言，先 `removeTranslator` 旧的、`load` 新 QM 到同一个 translator 对象、再靠 `LanguageChange` 事件触发刷新；或者 remove 旧的再 install 新的，别对同一个对象反复 install。
+第二道题演的是重复 install 和一次删光。您对同一个 `QTranslator` 对象连调了两次 `installTranslator`，然后只 `removeTranslator` 了一次，再查 `tr` 的时候，译文已经没有了。只卸了一次却全没了，这正是 `removeAll` 把两条一起删掉的表现，跟您“装一次卸一次”的直觉正好对不上，源码的对照就在 installTranslator 一节。
 
-### 4.3 多个 translator 的优先级：后装的先查
+第三道题验的是次序。您准备两个 `.qm`，给同一个 key 配上了不同的译文，咱们把它们做成两个 translator，按 A、B 的顺序 install，`tr` 查到的是 B 的译文。把两个都 remove 掉了，按 B、A 的顺序重新装一遍，查到的就换成了 A 的译文。后装的那个是生效的，您亲手换一遍就有体感了。
 
-后果：您装了两个 translator（A 通用翻译、B 行业术语补丁），期望 A 兜底、B 覆盖特定词条。结果发现 B 的覆盖没生效，查到的是 A 的译文。或者反过来，您不知道谁覆盖谁，翻译结果不稳定。
+第四道题是回源码和二进制里做核对的。您拿十六进制工具打开任意一个 `.qm`，文件开头的 16 个字节应当是 `3c b8 64 18 ca ef 9c 95 cd 21 1c bf 60 a1 bd dd`，正是 magic 一节列出的那串 mcookie 输出。行号核对的任务也都在前文里，`qtranslator.cpp:260` 的 section tag 枚举、`qtranslator.cpp:870-935` 末尾 `qFromBigEndian<char16_t>` 那两行（translation 是 UTF-16 大端的证据）、`qcoreapplication.cpp:2283-2311` 的兜底返回，咱们一处一处地对下来，都对上了，本篇的断言也就落了地。
 
-根因是 3.3 节的 prepend + 正向遍历：列表头部是最新装的，最先被查。安装顺序 A→B，查询顺序 B→A，B 命中就返回，不会查 A。
+## 官方文档参考链接
 
-正确做法：明确「后装的优先级更高」。想让补丁 translator 覆盖基础 translator，补丁必须后 install。需要调整优先级，先 remove 再按期望顺序重新 install（最后装的最优先）。
+[QTranslator 文档](https://doc.qt.io/qt-6/qtranslator.html)——`load`/`translate`/`isEmpty` 的查询入口，背后的实现咱们在查找算法一节拆过。
 
-### 4.4 没有 Q_OBJECT 的类没有 tr
+[QCoreApplication::translate 文档](https://doc.qt.io/qt-6/qcoreapplication.html#translate)——参数的说明都在，查不到返原文的行为也在这一页，咱们跟 translate 一节的源码对着看。
 
-后果：您在一个没继承 `QObject` 的工具类里写 `tr("Hello")`，编译报错「no member named 'tr'」。或者类继承了 `QObject` 但忘了 `Q_OBJECT` 宏，调 `tr` 编译失败。
+[QCoreApplication::installTranslator 文档](https://doc.qt.io/qt-6/qcoreapplication.html#installTranslator)——查询的逆序，这一页的官方说明里写着，咱们在源码里看到的 `prepend` 就是它的实现。
 
-根因是 3.1 节讲的：`tr` 是 `Q_OBJECT` 宏植入的，没 `Q_OBJECT` 就没 `tr`。
+[Qt Linguist Manual](https://doc.qt.io/qt-6/linguist-manual.html)——工具链的官方手册在这里，`lupdate`/`lrelease` 的用法咱们查它，运行时怎么读 `.qm` 的，看本篇就够了。
 
-正确做法：`QObject` 派生类必须 `Q_OBJECT` 宏；非 `QObject` 类（工具类、命名空间）用 `Q_DECLARE_TR_FUNCTIONS(ClassName)` 宏注入 `tr`，context 由宏参数字符串化得到。
+[Writing Source Code for Translation](https://doc.qt.io/qt-6/i18n-source-translation.html)——用法的规范在这一页，`tr`、`Q_DECLARE_TR_FUNCTIONS`、`qtTrId` 咱们写源码的时候照着它来。
 
-## 5. 官方文档参考链接
-
-- [QTranslator Class Reference](https://doc.qt.io/qt-6/qtranslator.html) —— load/translate/isEmpty
-- [QCoreApplication::translate](https://doc.qt.io/qt-6/qcoreapplication.html#translate) —— context/disambiguation/n 参数与找不到返原文行为
-- [QCoreApplication::installTranslator](https://doc.qt.io/qt-6/qcoreapplication.html#installTranslator) —— prepend 不去重 + 后装优先
-- [Qt Linguist Manual](https://doc.qt.io/qt-6/linguist-manual.html) —— lupdate/lrelease 工具链
-- [Writing Source Code for Translation](https://doc.qt.io/qt-6/i18n-source-translation.html) —— tr/Q_DECLARE_TR_FUNCTIONS/qtTrId 使用规范
-- [Plural Form Support](https://doc.qt.io/qt-6/i18n-source-translation.html#plural-form) —— %n 与 NumerusRules 复数规则
+[Plural Form Support](https://doc.qt.io/qt-6/i18n-source-translation.html#plural-form)——`%n` 的官方说明在这里，复数规则跟字节码虚拟机一节是对着看的，咱们两处一起翻。
 
 ---
 
-Qt 的国际化设计哲学，是「源码无感 + 运行时按需查找」——您源码里写 `tr`，编译期 moc 把类名烧进 `staticMetaObject` 当 context，运行时 `QCoreApplication` 遍历 translator 列表，每个 `QTranslator` 在 `.qm` 的二进制结构里做哈希+二分查找。这套设计让源码和翻译资源彻底解耦，切换语言不用重编程序。但它也藏着不少反直觉的细节：`tr` 找不到返原文、后装的优先、不去重、QM 用随机 magic、消息走二分不是哈希表、translation 是 UTF-16 而 sourceText 是 UTF-8。这些细节平时用不到，可一旦要做翻译调试、性能优化、或者手动解析 QM，就是必须懂的底层。读完这篇，您应该能在翻译行为诡异时，知道往哪儿查了。
+Qt 的国际化，走的是源码无感加运行时按需查找的路子。您在源码里写 `tr`，编译期 moc 把类名烧进了 `staticMetaObject` 当 context，运行时的 `QCoreApplication` 遍历 translator 列表，每个 `QTranslator` 在 `.qm` 的二进制结构上做哈希加二分的查找。源码和翻译资源就这样解了耦，切换语言是不用重编程序的。不过反直觉的细节也都藏在里头：`tr` 查不到的时候返回的是原文，后装的是排在前面的，install 是不去重的，QM 用的是随机 magic，消息走的是二分不是哈希表，translation 是 UTF-16 的，而 sourceText 是 UTF-8。这些细节平时是用不上的，可您一旦要做翻译调试、性能优化，或者要手动解析 QM 的话，它们就是必须懂的底层。这一篇读完了，翻译的行为要是再诡异起来，您该知道往哪儿查了。
+
+您要是想把本篇的行号证据拿来一一核对，它们已经按源码机制归类收在 [code-index · QTranslator 与 QM 文件格式源码索引](../code-index/qtbase/qtranslator.md) 底下了，您带着行号直接去 `qt_src/qt6.9.1` 翻原文就行。
