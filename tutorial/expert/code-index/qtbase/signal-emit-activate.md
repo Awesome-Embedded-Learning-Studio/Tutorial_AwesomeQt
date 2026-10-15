@@ -22,7 +22,7 @@ description: emit 是空宏，发射真身是 moc 插进信号函数体的 QMeta
 | 论点 | 行号 | 原文摘要 | 解读 |
 |---|---|---|---|
 | moc 在无参信号函数体里插 QMetaObject::activate(this,&staticMetaObject,index,nullptr) | :1308-1311 | `fprintf(out, "QMetaObject::activate(%s, &staticMetaObject, %d, nullptr);\n", ...)` | 信号发射的本质就是调 activate；有参信号会先准备 argv 再调。 |
-| moc 给有参信号打印 QMetaObject::activate<Ret>(this, &staticMetaObject, index, std::addressof(_t0), _t1, ...) 可变参数调用 | :1340-1350 | `fprintf(out, "    QMetaObject::activate<%s>(%s, &staticMetaObject, %d, ", ...)` | 调的是 activate 可变参数模板重载，实参逐个取地址传，不再是老式 void *argv[] 数组写法。 |
+| moc 给有参信号打印 `QMetaObject::activate<Ret>(this, &staticMetaObject, index, std::addressof(_t0), _t1, ...)` 可变参数调用 | :1340-1350 | `fprintf(out, "    QMetaObject::activate<%s>(%s, &staticMetaObject, %d, ", ...)` | 调的是 activate 可变参数模板重载，实参逐个取地址传，不再是老式 void *argv[] 数组写法。 |
 
 ## activate 可变参数模板重载
 

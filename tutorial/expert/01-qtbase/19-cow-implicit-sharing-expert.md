@@ -421,7 +421,7 @@ p1->value = 42;            // 修改了共享数据
 
 本篇的练习走验证的路子，几道题给的是方向和核对手段，完整的工程留给您自己搭。
 
-头一道题验 ref_ 的初值。您在调试器里断到 `QArrayData::allocate()` 的返回处（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qarraydata.cpp:141` 附近），看新块头部的 ref_ 是不是 1，是的话，创建即持有的说法就落了地。
+头一道题验 ref_ 的初值。您在调试器里断到 `QArrayData::allocate()` 的返回处（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qarraydata.cpp:141` 附近），看新块头部的 `ref_` 是不是 1，是的话，创建即持有的说法就落了地。
 
 第二道题验 detach 的发生。您写一个 `QList<int>`，拷贝的时候留一份副本，咱们往副本上 append 几个新元素，单步跟进去看 `detach()` 走的分支（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qarraydatapointer.h:142-145`），确认 ref_ 的变化是从 2 到 1、新块从 1 起步。
 

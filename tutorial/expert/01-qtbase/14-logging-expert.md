@@ -595,7 +595,7 @@ void setDefaultPattern()
 }
 ```
 
-默认的 pattern 是 `%{if-category}%{category}: %{endif}%{message}`，有 category 的消息就带 `categoryName: ` 这样的前缀，没有就是裸消息了。`qDebug()` 走的是 default category，被 `if-category` 跳了过去，所以默认的输出就是一条裸消息，`qCDebug(cat)` 才带 `cat: ` 的前缀。您想带时间戳、类型、线程的话，设环境变量 `QT_MESSAGE_PATTERN="%{time yyyy-MM-dd hh:mm:ss.zzz} [%{type}] [%{category}] %{message}"` 就行了。支持的占位符咱们数一数，`category`、`type`、`message`、`file`、`line`、`function`、`pid`、`appname`、`threadid`（OS 的线程号）、`qthreadptr`（QThread* 的指针值）、`time`、`backtrace`，末了连 `if-*`/`endif` 这一对也是有的，一整套都在里头了。
+默认的 pattern 是 `%{if-category}%{category}: %{endif}%{message}`，有 category 的消息就带 `categoryName:` 这样的前缀，没有就是裸消息了。`qDebug()` 走的是 default category，被 `if-category` 跳了过去，所以默认的输出就是一条裸消息，`qCDebug(cat)` 才带 `cat:` 的前缀。您想带时间戳、类型、线程的话，设环境变量 `QT_MESSAGE_PATTERN="%{time yyyy-MM-dd hh:mm:ss.zzz} [%{type}] [%{category}] %{message}"` 就行了。支持的占位符咱们数一数，`category`、`type`、`message`、`file`、`line`、`function`、`pid`、`appname`、`threadid`（OS 的线程号）、`qthreadptr`（QThread* 的指针值）、`time`、`backtrace`，末了连 `if-*`/`endif` 这一对也是有的，一整套都在里头了。
 
 ## 风险与故障预防
 
