@@ -14,8 +14,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
     auto* window = new QWidget;
@@ -33,19 +32,17 @@ int main(int argc, char* argv[])
     mainLayout->addWidget(manualLabel);
 
     auto* manualRow = new QHBoxLayout;
-    // 布局留足 margin，防止阴影被裁剪
+    // 手绘阴影收在卡片自身 rect 内，这里的 margin 只是排版留白（正文实验 2：设 0 也不裁）
     manualRow->setContentsMargins(30, 10, 30, 10);
 
-    auto* card1 = new ShadowCard(
-        QStringLiteral("卡片 A - 手动阴影"),
-        QStringLiteral("使用 QPainter 在 paintEvent 中逐层绘制半透明阴影。"
-                       "无需 QGraphicsDropShadowEffect，性能更优。"),
-        ShadowCard::ShadowMode::Manual);
-    auto* card2 = new ShadowCard(
-        QStringLiteral("卡片 B - 手动阴影"),
-        QStringLiteral("与卡片 A 相同的阴影技术，演示多卡片共存时的视觉效果。"
-                       "注意父布局 margin 留足阴影空间。"),
-        ShadowCard::ShadowMode::Manual);
+    auto* card1 = new ShadowCard(QStringLiteral("卡片 A - 手动阴影"),
+                                 QStringLiteral("使用 QPainter 在 paintEvent 中逐层绘制半透明阴影。"
+                                                "无需 QGraphicsDropShadowEffect，性能更优。"),
+                                 ShadowCard::ShadowMode::Manual);
+    auto* card2 =
+        new ShadowCard(QStringLiteral("卡片 B - 手动阴影"),
+                       QStringLiteral("与卡片 A 相同的阴影技术，演示多卡片共存时的视觉效果。"),
+                       ShadowCard::ShadowMode::Manual);
 
     manualRow->addWidget(card1);
     manualRow->addWidget(card2);
@@ -58,13 +55,14 @@ int main(int argc, char* argv[])
     mainLayout->addWidget(effectLabel);
 
     auto* effectRow = new QHBoxLayout;
+    // 特效阴影外溢出卡片 rect，左 30px 盖过 blur 20 + offset 6，防左侧被裁（正文实验 1）
     effectRow->setContentsMargins(30, 10, 30, 10);
 
-    auto* card3 = new ShadowCard(
-        QStringLiteral("卡片 C - DropShadow"),
-        QStringLiteral("使用 QGraphicsDropShadowEffect 自动阴影。"
-                       "配置 StyledPanel 框架 + blurRadius=20 + offset=(0,6)。"),
-        ShadowCard::ShadowMode::DropEffect);
+    auto* card3 =
+        new ShadowCard(QStringLiteral("卡片 C - DropShadow"),
+                       QStringLiteral("使用 QGraphicsDropShadowEffect 自动阴影。"
+                                      "配置 StyledPanel 框架 + blurRadius=20 + offset=(0,6)。"),
+                       ShadowCard::ShadowMode::DropEffect);
 
     effectRow->addWidget(card3);
     effectRow->addStretch();

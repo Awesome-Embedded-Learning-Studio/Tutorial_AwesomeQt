@@ -17,10 +17,7 @@
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-LabelModeDemo::LabelModeDemo(QWidget* parent)
-    : QWidget(parent)
-    , m_buddyHasMarker(true)
-{
+LabelModeDemo::LabelModeDemo(QWidget* parent) : QWidget(parent), m_buddyHasMarker(true) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // 三个演示区域依次排列
@@ -37,8 +34,7 @@ LabelModeDemo::LabelModeDemo(QWidget* parent)
 // setTextFormat 三种模式对比
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* LabelModeDemo::createTextFormatSection()
-{
+QWidget* LabelModeDemo::createTextFormatSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
@@ -48,11 +44,14 @@ QWidget* LabelModeDemo::createTextFormatSection()
     // 用户输入区
     auto* inputRow = new QHBoxLayout;
     auto* inputLabel = new QLabel(QStringLiteral("输入测试文本:"));
-    m_formatInput = new QLineEdit(QStringLiteral("<b>粗体</b> 和 <i>斜体</i> 以及 <script>alert('xss')</script>"));
+    m_formatInput = new QLineEdit(
+        QStringLiteral("<b>粗体</b> 和 <i>斜体</i> 以及 <script>alert('xss')</script>"));
     m_formatCombo = new QComboBox;
     m_formatCombo->addItem(QStringLiteral("PlainText"), static_cast<int>(Qt::PlainText));
     m_formatCombo->addItem(QStringLiteral("RichText"), static_cast<int>(Qt::RichText));
     m_formatCombo->addItem(QStringLiteral("AutoText"), static_cast<int>(Qt::AutoText));
+    m_formatCombo->setToolTip(
+        QStringLiteral("三个标签的格式各自固定，下拉只切换背景高亮，不改变渲染"));
 
     inputRow->addWidget(inputLabel);
     inputRow->addWidget(m_formatInput, 1);
@@ -123,8 +122,7 @@ QWidget* LabelModeDemo::createTextFormatSection()
 // setBuddy 快捷键演示
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* LabelModeDemo::createBuddySection()
-{
+QWidget* LabelModeDemo::createBuddySection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
@@ -145,8 +143,8 @@ QWidget* LabelModeDemo::createBuddySection()
         new QPushButton(QStringLiteral("切换标签文本（当前：含 &U 标记，Alt+U 有效）"));
 
     // 提示信息
-    auto* hint = new QLabel(
-        QStringLiteral("按 Alt+U 测试焦点跳转。点击按钮移除 & 标记后快捷键将失效。"));
+    auto* hint =
+        new QLabel(QStringLiteral("按 Alt+U 测试焦点跳转。点击按钮移除 & 标记后快捷键将失效。"));
     hint->setWordWrap(true);
 
     layout->addWidget(sectionTitle);
@@ -163,8 +161,7 @@ QWidget* LabelModeDemo::createBuddySection()
 // QFontMetrics::elidedText 文本截断
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* LabelModeDemo::createElideSection()
-{
+QWidget* LabelModeDemo::createElideSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
@@ -222,8 +219,7 @@ QWidget* LabelModeDemo::createElideSection()
 // 槽函数实现
 // ─────────────────────────────────────────────────────────────────────────────
 
-void LabelModeDemo::updateFormatDisplay()
-{
+void LabelModeDemo::updateFormatDisplay() {
     const QString text = m_formatInput->text();
     const Qt::TextFormat selectedFormat =
         static_cast<Qt::TextFormat>(m_formatCombo->currentData().toInt());
@@ -242,8 +238,7 @@ void LabelModeDemo::updateFormatDisplay()
     m_autoLabel->setStyleSheet(selectedFormat == Qt::AutoText ? highlight : normal);
 }
 
-void LabelModeDemo::toggleBuddyText()
-{
+void LabelModeDemo::toggleBuddyText() {
     // 在含 & 标记和不含标记之间切换，演示快捷键的依赖关系
     if (m_buddyHasMarker) {
         // 移除 & 标记——setBuddy 不会报错但快捷键静默失效
@@ -258,15 +253,15 @@ void LabelModeDemo::toggleBuddyText()
     }
 }
 
-void LabelModeDemo::updateElideDisplay()
-{
+void LabelModeDemo::updateElideDisplay() {
     const QString text = m_elideInput->text();
     const Qt::TextElideMode mode =
         static_cast<Qt::TextElideMode>(m_elideModeCombo->currentData().toInt());
 
     // 使用标签的实际字体和宽度计算截断
     QFontMetrics fm(m_elideLabel->font());
-    const int availableWidth = m_elideLabel->width();
+    const int availableWidth =
+        m_elideLabel->contentsRect().width(); // 扣掉 QFrame::Box 的边框，宽度落在内容区里
 
     // elidedText 在指定宽度内截断文本，返回已含省略号的字符串
     const QString elided = fm.elidedText(text, mode, availableWidth);

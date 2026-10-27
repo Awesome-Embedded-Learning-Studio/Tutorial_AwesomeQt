@@ -1,226 +1,108 @@
 ---
 title: "3.74 QPrintPreviewDialog 进阶"
-description: "入门篇我们学会了 QPrintPreviewDialog 的基本用法：连接 paintRequested 信号、在回调中绘制内容、exec 打开预览。进阶篇要深挖的是 paintRequested 信号的绘制流程机制、预览页面的自定义操作（缩放、导航、方向），以及如何添加自定义工具栏按钮实现预览与实际打印的一致性保证。"
+description: "进阶篇把 QPrintPreviewDialog 的机制对到源码行上：对话框内部组装一只 QPrintPreviewWidget 并转发它的 paintRequested（qprintpreviewdialog.cpp 第 199-207 行），预览生成时 QPrinter 临时换上 QPreviewPaintEngine，每一页记录成一只 QPicture 而不是内存 PDF（qprintpreviewwidget.cpp 第 355-377 行，qprinter.cpp 第 137-153 行，qpaintengine_preview.cpp 第 47-62、111-134 行），打印按钮只是再发一次 paintRequested（qprintpreviewwidget.cpp 第 582-587 行），fitToWidth 与 fitInView 是 setZoomMode 的便利函数（第 670-682 行），总览模式列数取页数开方再补成偶数列（第 323-331 行），示例在 examples/advanced/03-qtwidgets/74-qprintpreviewdialog-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.74——QPrintPreviewDialog 进阶
 
-## 1. 前言 / 预览对话框里的门道比看起来多
+上一篇的 QPrintDialog 把挑打印机的活交给了用户，本篇的 QPrintPreviewDialog 再往前送一步，纸还没走到打印机，用户就能在屏幕上翻看每一页。它看着像个黑盒，内部组装得其实很朴素，一只 QPrinter，加一只 QPrintPreviewWidget，外面套一层带工具栏的 QMainWindow。预览机制里，每一页都是拿您的绘制代码现打的，点打印那一刻，同一段代码再跑一遍。
 
-入门篇我们学会了 QPrintPreviewDialog 的基本用法：连接 paintRequested 信号、在回调中绘制内容、exec 打开预览。说实话，做到这一步你已经能在应用里弹出打印预览了——用户能看到每一页的效果，点打印就能输出。但如果你真正用过 WPS、LibreOffice 这些应用的打印预览，你会发现它们的预览远不只是"看一眼"——工具栏上有缩放、页面导航、方向切换，甚至有"导出 PDF"和"页面设置"这样的自定义按钮。这些才是让预览从"能用"变成"专业"的关键。
+引用文件咱们交代清楚。笔者把打印支持模块里的 qprintpreviewdialog.cpp 与 qprintpreviewwidget.cpp 从头读到尾，预览引擎那头又借 qprinter.cpp 与 qpaintengine_preview.cpp 对证，行号全部对着 Qt 6.9.1 标注。入门篇走过的连接 paintRequested、exec 的基本套路不重讲，本篇从内部组装讲到预览生成的真实路径，再落到缩放实现与工具栏定制，配套示例是一只带水印开关的预览对话框，玩法放在结语。
 
-这篇文章要深挖的是四个核心议题：paintRequested 信号的精确触发时机和绘制流程，预览页面操作（缩放、导航、方向切换）的行为细节，添加自定义工具栏按钮的方法，以及预览与实际打印之间的一致性保证。
+## 内部组装：一只 QPrinter 加一只 QPrintPreviewWidget
 
-## 2. 环境说明
-
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。QPrintPreviewDialog 属于 QtPrintSupport 模块，需要在 CMakeLists.txt 中添加 `find_package(Qt6 REQUIRED COMPONENTS PrintSupport)` 并链接 `Qt6::PrintSupport`。QPrintPreviewDialog 内部使用 QPrintPreviewWidget 实现预览功能。
-
-## 3. 核心概念讲解
-
-### 3.1 paintRequested 信号的绘制流程
-
-paintRequested 是 QPrintPreviewDialog 最核心的信号——你需要连接它到一个槽函数，在槽函数中对 QPrinter 参数进行绘制。理解这个信号的触发时机是正确使用预览对话框的关键。
-
-paintRequested 会在以下场景中被触发：对话框首次打开时触发一次，用于生成初始预览；用户在预览中修改了页面设置（比如切换纸张方向、调整边距）时触发，用于重新生成预览；用户点击了预览工具栏上的"刷新"按钮时触发（如果对话框有的话）。每次触发时，信号参数是一个指向 QPrinter 对象的指针，这个 QPrinter 就是你在构造 QPrintPreviewDialog 时传入的那个。
+构造时传不传 QPrinter，走的分支咱们在 init 里都能看清。传了，QPrintPreviewWidget 直接拿它建出来，指针原样存下（qprintpreviewdialog.cpp 第 199-201 行）。没传，对话框自己 new 一只 QPrinter，默认落在系统默认打印机上，并记下 ownPrinter 标志（第 203-206 行）。析构时只删除自己造的 QPrinter，您传入的打印机由您自己管（第 681-688 行）。
 
 ```cpp
-QPrinter printer;
-printer.setOutputFormat(QPrinter::PdfFormat);
-
-QPrintPreviewDialog preview(&printer, this);
-connect(&preview, &QPrintPreviewDialog::paintRequested,
-        this, &MyClass::on_paint_requested);
-
-preview.exec();
+if (_printer) {
+    preview = new QPrintPreviewWidget(_printer, q);
+    printer = _printer;
+} else {
+    ownPrinter = true;
+    printer = new QPrinter;
+    preview = new QPrintPreviewWidget(printer, q);
+}
+QObject::connect(preview, SIGNAL(paintRequested(QPrinter*)), q, SIGNAL(paintRequested(QPrinter*)));
 ```
 
-这里有一个非常重要的行为：paintRequested 可能在对话框的生命周期内被触发多次。也就是说你的绘制槽函数可能会被调用好几次——每次用户修改设置后都会重新调用。所以你的绘制逻辑必须是幂等的——多次调用不应该产生副作用（比如累加全局变量、追加文件内容等）。
+（qprintpreviewdialog.cpp 第 199-207 行）末尾那行 connect，值得咱们停一停。您连到对话框上的 paintRequested，源头在内部的预览控件里，对话框只做转发，转发代码就在第 207 行。本篇后面讲的所有触发时机，起点都在 QPrintPreviewWidget 那一侧。
+
+最外层的组装也顺路看清。对话框内部建了一只 QMainWindow 的派生类，它把 createPopupMenu 重载成返回空指针，免得用户右键点出工具栏菜单（第 47-52 行）。工具栏从适应宽度到打印按钮挨个摆好（第 232-282 行），预览控件当中央部件（第 297 行），主窗口随后被强制改成普通子部件挂进对话框（第 298-300 行）。窗口标题会拼上打印机的 docName（第 307-310 行）。还有一处联动咱们实测会碰到，打印机无效时 Page setup 按钮直接禁用，Windows 与 Apple 平台上输出格式不是原生打印时同样禁用，见第 312-317 行。咱们在没有配置打印机的环境里跑示例，这个钮多半是灰的。
+
+## 预览的每一页都是现打的
+
+预览从哪来，咱们从对话框第一次显示跟起。setVisible 里有个只跑一次的分支，头一回显示时调 preview->updatePreview，分支在第 693-702 行。updatePreview 本体在第 758-768 行，它再调 generatePreview，函数体在第 355-377 行。generatePreview 就是预览的主流程，咱们把核心几行原文摆出来。
 
 ```cpp
-void MyClass::on_paint_requested(QPrinter* printer)
+if (printer->d_func()->previewMode())
+    return;
+printer->d_func()->setPreviewMode(true);
+emit q->paintRequested(printer);
+printer->d_func()->setPreviewMode(false);
+pictures = printer->d_func()->previewPages();
+```
+
+（qprintpreviewwidget.cpp 第 365-370 行）这几行得连着 qprinter.cpp 里的 setPreviewMode 一起读。预览模式打开时，QPrinter 的打印引擎与绘制引擎被临时换成一只 QPreviewPaintEngine，真正的引擎被存到一边（qprinter.cpp 第 137-153 行）。您的绘制槽拿 QPainter 往 QPrinter 上画的时候，驱动的其实是预览引擎，它把每一次 draw 调用记录进一只 QPicture。begin 建头一页（qpaintengine_preview.cpp 第 47-62 行），您每调一次 newPage，它就新起一只 QPicture 记下一页（第 111-134 行）。画完，generatePreview 关掉预览模式，把页表要回来（第 369-370 行）。
+
+记录完的 QPicture 接着被摆进图形场景。populateScene 给每页造一只 PageItem（第 298-315 行），显示时 PageItem::paint 画好纸与阴影，再 drawPicture 把记录的绘制命令原样重放（第 87 行），页边距区还会被盖上一层半透明白，您画进边距的内容看起来就被洗淡了（第 89-95 行）。这里笔者要当面驳一条说法，旧稿与网上流传的讲法都称预览在内存里生成 PDF 再栅格化成图像，笔者在源码里找不到支持的代码，真实路径是 QPicture 记录加重放，从头到尾没有一张 PDF。
+
+哪些动作会让 paintRequested 再来一遍，笔者把源头数了一遍。对话框首次显示算一次。翻转 Portrait 与 Landscape 也算一次，工具栏的方向钮没有经过对话框的私有槽，直接接到预览控件的方向函数上（qprintpreviewdialog.cpp 第 374-375 行），一个接 setPortraitOrientation，另一个接 setLandscapeOrientation。它们落到 setOrientation，改完页面方向就调 generatePreview，函数在 qprintpreviewwidget.cpp 第 572-577 行。Page setup 对话框确认后同样走一遍方向更新，出处是第 570-587 行。点打印按钮时还会来一次，咱们下一节单独讲。所以您的绘制槽在一次预览里可能被叫好几回，绘制逻辑必须每次都从零画到尾。槽里要是往文件里追加内容或者累加全局计数，翻一次方向就多记一份，这类副作用得在入口处清干净。页面几何也得每次从参数给出的 QPrinter 上现读，方向刚被用户改过，缓存的旧矩形只会画错。
+
+## 点打印之后：同一段绘制代码再跑一遍
+
+工具栏的 Print 按钮接到 _q_print，咱们跟着它走一遍 Unix 的路径。它按需建一只 QPrintDialog，exec 等用户确认（qprintpreviewdialog.cpp 第 560-561 行）。用户点了接受，它才调 preview->print()，随后把对话框收下（第 562-568 行）。preview->print() 的函数体只有一行，就是再发一次 paintRequested，出处是 qprintpreviewwidget.cpp 第 582-587 行。源码里还留着一句注释，说本该复用生成好的页，实现没做，就在第 585 行。
+
+所以打印与预览共用的就是同一个槽，区别只在 QPrinter 当前装的是哪只引擎。预览时装 QPreviewPaintEngine，打印时预览模式已关，QPainter 直通真正的打印引擎。类文档把这套用法写得很直白，预览用的代码可以原样拿来当实际打印用，包括 newPage（qprintpreviewdialog.cpp 第 632-640 行）。预览与打印的一致性就靠这一点保证，您要是另写一套打印代码，两边的分页迟早分道扬镳。
+
+平台差异咱们也交代一句。Windows 与 Apple 上输出格式不是原生打印时，Print 按钮走的是导出 PDF 的路，弹文件保存框，后缀补上 .pdf，随后照样调 preview->print()。出处 qprintpreviewdialog.cpp 第 542-559 行。预览终究是记录下来的绘制命令在屏幕上重放，几何一致，设备渲染不完全一致，打印机的分辨率与色彩和屏幕有物理差别，版面照预览走，成色以打印机为准。
+
+## fitToWidth 与 fitInView：缩放的实现路径
+
+工具栏的 Fit width 与 Fit page 两个钮都接进 _q_fit，咱们看槽里的转发。Fit page 走 fitInView()，Fit width 走 fitToWidth()，转发逻辑在 qprintpreviewdialog.cpp 第 470-477 行。这一对函数在预览控件那边都是一行的便利函数。
+
+```cpp
+void QPrintPreviewWidget::fitToWidth()
 {
-    // 每次调用都从零开始绘制——不要依赖上一次调用的状态
-    QPainter painter(printer);
-
-    QRectF page = printer->pageRect(QPrinter::DevicePixel);
-    int page_num = 1;
-    qreal y = page.top();
-
-    // 绘制所有内容...
-    for (const auto& item : m_items) {
-        if (y + item.height() > page.bottom()) {
-            printer->newPage();
-            ++page_num;
-            y = page.top();
-        }
-        draw_item(&painter, item, y);
-        y += item.height();
-    }
+    setZoomMode(FitToWidth);
 }
 ```
 
-另一个需要注意的点是：paintRequested 的参数 QPrinter* 指向的 QPrinter 对象的输出格式被 QPrintPreviewDialog 内部设置为 PdfFormat，输出目标是一个内部的 QBuffer。也就是说，你的绘制内容先被写入内存中的 PDF，然后 QPrintPreviewDialog 再把这个 PDF 渲染成预览图像。这意味着你在 paintRequested 回调中对 printer 调用 setOutputFileName 是无效的——预览对话框会覆盖这个设置。
+（qprintpreviewwidget.cpp 第 670-673 行）fitInView 同款，只是换成 setZoomMode(FitInView)，位置在第 679-682 行。咱们接着看 setZoomMode，缩放走哪条路由它定。模式是 FitInView 或 FitToWidth 时，fitting 置真并立刻调 _q_fit(true)。是 CustomZoom 时，fitting 置假（第 689-699 行）。
 
-### 3.2 自定义预览页面：缩放、导航、方向
+_q_fit 里的活分两条路，咱们对着源码看。FitToWidth 拿视口宽度除以目标页宽得到比例，套上变换矩阵，再把视野对到页顶（第 220-229 行）。另一条路走 graphicsView 的 fitInView，KeepAspectRatio，整页塞进视口（第 231 行）。算完把 zoomFactor 按变换矩阵的 m11 乘上打印机与控件的逻辑 DPI 之比回写（第 239 行），打印页从打印机分辨率缩到屏幕分辨率，靠的就是这一步。
 
-QPrintPreviewDialog 内部使用 QPrintPreviewWidget 来渲染预览页面。QPrintPreviewWidget 提供了缩放、页面导航、视图模式等控制方法。虽然 QPrintPreviewDialog 的工具栏已经暴露了基本的缩放和导航按钮，但你可以通过访问内部的 QPrintPreviewWidget 来做更精细的控制。
+手动缩放那一路咱们顺带看清。zoomIn 与 zoomOut 的默认系数是 1.1（qprintpreviewwidget.h 第 52-53 行）。实现那头把模式切成 CustomZoom，再乘上变换，出处是 qprintpreviewwidget.cpp 第 400-404 与 593-611 行。工具栏上的加减号钮带自动重复，间隔 200 毫秒（qprintpreviewdialog.cpp 第 284-294 行）。缩放下拉框预置了 12.5% 到 800% 的档位（第 224-226 行，表存的是两倍值、显示时再除回）。手输超界的值，验证器在 1 到 1000 的范围上拦（第 222 行），Intermediate 状态回车没反应，焦点移走时打回原值（第 101-105 行），qprintpreviewdialog.cpp 第 596-607 行的夹取只在别的路径兜底。
 
-```cpp
-// 获取内部的预览 widget
-auto *preview_widget = preview.findChild<QPrintPreviewWidget*>();
-if (preview_widget) {
-    // 设置缩放比例
-    preview_widget->setZoomFactor(1.5);
+## 视图模式与当前页
 
-    // 设置视图模式：单页 / 双页 / 所有页面
-    preview_widget->setViewMode(QPrintPreviewWidget::AllPagesView);
+视图模式枚举有三个成员，咱们在 qprintpreviewwidget.h 第 24-28 行里能数全。单页是 SinglePageView。对页是 FacingPagesView。总览是 AllPagesView。私有构造里默认 SinglePageView，缩放模式默认 FitInView，缩放系数 1（qprintpreviewwidget.cpp 第 147-152 行）。对话框工具栏的初始勾选与它对得上，Fit page 与单页显示是选中态，对应 qprintpreviewdialog.cpp 第 403-409 行。三个显示钮接到 _q_setMode，选总览时切 AllPagesView，把适应、翻页与页码框一并禁用（第 515-523 行），切回单页或对页再启用并重新适应（第 529-535 行）。setViewMode 那头，总览分支还会把缩放模式改成 CustomZoom，fitting 关掉（第 546-551 行）。
 
-    // 跳转到指定页
-    preview_widget->setCurrentPage(3);
-}
-```
+总览的网格排布写在 layoutPages 里。纵向纸取列数为页数开方向上取整，横向纸向下取整，随后再补成偶数列，注释写明偶数列更好看（第 323-331 行）。对页模式固定两列，位置表多算一格，首页没有对页，注释也写明白了（第 332-345 行）。当前页怎么定，是滚动时算的，calcCurrentPage 拿视口与每页的重叠面积比大小，面积最大的那页胜出，打平取页码小的（第 257-275 行）。滚动条的 valueChanged 就接在这个槽上，连线在第 285-286 行。咱们拖着滚动条翻看，工具栏的页码框跟着变，动力就在这里。
 
-QPrintPreviewWidget::ViewMode 有三个选项：SinglePageView（一次显示一页，默认）、FacingPagesView（一次显示两页，左右并排，模拟书本翻页效果）、AllPagesView（一次显示所有页面的缩略图）。
+## 给工具栏塞自己的按钮
 
-页面方向（纵向/横向）的切换会影响 QPrinter 的页面配置。当用户在预览对话框的工具栏上切换方向时，QPrintPreviewDialog 会调用 QPrinter::setPageOrientation，然后重新触发 paintRequested 让你重新绘制内容。这就是为什么你的绘制逻辑必须从 QPrinter 动态读取页面配置——不能用缓存的旧值。
+内部工具栏并没有藏进私有类，它是内部主窗口的子对象，主窗口又挂在对话框底下（qprintpreviewdialog.cpp 第 232-233 与 296-300 行），所以 findChild<QToolBar*>() 能把它找出来，addAction 就能加您自己的按钮。示例加的是一个可勾选的 Add Watermark 开关。
 
-```cpp
-void MyClass::on_paint_requested(QPrinter* printer)
-{
-    // 每次都从 printer 读取当前配置——用户可能在预览中改了方向
-    QPageLayout::Orientation orientation = printer->pageLayout().orientation();
-    QRectF page = printer->pageRect(QPrinter::DevicePixel);
+勾选水印的现象值得您亲手试。示例的开关只翻一个 bool，不碰预览，paintRequested 的触发权在预览控件手里，所以勾上 Add Watermark 的那一刻预览纹丝不动。您点一下工具栏的 Portrait 或 Landscape，方向一翻，generatePreview 重跑，斜向的 DRAFT 水印连同新方向一起出现在每页中央。想勾完立刻见效，咱们可以拿 findChild 找到内部预览控件，模板参数写 QPrintPreviewWidget，然后调它的 updatePreview()，这是公开槽（qprintpreviewwidget.cpp 第 758-768 行），语义就是重发生一次 paintRequested，比借方向翻转绕路要体面。
 
-    if (orientation == QPageLayout::Landscape) {
-        // 横向布局的绘制逻辑
-    } else {
-        // 纵向布局的绘制逻辑
-    }
-}
-```
+依赖内部控件结构的做法要留余地。findChild 找不到就返回空指针，工具栏与预览控件的组装方式属于实现细节，大版本之间可能挪窝，判空加降级是您工程里该有的姿势，示例里 if (toolBar) 的判空就是这个意思。
 
-### 3.3 添加自定义工具栏按钮
+## 官方文档参考
 
-QPrintPreviewDialog 的工具栏上默认有缩放、导航、页面设置、打印等按钮。在工程中我们经常需要添加自定义按钮——比如"导出 PDF"（不经过打印机直接保存）、"页面水印设置"、"页眉页脚配置"等。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 Qt 6.9.1 源码核对过。
 
-方法是找到对话框内部的 QToolBar，然后添加自定义的 QAction。
+[Qt 文档 · QPrintPreviewDialog](https://doc.qt.io/qt-6/qprintpreviewdialog.html) -- 打印预览对话框，paintRequested 信号与内部组装的文档出处
 
-```cpp
-QPrintPreviewDialog preview(&printer, this);
-connect(&preview, &QPrintPreviewDialog::paintRequested,
-        this, &MyClass::on_paint_requested);
+[Qt 文档 · QPrintPreviewWidget](https://doc.qt.io/qt-6/qprintpreviewwidget.html) -- 预览控件，ViewMode 与 ZoomMode 枚举以及缩放便利函数的定义处
 
-// 找到内部工具栏
-auto *toolbar = preview.findChild<QToolBar*>();
-if (toolbar) {
-    // 添加分隔符
-    toolbar->addSeparator();
+[Qt 文档 · QPrinter](https://doc.qt.io/qt-6/qprinter.html) -- 打印机类，预览模式换引擎就发生在它身上
 
-    // 添加"导出 PDF"按钮
-    auto *export_action = toolbar->addAction("Export PDF");
-    connect(export_action, &QAction::triggered, this, [&printer, this]() {
-        QString path = QFileDialog::getSaveFileName(
-            this, "Export PDF", QString(), "PDF Files (*.pdf)");
-        if (!path.isEmpty()) {
-            printer.setOutputFormat(QPrinter::PdfFormat);
-            printer.setOutputFileName(path);
-            // 需要重新触发一次绘制
-            do_export_pdf(&printer);
-        }
-    });
-}
-
-preview.exec();
-```
-
-这里有几个注意事项。第一，findChild<QToolBar*>() 依赖于 QPrintPreviewDialog 的内部实现，虽然 Qt 6 系列中这个方法是稳定的，但理论上未来版本可能改变内部控件结构。如果你的应用需要长期维护，建议做 nullptr 检查并提供降级方案。
-
-第二，在自定义按钮的槽函数中，如果你修改了 QPrinter 的配置（比如上面代码中设置 outputFileName），这些修改会影响到后续的 paintRequested 调用。因为 paintRequested 使用的就是同一个 QPrinter 对象。所以如果你在"导出 PDF"按钮中改了 outputFileName，之后用户点预览对话框自带的"打印"按钮时，输出可能会被错误地导向你设置的文件而不是打印机。解决方案是在自定义操作完成后恢复 QPrinter 的配置，或者在导出 PDF 时使用一个独立的 QPrinter 对象。
-
-```cpp
-// 安全的导出方式——使用独立的 QPrinter
-connect(export_action, &QAction::triggered, this, [this]() {
-    QString path = QFileDialog::getSaveFileName(
-        this, "Export PDF", QString(), "PDF Files (*.pdf)");
-    if (!path.isEmpty()) {
-        QPrinter export_printer;  // 独立的 QPrinter，不影响预览
-        export_printer.setOutputFormat(QPrinter::PdfFormat);
-        export_printer.setOutputFileName(path);
-        export_printer.setPageSize(printer.pageLayout().pageSize());
-        export_printer.setPageMargins(printer.pageLayout().margins());
-        do_export_pdf(&export_printer);
-    }
-});
-```
-
-### 3.4 预览与实际打印的一致性保证
-
-这是打印预览功能中最容易被忽视但影响最大的问题——用户在预览中看到的效果必须和最终打印出来的效果完全一致。如果不一致，预览就失去了意义。
-
-一致性的核心原则是：预览和打印必须使用完全相同的绘制代码。不要为预览写一套绘制逻辑、为打印写另一套——哪怕差异很小（比如字体大小差了 1pt），用户也会发现并失去对预览功能的信任。
-
-```cpp
-// 统一的绘制入口
-void MyClass::do_paint(QPrinter* printer)
-{
-    QPainter painter(printer);
-    QRectF page = printer->pageRect(QPrinter::DevicePixel);
-
-    // 所有配置都从 printer 参数动态读取
-    QFont body_font("Sans", 10);
-    painter.setFont(body_font);
-
-    // ... 统一的绘制逻辑 ...
-}
-
-// 预览时调用
-void MyClass::on_paint_requested(QPrinter* printer)
-{
-    do_paint(printer);
-}
-
-// 直接打印时也调用同一个函数
-void MyClass::on_print()
-{
-    QPrintDialog dialog(&printer, this);
-    if (dialog.exec() == QDialog::Accepted) {
-        do_paint(&printer);
-    }
-}
-```
-
-有几个常见的不一致来源需要注意。第一是字体渲染差异——QPrintPreviewDialog 使用屏幕渲染来显示预览，而打印机使用打印机自身的渲染引擎。字体在屏幕和打印机上的 hinting 和抗锯齿处理可能不同，导致文字在预览和打印输出中的视觉效果有微妙差异。这不是代码能解决的问题，但差异通常很小，用户不太会注意到。
-
-第二是颜色空间差异——屏幕使用 RGB 颜色，打印机通常使用 CMYK。如果你的内容中包含鲜艳的蓝色或绿色，在打印输出中可能会变暗变灰。QPrintPreviewDialog 的预览使用屏幕 RGB 渲染，所以预览中的颜色比实际打印更鲜艳。如果你的应用对颜色准确性有要求（比如打印产品目录），需要提醒用户这个差异。
-
-第三是分辨率差异——预览的分辨率是屏幕分辨率（通常 96 DPI），打印的分辨率可能是 300 或 600 DPI。这意味着打印输出中的细节（比如细线、小文字）比预览中更清晰。这不是 bug，是物理特性的差异。
-
-## 4. 踩坑预防
-
-第一个坑是 paintRequested 被多次调用导致的副作用。预览对话框在用户修改设置时会重新触发 paintRequested，如果你的绘制函数有副作用（比如往文件写数据、修改全局状态），多次调用会产生重复或错误的结果。解决方案是确保绘制函数是纯函数——只从 QPrinter 参数和输入数据读取，只向 QPainter 写入，不修改外部状态。
-
-第二个坑是在自定义工具栏按钮中修改了共享 QPrinter 的配置。如 3.3 节所述，预览对话框和自定义按钮共享同一个 QPrinter 对象。如果你在自定义按钮中改了 outputFormat 或 outputFileName，后续的 paintRequested 调用会使用被修改后的配置，导致预览行为异常。解决方案是在需要修改 QPrinter 配置时使用独立的 QPrinter 对象，不要修改预览对话框使用的那个。
-
-第三个坑是 findChild 获取内部控件的脆弱性。通过 findChild<QToolBar*>() 或 findChild<QPrintPreviewWidget*>() 获取内部控件依赖于 Qt 的内部实现，可能在版本升级后失效。解决方案是始终做 nullptr 检查，并且不要过度依赖内部控件的特定行为。如果 findChild 返回 nullptr，降级到不使用自定义功能的方式。
-
-第四个坑是预览中页面数量与实际打印页面数量不一致。这通常发生在绘制逻辑使用了外部状态（比如当前时间、随机数）或者依赖了某些在预览上下文中不存在的资源。由于 paintRequested 在预览和打印时使用同一套代码，如果代码中依赖了只在某个上下文中有效的数据，就会导致页面数量不一致。解决方案是绘制逻辑不依赖上下文相关的状态，所有需要的数据都通过参数或成员变量传入。
-
-## 5. 练习项目
-
-练习项目：带自定义导出按钮的打印预览对话框。我们要实现一个报表预览功能，打开 QPrintPreviewDialog 时工具栏上多一个"Export PDF"按钮和一个"Add Watermark"勾选项。Export PDF 点击后弹出文件保存对话框，将报表保存为 PDF（使用独立的 QPrinter，不影响预览）。Add Watermark 勾选后，每一页的右下角绘制一个半透明的 "DRAFT" 水印文字。报表内容使用硬编码的数据（比如 50 行表格数据），分页输出。
-
-完成标准是：预览正确显示所有页面；勾选 Add Watermark 后预览立即更新（重新触发 paintRequested）并显示水印；Export PDF 导出的 PDF 内容和预览完全一致（包括水印状态）；多次切换 Add Watermark 不产生重复或残留内容。提示几个关键点：用一个 bool 成员变量控制水印是否绘制，Add Watermark 的 toggled 信号连接到更新这个 bool 并触发预览刷新（通过 findChild<QPrintPreviewWidget*>()->updatePreview()）；Export PDF 使用独立的 QPrinter 对象；绘制函数中检查水印标志决定是否画水印。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QPrintPreviewDialog](https://doc.qt.io/qt-6/qprintpreviewdialog.html) -- 打印预览对话框类，包含 paintRequested 信号和工具栏配置说明
-
-[Qt 文档 · QPrintPreviewWidget](https://doc.qt.io/qt-6/qprintpreviewwidget.html) -- 预览控件类，包含缩放、导航、视图模式方法
-
-[Qt 文档 · QPrinter](https://doc.qt.io/qt-6/qprinter.html) -- 打印机类，页面配置和输出格式设置
-
-[Qt 文档 · QToolBar](https://doc.qt.io/qt-6/qtoolbar.html) -- 工具栏类，用于向预览对话框添加自定义操作按钮
+[Qt 文档 · QPageSetupDialog](https://doc.qt.io/qt-6/qpagesetupdialog.html) -- 页面设置对话框，预览工具栏 Page setup 按钮弹出的就是它
 
 ---
 
-到这里，QPrintPreviewDialog 的进阶内容就过了一遍。paintRequested 的核心机制是每次配置变化时重新触发绘制——你的绘制函数必须是幂等的，不能有副作用。预览页面的缩放和导航可以通过内部的 QPrintPreviewWidget 控制，但 findChild 的方式需要注意版本兼容性。自定义工具栏按钮能显著提升预览对话框的实用性，但切记用独立的 QPrinter 做导出操作，不要修改共享的 QPrinter 配置。预览与打印的一致性保证依赖于使用完全相同的绘制代码，所有配置都从 QPrinter 参数动态读取。把这些搞清楚了，你的打印预览就能从"能看"变成"靠谱"了。
+03-qtwidgets 卷到这里就走完了，从布局与事件一路走到打印预览，控件的家底咱们翻过了一遍。往后的去处，教程线进 [05 其他模块卷的 QtSql 一篇](../05-other-modules/01-qtsql-advanced.md)，QtSql 与 QtCharts 在那边开卷。实例库那头则是成品级的练手货，widget 与 app 两栏可逛，拿成品对照本卷学过的控件，正好补上从学会到做出的那一段。
+
+想动手的您把示例跑起来（`examples/advanced/03-qtwidgets/74-qprintpreviewdialog-advanced/`，可执行文件与工程同名）。窗口里是一框示例文本加一个 Print Preview 按钮，点开预览，示例文本在 A4 上排出三四页，页码框能看到总数，没有打印机的环境里 Page setup 是灰的。您勾上 Add Watermark，预览没动静，翻转一次 Portrait，水印才在每页中央现身，这正是 paintRequested 只在预览重生成时发生的活证据。缩放框里手输 5000 回车，框里没反应，把焦点移走，它打回原值，超界的输入由验证器在回车那一步就拦下了。再点总览钮，所有页排成偶数列的网格，适应与翻页钮一起变灰，切回单页再拖动滚动条，页码框自己往上走。
+
+完成标准照旧。paintRequested 的源头在哪一行、被谁转发，您说得出。预览页是 QPicture 还是内存 PDF，您答得准。打印那一刻有没有复用预览生成好的页，您讲得清。fitToWidth 最终落到哪个函数、缩放比例怎么算，您能对着源码指出来。

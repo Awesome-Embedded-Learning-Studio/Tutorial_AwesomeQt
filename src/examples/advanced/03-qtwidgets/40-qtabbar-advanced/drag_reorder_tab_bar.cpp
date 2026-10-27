@@ -18,22 +18,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 DragReorderTabBar::DragReorderTabBar(QWidget* parent)
-    : QWidget(parent)
-    , m_tabBar(nullptr)
-    , m_stackedWidget(nullptr)
-    , m_infoLabel(nullptr)
-    , m_dragging(false)
-    , m_dragStartIndex(-1)
-{
+    : QWidget(parent), m_tabBar(nullptr), m_stackedWidget(nullptr), m_infoLabel(nullptr),
+      m_dragging(false), m_dragStartIndex(-1) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // ── 独立标签栏 ──
     m_tabBar = new QTabBar;
-    m_tabBar->setMovable(true);             // 启用内置拖拽排序
-    m_tabBar->setTabsClosable(true);        // 内置关闭按钮（RightSide）
+    m_tabBar->setMovable(true);                                         // 启用内置拖拽排序
+    m_tabBar->setTabsClosable(true);                                    // 内置关闭按钮（RightSide）
     m_tabBar->setSelectionBehaviorOnRemove(QTabBar::SelectPreviousTab); // 关闭后回到上次访问的标签
-    m_tabBar->setUsesScrollButtons(true);   // 标签溢出时显示滚动按钮
-    m_tabBar->setElideMode(Qt::ElideRight); // 超长标签文字右侧省略
+    m_tabBar->setUsesScrollButtons(true);                               // 标签溢出时显示滚动按钮
+    m_tabBar->setElideMode(Qt::ElideRight);                             // 超长标签文字右侧省略
 
     mainLayout->addWidget(m_tabBar);
 
@@ -49,16 +44,13 @@ DragReorderTabBar::DragReorderTabBar(QWidget* parent)
     // ── 信号槽连接 ──
 
     // 标签切换 → 同步 QStackedWidget 当前页面
-    connect(m_tabBar, &QTabBar::currentChanged,
-            m_stackedWidget, &QStackedWidget::setCurrentIndex);
+    connect(m_tabBar, &QTabBar::currentChanged, m_stackedWidget, &QStackedWidget::setCurrentIndex);
 
     // 内置关闭按钮 → tabCloseRequested → 移除标签和页面
-    connect(m_tabBar, &QTabBar::tabCloseRequested,
-            this, &DragReorderTabBar::removeTabAtIndex);
+    connect(m_tabBar, &QTabBar::tabCloseRequested, this, &DragReorderTabBar::removeTabAtIndex);
 
     // 标签移动 → 同步 QStackedWidget 的页面顺序
-    connect(m_tabBar, &QTabBar::tabMoved,
-            this, &DragReorderTabBar::syncStackedWidget);
+    connect(m_tabBar, &QTabBar::tabMoved, this, &DragReorderTabBar::syncStackedWidget);
 
     // 标签切换/移动/移除 → 更新底部信息
     connect(m_tabBar, &QTabBar::currentChanged, this, &DragReorderTabBar::updateInfoLabel);
@@ -76,11 +68,11 @@ DragReorderTabBar::DragReorderTabBar(QWidget* parent)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 鼠标事件——拖拽重排（演示 setMovable 的底层机制）
+// 鼠标事件——拖拽重排（对照阅读：展示 moveTab 的调用写法；QTabBar
+// 自己消费栏内鼠标事件，父件收不到，这段不会实际触发）
 // ─────────────────────────────────────────────────────────────────────────────
 
-void DragReorderTabBar::mousePressEvent(QMouseEvent* event)
-{
+void DragReorderTabBar::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
         // 检查鼠标是否在标签栏的某个标签上
         const int tabIndex = m_tabBar->tabAt(m_tabBar->mapFromParent(event->pos()));
@@ -93,8 +85,7 @@ void DragReorderTabBar::mousePressEvent(QMouseEvent* event)
     QWidget::mousePressEvent(event);
 }
 
-void DragReorderTabBar::mouseMoveEvent(QMouseEvent* event)
-{
+void DragReorderTabBar::mouseMoveEvent(QMouseEvent* event) {
     if (m_dragging) {
         // 检查拖拽距离是否超过阈值
         const int dragDistance = (event->pos() - m_dragStartPos).manhattanLength();
@@ -117,8 +108,7 @@ void DragReorderTabBar::mouseMoveEvent(QMouseEvent* event)
     QWidget::mouseMoveEvent(event);
 }
 
-void DragReorderTabBar::mouseReleaseEvent(QMouseEvent* event)
-{
+void DragReorderTabBar::mouseReleaseEvent(QMouseEvent* event) {
     m_dragging = false;
     m_dragStartIndex = -1;
     QWidget::mouseReleaseEvent(event);
@@ -128,14 +118,14 @@ void DragReorderTabBar::mouseReleaseEvent(QMouseEvent* event)
 // 创建初始标签页
 // ─────────────────────────────────────────────────────────────────────────────
 
-void DragReorderTabBar::setupInitialTabs()
-{
+void DragReorderTabBar::setupInitialTabs() {
     const int kTabCount = 5;
     for (int i = 0; i < kTabCount; ++i) {
         const QString title = QStringLiteral("文档 %1").arg(i + 1);
         auto* page = new QLabel(QStringLiteral("这是 %1 的内容区域。\n\n"
                                                "可以拖拽标签重排顺序，"
-                                               "点击关闭按钮移除标签。").arg(title));
+                                               "点击关闭按钮移除标签。")
+                                    .arg(title));
         page->setAlignment(Qt::AlignCenter);
         page->setWordWrap(true);
 
@@ -155,8 +145,7 @@ void DragReorderTabBar::setupInitialTabs()
 // 为标签添加自定义按钮：左侧状态指示点 + 右侧由 setTabsClosable 管理
 // ─────────────────────────────────────────────────────────────────────────────
 
-void DragReorderTabBar::attachTabButtons(int index)
-{
+void DragReorderTabBar::attachTabButtons(int index) {
     // 在标签左侧放一个绿色的状态指示点
     // setTabsClosable(true) 已经占用了 RightSide，自定义控件放 LeftSide 避免冲突
     auto* dot = new QLabel;
@@ -171,8 +160,7 @@ void DragReorderTabBar::attachTabButtons(int index)
 // 移除标签并同步 QStackedWidget
 // ─────────────────────────────────────────────────────────────────────────────
 
-void DragReorderTabBar::removeTabAtIndex(int index)
-{
+void DragReorderTabBar::removeTabAtIndex(int index) {
     if (index < 0 || index >= m_stackedWidget->count()) {
         return;
     }
@@ -190,8 +178,7 @@ void DragReorderTabBar::removeTabAtIndex(int index)
 // tabMoved → 同步 QStackedWidget 页面顺序
 // ─────────────────────────────────────────────────────────────────────────────
 
-void DragReorderTabBar::syncStackedWidget(int from, int to)
-{
+void DragReorderTabBar::syncStackedWidget(int from, int to) {
     // tabMoved 在 moveTab 时实时触发，每次交换相邻标签都会发一次信号
     // 必须同步 QStackedWidget 的页面顺序，否则标签和内容会错位
     QWidget* page = m_stackedWidget->widget(from);
@@ -206,8 +193,7 @@ void DragReorderTabBar::syncStackedWidget(int from, int to)
 // 更新底部信息标签
 // ─────────────────────────────────────────────────────────────────────────────
 
-void DragReorderTabBar::updateInfoLabel()
-{
+void DragReorderTabBar::updateInfoLabel() {
     const int current = m_tabBar->currentIndex();
     const int total = m_tabBar->count();
 

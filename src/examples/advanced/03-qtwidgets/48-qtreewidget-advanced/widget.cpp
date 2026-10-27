@@ -10,10 +10,8 @@
 // ---------------------------------------------------------------------------
 
 Widget::Widget(QWidget* parent)
-    : QWidget(parent),
-      m_treeWidget(new QTreeWidget(this)),
-      m_statusLabel(new QLabel(QStringLiteral("点击展开目录节点加载子项"), this))
-{
+    : QWidget(parent), m_treeWidget(new QTreeWidget(this)),
+      m_statusLabel(new QLabel(QStringLiteral("点击展开目录节点加载子项"), this)) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // -- 配置 QTreeWidget --
@@ -31,8 +29,7 @@ Widget::Widget(QWidget* parent)
     // -- 连接信号 --
     // @note itemExpanded 在用户展开节点时触发，用于实现懒加载
     connect(m_treeWidget, &QTreeWidget::itemExpanded, this, &Widget::onItemExpanded);
-    connect(m_treeWidget, &QTreeWidget::currentItemChanged, this,
-            &Widget::onCurrentItemChanged);
+    connect(m_treeWidget, &QTreeWidget::currentItemChanged, this, &Widget::onCurrentItemChanged);
 
     // -- 组装布局 --
     mainLayout->addWidget(m_treeWidget, 1);
@@ -42,8 +39,7 @@ Widget::Widget(QWidget* parent)
     resize(400, 500);
 }
 
-QTreeWidgetItem* Widget::createTopLevelItem(const QString& name, const QString& type)
-{
+QTreeWidgetItem* Widget::createTopLevelItem(const QString& name, const QString& type) {
     auto* item = new QTreeWidgetItem(m_treeWidget);
     item->setText(0, name);
     // @note 通过 Qt::UserRole 存储目录类型，用于后续生成不同类型的子项
@@ -59,8 +55,7 @@ QTreeWidgetItem* Widget::createTopLevelItem(const QString& name, const QString& 
     return item;
 }
 
-void Widget::loadChildren(QTreeWidgetItem* item)
-{
+void Widget::loadChildren(QTreeWidgetItem* item) {
     if (!item) {
         return;
     }
@@ -77,7 +72,7 @@ void Widget::loadChildren(QTreeWidgetItem* item)
     // @note 先移除占位子项，再填充真实子节点
     // takeChildren 返回所有子项的列表，我们需要清空再重新填充
     QList<QTreeWidgetItem*> oldChildren = item->takeChildren();
-    // Qt 对象树管理子项生命周期，手动删除旧的占位项
+    // QTreeWidgetItem 不是 QObject、没有父子托管，取出的旧子项须手动删除
     qDeleteAll(oldChildren);
 
     // 获取目录类型，用于模拟不同内容
@@ -97,42 +92,30 @@ void Widget::loadChildren(QTreeWidgetItem* item)
     }
 }
 
-QStringList Widget::simulateChildEntries(const QString& dirName,
-                                         const QString& dirType) const
-{
+QStringList Widget::simulateChildEntries(const QString& dirName, const QString& dirType) const {
     QStringList entries;
 
     // @note 模拟不同目录类型的文件内容
     // 真实应用中应使用 QDir::entryList 读取实际文件
     if (dirType == QStringLiteral("docs")) {
-        entries << QStringLiteral("report_final.docx")
-                << QStringLiteral("notes.txt")
-                << QStringLiteral("work_folder")
-                << QStringLiteral("resume.pdf")
+        entries << QStringLiteral("report_final.docx") << QStringLiteral("notes.txt")
+                << QStringLiteral("work_folder") << QStringLiteral("resume.pdf")
                 << QStringLiteral("meeting_notes.md");
     } else if (dirType == QStringLiteral("pics")) {
-        entries << QStringLiteral("vacation")
-                << QStringLiteral("screenshots")
-                << QStringLiteral("photo_001.jpg")
-                << QStringLiteral("photo_002.png")
+        entries << QStringLiteral("vacation") << QStringLiteral("screenshots")
+                << QStringLiteral("photo_001.jpg") << QStringLiteral("photo_002.png")
                 << QStringLiteral("avatar.bmp");
     } else if (dirType == QStringLiteral("music")) {
-        entries << QStringLiteral("playlist.m3u")
-                << QStringLiteral("album_folder")
-                << QStringLiteral("track01.mp3")
-                << QStringLiteral("track02.flac")
+        entries << QStringLiteral("playlist.m3u") << QStringLiteral("album_folder")
+                << QStringLiteral("track01.mp3") << QStringLiteral("track02.flac")
                 << QStringLiteral("podcast.mp3");
     } else if (dirType == QStringLiteral("projects")) {
-        entries << QStringLiteral("project_alpha")
-                << QStringLiteral("project_beta")
-                << QStringLiteral("README.md")
-                << QStringLiteral("CMakeLists.txt")
+        entries << QStringLiteral("project_alpha") << QStringLiteral("project_beta")
+                << QStringLiteral("README.md") << QStringLiteral("CMakeLists.txt")
                 << QStringLiteral("src_folder");
     } else if (dirType == QStringLiteral("downloads")) {
-        entries << QStringLiteral("archive.zip")
-                << QStringLiteral("installer.exe")
-                << QStringLiteral("document.pdf")
-                << QStringLiteral("temp_folder")
+        entries << QStringLiteral("archive.zip") << QStringLiteral("installer.exe")
+                << QStringLiteral("document.pdf") << QStringLiteral("temp_folder")
                 << QStringLiteral("data.csv");
     } else {
         entries << QStringLiteral("file_1.dat") << QStringLiteral("file_2.dat");
@@ -141,21 +124,15 @@ QStringList Widget::simulateChildEntries(const QString& dirName,
     return entries;
 }
 
-void Widget::onItemExpanded(QTreeWidgetItem* item)
-{
+void Widget::onItemExpanded(QTreeWidgetItem* item) {
     // @note 懒加载核心：在首次展开时才填充子节点
     loadChildren(item);
     m_statusLabel->setText(
-        QStringLiteral("已展开: %1  |  子项数: %2")
-            .arg(item->text(0))
-            .arg(item->childCount()));
+        QStringLiteral("已展开: %1  |  子项数: %2").arg(item->text(0)).arg(item->childCount()));
 }
 
-void Widget::onCurrentItemChanged(QTreeWidgetItem* current,
-                                  QTreeWidgetItem* /*previous*/)
-{
+void Widget::onCurrentItemChanged(QTreeWidgetItem* current, QTreeWidgetItem* /*previous*/) {
     if (current) {
-        m_statusLabel->setText(
-            QStringLiteral("选中: %1").arg(current->text(0)));
+        m_statusLabel->setText(QStringLiteral("选中: %1").arg(current->text(0)));
     }
 }

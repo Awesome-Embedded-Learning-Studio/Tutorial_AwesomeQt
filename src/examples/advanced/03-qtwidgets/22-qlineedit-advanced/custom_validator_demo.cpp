@@ -16,9 +16,7 @@
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-CustomValidatorDemo::CustomValidatorDemo(QWidget* parent)
-    : QWidget(parent)
-{
+CustomValidatorDemo::CustomValidatorDemo(QWidget* parent) : QWidget(parent) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // 三个演示区域依次排列
@@ -35,21 +33,17 @@ CustomValidatorDemo::CustomValidatorDemo(QWidget* parent)
 // 自定义 IP 地址验证器演示
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* CustomValidatorDemo::createValidatorSection()
-{
+QWidget* CustomValidatorDemo::createValidatorSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
-    auto* sectionTitle = new QLabel(
-        QStringLiteral("1. Custom IpAddressValidator"));
-    sectionTitle->setStyleSheet(
-        QStringLiteral("font-weight: bold; font-size: 14px;"));
+    auto* sectionTitle = new QLabel(QStringLiteral("1. Custom IpAddressValidator"));
+    sectionTitle->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 14px;"));
 
     auto* inputRow = new QHBoxLayout;
     auto* inputLabel = new QLabel(QStringLiteral("IP Address:"));
     m_validatorEdit = new QLineEdit;
-    m_validatorEdit->setPlaceholderText(
-        QStringLiteral("Enter IPv4 address, e.g. 192.168.1.1"));
+    m_validatorEdit->setPlaceholderText(QStringLiteral("Enter IPv4 address, e.g. 192.168.1.1"));
 
     // 安装自定义 IP 验证器
     m_validatorEdit->setValidator(new IpAddressValidator(m_validatorEdit));
@@ -61,9 +55,8 @@ QWidget* CustomValidatorDemo::createValidatorSection()
     m_validatorState = new QLabel(QStringLiteral("State: Empty (Intermediate)"));
     m_validatorState->setWordWrap(true);
 
-    auto* hint = new QLabel(
-        QStringLiteral("Each segment must be 0-255, no leading zeros. "
-                       "Empty or partial input = Intermediate."));
+    auto* hint = new QLabel(QStringLiteral("Each segment must be 0-255, no leading zeros. "
+                                           "Empty or partial input = Intermediate."));
     hint->setWordWrap(true);
 
     layout->addWidget(sectionTitle);
@@ -72,8 +65,8 @@ QWidget* CustomValidatorDemo::createValidatorSection()
     layout->addWidget(hint);
 
     // 文本变化时更新验证状态
-    connect(m_validatorEdit, &QLineEdit::textChanged,
-            this, &CustomValidatorDemo::updateValidatorState);
+    connect(m_validatorEdit, &QLineEdit::textChanged, this,
+            &CustomValidatorDemo::updateValidatorState);
 
     return container;
 }
@@ -82,15 +75,12 @@ QWidget* CustomValidatorDemo::createValidatorSection()
 // 输入掩码演示
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* CustomValidatorDemo::createInputMaskSection()
-{
+QWidget* CustomValidatorDemo::createInputMaskSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
-    auto* sectionTitle = new QLabel(
-        QStringLiteral("2. Input Mask (Phone Number)"));
-    sectionTitle->setStyleSheet(
-        QStringLiteral("font-weight: bold; font-size: 14px;"));
+    auto* sectionTitle = new QLabel(QStringLiteral("2. Input Mask (Phone Number)"));
+    sectionTitle->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 14px;"));
 
     auto* inputRow = new QHBoxLayout;
     auto* inputLabel = new QLabel(QStringLiteral("Phone:"));
@@ -104,9 +94,8 @@ QWidget* CustomValidatorDemo::createInputMaskSection()
     inputRow->addWidget(inputLabel);
     inputRow->addWidget(m_maskEdit, 1);
 
-    auto* hint = new QLabel(
-        QStringLiteral("Mask: (999) 999-9999. '9' = required digit. "
-                       "Parentheses and hyphen are fixed separators."));
+    auto* hint = new QLabel(QStringLiteral("Mask: (999) 999-9999. '9' = required digit. "
+                                           "Parentheses and hyphen are fixed separators."));
     hint->setWordWrap(true);
 
     layout->addWidget(sectionTitle);
@@ -120,15 +109,12 @@ QWidget* CustomValidatorDemo::createInputMaskSection()
 // QCompleter 自动补全演示
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* CustomValidatorDemo::createCompleterSection()
-{
+QWidget* CustomValidatorDemo::createCompleterSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
-    auto* sectionTitle = new QLabel(
-        QStringLiteral("3. QCompleter (Custom Word List)"));
-    sectionTitle->setStyleSheet(
-        QStringLiteral("font-weight: bold; font-size: 14px;"));
+    auto* sectionTitle = new QLabel(QStringLiteral("3. QCompleter (Custom Word List)"));
+    sectionTitle->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 14px;"));
 
     auto* inputRow = new QHBoxLayout;
     auto* inputLabel = new QLabel(QStringLiteral("Search:"));
@@ -176,9 +162,8 @@ QWidget* CustomValidatorDemo::createCompleterSection()
     inputRow->addWidget(inputLabel);
     inputRow->addWidget(m_completerEdit, 1);
 
-    auto* hint = new QLabel(
-        QStringLiteral("Completer: MatchContains + CaseInsensitive. "
-                       "Try typing 'signal', 'paint', or 'thread'."));
+    auto* hint = new QLabel(QStringLiteral("Completer: MatchContains + CaseInsensitive. "
+                                           "Try typing 'signal', 'paint', or 'thread'."));
     hint->setWordWrap(true);
 
     layout->addWidget(sectionTitle);
@@ -192,35 +177,31 @@ QWidget* CustomValidatorDemo::createCompleterSection()
 // 槽函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CustomValidatorDemo::updateValidatorState()
-{
+void CustomValidatorDemo::updateValidatorState() {
     const QString text = m_validatorEdit->text();
     int pos = 0;
     QString mutableText = text;
 
-    // 手动调用验证器获取当前状态
-    // validator() 返回 const 指针，validate 需要非 const 引用参数
-    const auto* validator =
-        qobject_cast<const IpAddressValidator*>(m_validatorEdit->validator());
+    // 手动调用验证器获取当前状态（validate 是 const 成员函数，const 指针上直接调用）
+    const auto* validator = qobject_cast<const IpAddressValidator*>(m_validatorEdit->validator());
     if (!validator) {
         return;
     }
 
-    const QValidator::State state = const_cast<IpAddressValidator*>(validator)->validate(mutableText, pos);
+    const QValidator::State state = validator->validate(mutableText, pos);
 
     QString stateText;
     switch (state) {
-    case QValidator::Acceptable:
-        stateText = QStringLiteral("Acceptable (valid IPv4 address)");
-        break;
-    case QValidator::Intermediate:
-        stateText = QStringLiteral("Intermediate (incomplete or partial)");
-        break;
-    case QValidator::Invalid:
-        stateText = QStringLiteral("Invalid (illegal characters or out of range)");
-        break;
+        case QValidator::Acceptable:
+            stateText = QStringLiteral("Acceptable (valid IPv4 address)");
+            break;
+        case QValidator::Intermediate:
+            stateText = QStringLiteral("Intermediate (incomplete or partial)");
+            break;
+        case QValidator::Invalid:
+            stateText = QStringLiteral("Invalid (illegal characters or out of range)");
+            break;
     }
 
-    m_validatorState->setText(QStringLiteral("State: %1 | Input: \"%2\"")
-                                  .arg(stateText, text));
+    m_validatorState->setText(QStringLiteral("State: %1 | Input: \"%2\"").arg(stateText, text));
 }

@@ -11,17 +11,13 @@
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-IpAddressValidator::IpAddressValidator(QObject* parent)
-    : QValidator(parent)
-{
-}
+IpAddressValidator::IpAddressValidator(QObject* parent) : QValidator(parent) {}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 验证逻辑
 // ─────────────────────────────────────────────────────────────────────────────
 
-QValidator::State IpAddressValidator::validate(QString& input, int& pos) const
-{
+QValidator::State IpAddressValidator::validate(QString& input, int& pos) const {
     Q_UNUSED(pos)
 
     // 空字符串是合法的中间状态——用户还没开始输入
@@ -37,20 +33,12 @@ QValidator::State IpAddressValidator::validate(QString& input, int& pos) const
         return Invalid;
     }
 
-    // 检查连续的点号（空段）
-    // 输入 "192..1.1" 中间有空段，视为非法
-    for (const auto& seg : segments) {
-        if (seg.isEmpty()) {
-            // 允许尾部空段（用户正在输入下一段），但中间空段非法
-            // 段索引 == segments.size()-1 且为空说明刚按了点号准备输入
-            continue;
-        }
-    }
-
     for (int i = 0; i < segments.size(); ++i) {
         const QString& seg = segments.at(i);
 
-        // 空段：如果是最后一段说明用户刚按了 '.'，算 Intermediate
+        // 空段统一算 Intermediate：结尾空段说明刚按了 '.'，中间空段（"192..1.1"）
+        // 也是过渡态，validate 会随每次输入反复回调，数字补上后状态自然恢复。
+        // 结尾空段要 continue 跳过下面的逐段检查，空段过不了 toInt，直接判会误成 Invalid。
         if (seg.isEmpty()) {
             if (i == segments.size() - 1 && segments.size() > 1) {
                 continue;
@@ -95,8 +83,7 @@ QValidator::State IpAddressValidator::validate(QString& input, int& pos) const
 // fixup
 // ─────────────────────────────────────────────────────────────────────────────
 
-void IpAddressValidator::fixup(QString& input) const
-{
+void IpAddressValidator::fixup(QString& input) const {
     Q_UNUSED(input)
     // 本示例不需要 fixup 逻辑，QValidator 基类已提供空实现
 }

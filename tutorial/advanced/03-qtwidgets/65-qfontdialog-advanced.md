@@ -1,217 +1,96 @@
 ---
 title: "3.65 QFontDialog 进阶"
-description: "入门篇我们用 QFontDialog::getFont 让用户选择字体，拿到 QFont 后直接设置给控件的 font 属性。"
+description: "进阶篇顺着 60 篇点过的第 283 行 connect 走进字体对话框：非原生的 QFontDialog 是一台用 QFontDatabase 现场组装的字体浏览器（qfontdialog.cpp 第 136-299 行 init 全家福），当样张的 QLineEdit 就是 currentFont 的登记处（第 193、806 行），FontDialogOption 六枚两两成对当掩码使（qfontdialog.h 第 27-34 行），过滤执行点在 updateFamilies（qfontdialog.cpp 第 450-467 行），书写系统过滤是内置下拉框不是自建工程（第 196、223-229、651-656 行），getFont 取消时退还原字体（第 358-375 行），NoButtons 混进 getFont 会交回 ok 为真的空 QFont（第 367、993 行），fontSelected 只在 done 的 Accepted 岔发出（第 985-991 行），open 字符串连接关闭时自动断开（第 907-914、994-999 行），原生面板是 macOS 一家、过滤选项在那里可能失效（第 832-838 行），示例在 examples/advanced/03-qtwidgets/65-qfontdialog-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.65——QFontDialog 进阶
 
-## 1. 前言 / 当所有字体都挤在一个列表里
+60 篇读 QDialog 与按钮盒的接线时，咱们点过一处细节，Qt 自家的 QFontDialog 在 qfontdialog.cpp 第 283 行手写了 connect(buttonBox, &QDialogButtonBox::accepted, q, &QDialog::accept)，本篇就顺着它往下读。论家门，QFontDialog 与 QColorDialog 是一路的，静态便捷函数加 Option 集，getFont 对应 getColor，FontDialogOption 对应那一套颜色选项。差别在数据形状：颜色是一组数值，字体是一叠元数据，family、style、size、删除线、下划线各占一格，所以 QFontDialog 肚子里装的是一台现场组装的小型字体浏览器，数据全部来自 QFontDatabase，拾色板在这里没有对应物。把它读明白，等宽过滤、书写系统过滤、getFont 的返回行为，入门篇没展开的问题全有出处。
 
-入门篇我们用 QFontDialog::getFont 让用户选择字体，拿到 QFont 后直接设置给控件的 font 属性。如果你的应用只是改改 QLabel 的字体，getFont 确实够用。但实际项目中的字体选择场景远比"弹框选字体"复杂。我曾经做过一个代码编辑器项目，系统上安装了两千多个字体，QFontDialog 打开后列表长到根本找不到想要的字体。更麻烦的是用户想要的其实是"等宽字体"或者"支持中文的字体"，而不是在两千个字体中大海捞针。另外 getFont 的预览区域太小了，只显示一行 "AaBbCc123"，根本看不出代码字体的等宽效果或者中文字体的实际渲染质量。
+引用文件咱们交代清楚。主战场是 Qt 6.9.1 的 QFontDialog 源码（qfontdialog.cpp 与 qfontdialog.h，src/widgets/dialogs），字体数据一侧还会进 qfontdatabase.cpp 与 qfontdatabase.h（src/gui/text）查证。入门篇的 getFont 基本用法不重讲，60 篇讲过的 exec 与 open 模态语义也不重讲。配套示例是一只静态函数与对话框对象两种拿字体方式并开的演示窗口，完整玩法放结语。
 
-这篇进阶篇聚焦四个方面：getFont 的局限性分析、QFontDialog 的选项标志位和字体类型过滤、字体过滤策略（按书写系统、按等宽比例宽度等条件筛选）、以及 fontSelected 信号配合自定义预览组件实现更直观的字体选择体验。
+## 一台现场组装的字体浏览器：三张列表、两只勾选框、一条样张
 
-## 2. 环境说明
+咱们翻出生记录。私有类的 `init`（qfontdialog.cpp 第 136-299 行）把界面一次装齐：family 与 style 各配一只只读 QLineEdit 加一只 QFontListView，字号栏 sizeEdit 挂 QIntValidator(1, 512)，手输也出不了圈（第 168 行）。Effects 组里是删除线与下划线两只勾选框（第 179-184 行），Sample 组里一条居中的 QLineEdit 当样张，初始文字 “AaBbYyZz”，注释特意写明不走 tr()，因为这行字挑的就是字符本身（第 186-193 行）。窗口起手 500 乘 360（第 289 行），角落的拖拽手柄也开着（第 140 行）。
 
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。QFontDialog 属于 QtWidgets 模块，QFontDatabase 和 QFontMetrics 属于 QtGui 模块。链接 Qt6::Widgets 即可。所有行为在 Qt 6.9.1 上验证通过。
+样张的地位比它看上去的高。currentFont() 在非原生路径上读的就是 sampleEdit->font()（第 798-807 行），咱们浏览时换 family、换 style、换字号，最后都汇到 updateSample 里拼一只新 QFont，QFontDatabase::font(family, style, pSize) 加上两只勾选框的删除线与下划线（第 625-636 行），再把字体设给样张。设字体时还有一道判断，新字体与样张手里的一样，currentFontChanged 一声不吭，不同才发（第 639-646 行）。
 
-## 3. 核心概念讲解
+按钮盒的接线就是 60 篇点过的那两行。init 造出 QDialogButtonBox（第 278-279 行），加 Ok 之后写 connect(buttonBox, &QDialogButtonBox::accepted, q, &QDialog::accept)（第 283 行），Ok 顺手设成默认钮（第 284 行），再加 Cancel，把 rejected 接到 reject（第 286-287 行）。键盘行为归 eventFilter 管：光标在 sizeEdit 里按上下与翻页键，按键事件被转交给字号列表，列表替您翻（第 389-401 行），光标在 family 或 style 列表里按回车，对话框当场 accept 关闭（第 402-407 行）。
 
-### 3.1 getFont 的局限——无过滤、无定制预览
+样式列表还有一处换词重试，笔者读着觉得贴心。setCurrentFont 带来的样式名在列表里找不到时，updateStyles 拿名字做替换再搜一轮，Italic 换 Oblique、Regular 换 Normal，四个方向各试一遍（第 550-568 行）。字体厂起名没有统一标准，Qt 用四个替换把常见别名兜住。
 
-QFontDialog::getFont 的签名很简单：传一个 bool 指针接收用户是否确认、初始字体、父控件、对话框标题和可选的 options。返回值是用户选择的 QFont。这个接口的问题不在返回值——而在对话框内部的展示逻辑。
+## MonospacedFonts 不是魔法：updateFamilies 里的两对掩码
 
-第一个问题是没有字体过滤能力。系统上安装的所有字体全部列在一个 QComboBox 里，从 Arial 到各种冷门装饰字体混在一起。在中文环境下更混乱——中文字体、英文字体、日文字体、韩文字体全部混列。用户想找一个"好看的中文字体"，要在几百个条目中逐个点击预览。getFont 的 options 参数只支持 FontDialogOptions 枚举里的几个标志位，没有"只显示等宽字体"或"只显示支持中文的字体"这样的过滤选项。
+FontDialogOption 全集六枚，值在 qfontdialog.h 第 27-34 行：NoButtons 0x00000001，DontUseNativeDialog 0x00000002，ScalableFonts 0x00000004，NonScalableFonts 0x00000008，MonospacedFonts 0x00000010，ProportionalFonts 0x00000020。笔者提醒您留意 NonScalableFonts，本篇源稿只数了五枚，显示不可缩放字体的那一枚被漏了。
 
-第二个问题是预览区域太小。QFontDialog 内部的预览只是 QLineEdit 里显示一行固定文本。对于代码字体选择来说，你需要在预览中看到实际的代码效果——缩进对齐、字符间距、0 和 O 的区分度、1 和 l 的区分度。一行 "AaBbCc123" 看不出这些差异。
+过滤的执行点在 updateFamilies（qfontdialog.cpp 第 444-521 行）。函数进门把选项分成两对掩码，scalableMask 是 ScalableFonts 加 NonScalableFonts，spacingMask 是 ProportionalFonts 加 MonospacedFonts（第 450-451 行），接着遍历 QFontDatabase::families(writingSystem)，拿全量字体族（第 455 行）。掩码只亮一位时才动过滤：ScalableFonts 单亮，isSmoothlyScalable 不达标的跳过，MonospacedFonts 单亮，isFixedPitch 不达标的跳过（第 460-467 行）。两位一起亮等于掩码全开，过滤整段跳过，咱们想恢复全量列表，把选项清空比凑齐两位更直白。isPrivateFamily 标记的私有字体族一律不进列表（第 457-458 行），isFixedPitch 的实现在 qfontdatabase.cpp 第 1533-1546 行，读的是字体库里每个 family 自带的 fixedPitch 位。
 
-第三个问题是 getFont 是模态阻塞的，和 QColorDialog::getColor 一样——对话框打开期间用户看不到自己正在编辑的文档效果。当然对于字体选择来说，模态的问题没有颜色选择那么严重，因为字体选择通常是"选一次用很久"的操作。
+列表装好后咱们再看一道兜底匹配。setCurrentFont 带进来的字体族在过滤后的列表里选不中时，updateFamilies 按 family 同名、foundry 同名逐级让步，再拿 helvetica 与应用当前字体垫底（第 484-514 行），保证列表里总有一项亮着。
 
-### 3.2 QFontDialog 的选项标志位
+平台边界咱们按文档读。枚举文档写明过滤选项可能在个别平台不被支持，文档举的例子是 Mac，而 Windows 与 Linux 上走的非原生对话框，回回都支持（qfontdialog.cpp 第 832-834 行），DontUseNativeDialog 的说明也只针对 Mac 上的 Apple 字体面板，别的平台没提（第 837-838 行）。本篇源稿说 Windows 原生对话框会静默忽略 MonospacedFonts，还配了一道 Windows 上的调试题，笔者在源码与文档里都找不到支撑，Windows 与 Linux 走的本来就是非原生实现，六枚选项原样生效，那道题不成立。
 
-QFontDialog::FontDialogOption 提供了一组有限的控制标志。MonospacedFonts 只显示等宽字体——这可能是最实用的过滤选项。如果你在选择代码编辑器字体或者终端字体，这个选项直接把几千个字体缩减到几十个。
+设置时机也有一条，您记一下。options 的属性文档写明要在显示前设置，显示中途改不保证当场生效（第 878-880 行）。setOptions 里顺手管了一件事，NoButtons 亮起时按钮盒整个藏掉（第 892 行）。
 
-```cpp
-bool ok = false;
-QFont font = QFontDialog::getFont(
-    &ok, QFont("Consolas"), this,
-    "选择代码字体",
-    QFontDialog::MonospacedFonts);
-```
+## 书写系统过滤是内置的：左下角的下拉框已经替咱们装好了
 
-ProportionalFonts 是 MonospacedFonts 的反面——只显示比例宽度字体，排除等宽字体。适合选择文档排版字体。NoButtons 移除对话框底部的 OK 和 Cancel 按钮，和 QColorDialog 中的用途一样——配合非模态 open() 使用，让字体选择器变成浮动面板。DontUseNativeDialog 强制使用 Qt 自己实现的字体对话框，行为跨平台一致。
+源稿用了半节讲想按支持中文过滤就得自己拿 QFontDatabase 搭面板，咱们翻 init 能翻出反例。非原生 QFontDialog 的左下角，自带一只 Writing System 下拉框（qfontdialog.cpp 第 196 行），init 遍历 QFontDatabase::WritingSystem 枚举，拿 writingSystemName 逐项填进去，名字为空就停（第 223-229 行）。私有类构造时把书写系统默认成 QFontDatabase::Any（第 76-77 行），正对下拉框的第一项。
 
-ScalableFonts 只显示可缩放字体（TrueType、OpenType 等），排除位图字体。在现代系统上位图字体已经很少了，但在一些嵌入式 Linux 环境中仍然存在固定位图的点阵字体，用这个选项可以过滤掉它们。
+选中哪一项，writingSystemHighlighted 接手：下拉框序号直接转成 WritingSystem（第 651-653 行），样张文字换成 writingSystemSample 给那套文字备的样张（第 654 行），再重跑 updateFamilies，families(writingSystem) 换了参数，字体族列表当场收窄（第 455、655 行）。咱们想只看支持简体中文的字体，在下拉框里挑中简体中文那一项就完事，一行自建代码都不用写。同一个查询咱们代码里也能直接用，QFontDatabase::families 是 public static，定义在 qfontdatabase.h 第 85 行。咱们写一行 QFontDatabase::families(QFontDatabase::SimplifiedChinese)，拿到的列表与对话框内部用的是同一份。
 
-这些选项可以通过按位或组合使用。比如选择代码字体的推荐组合是 MonospacedFonts | ScalableFonts——只显示可缩放的等宽字体。
+样张文字有个笔者对着源码数过才知道的小机关。init 摆的样张是 “AaBbYyZz”（qfontdialog.cpp 第 193 行），writingSystemSample 给 Any 与 Symbol 备的样张，却是 “AaBbzZ”（qfontdatabase.cpp 第 2091-2094 行）。咱们把下拉框切到 Cyrillic 再切回 Any，样张就从 AaBbYyZz 变成 AaBbzZ，没有谁手滑，切换前后样张来自两个不同的赋值来源。
 
-```cpp
-auto *dlg = new QFontDialog(initial_font, this);
-dlg->setOption(QFontDialog::MonospacedFonts);
-dlg->setOption(QFontDialog::ScalableFonts);
-dlg->setOption(QFontDialog::DontUseNativeDialog);
-```
+边界也提醒您一句。书写系统下拉框是非原生实现的东西，macOS 的原生字体面板上没有它，六枚过滤选项同理（qfontdialog.cpp 第 832-838 行）。
 
-但要注意一个跨平台陷阱：MonospacedFonts 和 ProportionalFonts 在原生对话框上可能不生效。Windows 的原生字体对话框有自己的分类逻辑，这些 Qt 选项会被静默忽略。所以如果依赖字体类型过滤，务必同时设置 DontUseNativeDialog。
+## getFont 的返回链：ok 为真不等于用户做了选择
 
-### 3.3 字体过滤策略
+两只静态重载在 qfontdialog.h 第 58-60 行，带 initial 与不带，不带的内部用默认构造的 QFont 当 initial，出处 qfontdialog.cpp 第 352-356 行。私有实现共用一套（第 358-375 行）：QAutoPointer 拿住对话框（第 361 行），setOptions、setCurrentFont、设标题挨个做完再 exec（第 362-367 行），ok 指针非空就按 exec 的结果填写（第 368-369 行），结果为真返回 selectedFont()，为假返回 initial（第 370-374 行）。用户取消时，带 initial 的重载退回 initial，不带的退回 Qt 默认字体，两只重载的文档注释各自写明（第 313-320、341-347 行），咱们要紧的还是把 ok 标志查到位，别把取消交回的原字体当新选择用。
 
-当 QFontDialog 内置的过滤选项不够用时，我们需要自己实现字体过滤。QFontDatabase 是字体信息的查询中心，提供了按书写系统、样式、大小等条件枚举字体的能力。
-
-按书写系统过滤是最常见的需求。QFontDatabase::families(QFontDatabase::WritingSystem) 返回支持指定书写系统的字体族列表。比如 QFontDatabase::SimplifiedChinese 返回所有支持简体中文的字体族。
+咱们停在 done 的两岔（第 982-1001 行）。Accepted 岔上 selectedFont 存下来、fontSelected 发出（第 985-991 行），Rejected 岔上，selectedFont 被清成默认构造的 QFont，值是空的（第 993 行）。把返回判定与 Rejected 岔连起来读，会看出一条怪链，源码咱们原样摘下来。
 
 ```cpp
-QFontDatabase db;
-QStringList chinese_fonts = db.families(QFontDatabase::SimplifiedChinese);
-// chinese_fonts 包含所有支持简体中文的字体族名
-```
-
-按等宽属性过滤需要自己实现。QFont 没有直接的 isMonospaced() 方法，但 QFontMetrics 提供了间接判断方式——测量不同字符的宽度，如果所有字符宽度一致就是等宽字体。
-
-```cpp
-bool isMonospaced(const QFont &font)
-{
-    QFontMetrics fm(font);
-    // 等宽字体的所有可打印 ASCII 字符宽度相同
-    const int width_a = fm.horizontalAdvance('a');
-    const int width_W = fm.horizontalAdvance('W');
-    const int width_0 = fm.horizontalAdvance('0');
-    const int width_i = fm.horizontalAdvance('i');
-    return (width_a == width_W) && (width_a == width_0) && (width_a == width_i);
+// Qt 6.9.1 的 QFontDialog 源码（qfontdialog.cpp）
+int ret = (dlg->exec() || (options & QFontDialog::NoButtons));
+if (ok)
+    *ok = !!ret;
+if (ret && bool(dlg)) {
+    return dlg->selectedFont();
+} else {
+    return initial;
 }
 ```
 
-更高效的方式是检查 QFont::fixedPitch() 属性。fixedPitch() 返回 true 表示字体声明自己为固定宽度。这个值来自字体文件的元数据，比逐字符测量快得多。但 fixedPitch() 依赖字体自身的声明，极少数字体可能声明不准确。
+咱们把 NoButtons 传给 getFont 会怎样。按钮盒被藏掉（第 892 行），Esc 与关窗都走 Rejected，selectedFont 随之清成默认 QFont（第 993 行）。回车不受影响，光标在 family 或 style 列表按回车照样 accept，init 末尾还把初始焦点给了 familyList，出处 setFocus 第 296 行。可摘录里第一行的 || 把 NoButtons 位当真值顶上去，exec 返回 0 也被顶成真，*ok 报 true，返回条件同样放行，交回一只默认构造的空 QFont。ok 为真、字体为空，两头都不能信。NoButtons 的正业写在枚举文档里，是给 open() 的活对话框用的（第 836 行），别把它混进 getFont。
 
-```cpp
-QStringList getMonospacedFamilies()
-{
-    QFontDatabase db;
-    QStringList result;
-    for (const auto &family : db.families()) {
-        QFont font(family);
-        if (font.fixedPitch()) {
-            result << family;
-        }
-    }
-    return result;
-}
-```
+## 两只信号分工与 open 的自动接线
 
-有了过滤后的字体列表，如何把它注入到 QFontDialog 中？遗憾的是 QFontDialog 没有提供 setFamilies 这样的 API。如果你需要完全自定义的字体列表，只能自己构建字体选择对话框——一个 QComboBox 显示过滤后的字体族名，一个 QComboBox 显示样式（Regular/Bold/Italic 等），一个 QSpinBox 选择大小，加上自定义预览区域。QFontDatabase 提供了所有需要的数据（families()、styles()、pointSizes()），构建起来并不复杂。
+currentFontChanged 是浏览态信号，family、style、字号、勾选框任何一样动了都汇进 updateSample（第 661-708 行），样张字体真变了才发（第 642-645 行），用户按住上下键扫列表时它是高频的，信号文档也提醒，选择过程中的字体可能与最终选择不同（第 916-926 行）。fontSelected 是定稿信号，只在 done 的 Accepted 岔发出（第 991 行），发出之前若最终字体与样张手里的字体不同，咱们还能看到一次补发的 currentFontChanged，出处第 987-989 行。咱们接实时预览挂 currentFontChanged，接定稿动作挂 fontSelected，别混。selectedFont() 与 currentFont() 的差别文档写得直白，用户可能反复换字体后挑定一只，两者不一定相同（第 809-815 行）。
 
-### 3.4 fontSelected 信号与自定义预览组件
+`open(QObject *receiver, const char *member)`（qfontdialog.h 第 53-54 行）是 QFontDialog 自己补的便捷口。60 篇讲过 QDialog 的 Qt 5 字符串式 open 在 6.9 头文件里已经没了，字体对话框这边留了一份，实现里拿 SIGNAL 宏做连接，咱们自己写的槽接上 fontSelected（qfontdialog.cpp 第 907-914 行），连接对象存进 receiverToDisconnectOnClose，done 收尾时自动断开（第 994-999 行）。NoButtons 加 open 加 currentFontChanged，一只不落地的浮动字体面板就靠三样拼出来。
 
-QFontDialog 提供两个字体相关的信号：currentFontChanged(const QFont &font) 在用户浏览字体时实时触发，fontSelected(const QFont &font) 在用户点确定后触发。如果需要实时预览，用 currentFontChanged；如果只需要最终选择，用 fontSelected。
+原生路径咱们接着读（第 1003-1017 行）。canBeNativeDialog 的否决清单，咱们挨个数：全局属性 AA_DontUseNativeDialogs、控件属性 WA_DontShowOnScreen、选项 DontUseNativeDialog，任一命中就否决（第 1010-1013 行），子类被类名比对排除在外（第 1016 行）。真走原生时私有类的 setVisible 给自己盖上 WA_DontShowOnScreen，控件版整棵不显示（第 957-971 行），平台助手的两只同名信号在 initHelper 里桥接到 QFontDialog 自己的信号上（第 428-431 行），窗口标题由 helperPrepareShow 转交，出处第 434-437 行。
 
-```cpp
-auto *dlg = new QFontDialog(initial_font, this);
-dlg->setOption(QFontDialog::DontUseNativeDialog);
-dlg->setOption(QFontDialog::MonospacedFonts);
+## 想往列表里塞自己的字体集：Qt 没留口子
 
-connect(dlg, &QFontDialog::currentFontChanged,
-        this, &CodeEditor::onFontPreview);
+qfontdialog.h 的公开面笔者逐行数过（第 39-60 行），setCurrentFont、currentFont、selectedFont、setOption 这些加两只 getFont，没有 setFamilies 或同类的注入 API。updateFamilies 的注释倒是许了愿，说有特殊需求可以重实现（原文 can be reimplemented，qfontdialog.cpp 第 439-442 行），可它是 QFontDialogPrivate 的函数，咱们在应用侧够不着。想按自己的规则筛字体，出路是拿 QFontDatabase 自搭选择面板，查询面全是 public static，families、styles、pointSizes 这些，加上 isSmoothlyScalable 与 isFixedPitch，都在 qfontdatabase.h 第 85-97 行。Qt 自家对话框调的与咱们能调的是同一个库，自搭面板不缺数据，缺的只是三张列表的组装工夫，照 init 的骨架拼一遍就有。
 
-dlg->open();
-```
+示例还给了一条省事的路。咱们选中字体之后，用 QFontInfo 读实际匹配结果，出处 font_dialog_demo.cpp 第 111-112 行，QFontDialog 交回的 QFont 是请求值，QFontInfo 报的是 Qt 实际匹配到的字体，family 对不上时它当场能看出来。信息标签里的 Available styles 清单，就是拿 QFontDatabase::styles 补的，出处第 114-115 行。
 
-自定义预览组件是字体选择体验的关键。一个好的字体预览不应该只显示一行固定文本，而应该展示目标场景的实际效果。比如代码编辑器的字体预览应该显示一段真实代码，文档排版字体预览应该显示一段带标题和正文的文本。
+## 官方文档参考
 
-```cpp
-class FontPreviewWidget : public QWidget
-{
-public:
-    explicit FontPreviewWidget(QWidget* parent = nullptr)
-        : QWidget(parent)
-    {
-        m_layout = new QVBoxLayout(this);
-        // 标题标签
-        m_title = new QLabel("The Quick Brown Fox");
-        m_layout->addWidget(m_title);
-        // 代码预览标签
-        m_code_preview = new QLabel;
-        m_code_preview->setText(
-            "int main()\n"
-            "{\n"
-            "    return 0;\n"
-            "}");
-        m_code_preview->setWordWrap(false);
-        m_layout->addWidget(m_code_preview);
-        // 尺寸信息
-        m_metrics_label = new QLabel;
-        m_layout->addWidget(m_metrics_label);
-    }
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 6.9.1 源码核对过。
 
-    void setPreviewFont(const QFont &font)
-    {
-        m_title->setFont(font);
-        m_code_preview->setFont(font);
+[Qt 文档 · QFontDialog](https://doc.qt.io/qt-6/qfontdialog.html) -- 字体对话框类，getFont、选项集与两只信号的定义处
 
-        QFontMetrics fm(font);
-        m_metrics_label->setText(
-            QString("Ascent: %1  Descent: %2  "
-                    "LineSpacing: %3  AvgWidth: %4")
-                .arg(fm.ascent())
-                .arg(fm.descent())
-                .arg(fm.lineSpacing())
-                .arg(fm.averageCharWidth()));
-    }
+[Qt 文档 · QFontDialog::FontDialogOption](https://doc.qt.io/qt-6/qfontdialog.html#FontDialogOption-enum) -- 六枚选项的取值与平台支持说明
 
-private:
-    QVBoxLayout* m_layout;
-    QLabel* m_title;
-    QLabel* m_code_preview;
-    QLabel* m_metrics_label;
-};
-```
+[Qt 文档 · QFontDatabase](https://doc.qt.io/qt-6/qfontdatabase.html) -- 字体查询库，families、isFixedPitch 与书写系统接口的老家
 
-预览组件中显示 QFontMetrics 的信息（ascent、descent、lineSpacing、averageCharWidth）非常有用——这些数值直接影响文本在界面中的实际布局。两个字体看起来差不多，但 lineSpacing 差 4 个像素，在紧凑的 UI 中就会导致换行差异。把这些信息直观地展示出来，用户选择字体时更有依据。
-
-现在有一道调试题给大家。看下面这段代码：
-
-```cpp
-bool ok = false;
-QFont font = QFontDialog::getFont(
-    &ok, m_editor->font(), this,
-    "选择字体",
-    QFontDialog::MonospacedFonts);
-if (ok) {
-    m_editor->setFont(font);
-}
-```
-
-在 Windows 上运行后，发现列表中出现了大量非等宽字体（比如 Arial、Times New Roman）。问题出在哪里？MonospacedFonts 选项在 Windows 原生字体对话框上被静默忽略了——Windows 系统的字体选择对话框不支持"只显示等宽字体"这种过滤。解决方案是加上 DontUseNativeDialog 选项，强制使用 Qt 自己的字体对话框实现。
-
-## 4. 踩坑预防
-
-第一个坑是 MonospacedFonts 等过滤选项在原生对话框上不生效。前面调试题已经分析过了。Windows 和 macOS 的原生字体选择器不支持字体类型过滤，QFontDialog 会把 MonospacedFonts 选项传给原生对话框但被忽略。后果是你以为只显示了等宽字体，实际上系统上所有字体都在列表里，用户选到了一个比例宽度字体。解决方案是：使用任何过滤选项时，务必同时设置 DontUseNativeDialog。
-
-第二个坑是 QFontDialog::getFont 在用户取消时返回的字体。getFont 的返回值是一个 QFont——无论用户点是确认还是取消，它都返回一个合法的 QFont 对象。唯一的区分方式是那个 bool* 参数。如果你忘了检查 bool 值，或者把 bool 指针传了 nullptr，就无法知道用户到底确认了还是取消了。后果是用户点取消后字体仍然被应用。解决方案是始终检查 bool 返回值，且不要传 nullptr。
-
-第三个坑是字体族名在不同系统上不一致。同一个字体在 Windows 上叫 "Microsoft YaHei"，在 Linux 上可能叫 "Noto Sans CJK SC"，在 macOS 上叫 "PingFang SC"。如果你在 QFontDialog 中选了一个字体，把 fontFamily 保存到配置文件，拿到另一台机器上 QFont(family_name) 可能找不到对应字体，会静默回退到默认字体。后果是配置看起来没问题但字体显示效果完全不同。解决方案是保存配置时同时记录字体的 styleHint 和 styleName 作为备选匹配依据，或者使用 QFontDatabase::addApplicationFont 嵌入关键字体。
-
-第四个坑是 currentFontChanged 信号的高频触发。用户拖动字体大小 spinbox 或者按住键盘上下键切换字体时，currentFontChanged 会高频触发（每秒几十次）。如果你的预览更新逻辑比较重（比如重新排版整篇文档），直接在槽函数中做会很卡。解决方案是用 QTimer 做防抖——收到信号后启动一个 50ms 的 singleShot timer，连续信号只让最后一次真正触发更新。
-
-## 5. 练习项目
-
-练习项目：代码编辑器字体选择器。我们不使用 QFontDialog，而是自己构建一个带过滤和实时预览的字体选择面板。
-
-完成标准是：左侧是一个经过等宽过滤的字体族列表（QListWidget），右侧上方是字体样式选择（Regular/Bold/Italic/Bold Italic），右侧中间是字号选择（QSpinBox，范围 8-72），右侧下方是自定义预览区域显示一段真实 Python 代码并使用 QTextEdit 设置只读模式渲染。预览区域实时跟随字体族、样式、字号的变化更新。底部显示当前字体的 QFontMetrics 信息（ascent、descent、lineSpacing、averageCharWidth）。过滤逻辑使用 QFont::fixedPitch() 筛选等宽字体。
-
-提示几个关键点：QFontDatabase::families() 获取全部字体族，用 fixedPitch() 过滤；QFontDatabase::styles(family) 获取指定字体族的可用样式；QFontDatabase::pointSizes(family, style) 获取可用字号列表，或者直接让用户输入任意大小；预览区域的 QTextEdit 通过 setCurrentFont 设置字体；QFontMetrics 的数值信息帮助用户对比不同字体的实际渲染差异。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QFontDialog](https://doc.qt.io/qt-6/qfontdialog.html) -- 字体对话框类，getFont/setOption/currentFontChanged/fontSelected 信号
-
-[Qt 文档 · QFont](https://doc.qt.io/qt-6/qfont.html) -- 字体类，family/style/pointSize/fixedPitch 属性
-
-[Qt 文档 · QFontDatabase](https://doc.qt.io/qt-6/qfontdatabase.html) -- 字体数据库，families/styles/pointSizes/writingSystem 查询
-
-[Qt 文档 · QFontMetrics](https://doc.qt.io/qt-6/qfontmetrics.html) -- 字体度量，ascent/descent/lineSpacing/averageCharWidth/horizontalAdvance
-
-[Qt 文档 · QFontDialog::FontDialogOption](https://doc.qt.io/qt-6/qfontdialog.html#FontDialogOption-enum) -- 选项标志位，MonospacedFonts/ProportionalFonts/NoButtons/DontUseNativeDialog
+[Qt 文档 · QFontInfo](https://doc.qt.io/qt-6/qfontinfo.html) -- 实际匹配字体的查询，请求与到手的差别它说了算
 
 ---
 
-到这里，QFontDialog 的进阶用法就过了一遍。getFont 简单好用但没有过滤能力，在字体数量庞大的系统上体验很差。选项标志位中的 MonospacedFonts 是最常用的过滤，但必须配合 DontUseNativeDialog 才能跨平台可靠生效。自己用 QFontDatabase 构建过滤逻辑可以实现更精细的字体筛选——按书写系统、按等宽属性、按自定义规则。currentFontChanged 信号配合自定义预览组件，让用户在真实场景文本中评估字体效果，比 QFontDialog 自带的那一行 "AaBbCc123" 有用得多。字体选择器做到这个程度，用户才不用在几千个字体中大海捞针了。
+对话框一家咱们接着走，下一站 [3.66 QFileDialog 进阶](./66-qfiledialog-advanced.md)。QFileDialog 是标准对话框里块头最大的一只，Option 表比本篇六枚还多一枚，原生与非原生的分岔也更深，getFont 式的静态便捷函数，咱们到那边见最后一面。
+
+想动手的您把示例跑起来（examples/advanced/03-qtwidgets/65-qfontdialog-advanced/，可执行文件 65-qfontdialog-advanced）。点 Pick Font (Static Method)，弹出标题 Select Font 的对话框，选一只字体确认，下方预览区换成新字体，信息标签报出 Family、Style、Size、Weight，还有该字体族的可用样式清单（font_dialog_demo.cpp 第 114-127 行），咱们改点 Cancel，预览区纹丝不动，ok 为假时示例不应用字体（第 78-80 行）。勾上 Monospace fonts only 再点 Pick Font (Dialog Object)，字体族列表收窄到等宽字体（第 94 行），不勾就是全量，确认后应用的是 currentFont()（第 97-98 行）。对话框左下角的 Writing System 下拉咱们切到 Cyrillic 试试，字体族列表当场换一批，样张文字换成西里尔字符，再切回 Any，样张变成 AaBbzZ，与初始的 AaBbYyZz 不同，两个来源的差别您现在对得上号。光标停在字体族或样式列表里按回车，对话框直接接受并关闭（qfontdialog.cpp 第 402-407 行）。
+
+完成标准照旧。六枚选项哪两对组成掩码，两位同亮时过滤为什么整段跳过，您说得出。NoButtons 混进 getFont 交回什么，您讲得明。书写系统过滤在界面哪一处、走哪两个函数，您指得出。currentFontChanged 与 fontSelected 各在哪个时机发出，您数得清。

@@ -1,222 +1,85 @@
 ---
 title: "3.60 QDialog 进阶"
-description: "入门篇我们学会了 QDialog 的基本创建和 exec() 模态调用。进阶篇我们要深入 QDialog 的模态策略——exec() 的阻塞事件循环、show()/open() 的非阻塞模式、setWindowModality 的三种粒度，以及如何用信号和 lambda 回调构建异步对话框的结果处理链。"
+description: "进阶篇接住 59 篇交棒进入对话框本体：exec 停的是调用方代码，事件分发照常跑（qdialog.cpp 第 573-575 行局部 QEventLoop，第 839-842 行隐藏时 exit），WA_DeleteOnClose 在 exec 期间被临时摘掉由它自己补删（第 558-559、586-587 行），Esc 与关闭钮都汇到 reject（第 696-698、733-737 行），Enter 找 default 按钮代点（第 703-714 行），三种模态粒度在 qnamespace.h 第 1556-1560 行，exec 置的是 WA_ShowModal 而 ApplicationModal 是 qwidget.cpp 第 11462-11476 行属性分支的默认提升，open() 借 WindowModal 用完由 resetModalitySetByOpen 还回（第 509-526、458-471 行），Qt 5 的 open(receiver, member) 重载在 6.9 头文件已不存在（qdialog.h 第 51-56 行），三信号发放现场在 done()（第 608-626 行），done(3) 自定义码只走 finished，hide() 不发信号，QDialogButtonBox 到 QDialog 没有自动接线，Qt 自家 QFontDialog 第 283 行与 QInputDialog 第 216 行都是手动 connect，示例在 examples/advanced/03-qtwidgets/60-qdialog-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.60——QDialog 进阶
 
-## 1. 前言 / exec() 用着用着就翻车了
+59 篇收队时咱们约好，从常驻窗口转入对话框，exec 的模态循环与三种模态粒度在这边等咱们。本篇兑现这句话。笔者把 Qt 6.9.1 的 QDialog 源码（qdialog.cpp）从头读到尾，exec 的嵌套事件循环、模态三档、open() 的异步路线、三个结果信号的发放次序，全在 qdialog.cpp 一份文件里有据可查。中间还要纠正一个流传很广的说法，那个得到按钮盒那边对证。
 
-入门篇我们学会了 QDialog 的基本操作——new 一个对话框、调 exec()、拿返回值。说实话，如果你只写简单的"弹个框问用户点确定还是取消"这种逻辑，exec() 确实够用。但一旦你的程序复杂起来，exec() 就开始露出獠牙了。
+主战场是 qdialog.cpp 与 qdialog.h（src/widgets/dialogs），私有结构下探到 qdialog_p.h，咱们引用文件交代清楚。模态属性的本体在 QWidget 一侧，咱们要借 QWidget 源码（qwidget.cpp）的两段代码作证。配套示例是 examples/advanced/03-qtwidgets/60-qdialog-advanced/ 的一只双按钮演示窗，完整玩法放结语。
 
-为什么？因为 exec() 的底层机制是开启一个**嵌套事件循环**。它会阻塞调用它的那个函数，直到对话框关闭才返回。这听起来很方便，但实际上埋了一堆定时炸弹：如果你的主窗口有个 QTimer 在跑，exec() 期间定时器照样触发；如果有个网络请求回来触发了一个回调，回调里恰好操作了正在等待对话框返回的对象——恭喜你，你可能会收获一个非常漂亮的使用已释放内存的场景。Qt 官方文档现在都开始建议开发者优先使用 open() 而不是 exec()，原因就在这里。
+## exec：代码停在原地，事件照常分发
 
-这一篇我们要做的事情是：彻底搞清楚 exec()、show()、open() 三者的区别，理解 setWindowModality 的三种模态粒度，掌握异步对话框的结果回调模式，最后把 QDialogButtonBox 和 accept/reject 的集成吃透。
+入门篇咱们写过那样的代码，new 一只对话框，exec 等返回值，按返回值分流。它到底停在哪。咱们去读 Qt 6.9.1 的 QDialog 源码（qdialog.cpp 第 549-589 行）。进门头一件事是查递归，同一只对话框 exec 两次，收到的是 qWarning 加 -1（第 553-556 行）。随后两行有点意外，exec 把 WA_DeleteOnClose 临时摘掉了（第 558-559 行），循环结束后再由它自己补 delete（第 586-587 行），删除时机收归 exec 一手管。
 
-## 2. 环境说明
-
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。所有内容依赖 QtWidgets 模块。示例可在任何支持 Qt6 的桌面平台上编译运行。异步回调模式会用到 lambda 和信号槽的函数指针连接语法。
-
-## 3. 核心概念讲解
-
-### 3.1 exec() vs show() ——阻塞事件循环与非阻塞
-
-我们先来搞清楚这三兄弟到底干了什么。exec() 调用后，QDialog 内部会创建一个 QEventLoop 并调用它的 exec()，这意味着调用 QDialog::exec() 的那个函数被挂起了——代码停在 exec() 那一行，直到对话框被 accept() 或 reject() 关闭后才继续往下走。但挂起的只是你的代码，不是整个程序。Qt 的事件分发器仍然在处理事件：QTimer 的 timeout 照样触发，QSocketNotifier 的网络事件照样分发，其他窗口的 repaint 请求照样执行。这就是所谓的"嵌套事件循环"——你在事件循环 A 中开启了一个事件循环 B，B 关闭之前 A 中的后续代码不会执行，但 A 中已经注册的事件源仍然活跃。
-
-show() 就简单多了。它调用 QWidget::show() 把对话框显示出来，然后立即返回。你的代码继续往下走，对话框就在那里待着，用户想操作主窗口也行，想操作对话框也行。show() 本身不涉及任何事件循环的嵌套。
+咱们接着看，模态与结果码的准备各一句（第 563-565 行），show（第 567 行），然后是本篇的主角：
 
 ```cpp
-// 模态用法——exec() 阻塞
-auto* dlg = new MyDialog(this);
-if (dlg->exec() == QDialog::Accepted) {
-    // 用户点了确定，拿到数据
-    auto result = dlg->getResult();
-    process(result);
-}
-delete dlg;  // exec() 返回后安全删除
-
-// 非模态用法——show() 立即返回
-auto* dlg = new MyDialog(this);
-dlg->setAttribute(Qt::WA_DeleteOnClose);  // 关闭时自动删除
-connect(dlg, &MyDialog::dataReady, this, &MainWindow::onDataReady);
-dlg->show();
-// show() 返回了，继续做别的事
+// exec 的本体：栈上一只 QEventLoop（qdialog.cpp 第 573-575 行，摘录）
+QEventLoop eventLoop;
+d->eventLoop = &eventLoop;
+(void) eventLoop.exec(QEventLoop::DialogExec);
 ```
 
-现在问题来了：exec() 的嵌套事件循环到底危险在哪？最典型的翻车场景是这样的——你在主窗口有个 slot 处理网络回调，回调里调用了某个对象的成员函数，而这个对象的析构刚好挂在 exec() 返回之后的代码路径上。如果网络回调在 exec() 期间触发了，它访问了一个"逻辑上应该已经不存在但物理上还没被 delete"的对象，行为就是未定义的。这不是理论上的风险，是我在实际项目里踩过的坑，调了一整天才发现是 exec() 期间一个 deferred delete 事件被提前处理了。
+栈上的局部循环。您的代码停在 eventLoop.exec 那一行等它返回，可 QApplication 的主循环没有停，它只是被叠了一层。定时器超时、网络回复、排在队列里的删除事件，都在这一层里照常分发。这正是类文档第 539-544 行劝咱们少用 exec 的理由，原文把 “deleting the dialog's parent while the dialog is open via exec()” 写成事故例子，对话框还开着，父窗口已经没了。
 
-Qt 还提供了第三个选择：open()。open() 的行为介于 exec() 和 show() 之间——它设置了 WindowModal 模态，然后用 show() 显示对话框，不阻塞。当对话框关闭时，它会发射 finished() 信号。这是 Qt 官方推荐的异步模态对话框方式，我们后面会详细讲。
+循环怎么退出。QDialogPrivate::setVisible 在对话框藏起来的分支里调 eventLoop->exit()（第 839-842 行），所以任何让对话框 hide 的路径都能放行 exec。返回值 rescode 在私有类构造时是 0（qdialog_p.h 第 49 行），DialogCode 枚举 Rejected 打头（qdialog.h 第 30 行），没走到 accept 的关闭一律算拒收。用户按 Esc 是一条，keyPressEvent 里 QKeySequence::Cancel 一命中，就调 reject（第 696-698 行）。点标题栏关闭钮是另一条，closeEvent 在可见状态下调 reject，拒完还可见就 ignore 掉关闭事件（第 733-737 行）。Enter 键另有一路，它去找可见的 default 按钮，替您 click 一下（第 703-714 行）。
 
-### 3.2 setWindowModality 三种模式
+您若拿 exec 写主流程，得清楚这一层循环里谁都能插队。exec 自己有 QPointer guard 兜底（第 569、577-578 行，对象没了直接返回 Rejected），业务对象可没这层保险，等待 exec 返回的调用方握着裸指针，就赌上运气了。文档把它列成劝退语，咱们没有理由不当真。
 
-QDialog 的模态行为不是非黑即白的，Qt 给了我们三种粒度的控制。这个属性继承自 QWidget，通过 setWindowModality() 设置，对应的枚举是 Qt::WindowModality。
+## 三种模态粒度：谁被冻结，谁还活着
 
-第一种是 Qt::NonModal，顾名思义就是非模态。对话框显示后用户可以自由操作所有窗口，对话框只是漂浮在上面。show() 默认就是这个模式。
+咱们把枚举数一遍，qnamespace.h 第 1556-1560 行，NonModal、WindowModal、ApplicationModal 三档，冻结范围递进。NonModal 谁都不冻，WindowModal 冻父窗口链，ApplicationModal 冻整个应用的窗口。类文档第 226-230 行讲窗口级模态，只挡住对话框一系的父窗口，其余顶层窗口照常用，工具面板要保持可用的多窗口应用，选这一档。
 
-第二种是 Qt::WindowModal，窗口级模态。对话框会阻塞它的父窗口以及父窗口的所有兄弟窗口，但不会影响其他独立的顶层窗口。这在多窗口应用中非常有用——比如你的应用有一个主窗口和一个独立工具面板，弹出的对话框只需要阻塞主窗口但不影响工具面板，WindowModal 就是正确的选择。open() 内部就是设置了 WindowModal。
+有种说法是 exec 内部调了 setWindowModality(Qt::ApplicationModal)，源码里没有这一句。exec 置的是 WA_ShowModal 属性（qdialog.cpp 第 563-564 行），属性的本体处理在 QWidget 源码（qwidget.cpp 第 11462-11476 行），置位时若 windowModality 还没被显式设过，属性分支自动把它提为 ApplicationModal。“exec 默认冻结全应用”这话对，机制却绕了一道，咱们报出处要报准。
 
-第三种是 Qt::ApplicationModal，应用级模态。对话框会阻塞整个应用中的所有窗口，用户必须先处理完对话框才能继续操作任何窗口。exec() 内部就是设置了 ApplicationModal。
+setModal(true) 是同一条通道的便捷写法（qdialog.cpp 第 1010-1013 行，一行 setAttribute），文档注明它等价于把 windowModality 设为 ApplicationModal（第 996-1008 行），而且 exec 不看 modal 属性，进门一律按模态弹（第 1004-1005 行）。您手动 setWindowModality(Qt::WindowModal) 再 show()，得到窗口级模态加非阻塞，主窗口冻着，代码继续跑。open() 内部走的就是这一档，下一节咱们看它怎么走。
 
-```cpp
-// 窗口级模态——只阻塞父窗口链
-dlg->setWindowModality(Qt::WindowModal);
-dlg->show();  // 非阻塞，但父窗口被冻结
+## open()：借来的窗口模态，收场还回去
 
-// 应用级模态——不调 exec() 也能实现
-dlg->setWindowModality(Qt::ApplicationModal);
-dlg->show();  // 非阻塞，但所有窗口被冻结
+open() 的实现在 qdialog.cpp 第 509-526 行，咱们逐行看。当前模态不是 WindowModal 时，记下旧值（第 515-516 行），随后 setWindowModality(Qt::WindowModal)，顺手把 WA_SetWindowModality 摘掉（第 517-518 行），装作模态生来如此。然后 setResult(0) 清结果码（第 524 行），show() 完就返回（第 525 行），全程不起事件循环。
 
-// open() 等价于 WindowModal + show() + finished 信号连接
-dlg->open(this, SLOT(onDialogFinished()));
-```
+借的模态要还。对话框收场时 QDialogPrivate::close 调 resetModalitySetByOpen（第 149 行），实现（第 458-471 行）里只要您事后没自己动过模态，旧值原样恢复。exec 进门也调一次它（第 561 行），免得上一场 open() 借的模态串场。借了要还的设计平时感知不到，您排查“对话框关了别的窗口还冻着”一类现象时，它是必经的检查点。
 
-这里有一个容易搞混的点：setModal(true) 和 setWindowModality(Qt::ApplicationModal) 的效果是一样的。setModal() 是一个便捷方法，内部就是调 setWindowModality()。但 setModal() 不会改变 show() 的非阻塞行为——你仍然需要配合 show() 而不是 exec()。如果你调了 setModal(true) 再调 show()，对话框是模态的（其他窗口被冻结），但 show() 立即返回，你的代码不会被阻塞。
+结果不再从返回值拿，从信号拿。`open(QObject *receiver, const char *member)` 这个一次性回调重载，6.9 的 qdialog.h 里已经没有了，槽清单（第 51-56 行）仅剩无参 open，Qt 5 迁移过来的代码见着它，换成 connect 加 lambda 是正路。另有一句警告咱们要带上，qdialog.cpp 类文档第 249-251 行写着，open() 或 show() 弹的模态对话框别建在栈上，控制权立刻回到调用方，栈帧一散对话框就成了悬空对象。
 
-还有一个细节值得注意：WindowModal 的阻塞范围是以"窗口层级链"来计算的。如果对话框 A 的父窗口是主窗口，对话框 B 的父窗口是对话框 A，那么 B 的 WindowModal 只会阻塞 A 和主窗口，不会影响其他独立窗口。这个层级关系在复杂的多对话框场景中很重要。
+## accept、reject、done：三个信号的老家
 
-### 3.3 异步对话框的结果回调模式
+咱们看三个信号，accepted、rejected、finished(int)，声明在 qdialog.h 第 46-49 行，发放现场全在 done()。done(int r)（qdialog.cpp 第 608-626 行）开头走 QDialogPrivate::close，把 r 写进 rescode（第 122 行 setResult）并隐藏对话框，随后按 dialogCode() 分流（qdialog_p.h 第 93 行，它就是 rescode 的内联读法），Accepted 发 accepted，Rejected 发 rejected（第 618-622 行），收尾的是 finished(r)，带着原始参数（第 624-625 行）。您要是 done(3) 传自定义码，accepted 与 rejected 都不出声，只有 finished 应答。
 
-既然 exec() 有风险，那我们就用异步模式来处理对话框的结果。异步模式的核心思路是：显示对话框（不阻塞），通过信号来通知调用者对话框的结果。QDialog 提供了三个关键信号来完成这件事。
+咱们再看 accept() 与 reject()，它们只是 done(Accepted) 与 done(Rejected) 的一行转发（第 634-648 行），而且五个槽在头文件里全是 virtual（qdialog.h 第 51-56 行），类文档（qdialog.cpp 第 314-318 行）也写明，可以重写 accept、reject、done 改关闭行为。想在关门前做校验，重写 accept() 是一条路，Enter 键、代码调用、按钮点击最终都汇到这里，一处拦住全部。另有一条信号细节值得记，hide() 或 setVisible(false) 不发任何信号，三个信号的文档各自注明了（第 1074-1085 行起），信号只认 done 家族的关闭。
 
-finished(int result) 信号在对话框关闭时触发，参数是对话框的结果码。accepted() 在 accept() 被调用时触发，rejected() 在 reject() 被调用时触发。这三个信号的关系是：accept() 会同时触发 accepted() 和 finished(Accepted)，reject() 会同时触发 rejected() 和 finished(Rejected)。
+关闭时的删除也讲究顺序。WA_DeleteOnClose 的 delete 走 deleteLater，出处 qwidget.cpp 第 8594-8600 行，排进事件循环稍后执行，所以 accepted 槽跑的时候对话框对象还活着，取数据来得及。但排队终究要执行，您在槽里再开一只模态对话框或再跑一轮事件处理，删除就可能插进来。要跨过这段时间用数据，把数据拷出来，别攥对话框指针。
 
-```cpp
-// 方式一：用 finished 信号 + lambda 回调
-auto* dlg = new MyDialog(this);
-dlg->setAttribute(Qt::WA_DeleteOnClose);
+## 按钮盒不会替您接线
 
-connect(dlg, &QDialog::finished, this, [this](int result) {
-    if (result == QDialog::Accepted) {
-        qDebug() << "用户确认了操作";
-        // 处理确认逻辑
-    } else {
-        qDebug() << "用户取消了操作";
-    }
-});
+有种流传的说法是，QDialogButtonBox 放进 QDialog，AcceptRole 的按钮点了自动调 accept()，不用 connect。笔者翻过 QDialogButtonBox 的源码，文件是 qdialogbuttonbox.cpp，没有那层自动接线。点击的路径在 handleButtonClicked（第 872-904 行），头一个发的是 clicked(button)（第 883 行），随后按按钮角色分流，AcceptRole 与 YesRole 发 accepted（第 891 行），RejectRole 与 NoRole 发 rejected（第 895 行），HelpRole 发 helpRequested（第 898 行）。到这一步，信号还停在按钮盒自己身上。
 
-dlg->open();  // 异步模态，不阻塞
+那 QDialog 那头谁接。Qt 自家对话框全是手动连的，QFontDialog 与 QInputDialog 都写了 connect(buttonBox, &QDialogButtonBox::accepted, q, &QDialog::accept)，出处分别在 qfontdialog.cpp 第 283 行与 qinputdialog.cpp 第 216 行，QMessageBox 则走 clicked 逐钮分发，出处 qmessagebox.cpp 第 274 行。按钮盒的 show 事件里确实有事发生，但那是 ensureFirstAcceptIsDefault，出处 qdialogbuttonbox.cpp 第 1061-1062 行，实现在第 998-1043 行，把第一只 AcceptRole 按钮设为默认钮，与 accept 调用无关。所以您写自己的对话框，connect(buttons, &QDialogButtonBox::accepted, dlg, &QDialog::accept) 这一行得自己敲，忘了它，按钮点了对话框纹丝不动。按钮角色的整套系统，61 篇展开。
 
-// 方式二：用 accepted/rejected 分开连接
-auto* dlg2 = new ConfirmDialog(this);
-dlg2->setAttribute(Qt::WA_DeleteOnClose);
+## 示例：同一只对话框，两条取结果的路径
 
-connect(dlg2, &QDialog::accepted, this, [this, dlg2]() {
-    // 注意：dlg2 此时还没被 delete，WA_DeleteOnClose 的 delete 是 deferred
-    auto data = dlg2->collectData();
-    applyData(data);
-});
+示例咱们走一遍（examples/advanced/03-qtwidgets/60-qdialog-advanced/，主窗口两只按钮加一块日志区）。阻塞的一路（main_window.cpp 第 57-77 行）里对话框是栈对象（第 63 行），exec 返回（第 64 行）后还要读 name() 与 email()（第 68-69 行），栈对象此刻还活着，取数安全，这是 exec 顺手的地方。非阻塞的一路（第 79-112 行）换成 new（第 88 行）配 WA_DeleteOnClose（第 89 行），accepted 的 lambda 用 QPointer 捕获（第 94 行），槽里判了空再取数（第 96-103 行），最后 show() 立即返回（第 111 行）。
 
-connect(dlg2, &QDialog::rejected, this, []() {
-    qDebug() << "取消";
-});
+咱们再看校验，它长在按钮转发上。UserInputDialog 把 OK 钮连到 validateAndAccept，出处 user_input_dialog.cpp 第 74-75 行，两栏输入有一栏空着就原样 return，对话框不关（第 83-88 行），两栏都有内容 accept 才被调到（第 90 行）。示例没有重写 accept()，靠的是按钮转发，与前面重写 accept() 的路线互为印证，两条都拦得住空输入。
 
-dlg2->open();
-```
+## 官方文档参考
 
-这里有一个非常重要的细节：当你使用 WA_DeleteOnClose 时，对话框在关闭后会被标记为待删除，但实际的 delete 操作是延迟的（通过 deleteLater()）。这意味着在 finished/accepted/rejected 信号的槽函数中，对话框对象仍然有效——你可以安全地从中提取数据。但如果你的槽函数中启动了任何异步操作（比如另一个 open() 的对话框或者一个定时器），在那个异步操作回调时对话框可能已经被删除了。所以如果你需要在延迟回调中使用对话框数据，一定要在信号槽里把数据拷贝出来，而不是保存对话框的指针。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 6.9.1 源码核对过。
 
-方式二的 lambda 中有一个容易忽略的陷阱——lambda 捕获了 dlg2 指针。因为 WA_DeleteOnClose 的存在，如果槽函数中的逻辑比较重（比如调用了 processEvents 或者打开了另一个模态对话框），dlg2 可能在槽函数执行期间就被 delete 了。安全做法是在 lambda 中只拷贝你需要的数据，或者不设 WA_DeleteOnClose 而是在槽函数末尾手动 deleteLater。
+[Qt 文档 · QDialog](https://doc.qt.io/qt-6/qdialog.html) -- 对话框基类，exec、open、done 与模态行为的定义处
 
-```cpp
-// 安全的异步回调模式
-auto* dlg = new SettingsDialog(this);
+[Qt 文档 · QDialogButtonBox](https://doc.qt.io/qt-6/qdialogbuttonbox.html) -- 按钮盒类，ButtonRole 与 accepted、rejected 信号的出处
 
-// 在连接信号前准备好数据提取函数
-connect(dlg, &QDialog::accepted, this, [this, dlg]() {
-    // 立即拷贝数据，不保存 dlg 指针
-    auto settings = dlg->currentSettings();
-    m_appSettings = settings;  // 拷贝到成员变量
-    applySettings(settings);
-});
+[Qt 文档 · QWidget](https://doc.qt.io/qt-6/qwidget.html) -- setWindowModality 与 WA_DeleteOnClose 的属性文档
 
-// 用 finished 信号统一做清理
-connect(dlg, &QDialog::finished, dlg, &QObject::deleteLater);
-
-dlg->open();
-```
-
-open() 还有一个历史悠久的重载版本：open(QObject*receiver, const char* member)。这个版本会在对话框关闭时自动调用 receiver 的 member 槽函数，并且连接是自动断开的（一次性连接）。但在 Qt6 中，我们更推荐用函数指针连接 + lambda 的方式，可读性和类型安全性都更好。
-
-### 3.4 QDialogButtonBox 与 accept/reject 的集成
-
-QDialogButtonBox 是 Qt 为对话框按钮提供的一个标准容器，它的核心价值不只是帮你排列按钮——更重要的是它能自动触发 QDialog 的 accept() 和 reject()。当你在 QDialogButtonBox 中放入 AcceptRole 的按钮（比如 Ok、Save）并把它放进 QDialog 时，点击这个按钮会自动调用 QDialog 的 accept()；RejectRole 的按钮（比如 Cancel、Close）会自动调用 reject()。这个自动连接是在 QDialogButtonBox 被 show() 时建立的，不需要你手动 connect。
-
-```cpp
-auto* dialog = new QDialog(this);
-auto* layout = new QVBoxLayout(dialog);
-
-// ... 添加对话框内容 ...
-
-auto* buttons = new QDialogButtonBox(
-    QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-// 不需要手动连接 accepted/rejected！
-// QDialogButtonBox 会自动触发 dialog 的 accept/reject
-
-layout->addWidget(buttons);
-dialog->open();
-
-connect(dialog, &QDialog::accepted, this, [this]() {
-    // 在这里处理确认逻辑
-});
-```
-
-这个自动连接的机制是通过 QDialogButtonBox 的 accepted() 和 rejected() 信号实现的。当按钮的 role 是 AcceptRole 时，点击它会触发 QDialogButtonBox::accepted() 信号，而这个信号在 QDialog 内部被自动连接到了 QDialog::accept()。这个连接发生在 QDialog::showEvent() 中——所以如果你在 show() 之前就在按钮上连了自己的 clicked 信号槽，需要注意执行顺序：QDialogButtonBox 的 accepted/rejected 信号先触发，然后 QDialog 的 accept()/reject() 被调用，最后对话框关闭。
-
-如果你需要在 accept 之前做数据验证，不要直接 connect Ok 按钮的 clicked 信号——更好的做法是重写 QDialog 的 accept() 虚函数，在里面做验证，只有验证通过才调用 QDialog::accept()。
-
-```cpp
-class ValidatedDialog : public QDialog {
-protected:
-    void accept() override {
-        if (!validateInput()) {
-            // 验证失败，不关闭对话框
-            highlightErrors();
-            return;
-        }
-        // 验证通过，调用基类 accept 关闭对话框
-        QDialog::accept();
-    }
-
-    bool validateInput() {
-        // 验证逻辑
-        return !m_input->text().isEmpty();
-    }
-};
-```
-
-这样做的好处是把验证逻辑和按钮的信号解耦了。不管用户是点 Ok 按钮、按 Enter 键、还是通过代码调用 accept()，都会经过同一套验证逻辑。如果你把验证逻辑放在 Ok 按钮的 clicked 槽里，用代码调用 accept() 就会绕过验证。
-
-## 4. 踩坑预防
-
-第一个坑是 exec() 期间的对象生命周期问题。当你调用了 exec()，嵌套事件循环会处理所有排队的事件，包括 DeferredDelete 事件。这意味着如果你的代码逻辑是"exec() 返回后 delete 某个对象"，但 exec() 期间某个事件处理函数又访问了这个对象，你就会踩到未定义行为。解决方案是：尽量避免在 exec() 期间触发与正在等待的对象有交互的回调，或者改用 open() 异步模式从根本上避免这个问题。
-
-第二个坑是 WA_DeleteOnClose 和信号槽时序的冲突。当你给对话框设置了 WA_DeleteOnClose，对话框关闭后会在事件循环的下一轮迭代中被 delete。但 finished/accepted/rejected 信号是在关闭过程中同步触发的，所以在这些信号的槽函数中对话框对象仍然有效。问题出在如果你在槽函数里又做了一些会导致事件循环处理的事情（比如调了另一个 exec()），对话框可能在那个嵌套调用中被 delete 了。解决方案是不使用 WA_DeleteOnClose，改用 connect(dlg, &QDialog::finished, dlg, &QObject::deleteLater)——这样可以保证 deleteLater 一定在所有信号槽处理完毕后才被调度。
-
-第三个坑是 open() 的 receiver/member 重载版本在 Qt6 中依然可用但不够安全。这个重载版本内部使用了 QMetaObject::invokeMethod 的字符串查找机制，没有编译期类型检查。如果你改了槽函数的名字但忘了更新 open() 的参数，编译能过但运行时回调不会触发——而且不会有任何警告。解决方案是统一使用 open() 的无参版本 + connect() 函数指针语法。
-
-第四个坑是在 accept() 重写中忘记调用基类的 accept()。我们前面建议在 accept() 中做验证，验证通过后才调 QDialog::accept()。但如果你忘了调基类的 accept()，对话框不会关闭，finished 信号不会触发，open() 的回调也不会执行。这个 bug 非常隐蔽，因为对话框看起来"什么都没发生"，不会报错也不会崩溃。养成一个习惯：每次重写 accept() 都检查一下是否在所有代码路径上要么调了 QDialog::accept() 要么明确想阻止关闭。
-
-## 5. 练习项目
-
-练习项目：异步设置对话框。我们要做一个模拟应用设置对话框的小项目，重点练手异步对话框的结果回调。
-
-我们要实现的功能是：主窗口有一个按钮"打开设置"，点击后用 open() 异步弹出设置对话框。设置对话框包含两个 QLineEdit（用户名、服务器地址）和一个 QDialogButtonBox（Ok + Cancel + Apply）。Ok 按钮关闭对话框并通过 accepted 信号传递数据，Cancel 按钮关闭对话框不做任何事，Apply 按钮不关闭对话框但立即应用当前设置（这需要你用 QDialogButtonBox 的 clicked 信号配合 buttonRole 来判断）。主窗口在对话框打开期间仍然可以响应（但被 WindowModal 冻结），设置对话框关闭后主窗口更新显示。完成标准是三种按钮行为正确——Ok 关闭并应用、Cancel 关闭不应用、Apply 不关闭但应用——代码结构清晰，信号槽连接合理，没有内存泄漏。
-
-提示几个关键点：Apply 按钮的 role 是 ApplyRole，它不会自动触发 accept 或 reject，你需要通过 clicked(QAbstractButton*) 信号判断点击的是哪个按钮；验证逻辑放在 accept() 重写中而不是按钮的信号槽中；用 connect(dlg, &QDialog::finished, dlg, &QObject::deleteLater) 管理对话框生命周期。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QDialog](https://doc.qt.io/qt-6/qdialog.html) -- QDialog 类参考，exec/show/open 三种显示方式和模态行为
-
-[Qt 文档 · QDialogButtonBox](https://doc.qt.io/qt-6/qdialogbuttonbox.html) -- QDialogButtonBox 类参考，StandardButton 和 ButtonRole 枚举
-
-[Qt 文档 · Qt::WindowModality](https://doc.qt.io/qt-6/qt.html#WindowModality-enum) -- 窗口模态枚举值 NonModal/WindowModal/ApplicationModal
-
-[Qt 文档 · QWidget](https://doc.qt.io/qt-6/qwidget.html) -- QWidget 基类参考，setWindowModality 和 WA_DeleteOnClose 属性
-
-[Qt 文档 · QEventLoop](https://doc.qt.io/qt-6/qeventloop.html) -- 事件循环类，exec() 嵌套机制的基础
+[Qt 文档 · QEventLoop](https://doc.qt.io/qt-6/qeventloop.html) -- 事件循环类，exec 嵌套的本体
 
 ---
 
-到这里我们就把 QDialog 的模态策略和异步回调模式彻底理清楚了。exec() 不是不能用，但你要清楚它的嵌套事件循环会带来什么后果；open() 是 Qt 官方推荐的替代方案，配合 finished 信号和 lambda 回调能写出更安全的代码；三种 WindowModality 让你在多窗口场景中有精确的控制粒度。下一篇我们来看 QDialogButtonBox 的进阶用法——自定义按钮角色、动态状态控制，以及 clicked 信号的分角色处理。
+主窗口一家讲完，对话框这边刚开门。下一站 [3.61 QDialogButtonBox 进阶](./61-qdialogbuttonbox-advanced.md)，按钮角色的跨平台布局差异、自定义按钮的角色分配都在那边，本篇“按钮盒不会替您接线”的判断，到 61 篇还能看到更多手动接线的现成范本。
+
+想动手的您把示例跑起来（examples/advanced/03-qtwidgets/60-qdialog-advanced/，可执行文件 60-qdialog-advanced）。点 Open Non-Blocking (show)，对话框开着时主窗口按钮照样点得动，日志区持续追加，谁都没被冻结，这就是 NonModal 配 show() 的现场。再点 Open Blocking (exec)，对话框关掉之前您点主窗口任何地方都没反应，日志停在打开那一行，您的代码停在 exec 那一行等返回。两栏空着点 OK，对话框不动，填一栏还是不动，两栏都填了才收下。按 Esc 与点关闭钮走同一条 reject 路，日志都记 Rejected。
+
+完成标准照旧。exec 停的是谁的代码、不停的是谁，您说得出。WindowModal 与 ApplicationModal 冻结范围差在哪，您讲得明。open() 借的模态什么时候还，您答得上。按钮盒的 accept 要不要自己连，您手里现在有源码出处了。

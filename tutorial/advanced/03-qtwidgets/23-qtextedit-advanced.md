@@ -1,150 +1,128 @@
 ---
 title: "3.23 QTextEdit 进阶"
-description: "入门篇我们学会了 QTextEdit 的基础操作——setHtml/toHtml、QTextCursor 的 movePosition 和 insertText、以及 document()->setModified 的修改追踪。进阶篇要把视角拉到 QTextDocument 的底层模型上，拆解富文本操作的真正机制。"
+description: "入门篇把 setHtml/toHtml/toPlainText 三种内容格式、QTextCursor 的移动与选中、QTextCharFormat 的字符格式化和 setModified 的修改追踪过了一遍，进阶篇把视角沉到 QTextDocument 的 frame/block/fragment 树上，拆 Format 类的分工与锚点点击的真正归属，过 position 与 anchor 的选区模型和 ExtraSelection 批量高亮，末尾收拾 find 的返回值语义、默认大小写与零宽匹配，配套示例在 examples/advanced/03-qtwidgets/23-qtextedit-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.23——QTextEdit 进阶
 
-## 1. 前言 / QTextEdit 的深度远不止 setHtml + toPlainText
+[3.22 QLineEdit 进阶](./22-qlineedit-advanced.md) 收尾留了话，输入类五连的第二篇从富文本文档结构讲起，本篇兑现这句，咱们从树根看起。QLineEdit 的世界只有一串纯文本，QTextEdit 的每个字却都住在一棵文档树上，控件自己只是这棵树的显示端。
 
-入门篇我们把 QTextEdit 的基础能力过了一遍——setHtml/toHtml/toPlainText 三种内容格式、QTextCursor 的光标移动和选中、QTextCharFormat 的字符格式化、以及 document()->setModified 的修改状态追踪。这些知识够你做一个简易的文本编辑器了。但如果你要做的是富文本编辑器——用户可以调字体、变色、插表格、嵌列表——你就会发现入门篇的知识像是在用锤子修手表。你需要理解 QTextDocument 的四层结构模型，需要掌握 QTextCursor 的高级导航和选区操作，需要知道 QTextCharFormat/QTextBlockFormat/QTextTableFormat 各自管什么，还需要会做搜索替换。这篇文章我们就把 QTextEdit 的四个进阶维度拆清楚：QTextDocument 底层模型、富文本格式化 API 全景、QTextCursor 高级导航与选区、以及搜索替换的正确实现。
+笔者摆一个多数人都碰过的落差。入门篇的 setHtml 加 toPlainText，够您做一个能读写 HTML 的窗口，可需求一走到调字体、插表格、嵌列表、全文高亮这一带，就处处别扭：API 都认识，下手时却不知道该改树的哪一层。根子在 QTextDocument 的结构没进脑子，本篇按结构、格式类、光标选区、搜索替换的顺序把这几层过一遍。
 
-## 2. 环境说明
+## 树才是正文：frame、block 与 fragment
 
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。QTextEdit 属于 QtWidgets，但其内部使用的 QTextDocument、QTextCursor、QTextCharFormat 等类定义在 QtGui 中。QtWidgets 依赖 QtGui，链接 Qt6::Widgets 即可。富文本相关的格式类（QTextFrameFormat、QTextTableFormat、QTextListFormat）同样在 QtGui 中。
+QTextDocument 内部是一棵树，咱们从上往下数。顶层是 rootFrame，document()->rootFrame() 拿到它，frame 下面还能套 frame，frame 里住着 block，block 里住着 fragment。frame 负责圈区域，表格这类嵌套排版就落在这层，它的子类下文单说。block 对应一个段落，以换行符分界。fragment 是 block 里格式一致的最小文本段，一段话里出现三种字体，它就有三个 fragment。
 
-## 3. 核心概念讲解
-
-### 3.1 QTextDocument 四层结构——frame/block/fragment/table 的层级关系
-
-QTextDocument 采用了经典的文档对象模型设计，内部是一个树形结构，顶层是 root frame，每个 frame 包含若干 block，每个 block 包含若干 fragment。frame 是最大的容器单元，用来实现分栏、页眉页脚等布局。block 对应一个段落（以换行符分隔的文本段），它是文本内容的主要载体。fragment 是 block 内的最小文本单元，每个 fragment 拥有统一的字符格式——也就是说，一个 block 内如果有三种不同格式的文字，它就包含三个 fragment。
+从根往下遍历的路径不长，咱们写成片段：
 
 ```cpp
-QTextDocument *doc = editor->document();
-QTextFrame *rootFrame = doc->rootFrame();
-
-// 遍历 root frame 下的所有 block
-for (auto it = rootFrame->begin(); !(it == rootFrame->end()); ++it) {
-    QTextBlock block = it.currentBlock();
-    if (block.isValid()) {
-        qDebug() << "Block text:" << block.text();
-        // 遍历 block 内的 fragment
-        for (auto fragIt = block.begin(); !(fragIt == block.end()); ++fragIt) {
-            QTextFragment fragment = fragIt.fragment();
-            if (fragment.isValid()) {
-                qDebug() << "  Fragment:" << fragment.text()
-                         << "Format index:" << fragment.charFormatIndex();
-            }
-        }
-    }
+QTextFrame *root = doc->rootFrame();
+for (auto it = root->begin(); it != root->end(); ++it) {
+    if (QTextFrame *child = it.currentFrame())        // 子 frame，表格在这里
+        walkFrame(child);                             // 递归往下走
+    else if (QTextBlock block = it.currentBlock(); block.isValid())
+        for (auto fragIt = block.begin(); fragIt != block.end(); ++fragIt)
+            qDebug() << fragIt.fragment().text();     // 每个格式一致的小段
 }
 ```
 
-这段代码展示了从 document -> rootFrame -> block -> fragment 的完整遍历路径。理解这个结构的关键在于：每次你通过 QTextCursor 插入带格式的文字，实际上是在当前 block 内创建了一个新的 fragment，这个 fragment 记录了文字内容和对应的 QTextCharFormat 索引。当两个相邻 fragment 的格式相同时，QTextDocument 会自动合并它们。这也是为什么你用 setHtml 加载一段内容后，`toHtml()` 的输出看起来和你写入的不一样——QTextDocument 在内部做了格式合并和结构优化。
+迭代器每一站要么指着子 frame，要么指着 block。currentFrame() 与 currentBlock()，同一时刻只有一个非空。您要是只查 currentBlock()，跑起来不报错，表格里的字却一行都打不出来，因为子 frame 的位置上 currentBlock() 给回的是无效块，isValid() 把它滤掉了，遍历就这么安静地漏掉一整块。第一行那个 currentFrame() 分支是必需品。
 
-QTextTable 是 frame 的一个特殊子类，它不直接出现在 block/fragment 的遍历路径中，而是作为 frame 的子 frame 存在。插入表格时，QTextCursor 的 insertTable 会在当前 block 的位置创建一个 QTextTable，表格内的每个单元格又是一个 frame，每个 frame 内包含自己的 block。
+插入的落点也在这棵树上。您用 QTextCursor 插入一段带格式的文字，文档里多出来的是一个 fragment，它记着文字内容和对应的字符格式索引。相邻两个 fragment 格式相同时会被并回去，同格式的连续文本合成一个片段。setHtml 存进去再 toHtml 读出来，标记串跟您手写的常有出入，一部分根由在这类归并，另一部分是序列化时补进去的内容：toHtml 给每个段落配上一整套 margin 与缩进样式，body 标签注入默认字体（Sans Serif 9pt），颜色归一成 `#rrggbb` 的六位写法，写 `red` 进去，出来是 `#ff0000`。
 
-### 3.2 富文本格式化 API 全景——CharFormat / BlockFormat / TableFormat
+表格是 frame 的子类 QTextTable，光标调 insertTable 就在当前位置生成一枚。单元格咱们要单独说，它拿的是 QTextTableCell，一枚轻量的位置句柄，够不着 frame 的继承链，进一格子用 firstCursorPosition() 或 begin()，接着走 block 和 fragment。把单元格当 frame 去深挖的代码，会在继承层面落空。
 
-QTextCharFormat 控制字符级别的外观——字体族、字号、颜色、背景色、加粗、斜体、下划线、删除线、上标下标、超链接。入门篇我们用它做过加粗和变色，进阶篇要补充几个容易忽略的属性。
+示例把结构这件事做成了看得见的东西。状态栏一路显示光标的段落号和文档的段落总数，实现在 rich_text_navigator.cpp 的 updateStatusBar，238 行起用 blockCount 与 characterCount。您跑起示例，点一次插入富文本按钮（169 行的 insertRichText，插一张 2x2 表格），段落总数比肉眼数的多出五个：四个单元格各占一个 block，还有一块是表格落脚的普通块（插入片段首尾的 `<br/>` 把它折了出来），树的形状当场数出来了。
+
+## Format 类各管一层：字符、段落、表格互不越权
+
+| Format 类 | 管哪一层 |
+| ---- | ---- |
+| QTextCharFormat | 字体、字号、前景背景色、加粗斜体、下划线删除线、上下标、锚点 |
+| QTextBlockFormat | 对齐、左右与首行缩进、行距、段前段后距、段落背景 |
+| QTextListFormat | 列表样式与缩进层级 |
+| QTextTableFormat | 边框、单元格间距、列宽约束 |
+
+有一个说法流传很广，说 QTextListFormat 继承自 QTextBlockFormat，咱们来修正，两类是平级的，全都直接继承 QTextFormat，互不干扰是设计如此，不靠继承关系。
+
+字符层入门篇玩过加粗变色，进阶咱们补两个容易漏的属性。头一个是锚点：
 
 ```cpp
-QTextCharFormat linkFormat;
-linkFormat.setAnchor(true);
-linkFormat.setAnchorHref("https://doc.qt.io");
-linkFormat.setForeground(QColor("#1565C0"));
-linkFormat.setUnderlineStyle(QTextCharFormat::SingleUnderline);
-cursor.insertText("Qt Documentation", linkFormat);
+QTextCharFormat link;
+link.setAnchor(true);
+link.setAnchorHref(QStringLiteral("https://doc.qt.io"));
+link.setForeground(QColor(QStringLiteral("#1565C0")));
+link.setUnderlineStyle(QTextCharFormat::SingleUnderline);
+cursor.insertText(QStringLiteral("Qt 文档"), link);
 ```
 
-setAnchor(true) 把文字标记为超链接锚点，setAnchorHref 设置目标 URL。QTextEdit 默认不会响应锚点的点击——你需要自己连接 anchorClicked 信号，或者在 QTextEdit 上设置 openExternalLinks。另外 QTextCharFormat 支持 verticalAlignment 属性来设置上标（AlignSuperScript）和下标（AlignSubScript），这在公式编辑或脚注标注中会用到。
+setAnchor(true) 只把文字标记成锚点，QTextEdit 不会替您响应点击，它的信号表里没有 anchorClicked，openExternalLinks 也是别家的属性，这两样都长在 QTextBrowser 上，那是输入类五连的第四站。QTextEdit 里插了链接点着没反应，属于设计如此。另一个是 verticalAlignment，AlignSuperScript 与 AlignSubScript 摆出上标下标，公式和脚注用得上。
 
-QTextBlockFormat 控制段落级别的布局——对齐方式、缩进（左/右/首行）、行距、段前段后间距、背景色。一个常见的进阶用法是设置列表格式：
+段落层归 QTextBlockFormat，咱们常用的对齐、缩进、行距、段间距都在它身上。列表样式走它的同层伙伴 QTextListFormat，setStyle 给 ListDisc 摆圆点，setIndent 定层级，cursor.insertList(listFormat) 落下列表并返回 QTextList*，之后光标续写的文字挂在同一枚列表上，敲换行自动续下一项。
 
-```cpp
-QTextListFormat listFormat;
-listFormat.setStyle(QTextListFormat::ListDisc);  // 无序圆点列表
-listFormat.setIndent(1);
+这里咱们要当场说清 setHtml 的脾气。它把整棵文档树推倒重析，之前用光标摆好的格式、表格、列表全部随之消失，一次 setHtml 就是一次整篇重写。想往现有内容里塞一段 HTML，走光标的 insertHtml()，在指定位置插入，周围格式原样保留。示例两种都有：loadSampleContent 在 116 行用 setHtml 装载演示内容，插入按钮在 180 行用 insertHtml 往光标处塞表格。您做个对照实验，把 116 行的 setHtml 紧跟着复制一份再调一次（换成另一段 HTML），跑起来只见第二段，第一段的演示内容连同格式一起没了。再点一次插入按钮对照着看，insertHtml 塞进来的表格落在光标处，周围的字一个都没动。
 
-QTextCursor cursor = editor->textCursor();
-QTextList *list = cursor.insertList(listFormat);
-cursor.insertText("第一项");
-cursor.insertText("\n");
-cursor.insertText("第二项");
-```
+## position 与 anchor：选区的形状由光标两端决定
 
-QTextListFormat 是 QTextBlockFormat 的子类，专门用来控制列表样式。QTextTableFormat 控制表格的外观——边框宽度、单元格间距、列宽约束。这三套 Format 类各自管理不同层级的视觉属性，互不干扰。
+QTextCursor 内部是两个整数位置，咱们挨个看。position 是活跃端，光标所在。anchor 是另一端，选区的固定脚。两端重合就是一个插入点，分开了才有选区。您用 movePosition 配 KeepAnchor，挪的只有 position，anchor 留在原地，选区随之成形，示例的选中行按钮就是这么拼的（rich_text_navigator.cpp 第 148 行的 selectLine，StartOfLine 配 MoveAnchor，EndOfLine 配 KeepAnchor）。懒一点的场合 select() 更省事，BlockUnderCursor 整段，WordUnderCursor 整词，140 与 157 行各有一枚按钮伺候。
 
-### 3.3 QTextCursor 高级导航与 ExtraSelection 高亮
+QTextCursor 是值类型，随手复制不会惊动编辑器，改动要 setTextCursor 写回去才生效。咱们后面做搜索高亮正沾这个光，一份光标改到哪算哪，不碰编辑器本身。
 
-入门篇我们用了 movePosition 做光标移动和选中，进阶篇要搞清楚 QTextCursor 的 position 和 anchor 两个核心概念。QTextCursor 内部维护了两个整数位置：position 是光标所在位置（活跃端），anchor 是选区的起点位置。当 position == anchor 时没有选区，只是一个插入点；position != anchor 时从 anchor 到 position 之间的文字就是选区。movePosition 在 KeepAnchor 模式下只移动 position 而 anchor 不动，形成选区。
+anchor 可以大于 position。用户从右往左划选区，position 在前 anchor 在后，内容照样能取（selectedText() 按文档顺序提取选区文本，与划动方向无关），可拿 position() 当起点算偏移的代码，在反向选区上就算错了。要起止位置走 selectionStart() 与 selectionEnd()，比自己拿 qMin qMax 现算稳。再补一个会拦住人的细节，selectedText() 里的段落分隔以 U+2029 形式回来，直接拿它跟纯文本比对会落空。验证的法子现成，您在 selectBlock（140 行）里补一行打点，把 cursor.selectedText() 打出来，选中含多段的内容，输出长度比肉眼数的字符多，多出来的就是段间的 U+2029。
 
-QTextCursor 是值类型，你可以随意复制而不影响编辑器状态——只有通过 setTextCursor 写回时才生效。这个特性在实现"搜索后高亮所有匹配项"时特别有用：你创建多个 QTextCursor 分别指向各个匹配位置，然后把它们转为 ExtraSelection 列表一次性设置给 QTextEdit。
+## find 与 ExtraSelection：高亮、大小写与倒序替换
+
+不动文档就能给一片文字上色，靠的是 ExtraSelection，一组带格式的光标，setExtraSelections 一次给齐。咱们看示例的 performSearch，实现从 rich_text_navigator.cpp 第 189 行起：
 
 ```cpp
 QList<QTextEdit::ExtraSelection> highlights;
-QTextDocument *doc = editor->document();
 QTextCursor searchCursor(doc);
-
 while (!searchCursor.isNull() && !searchCursor.atEnd()) {
-    searchCursor = doc->find("Qt", searchCursor);
+    searchCursor = doc->find(keyword, searchCursor);   // keyword 来自搜索框
     if (!searchCursor.isNull()) {
         QTextEdit::ExtraSelection sel;
         sel.cursor = searchCursor;
-        sel.format.setBackground(QColor("#FFF176"));
+        sel.format.setBackground(QColor(QStringLiteral("#FFF176")));
         highlights.append(sel);
     }
 }
-editor->setExtraSelections(highlights);
+setExtraSelections(highlights);
 ```
 
-QTextDocument::find 返回的是一个已经选好区的 QTextCursor——position 指向匹配文本末尾，anchor 指向开头。下一次 find 从 position 继续搜索，避免死循环。find 支持纯文本和 QRegularExpression 两种模式，配合 FindFlags 控制方向和选项（FindBackward / FindCaseSensitively / FindWholeWords）。找不到匹配时返回 isNull() 为 true 的 cursor，循环搜索时用 isNull() 判断终止。
+循环能停得下来，靠的是 find 的返回值语义。返回的光标已经替您选好匹配，anchor 压在匹配开头，position 落在末尾，下一轮正向搜索从 selectionEnd() 接着走，反向从 selectionStart() 往回走，每轮必进。找不到给一枚 isNull() 为真的光标，查询串为空时直接返回空光标。您看示例开头的关键词判空（192 行），跟文档层这道理是同一道守卫。
 
-现在有一道调试题给大家。下面这段代码试图高亮文档中所有正则匹配，但运行后只高亮了第一个——为什么？
+方向与大小写，您在 FindFlags 里挑：
 
-```cpp
-QTextCursor cursor(doc);
-while (!cursor.atEnd()) {
-    cursor = doc->find(QRegularExpression("Qt\\w+"), cursor);
-    if (!cursor.isNull()) {
-        QTextEdit::ExtraSelection sel;
-        sel.format.setBackground(QColor("#FFEB3B"));
-        sel.cursor = cursor;
-        highlights.append(sel);
-    }
-}
-```
+| FindFlag | 作用 |
+| ---- | ---- |
+| FindBackward | 反向搜，从 selectionStart 往回走 |
+| FindCaseSensitively | 区分大小写，不给就默认不区分 |
+| FindWholeWords | 整词匹配，边界按字母与数字判定 |
 
-问题出在零宽匹配的陷阱——如果正则可以匹配空字符串（比如 `Qt*`），find 会在同一位置反复返回零宽匹配，position 不前进，死循环。解决方案是在每次 find 之后检查 position 是否推进了，必要时手动 `cursor.setPosition(cursor.position() + 1)`。
+默认不区分，咱们在示例上一验就着。搜索框敲小写 qtext，照样一片黄。正则这层更干脆，表达式自己带的大小写选项会被 find 忽略，它按 FindCaseSensitively 在内部重设一遍 patternOptions，您想区分只能加这个标志。实验就把 204 行补上第三个参数 QTextDocument::FindCaseSensitively，小写 qtext 当场搜空，QText 恢复满屏高亮。
 
-实现替换功能时，find 配合 insertText 就够了——find 返回的 cursor 已经选中目标文本，直接 insertText 替换选区。替换全部要从文档末尾向开头反向搜索（FindBackward），因为每次替换后文档长度变了，正向搜索的位置会偏移。
+find 另有一组 QRegularExpression 的重载，用之前有一件事要想清楚。能匹配空串的模式（`Q*`、`\\b`、`(?=Q)` 都算）会让循环出不去：find 实现里返回光标的推进量取自匹配长度，长度为零，下一轮还从 selectionEnd() 原地起步，循环条件永远满足。`\\b` 按 C++ 字面量的写法是两个反斜杠，要是裸写一个 `\b`，粘进 QStringLiteral 是合法转义，编译器把它读成退格符 0x08，能编译不报错，正则拿到的却已经是另一个字符，含义整个跑偏。兜底要么把模式写成不可能空匹配，要么每轮 find 后看 position 推没推进，没推进就手动调一次 setPosition(position() + 1)，把光标顶过去一格。您把 204 行换成 `doc->find(QRegularExpression(QStringLiteral("Q*")), searchCursor)` 跑一把，界面当场卡住（终端 Ctrl+C 退出），换成 `Q\\w*` 程序照常跑完，零宽不零宽一试便知。
 
-## 4. 踩坑预防
+替换顺着同一套光标走。find 返回的 cursor 已经选中目标，insertText() 就地替换。替换全部必须从文档末尾往开头 FindBackward 倒着来，正向边替换边改文档长度，后面的位置全跟着偏。您把示例的搜索栏补成完整的查找替换吧，查找下一个、查找上一个、替换、全部替换，再加一枚大小写复选框，高亮列表在关键词变动时整批重算，全部替换按倒序的路子走，做完这套东西能直接搬进自己的项目。
 
-第一个坑是 QTextCursor 的 position 和 anchor 混淆导致选区方向错误。QTextCursor 的选区方向是从 anchor 到 position，但 anchor 可以大于 position（反向选区）。如果你在代码中假设选区总是从左到右的，用 `qMin(cursor.anchor(), cursor.position())` 和 `qMax(...)` 来获取起止位置会更安全。selectedText() 总是返回从 anchor 到 position 的文本，不管方向如何——所以内容是对的，但如果你用 position() 当起点来计算偏移，方向反了就会算错。
+## 官方文档参考
 
-第二个坑是 setHtml 会完全覆盖之前的所有格式和结构。调用 setHtml 时 QTextDocument 会清空整个文档树并重新解析 HTML，之前通过 QTextCursor 精心设置的格式、表格、列表全部丢失。这不是"追加"而是"重写"。如果你需要在保留现有内容的基础上追加 HTML 片段，应该用 QTextCursor::insertHtml() 在指定位置插入。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17。QTextEdit 在 QtWidgets，QTextDocument、QTextCursor 与全部格式类都在 QtGui，链接 Qt6::Widgets 一并带上，示例可在 Linux、macOS、Windows 桌面平台编译运行。
 
-第三个坑是 QTextDocument::find 配合正则表达式时，如果正则可以匹配空字符串（比如 `Qt*` 匹配零个 Qt），会导致死循环——find 在同一位置反复返回零宽匹配，position 不前进。解决方案是在正则中避免零宽匹配，或者在每次 find 后检查 position 是否推进了。
+[Qt 文档 · QTextEdit](https://doc.qt.io/qt-6/qtextedit.html) -- 富文本编辑器，ExtraSelection 结构体与 setExtraSelections 的用法
 
-## 5. 练习项目
+[Qt 文档 · QTextDocument](https://doc.qt.io/qt-6/qtextdocument.html) -- 文档模型，find 的各档重载、rootFrame 与 blockCount
 
-练习项目：简易富文本搜索工具。我们要实现一个带搜索高亮和替换功能的 QTextEdit 编辑器。窗口中央是 QTextEdit，初始化时加载一段包含多种格式的 HTML 内容。底部搜索栏包含搜索输入框、查找下一个/上一个按钮、替换输入框、替换/全部替换按钮、大小写敏感复选框。查找下一个从当前光标位置向后搜索第一个匹配项，选中并滚动到该位置，同时用 ExtraSelection 黄色背景高亮所有匹配项。替换当前选中项并自动跳到下一个。全部替换从文档末尾向开头反向操作，避免位置偏移。完成标准是高亮正确标记所有匹配、查找能循环跳转、替换不丢失周围格式、全部替换不遗漏。提示：高亮用 `QList<QTextEdit::ExtraSelection>` 统一管理，搜索内容变化时重新计算；全部替换用 FindBackward 从末尾向前替换。
+[Qt 文档 · QTextCursor](https://doc.qt.io/qt-6/qtextcursor.html) -- 编辑与选区接口，position、anchor、selectionStart 与 selectionEnd
 
-## 6. 官方文档参考链接
+[Qt 文档 · QTextCharFormat](https://doc.qt.io/qt-6/qtextcharformat.html) -- 字符格式，锚点属性与 verticalAlignment
 
-[Qt 文档 · QTextEdit](https://doc.qt.io/qt-6/qtextedit.html) -- 富文本编辑器，ExtraSelection 结构体定义
+[Qt 文档 · QTextBlockFormat](https://doc.qt.io/qt-6/qtextblockformat.html) -- 段落格式，对齐、缩进与行距
 
-[Qt 文档 · QTextDocument](https://doc.qt.io/qt-6/qtextdocument.html) -- 文档模型，find 方法、rootFrame、blockCount
+[Qt 文档 · QTextListFormat](https://doc.qt.io/qt-6/qtextlistformat.html) -- 列表格式，样式枚举与缩进层级
 
-[Qt 文档 · QTextCursor](https://doc.qt.io/qt-6/qtextcursor.html) -- 文档编辑接口，position/anchor/selection 操作
-
-[Qt 文档 · QTextCharFormat](https://doc.qt.io/qt-6/qtextcharformat.html) -- 字符格式，anchor/verticalAlignment/font 属性
-
-[Qt 文档 · QTextBlockFormat](https://doc.qt.io/qt-6/qtextblockformat.html) -- 段落格式，alignment/indent/lineHeight
-
-[Qt 文档 · QTextDocument::find](https://doc.qt.io/qt-6/qtextdocument.html#find) -- 文本搜索方法，FindFlags 说明
+[Qt 文档 · QTextTable](https://doc.qt.io/qt-6/qtexttable.html) -- 表格对象，QTextTableCell 单元格的进入方式
 
 ---
 
-到这里，QTextEdit 的进阶内容就过完了。QTextDocument 的 frame/block/fragment 四层结构是理解所有富文本操作的基础——知道数据长什么样，才能正确操作它。QTextCharFormat/QTextBlockFormat/QTextTableFormat 三套格式类分别管理字符、段落、表格三个层级的视觉属性。QTextCursor 的 position/anchor 双位置模型是精确控制选区的关键，配合 ExtraSelection 可以实现搜索高亮等高级效果。QTextDocument::find 是内置的搜索引擎，但正则搜索要注意零宽匹配的陷阱，替换操作要注意方向选择。掌握这些，你就具备了构建完整富文本编辑器的能力。
+输入类五连走到第二篇，树、格式、光标这三样本篇备齐，下一篇接着用。[3.24 QPlainTextEdit 进阶](./24-qplaintextedit-advanced.md) 请出 QTextEdit 的纯文本兄弟，从两个类的分工讲起，聊到行号侧栏与大日志不卡。想再动手的，请您把示例（examples/advanced/03-qtwidgets/23-qtextedit-advanced/，可执行文件 23-qtextedit-advanced）完整跑一轮：搜索框敲小写关键词看默认大小写，204 行加 FindCaseSensitively 再看一遍，setHtml 连调两次看整篇重写，插入富文本后数一数状态栏的段落。加码的话，您照查找替换那一段的清单一口气补齐，全部替换记得倒序。

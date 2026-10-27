@@ -1,187 +1,116 @@
 ---
 title: "3.46 QListWidget 进阶"
-description: "入门篇我们用 QListWidget 展示了字符串列表、图标列表、多选和单选操作，掌握了 addItem/setCurrentRow/currentItemChanged 信号以及 QSS 定制列表项外观。"
+description: "入门篇用 QListWidget 列过字符串配过图标，进阶篇把底翻开对着 6.9.1 读穿：构造里 setup 挂的是私有 QListModel（内部只是一个行指针容器而 setModel 直接断言拒绝）、currentItemChanged、currentTextChanged、currentRowChanged 三个信号由选择模型的 currentChanged 经 emitCurrentItemChanged 依次转发（槽里改模型会影响后续信号）、setItemWidget 只是 setIndexWidget 把 widget 过继给 viewport 并按条目 visualRect 摆几何而行高仍由条目的 SizeHintRole 决定（不设 setSizeHint 就裁切）、行删除时 rowsAboutToBeRemoved 释放静态 editor 回收 widget、InternalMove 拖放走 QListView::dropEvent 的 moveRow 路径发 rowsMoved（落点压条目则退回插入加删除的后备路径）、MIME 默认 application/x-qabstractitemmodeldatalist 而外部交互要重写 mimeData 与 dropMimeData、supportedDropActions 默认 CopyAction 或 MoveAction、sortItems 用 std::stable_sort 按 DisplayRole 比较经 layoutChanged 发布、大列表开关 uniformItemSizes 复用缓存尺寸与 layoutMode 配 batchSize 分批布局（默认 100）而 movement 默认 Static 且 Free 与 Snap 的自由摆放只在 IconMode 生效，配套示例在 examples/advanced/03-qtwidgets/46-qlistwidget-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.46——QListWidget 进阶
 
-## 1. 前言 / 当列表不只是"一行一行的文字"
+[3.45 QFrame 进阶](./45-qframe-advanced.md) 结尾把话递了过来：列表部件怎么把条目管起来，本篇接着看。入门篇您用 QListWidget 列过字符串、配过图标，currentRow 一改界面跟着动。进阶篇咱们把它的底翻开：条目存在哪，currentRow 那串信号谁发的，setItemWidget 之后行高为什么老出事，拖放重排时模型里发生了什么。源稿把笔墨压在演示代码上，机制层几乎没碰，本篇按源码重排，改准的地方随文给行号。
 
-入门篇我们用 QListWidget 展示了字符串列表、图标列表、多选和单选操作，掌握了 addItem / setCurrentRow / currentItemChanged 信号以及 QSS 定制列表项外观。对于简单的选择列表——比如字体列表、颜色列表、国家列表——入门篇那一套完全够用。但一旦你需要做"拖拽调整顺序"、"给每一项嵌入自定义控件（比如带头像和状态指示器的联系人项）"、"或者把列表项导出为文件路径"这类需求，你就会发现 addItem(QString) 那个接口远远不够。
+本篇引用以 qlistwidget.cpp 与 qlistwidget.h 为主，咱们把私有模型补到 qlistwidget_p.h，拖放与布局补 qlistview.cpp 与 qabstractitemview.cpp，MIME 格式名补 qabstractitemmodel.cpp。配套示例的完整玩法放在结语，正文引用文件名加行号。
 
-今天我们把 QListWidget 的进阶能力拆透。核心内容是四个方面：setDragDropMode 实现内部拖放排序、setItemWidget 给列表项嵌入自定义 QWidget、MIME 数据的自定义与外部拖放交互，以及大量列表项的性能优化。
+## 构造时就定下的事：QListView 挂一个私有 QListModel
 
-## 2. 环境说明
+咱们从构造读起。QListWidget 的构造只有一行正事，基类 QListView 加一个 setup()，出处 qlistwidget.cpp 第 1354-1359 行。setup 头一件事是 new 一个 QListModel 挂上去，出处第 1069-1073 行。QListModel 不在公开头文件里，声明藏在 qlistwidget_p.h 第 44 行，内部只有一个 QList<QListWidgetItem*> 容器装行指针（第 102 行）。QListWidget 带的是自家的轻量模型，没借 QStandardItemModel 的光，setModel 里那句断言也把换模型的路堵上了，出处 qlistwidget.cpp 第 1884-1886 行。所有权也顺带交代，QListWidget 析构时连条目一起收，文档写在第 1362 行。
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。QListWidget 属于 QtWidgets 模块，链接 Qt6::Widgets 即可。拖放涉及 QMimeData 和 QDrag（QtGui）。所有行为在 Qt 6.9.1 上验证通过。
+条目的数据也存在条目自己身上。私有结构 values 是一个 QList<QWidgetItemData>，每项是角色加值的一对（qlistwidget_p.h 第 139 行）。咱们跟着 setData 看它怎么存，它顺着容器找角色，找到改值，没找到追加，EditRole 顺手折算成 DisplayRole，出处 qlistwidget.cpp 第 656-679 行，改完通知模型发 dataChanged。模型的 data 干脆把活儿整个转回给条目（第 178-183 行）。三个构造函数给条目的默认 flags 一致，Selectable、UserCheckable、Enabled、DragEnabled（第 550-557、577-581、612-615 行），里头没有 Editable，双击默认改不动文字。拿列表指针构造的条目，还会顺手把自己追加到模型末尾，出处第 556-557 行。
 
-## 3. 核心概念讲解
+## currentRow 那组信号，是选择模型替您转发的
 
-### 3.1 setDragDropMode 实现内部拖放排序
+setup 还接了一批视图信号，pressed 与 clicked 经它转手，发出时就成了 itemPressed、itemClicked，doubleClicked 和 activated 同理，出处 qlistwidget.cpp 第 1074-1087 行。currentRow 这边走得更绕。QListWidget::setSelectionModel 里接了两条线（第 1375-1392 行）：选择模型的 currentChanged 转给私有类的 emitCurrentItemChanged，selectionChanged 走短线，直接发 itemSelectionChanged。emitCurrentItemChanged 依次发三个信号，currentItemChanged 打头，currentTextChanged 居中，currentRowChanged 收尾，出处第 1138-1155 行。入门篇您连的 currentRowChanged(int)，就是打这儿发出来的。
 
-QListWidget 内置了拖放支持，通过 setDragDropMode 配置拖放行为。最常用的模式是 InternalMove——允许用户在列表内部拖拽项目来调整顺序。
+顺着这路信号还有两个顺手的东西。currentRow 是带 NOTIFY 的属性，您 setCurrentRow(2) 换行，读 currentRow() 问行，都走它，出处 qlistwidget.h 第 167 行。想让某行滚进视野，scrollToItem(item) 默认给 EnsureVisible（第 229 行），不用自己去算滚动条。
 
-```cpp
-listWidget->setDragDropMode(QAbstractItemView::InternalMove);
-listWidget->setDefaultDropAction(Qt::MoveAction);
-listWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
-listWidget->setSelectionMode(QAbstractItemView::SingleSelection);
-```
+这里有个连锁要留神。您在 currentItemChanged 的槽里再改一次模型，后两个信号读到的是改过之后的状态，源码注释专门拿持久索引防了这一手（第 1146-1152 行）。selectedItems 走的也是选择模型，selectedIndexes() 拿到行号，再回模型取条目（第 1709-1721 行）。一次能回来几个由 selectionMode 决定，QListView 构造里默认给了 SingleSelection，出处 qlistview.cpp 第 144-152 行，您换成 ExtendedSelection，selectedItems 才可能一次回一串。ListMode 还有个默认藏着的：橡皮筋选框不显示，私有构造里 showElasticBand 是 false（第 1759-1772 行），您想看到那根框，就调 setSelectionRectVisible(true)，出处第 1692-1710 行。
 
-InternalMove 模式下，用户按住某个列表项拖动时，QListWidget 会在拖动位置显示一个插入指示线（drop indicator），松开鼠标后项目被移动到新位置。整个过程中 QListWidget 自动处理 QModelIndex 的更新——你不需要手动移动数据。
+## setItemWidget：行高跟条目的 sizeHint 走，widget 只是铺上去
 
-但有一个关键点：InternalMove 只移动了项的显示顺序，它不会自动同步你维护的外部数据结构。比如你有一个 `QVector<QString> m_items` 和 QListWidget 的显示一一对应，用户通过拖放调整了列表顺序后，`m_items` 的顺序并没有变。你需要在模型变化后读取新的顺序来同步。
+setItemWidget 本体三行，转手给基类的 setIndexWidget，出处 qlistwidget.cpp 第 1698-1703 行。setIndexWidget 值得咱们停下来读一遍，出处 qabstractitemview.cpp，第 3325-3353 行。
 
 ```cpp
-connect(listWidget->model(), &QAbstractItemModel::rowsMoved,
-        this, [this]() {
-    // 重新同步外部数据
-    m_items.clear();
-    for (int i = 0; i < listWidget->count(); ++i) {
-        m_items.append(listWidget->item(i)->text());
+// setIndexWidget 的核心动作（qabstractitemview.cpp 第 3338-3351 行，摘录）
+if (widget) {
+    widget->setParent(viewport());
+    d->persistent.insert(widget);
+    d->addEditor(index, widget, true);
+    widget->installEventFilter(this);
+    widget->show();
+    dataChanged(index, index); // update the geometry
+    if (!d->delayedPendingLayout) {
+        widget->setGeometry(visualRect(index));
+        d->doDelayedItemsLayout();  // relayout due to updated geometry
     }
-});
-```
-
-rowsMoved 信号在拖放完成后触发。你在这个槽里遍历 QListWidget 的所有项，按照新的显示顺序重建你的外部数据。如果你需要更细粒度的控制——比如限制某些项目不能被拖到某些位置——你可以子类化 QListView（QListWidget 的基类）并重写 dropEvent。
-
-setDragEnabled(bool) 控制项目是否可以拖出，setAcceptDrops(bool) 控制是否接受外部拖入。默认 InternalMove 模式下两者都是 true。如果你只想允许拖出但不允许拖入（比如把列表项拖到另一个窗口），设 setAcceptDrops(false) 并把 dragDropMode 改为 QAbstractItemView::DragOnly。
-
-### 3.2 setItemWidget 嵌入自定义控件
-
-QListWidgetItem 默认只能显示文字和图标。如果你需要在列表项中嵌入更复杂的控件——比如一个联系人卡片包含头像、名称和在线状态指示器，或者一个音乐列表项包含播放按钮和进度条——就需要用 setItemWidget。
-
-```cpp
-auto *item = new QListWidgetItem(listWidget);
-listWidget->addItem(item);
-
-auto *widget = new QWidget;
-auto *layout = new QHBoxLayout(widget);
-layout->setContentsMargins(8, 4, 8, 4);
-
-auto *avatar = new QLabel;
-avatar->setPixmap(QPixmap(":/avatar.png").scaled(40, 40,
-    Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
-layout->addWidget(avatar);
-
-auto *info = new QVBoxLayout;
-auto *name = new QLabel("张三");
-name->setStyleSheet("font-weight: bold;");
-auto *status = new QLabel("在线");
-status->setStyleSheet("color: #4caf50;");
-info->addWidget(name);
-info->addWidget(status);
-layout->addLayout(info, 1);
-
-listWidget->setItemWidget(item, widget);
-```
-
-setItemWidget 接受一个 QListWidgetItem 和一个 QWidget，把 widget 关联到该项。QListWidget 在渲染该项时不再使用默认的委托绘制，而是直接显示你提供的 widget。
-
-setItemWidget 有几个重要的限制需要你心里有数。第一是性能——setItemWidget 为每个列表项创建一个完整的 QWidget 层级（包括布局管理器、子控件等），如果列表有上千项，内存和渲染开销会非常大。setItemWidget 适合几十到几百项的场景，不适合大数据列表。大数据场景应该用 QListView + 自定义 QStyledItemDelegate，delegate 只负责绘制（不创建控件），性能好得多。
-
-第二是 sizeHint——使用 setItemWidget 后，QListWidgetItem 的 sizeHint 需要手动设置，否则列表项可能显示高度不够，widget 的下半部分被截断。
-
-```cpp
-item->setSizeHint(widget->sizeHint());
-```
-
-如果你在 setItemWidget 之后动态改变了 widget 的大小（比如展开/折叠内容），需要重新设置 sizeHint。
-
-第三是选择和交互。setItemSelected / setCurrentItem 仍然能正常工作——选中状态由 QListWidget 管理，不影响 setItemWidget 的 widget。但 widget 上的子控件（QPushButton、QLineEdit 等）会正常接收鼠标事件，不会触发列表项的选中。这意味着如果你在 widget 上放了一个按钮，点击按钮不会选中列表项——点击按钮区域外的部分才会选中。如果你希望点击 widget 的任何位置都选中列表项，需要自己处理——比如在 widget 上安装事件过滤器，把鼠标事件转发给 QListWidget。
-
-### 3.3 MIME 数据与外部拖放
-
-QListWidget 的拖放不限于内部——你可以把列表项拖到其他应用，或者从其他应用拖入数据。这通过 MIME 类型机制实现。
-
-默认情况下 QListWidget 的内部拖放使用 `application/x-qabstractitemmodeldatalist` 这个私有 MIME 类型。如果你想让列表项可以被拖到外部应用（比如文件管理器），需要子类化 QListWidget 并重写 mimeData 方法，把项的数据编码为标准的 MIME 格式。
-
-```cpp
-QMimeData *mimeData(const QList<QListWidgetItem *> &items) const override
-{
-    auto *mime = new QMimeData;
-    QList<QUrl> urls;
-    for (auto *item : items) {
-        // 假设 item->data(Qt::UserRole) 存储了文件路径
-        QString path = item->data(Qt::UserRole).toString();
-        urls.append(QUrl::fromLocalFile(path));
-    }
-    mime->setUrls(urls);
-    return mime;
 }
 ```
 
-这段代码把选中的列表项转换为文件 URL 列表，拖到文件管理器后就是复制/移动文件的操作。反过来，如果你想让 QListWidget 接受外部拖入的文件，需要重写 dropMimeData 并处理 `text/uri-list` MIME 类型。
+widget 被过继给 viewport，注册成该索引的静态 editor，再按条目当前的 visualRect 摆好几何。您注意到没有，它全程没碰条目的 sizeHint。行高从哪来？QListView 布局时问委托要 sizeHint，委托回模型查 SizeHintRole，QListModel 又转给条目（qlistwidget.cpp 第 178-183 行）。所以您挂了一张 60 像素高的卡片，条目自己的 hint 还是默认值，卡片就被压进一行矮格子里，下半截裁掉。解法是挂之前给条目 setSizeHint(card->sizeHint())，示例正是这个次序（widget.cpp 第 107-113 行）。撤除有现成的 removeItemWidget，本质是拿空指针再设一遍（qlistwidget.h 第 264 行）。
+
+widget 的身份也容易误会，别当它是 item 的子对象，setParent 给的是 viewport。行删掉时它确实跟着没，依据是视图的 rowsAboutToBeRemoved 槽，它会遍历 editor 哈希，把删除区间里的静态 editor 顺手释放，出处 qabstractitemview.cpp 第 3547-3570 行。量级的事顺便说清：每挂一个 widget 就多一棵真控件树，滚动经过的每一项都要显示隐藏，条目数上了几百，咱们该换 QStyledItemDelegate 重写 paint，委托只画不建控件。文档对 setItemWidget 的告诫同向，只放静态内容，动态内容用 QListView 配委托（qlistwidget.cpp 第 1688-1693 行）。
+
+交互也跟着换主。挂上去的控件树自己消化鼠标事件，视图看不见那些按压，您点卡片上的按钮，列表既不选中那一行，也不发 itemClicked，选区要靠条目自己露出来的区域去点。事件过滤器装在 widget 一层（qabstractitemview.cpp 第 3342 行），拦的是焦点切换这类编辑器事务，不管选区。示例的 X 按钮正吃了这个特性，点按钮直接删行，那一行不会因此被选中（widget.cpp 第 36、43-55 行）。
+
+## InternalMove 重排：moveRow 发 rowsMoved，还有一条后备路径
+
+setDragDropMode(InternalMove) 一行把拖出和接收同时打开，实现是 setDragEnabled(true)，紧接 setAcceptDrops(true)，出处 qabstractitemview.cpp 第 1528-1534 行。源稿说成默认如此，笔者对着源码核过，改准为这一次调用的效果。
+
+松手后的事在 QListView::dropEvent，出处 qlistview.cpp 第 883-948 行。事件源是自己且是移动时，它把选中项按行号排好，逐个调 model()->moveRow，QListModel::moveRows 里走 beginMoveRows，挪容器，收尾发布，出处 qlistwidget.cpp 第 261-292 行，模型发出的就是 rowsMoved。您在外部另维护一份 QVector，连模型的 rowsMoved 信号最省事，槽里按 count() 重读一遍就是新顺序。
+
+咱们把 moveRow 的调度摘出来看（qlistview.cpp 第 914-927 行）。
 
 ```cpp
-bool dropMimeData(int index, const QMimeData *data,
-                  Qt::DropAction action) override
-{
-    if (data->hasUrls()) {
-        for (const auto &url : data->urls()) {
-            auto *item = new QListWidgetItem(
-                url.toLocalFile());
-            insertItem(index, item);
-            ++index;
-        }
-        return true;
+// QListView::dropEvent 的搬移调度（qlistview.cpp 第 914-927 行，摘录）
+for (const QPersistentModelIndex &pIndex : std::as_const(persIndexes)) {
+    // only generate a move when not same row or behind itself
+    if (r != pIndex.row() && r != pIndex.row() + 1) {
+        // try to move (preserves selection)
+        const bool moved = model()->moveRow(QModelIndex(), pIndex.row(), QModelIndex(), r);
+        if (!moved)
+            continue; // maybe it'll work for other rows
+        dataMoved = true; // success
+    } else {
+        // move onto itself is blocked, don't delete anything
+        dataMoved = true;
     }
-    return QListWidget::dropMimeData(index, data, action);
+    r = pIndex.row() + 1;   // Dropped items are inserted contiguously and in the right order.
 }
 ```
 
-supportedDropActions() 控制支持的拖放动作类型。如果你只允许复制不允许移动，返回 Qt::CopyAction。
+摘录里有两层保护值得认。落到自己身上或紧挨着自己后面的位置不发搬移，源码注释把它标成 blocked，也不删任何东西。搬移用的 moveRow 保选区，注释那句 preserves selection，就是您不用替选区操心的理由。
 
-### 3.4 大量列表项的性能优化
+落点压在选中条目身上时走不到 moveRow，退回 QAbstractItemView::dropEvent 的老路（第 940-946 行），模型按 MIME 数据插入新行，源行由启动拖动那头的 clearOrRemove 收掉，出处 qabstractitemview.cpp 第 3896 行，这时您收到的是 rowsInserted 加 rowsRemoved。外部副本要么两种信号都接，要么干脆不存副本、用时现读，笔者更倾向后者。
 
-QListWidgetItem 是重量级的——每个项都是一个独立的 QListWidgetItem 对象，包含文字、图标、字体、背景色、自定义数据等。当列表项数量达到数千时，QListWidget 的性能会明显下降，特别是初始化阶段（逐个 addItem）和滚动阶段（每个项都需要渲染）。
+另有一路您也容易认错：movement 的 Free 与 Snap 管的是 IconMode 的自由摆放，图标视图里拖着走只挪视觉位置、发 indexesMoved，行序不动（qlistview.cpp 第 2936-2960 行）。ListMode 下 movement 默认 Static，布局仍是纵向流，切 Free 或 Snap 看不出差异。setMovement 还有个副作用，值给到非 Static，dragEnabled 会跟着打开，viewport 的 acceptDrops 也是，出处第 193-204 行。
 
-优化方向有几个。第一是批量添加时用 setUpdatesEnabled(false) 包裹，防止每添加一项都触发一次重绘。
+## MIME 三件套：默认私有格式，进出都能改
 
-```cpp
-listWidget->setUpdatesEnabled(false);
-for (int i = 0; i < 5000; ++i) {
-    listWidget->addItem(QString("项目 %1").arg(i));
-}
-listWidget->setUpdatesEnabled(true);
-```
+mimeTypes 默认返回 Qt 的私有格式，全名以 application/ 打头，后跟 x-qabstractitemmodeldatalist，出处 qlistwidget.cpp 第 1770-1772 行，格式名登记在 qabstractitemmodel.cpp，第 2120 行。这个格式 Qt 家里互相认，文件管理器不认。想让条目拖出去变成文件，子类化 QListWidget 重写受保护的虚函数 mimeData，把选中项的路径装进 QUrl 列表（声明在 qlistwidget.h 第 249 行，默认实现在 qlistwidget.cpp 第 1785-1801 行）。反过来接收外部文件，您重写 dropMimeData 处理 hasUrls，声明在 qlistwidget.h 第 251 行，默认实现出处第 1812-1823 行。
 
-第二是设置 uniformItemSizes 属性。如果你的所有列表项大小相同（这是最常见的情况），把这个属性设为 true 可以让 QListView 跳过逐项计算 sizeHint 的步骤，直接用固定尺寸来布局。
+支持的动作默认就带移动。supportedDropActions 的默认也在这儿定，基类给 CopyAction，QListWidget 再或上 MoveAction，出处 qlistwidget.cpp 第 1837-1841 行。基类的默认在 qabstractitemmodel.cpp，第 2252-2255 行。您只想给复制，就重写 supportedDropActions，让它只返回 Qt::CopyAction。QListWidget::dropEvent 只是转手 QListView::dropEvent（第 1827-1831 行），想拦拖放别在这一层做。
 
-```cpp
-listWidget->setUniformItemSizes(true);
-```
+## sortItems 与大列表的布局开关
 
-第三是 setItemWidget 的替代方案。如果你需要自定义外观但不需要交互控件（按钮、输入框等），用 QStyledItemDelegate 重写 paint 方法代替 setItemWidget。delegate 只负责绘制，不创建 QWidget，性能提升一个数量级。
+sortItems 默认升序（qlistwidget.h 第 202 行的默认参数），实现存下您给的顺序再调模型的 sort（qlistwidget.cpp 第 1588-1593 行）。QListModel::sort 把指针和原始行号配成对，交给 std::stable_sort（第 295-320 行），相等的条目保持原序，排序经 layoutAboutToBeChanged 与 layoutChanged 一对信号发布，没有删行插行。比较器是 operator<，拿 DisplayRole 走 variantLessThan（第 698-702 行），也就是按显示文本比。sortingEnabled 默认 false，您把它开成 true 之后，插入即自动排序。
 
-如果你的列表真的需要处理上万条数据，QListWidget 已经不是合适的工具了——你应该用 QListView + 自定义 QAbstractListModel，利用 QListView 内置的懒加载机制（只渲染可见区域的项）。这属于 QListView 进阶的内容，我们下一篇会详细讲。
+布局开关都在 QListView 身上。uniformItemSizes 默认 false，条目等高时开成 true，布局直接复用第一项的缓存尺寸，跳过逐项算 sizeHint（qlistview.cpp 第 2484、2750 行）。layoutMode 默认 SinglePass 一次布完，您改成 Batched 后按 batchSize 分批布局，批间回事件循环，可见条目早早能交互，batchSize 默认给 100，出处第 303-312、352-372 行。批量 addItem 前后用 setUpdatesEnabled 包一层是通用手段，省的是逐次重绘。这几个开关救的是布局与绘制，救不了内存，几万条往上就得 QListView 配自定义模型了。
 
-## 4. 踩坑预防
+## 官方文档参考
 
-第一个坑是 InternalMove 拖放后外部数据不同步。QListWidget 的拖放只更新了自身的显示顺序，不会自动同步你维护的外部数据结构。后果是用户拖放调整了顺序，但你的 `m_items[index]` 还是旧顺序——下次操作（比如删除第 N 项）会删错项。解决方案是在 rowsMoved 信号中重建外部数据，或者在每次需要访问数据时直接从 QListWidget 读取（不维护外部副本）。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为在 6.9.1 源码核对。QListWidget 属 QtWidgets，链接 Qt6::Widgets 即可，拖放另涉 QtGui 的 QMimeData 与 QDrag。
 
-第二个坑是 setItemWidget 后 sizeHint 不够导致 widget 被截断。QListWidget 使用 QListWidgetItem 的 sizeHint 来决定列表项的高度，但 setItemWidget 不会自动更新 sizeHint。如果你在 setItemWidget 后没有手动设 `item->setSizeHint(widget->sizeHint())`，widget 会按默认的列表项高度显示——内容超出的部分直接被裁切。后果是看起来只有文字的上面一半，头像只露出个头顶。
+[Qt 文档 · QListWidget](https://doc.qt.io/qt-6/qlistwidget.html) -- setItemWidget 与 currentRowChanged 的定义处
 
-第三个坑是大量 setItemWidget 导致内存和渲染性能问题。每个 setItemWidget 都创建了一个完整的 QWidget 层级。1000 个列表项就是 1000 个 QWidget + 1000 个 Layout + 大量子控件。滚动时所有经过可见区域的项都需要 show/hide，内存占用可能达到数百 MB。后果是列表滚动时明显卡顿，窗口 resize 时更卡。解决方案是超过 100 项就不要用 setItemWidget，改用 QStyledItemDelegate 自定义绘制。
+[Qt 文档 · QListWidgetItem](https://doc.qt.io/qt-6/qlistwidgetitem.html) -- 条目的 flags 与 sizeHint 所属
 
-## 5. 练习项目
+[Qt 文档 · QListView](https://doc.qt.io/qt-6/qlistview.html) -- uniformItemSizes、batchSize 与 selectionRectVisible
 
-练习项目：可拖拽排序的播放列表。我们要实现一个类似音乐播放器的列表界面。
+[Qt 文档 · QAbstractItemView](https://doc.qt.io/qt-6/qabstractitemview.html) -- DragDropMode 枚举与 setIndexWidget
 
-完成标准是：QListWidget 包含 10 首歌曲信息。每个列表项通过 setItemWidget 显示：左侧一个 32x32 的封面图占位（用 QLabel 显示一个纯色方块，颜色从预定义列表取），中间上方是歌曲名（粗体），中间下方是歌手名（灰色），右侧是时长标签（如"3:45"）。列表开启 InternalMove 拖拽排序，拖拽后同步一个外部的 `QVector<SongInfo>` 数据结构。双击列表项播放（打印"正在播放: [歌曲名]"）。右键菜单包含"移除"和"移到顶部"两个操作。
-
-提示几个关键点：setItemWidget 后要设 sizeHint；rowsMoved 信号里遍历 count() 重建 QVector；右键菜单用 setContextMenuPolicy(Qt::CustomContextMenu) + customContextMenuRequested 信号。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QListWidget](https://doc.qt.io/qt-6/qlistwidget.html) -- 列表控件，包含 addItem/setItemWidget/setDragDropMode 等接口
-
-[Qt 文档 · QListWidgetItem](https://doc.qt.io/qt-6/qlistwidgetitem.html) -- 列表项，包含 setData/sizeHint/flags 等
-
-[Qt 文档 · QAbstractItemView::DragDropMode](https://doc.qt.io/qt-6/qabstractitemview.html#DragDropMode-enum) -- 拖放模式枚举
-
-[Qt 文档 · QStyledItemDelegate](https://doc.qt.io/qt-6/qstyleditemdelegate.html) -- 自定义绘制委托（setItemWidget 的替代方案）
+[Qt 文档 · QMimeData](https://doc.qt.io/qt-6/qmimedata.html) -- setUrls 与 hasUrls，外部拖放的数据载体
 
 ---
 
-到这里，QListWidget 的进阶内容就拆完了。InternalMove 一行代码就能开启拖拽排序，但别忘了同步外部数据。setItemWidget 能在列表项里嵌入任意控件，但它有明确的性能上限——几百项是极限，再多了换 delegate。MIME 数据机制让列表项可以和外部应用交互，拖文件进拖文件出都能实现。掌握这些后，你就能做出专业级的列表界面——而不只是"一列文字能选"的基本列表。
+私有模型、信号转发、行高归属，加上 moveRow 与 MIME，还有布局开关，都对上了号。QListWidget 把模型藏起来换省心，代价是模型一层您碰不着，条目一多，内存头一个顶不住。把这层壳翻到底正是下一篇的事，[3.47 QListView 进阶](./47-qlistview-advanced.md)，咱们接着看。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/46-qlistwidget-advanced/，可执行文件 46-qlistwidget-advanced）。窗口一张列表五张卡片，构造里那几行配置值得您回头对照正文，InternalMove 开重排，单选加 40 像素网格，出处 widget.cpp 第 71-77 行。addCard 三步走，建条目、设 sizeHint(QSize(0, 40))、再挂 CardWidget（第 104-114 行），行高的归属就这么演给您看。卡片右上的 “X” 按钮靠 itemWidget 反查自己属于哪一行（第 43-55 行），行一删，widget 会被视图一并回收，依据就是 rowsAboutToBeRemoved 那个槽。底部标签连着 currentRowChanged，行一变就报数（第 89-90、131-145 行）。顶部按钮在 Free 与 Snap 之间切 movement（第 116-129 行），不过示例是 ListMode，切换看不出差异，自由摆放要 IconMode 才登场。
+
+完成标准照旧。QListWidget 的模型是哪个类、声明在哪个头文件，您说得出。currentRowChanged 从哪条内部信号转来，您数得出。挂了 itemWidget 的行高度由谁定，您答得上。内部重排在模型里发哪个信号，后备路径发哪两个，您对得出。

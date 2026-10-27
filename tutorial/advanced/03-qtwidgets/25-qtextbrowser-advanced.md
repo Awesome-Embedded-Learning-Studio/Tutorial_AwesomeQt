@@ -1,162 +1,114 @@
 ---
 title: "3.25 QTextBrowser 进阶"
-description: "入门篇我们知道了 QTextBrowser 是 QTextEdit 的只读版本，能加载 HTML、处理链接点击、做历史导航。但到了工程实践里，光靠 setSource + anchorClicked 很快就会撞墙——自定义协议的资源加载不会触发 loadResource、空历史栈上调 backward 直接崩溃、setOpenExternalLinks 一开 anchorClicked 就被拦截。"
+description: "入门篇把 setSource 加载 HTML、anchorClicked 拦链接与 backward 前进后退过了一遍，进阶篇从资源装载这一层讲起，覆写 loadResource 接管自定义协议与异步回填，摸清历史栈的两根栈结构与导航方法自带的保险，把链接点击的分流次序从头捋到尾，配套示例在 examples/advanced/03-qtwidgets/25-qtextbrowser-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.25——QTextBrowser 进阶
 
-## 1. 前言 / 为什么入门篇那点知识撑不住真实项目
+[3.24 QPlainTextEdit 进阶](./24-qplaintextedit-advanced.md) 收尾把话递到了第四站，[3.23 QTextEdit 进阶](./23-qtextedit-advanced.md) 还埋过一颗种子，setAnchor 只给文字挂锚点记号，anchorClicked 与 openExternalLinks 都长在 QTextBrowser 上，本篇就把这个交代兑现。QTextBrowser 是 QTextEdit 的只读子类，控件壳与文档树照旧，比 QTextEdit 多出来的是三样，锚点的点击响应、历史导航、资源装载。入门篇把 setSource 加载 HTML、anchorClicked 拦外部链接、backward 与 forward 前进后退过了一遍，做个“关于”页面或者几十页的离线帮助够用。需求一旦走进正式些的文档系统，要从数据库取图片、要精确控制历史栈、要给每类链接各自安排去处，那几样就不够了，咱们把这三层分别看过去。
 
-入门篇我们把 QTextBrowser 当一个"能点链接的 QTextEdit"来用——setSource 加载 HTML，anchorClicked 拦截外部链接，backward/forward 做导航。说实话，做一个简单的"关于"页面或者几十页的离线帮助文档，这些知识确实够用了。但如果你尝试用 QTextBrowser 做一个稍微正式的文档系统——比如支持自定义资源协议（从数据库或网络加载图片）、支持自定义链接处理逻辑（点击某类链接弹对话框而不是导航）、需要精确控制历史栈——你会发现入门篇的那些 API 突然不好使了。loadResource 对自定义 scheme 没反应，backward() 在空历史栈上直接让程序崩溃，setOpenExternalLinks 设成 true 之后 anchorClicked 信号就不发了。这三个坑每一个都够调试半天的。我们今天把这三块进阶内容拆透：loadResource 资源加载覆写的完整机制、历史栈的内部结构和安全操作方式、以及 anchorClicked 与 setOpenExternalLinks 之间的微妙关系。
+咱们按这样的次序走，资源装载怎么收在 loadResource 一个覆写里，网络图片的异步回填怎么落地，接着是历史栈的结构与边界行为，链接点击的分流次序收尾。正文里的行号都带着出处，示例代码在 examples/advanced/03-qtwidgets/25-qtextbrowser-advanced/，Qt 内部实现指源码树里的 qtextbrowser.cpp 与 qtextdocument.cpp。
 
-## 2. 环境说明
+## 覆写 loadResource，资源来源就归您管
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。QTextBrowser 属于 QtWidgets 模块，链接 Qt6::Widgets 即可。涉及的网络相关类（QNetworkAccessManager 等）属于 QtNetwork 模块，如果示例中用到网络加载需要额外链接 Qt6::Network。
+咱们从默认行为看起。QTextBrowser 渲染文档要用到文档外面的东西，`<img>` 引用的图片、样式表、内嵌子文档都算，基类的默认实现把 name 当文件名处理（qtextbrowser.cpp 第 1138-1154 行），非绝对路径会在 searchPaths 属性列出的目录里找，找不到再去当前 source 所在的目录，读回来的是 QByteArray，本地文件与 qrc 资源都从这里走，官方注释还写明这个默认实现连 type 参数都不看。要从数据库、网络或任何自定义协议取资源，覆写 loadResource(int type, const QUrl &name)，type 标资源类型，取值是 QTextDocument::ResourceType，name 是资源自己的 URL，返回的 QVariant 按类型给，对应关系源码注释里有一张表（第 1131-1136 行）：
 
-## 3. 核心概念讲解
-
-### 3.1 loadResource 资源加载覆写
-
-QTextBrowser 在渲染文档时需要加载各种资源——HTML 中引用的图片、CSS 样式表、甚至是 iframe 内嵌的子文档。默认情况下，它只能加载本地文件和 Qt 资源系统（qrc）中的资源。但实际项目中你可能需要从网络、数据库或者自定义协议加载资源。这时候就需要覆写 `loadResource(int type, const QUrl &name)` 方法。
-
-loadResource 的 type 参数标识资源类型，对应 QTextDocument::ResourceType 枚举：QTextDocument::HtmlResource、QTextDocument::ImageResource、QTextDocument::StyleSheetResource、QTextDocument::MarkdownResource 等。name 参数就是资源的 URL。你需要根据 type 和 name 返回对应的 QVariant——图片返回 QImage 或 QPixmap，HTML 返回 QString，CSS 返回 QString。
+| ResourceType 取值 | loadResource 返回的 QVariant |
+| ---- | ---- |
+| HtmlResource | QString 或 QByteArray |
+| ImageResource | QImage、QPixmap 或 QByteArray |
+| StyleSheetResource | QString 或 QByteArray |
+| MarkdownResource | QString 或 QByteArray |
 
 ```cpp
-class CustomTextBrowser : public QTextBrowser
+// 子类 protected 段里覆写，没命中的请求回退基类
+QVariant loadResource(int type, const QUrl &name) override
 {
-protected:
-    QVariant loadResource(int type, const QUrl &name) override
-    {
-        if (name.scheme() == "dbimg") {
-            // 从数据库加载图片: dbimg://product/12345
-            auto image = loadFromDatabase(name.host(), name.path());
-            if (!image.isNull()) {
-                return QVariant(image);
-            }
-        }
-        // 回退到默认实现处理本地文件和 qrc
-        return QTextBrowser::loadResource(type, name);
+    if (type == QTextDocument::ImageResource
+        && name.scheme() == QLatin1String("dbimg")) {
+        // dbimg://product/12345，host 是 product，path 是 /12345
+        QImage img = loadFromDatabase(name.host(), name.path());
+        if (!img.isNull())
+            return QVariant(img);
+        return QVariant(grayPlaceholder());           // 找不到给一枚灰色占位
     }
-};
+    return QTextBrowser::loadResource(type, name);    // 本地与 qrc 照旧
+}
 ```
 
-这里有一个关键细节需要注意：loadResource 只对 QTextBrowser 能够识别的 URL scheme 生效。具体来说，当 QTextBrowser 遇到一个 `<img src="dbimg://product/12345">` 标签时，它会尝试调用 loadResource 来获取图片数据。但如果你用的是 `setSource()` 加载 HTML 文件，而文件中引用了自定义 scheme 的资源，QTextBrowser 有时会在调用 loadResource 之前就因为无法解析 scheme 而跳过加载。解决方案是确保 loadResource 的覆写逻辑足够健壮，同时不要在 setSource 的文件路径本身使用自定义 scheme——只在文档内部引用资源时使用。
+流传的说法是，自定义 scheme 的资源有时会在 loadResource 之前被跳过，咱们对着源码把卡点找出来，scheme 白名单并不存在。文档本体走 setSource，装载入口无条件问一次 loadResource（第 291 行），拿回 QString 或 QByteArray 才交给 setHtml（第 344 行），`<img>` 这类文档内引用的请求从排版层转发进来（qtextedit.cpp 第 76-83 行的钩子把资源请求转给控件的 loadResource），两处都不认 scheme。真会把您拦住的是另外两处。一处是同 URL 短路，setSource 的装载条件是新旧 URL 去掉 fragment 之后不相等（第 289-290 行），同一个地址装第二遍不会重新装载，reload() 就为这事存在，它把 currentURL 暂清，回头再调一次 setSource（第 785-791 行）。另一处是 baseUrl 改写，文档装载时 baseUrl 被设成文档 URL 去掉文件名的部分（第 333-335 行），QTextDocument::resource 拿它把相对 src 解析成绝对 URL，出处是 qtextdocument.cpp 第 2152 行。所以自定义 scheme 放在文档内部的资源引用里没问题，文档本体的路径用本地文件，或者相对路径配 setSearchPaths（第 776-780 行），更省事。
 
-另一个实战场景是延迟加载网络图片。QTextBrowser 的 loadResource 是同步调用——它必须立即返回结果。但网络请求是异步的。这时候的通用做法是在 loadResource 中先返回一个占位图片，同时发起异步网络请求，请求完成后再通过 QTextDocument 的 `addResource()` 方法把真实图片注入文档，然后触发文档刷新。
+## 网络图片异步回填，addResource 站在查找链最前面
+
+loadResource 是同步调用，排版等在那一行上，必须立刻返回 QVariant，网络请求偏偏是异步的，两头对不上。咱们通行的写法是占位图顶在前面，真图到了再回填：
 
 ```cpp
 QVariant loadResource(int type, const QUrl &name) override
 {
-    if (type == QTextDocument::ImageResource && name.scheme() == "https") {
-        // 先返回占位图
-        auto placeholder = QPixmap(kPlaceholderSize, kPlaceholderSize);
+    if (type == QTextDocument::ImageResource && name.scheme() == QLatin1String("https")) {
+        QPixmap placeholder(kSize, kSize);              // 占位图顶住排版
         placeholder.fill(Qt::lightGray);
-
-        // 异步加载真实图片
-        auto *reply = m_network_mgr->get(QNetworkRequest(name));
-        connect(reply, &QNetworkReply::finished, this, [this, name, reply]() {
+        auto *reply = m_networkMgr->get(QNetworkRequest(name));
+        connect(reply, &QNetworkReply::finished, this, [this, name, reply] {
             QImage img;
             img.loadFromData(reply->readAll());
-            reply->deleteLater();
-            if (!img.isNull()) {
-                document()->addResource(QTextDocument::ImageResource, name, QVariant(img));
-                // 触发重绘
-                viewport()->update();
-            }
+            reply->deleteLater();                       // 不删就漏
+            if (img.isNull())
+                return;
+            document()->addResource(QTextDocument::ImageResource, name, img);
+            viewport()->update();                       // 触发一次重绘
         });
-        return QVariant(placeholder);
+        return placeholder;
     }
     return QTextBrowser::loadResource(type, name);
 }
 ```
 
-这种"占位 + 异步回填"的模式在需要展示网络图片的文档浏览器中非常实用，但要注意内存管理——QNetworkReply 必须在完成后 deleteLater，否则会泄漏。
+回填为什么生效，查找次序说了算。图片绘制时问的是 QTextDocument::resource。它头一环查 addResource 注入的 resources 表，出处是 qtextdocument.cpp 第 2153 行，跟着查内部缓存（第 2155 行），最后轮到 loadResource（第 2157 行）。addResource 存的永远排在最前头，真图一进表，之后每次绘制拿到的都是它。占位图的尺寸要跟真图对上，布局按装载那一刻拿到的图算尺寸，占住的那块不会因为您换了图自己改。QNetworkReply 用完必须 deleteLater，这里最容易漏，一次点击一张图，泄漏按点击数累积。
 
-### 3.2 历史栈导航的内部机制与安全操作
+## 历史栈是两根栈，导航方法自带保险
 
-入门篇我们用了 backward()、forward()、home() 三个方法和 backwardAvailable、forwardAvailable 两个信号来构建导航。但入门篇没有讲的是：这些方法在边界条件下的行为非常危险。
+历史在私有类里是两根 QStack<HistoryEntry>（qtextbrowser.cpp 第 87-88 行），stack 存浏览过的页面，forwardStack 存后退之后待前进的页面，每个条目记 URL，记文档类型，记 documentTitle，连横向纵向滚动位置也一起存（第 832-837 行）。backward、forward、home 在 Qt 6.9.1 里全带保险，backward 查 stack.size() <= 1 就返回（第 918 行），forward 查 forwardStack 为空（第 940 行），home 查记录的首页 URL 是否有效（第 960 行），官方注释把行为写明，没有上一页就什么都不做。流传很广的说法是空栈上调 backward() 直接崩溃，在这个版本站不住，咱们对着源码把这句改掉，直接调用不崩。
 
-QTextBrowser 内部维护了一个 QVector<Entry> 形式的历史栈，每个 Entry 记录了 URL 和对应的文档标题。当前浏览位置用一个索引值来标识。backwardAvailable 和 forwardAvailable 信号在索引变化时触发。这个设计本身没问题，但问题在于：如果你在历史栈为空时（比如刚创建 QTextBrowser，还没调过 setSource）直接调用 backward()，在 Qt 6 的某些版本中会导致越界访问，程序直接崩溃。这不是理论上的危险，是我在实际项目中踩过的雷——一个"帮助"按钮创建了一个 QTextBrowser，用户习惯性地按了 Alt+Left（后退快捷键），程序当场去世。
+检查照样要写，理由在判定的讲究上。backward 的可达性取 stack.size() > 1，首页本身占一条，栈非空不代表能退，isBackwardAvailable 的实现就是这个式子（第 1165-1169 行），isForwardAvailable 看 forwardStack 是否为空，出处见第 1179-1183 行。backwardHistoryCount 与 forwardHistoryCount 各自报数，一个返回 stack.size() - 1（第 1263-1266 行），另一个返回 forwardStack.size()（第 1252-1255 行）。您要列历史面板的话，historyTitle 与 historyUrl 按相对索引取条目，负数往回数，0 是当前页，正数往前数，标题取条目里存的 documentTitle，historyTitle 出处见第 1240-1244 行，historyUrl 在第 1220-1224 行。
 
-安全操作历史栈的方式是在调用 backward/forward 之前先检查栈状态。QTextBrowser 提供了 `backwardHistoryCount()` 和 `forwardHistoryCount()` 两个方法，分别返回向后和向前的历史条目数量。只有 count > 0 时才调用对应的方法：
+您给浏览器配 Alt+Left 快捷键时，槽里查过 backwardHistoryCount() 再调 backward()，按钮的 enabled 交给 backwardAvailable 与 forwardAvailable 两条信号，两条路都通着，按钮和状态就永远跟栈对得上。示例的导航栏是现成的样板，按钮连的是带检查的 safeBackward 与 safeForward，出处是 custom_resource_browser.cpp 第 77-78 行，updateNavigationState 按两个 count 摆按钮与标签（第 270-285 行），sourceChanged 一发（qtextbrowser.cpp 第 371 行，装载收尾处）就刷新一遍（第 39-41 行），backwardAvailable 与 forwardAvailable 到来时也各刷一遍（第 46-49 行），两个信号都在压栈之后才发（qtextbrowser.cpp 第 840 与 844 行），一次导航之内按钮和标签就能走到位，不用等下一趟。
 
-```cpp
-void safeBackward(QTextBrowser *browser)
-{
-    if (browser->backwardHistoryCount() > 0) {
-        browser->backward();
-    }
-}
+## 中途 setSource，身后的历史就被清掉
 
-void safeForward(QTextBrowser *browser)
-{
-    if (browser->forwardHistoryCount() > 0) {
-        browser->forward();
-    }
-}
-```
+历史栈的维护集中在 doSetSource 一处，出处见 qtextbrowser.cpp 第 814-851 行。装载前给当前页拍一张快照，装载后把栈顶换成快照本身（第 830 行），再把新页面压进 stack（第 838 行），然后处理 forwardStack，新 URL 恰好等于前进栈顶时只弹出前进栈的栈顶（第 842-844 行），其余情况整个清空（第 846-847 行）。这跟您熟悉的浏览器一致，停在 B 页点开 D，C 就从历史里消失了。要做阅读历史，想把完整轨迹留下来，就在 setSource 之前，用 historyUrl 与 historyTitle 把条目复制出来，放进自己维护的结构里。
 
-如果你给 QTextBrowser 配了键盘快捷键（比如 Alt+Left 后退、Alt+Right 前进），一定要在快捷键的槽函数中做这个检查，而不是直接 connect 到 backward/forward。backwardAvailable/forwardAvailable 信号可以安全地用来控制按钮的 enabled 状态（因为 Qt 内部做了保护），但直接调用 backward/forward 方法没有保护。
+有一个误判从示例里冒出来，得当场说清。示例的第二页切换用的是 setHtml，出处是 custom_resource_browser.cpp 第 239 与 243 行，QTextBrowser 没有重载 setHtml，QTextEdit::setHtml 也不是虚函数，改文档绕开了 doSetSource，历史栈纹丝不动，您跑起来会看到底部标签的后退栈恒为 -1，上一节那个 stack.size() - 1 在空栈上算出来的就是它，后退按钮一直是灰的。机制没错，是装载方式没走历史入口。想让历史动起来，装载得走 setSource，文档本体照样可以出自 loadResource，setSource 装的 HTML 本来就从那里来（第 291 行），给覆写加一个 HtmlResource 分支，把 myapp://page1 与 myapp://page2 这样的文档 URL 也从内存里给出去，历史、后退、前进就全通了。home() 回的地址也是装载时记下的，首次装载时 home URL 还无效，记下的就是它（第 326-327 行）。
 
-另外还有一个容易忽略的行为：当你在历史栈中间位置（不是栈顶）调用 setSource 加载一个新页面时，当前位置之后的所有历史条目会被清除，新页面被追加到当前位置后面。这和浏览器的行为一致——你在 B 页面上打开了新页面 D，C 就从历史中消失了。如果你需要保留完整的历史记录（比如做文档阅读器的阅读历史），就需要在 setSource 之前手动保存当前历史，或者自己维护一套独立的历史数据结构。
+## 链接点击的分流次序：openLinks 定全手动，openExternalLinks 只管绝对 URL
 
-`historyTitle(int)` 和 `historyUrl(int)` 方法接受一个相对索引参数——负数表示后退方向的历史（-1 是上一个页面，-2 是上上个页面），正数表示前进方向（1 是下一个页面）。historyTitle 返回的是文档的 `<title>` 标签内容或者 URL 的文件名。
+咱们把 activateAnchor 的次序摆开，它是链接点击的统一入口（qtextbrowser.cpp 第 199-238 行）。openLinks 为 false 时只发 anchorClicked，发完就返回（第 211-213 行）。openLinks 为 true 时接着轮到 openExternalLinks，条件是它开着、URL 不属于 file/qrc 这类本地 scheme 且不是相对 URL（第 219-228 行），命中就交 QDesktopServices::openUrl 然后返回，这个 return 在 anchorClicked 发射（第 232 行）之前，信号没机会出。都没命中才发 anchorClicked，槽里没动文档的话，Qt 会自动 setSource 导航，出处见第 237 行。
 
-### 3.3 anchorClicked 与 setOpenExternalLinks 的关系
+setOpenExternalLinks(true) 之所以让 anchorClicked 发不出来，根因就在这个 return 上，页面已经交给系统浏览器了，您想在打开前记录点击、检查 URL、按内容挑用哪个浏览器，全都轮不上。相对链接还有个冷门分支，当前文档挂在绝对 URL 上时，activateAnchor 拿到 href 就交给 resolveUrl（第 209 行），文档内的相对链接在第 185 行就拼成了绝对 URL，scheme 不是 file/qrc 的话，openExternalLinks 开着就命中第 225 行第一子句，照样送进系统浏览器，第 226 行的第二子句要的是解析之后仍是相对 URL 的链接，这个场景给不出来。openExternalLinks 关着的话，这类相对链接照发 anchorClicked，在浏览器内正常导航。本地 HTML 文档里的相对链接另算，openExternalLinks 开关两边都拦不着它。四种组合的效果咱们摆成表，看点击一个 http 链接会发生什么：
 
-入门篇我们用 anchorClicked 信号拦截链接点击。但这里有一个非常容易踩坑的地方：`setOpenExternalLinks(bool)` 属性。这个属性的语义是"当用户点击一个外部链接（http/https 协议）时，自动用系统默认浏览器打开"。听起来很方便，但它的副作用很少被提及：当你把 setOpenExternalLinks 设为 true 之后，QTextBrowser 会自动拦截所有 http/https 链接的点击事件，直接调用 QDesktopServices::openUrl，而不会发出 anchorClicked 信号。
+| openLinks | openExternalLinks | 点击 http 链接的结果 |
+| ---- | ---- | ---- |
+| true（默认） | false（默认） | 发 anchorClicked，随后自动 setSource 导航 |
+| true | true | 直接交给系统浏览器，anchorClicked 不发 |
+| false | false | 只发 anchorClicked，导航全归您的槽 |
+| false | true | 仍然只发 anchorClicked，openExternalLinks 那道够不着 |
 
-这意味着你失去了对 http/https 链接的完全控制权。如果你想在打开外部链接之前做一些处理（比如记录用户点击了哪些外部链接、检查 URL 是否安全、或者根据内容决定是用内嵌浏览器还是外部浏览器打开），就不能用 setOpenExternalLinks(true)。
+openLinks(false) 站在入口第一道，openExternalLinks 那道根本到不了，想手动控制导航，只设 openLinks(false) 就够了。您看示例，两条都设成 false，出处是 custom_resource_browser.cpp 第 31-32 行，anchorClicked 的槽里按 scheme 分流，内部页面手动装载，http 与 https 交 QDesktopServices::openUrl，自定义协议走自己的处理（第 228-264 行）。
 
-正确的做法是保持 setOpenExternalLinks 为 false（默认值），自己在 anchorClicked 的槽函数中处理所有链接类型：
+槽里改文档还有个顺带的效果。文档一变，contentsChanged 把 textOrSourceChanged 置位，置位函数在 qtextbrowser.cpp 第 111-115 行，连接在第 680 行，activateAnchor 发完 anchorClicked 查这个标志（第 234-235 行），置位就不再自动导航。您在槽里调 setSource 或 setHtml 接管之后，Qt 不会替您再导一遍，两边不打架。
 
-```cpp
-browser->setOpenExternalLinks(false);
-browser->setOpenLinks(false);  // 同时禁用默认的内部导航
+## 官方文档参考
 
-connect(browser, &QTextBrowser::anchorClicked,
-        this, [this](const QUrl &url) {
-    if (url.scheme() == "http" || url.scheme() == "https") {
-        QDesktopServices::openUrl(url);
-    } else if (url.scheme() == "action") {
-        handleCustomAction(url);
-    } else if (url.isRelative() || url.scheme() == "file") {
-        // 内部导航：手动调用 setSource
-        browser->setSource(url);
-    }
-});
-```
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，QTextBrowser 在 QtWidgets，异步加载网络图片要补上 Qt6::Network，示例可在 Linux、macOS、Windows 桌面平台编译运行。
 
-注意这里还用了 `setOpenLinks(false)`。setOpenLinks 控制 QTextBrowser 是否自动处理链接点击的导航行为——设为 false 后，QTextBrowser 不会在用户点击链接时自动调用 setSource，所有导航逻辑完全由你的 anchorClicked 槽函数控制。这是一个更干净的设计：你明确知道每种类别的链接会怎么处理，不会有隐含的默认行为跳出来捣乱。
+[Qt 文档 · QTextBrowser](https://doc.qt.io/qt-6/qtextbrowser.html) -- 只读富文本浏览器，loadResource、openLinks 与历史栈 API 都在这页
 
-现在有一道思考题。如果你的 QTextBrowser 同时设置了 setOpenExternalLinks(true) 和 setOpenLinks(false)，用户点击一个 http 链接时会发生什么？答案是：setOpenLinks(false) 会阻止所有链接导航，包括外部链接的自动打开。也就是说 setOpenLinks(false) 的优先级高于 setOpenExternalLinks(true)。两个属性的组合效果是：没有任何自动导航行为。所以如果你要手动控制导航，只设 setOpenLinks(false) 就够了，不需要同时操作 setOpenExternalLinks。
+[Qt 文档 · QTextDocument](https://doc.qt.io/qt-6/qtextdocument.html) -- 底层文档模型，ResourceType 枚举与 addResource 的说明
 
-## 4. 踩坑预防
+[Qt 文档 · QTextDocument::ResourceType](https://doc.qt.io/qt-6/qtextdocument.html#ResourceType-enum) -- loadResource 的 type 参数取值
 
-第一个坑是 backward() 在空历史栈上可能崩溃。QTextBrowser 内部的 QVector<Entry> 在空状态下访问会产生越界。后果是程序直接 segfault，没有异常可以捕获。解决方案是在调用 backward/forward/home 之前，始终通过 backwardHistoryCount/forwardHistoryCount 检查栈状态。如果你通过快捷键触发导航，槽函数中必须做这个检查。
-
-第二个坑是 loadResource 对自定义 scheme 的资源不总是被调用。当 setSource 加载的 HTML 文件中引用了自定义 scheme（比如 dbimg://）的图片时，某些情况下 QTextBrowser 会在调用 loadResource 之前就判定 URL 无效而跳过加载。解决方案是在 HTML 中使用相对路径配合 setSearchPaths，或者对自定义 scheme 的资源使用完整的 loadResource 覆写并在其中处理所有可能的路径格式。
-
-第三个坑是 setOpenExternalLinks(true) 会阻止 http/https 链接的 anchorClicked 信号发射。如果你依赖 anchorClicked 来记录或拦截外部链接，开启这个属性后你的逻辑就不会被执行了。后果是外部链接"静默"地被系统浏览器打开，你没有任何机会做中间处理。解决方案是不使用 setOpenExternalLinks，自己在 anchorClicked 槽函数中处理所有链接类型。
-
-## 5. 练习项目
-
-练习项目：增强型文档浏览器。我们要实现一个支持自定义图片资源协议的 QTextBrowser，核心功能是从一个模拟的数据库（用 QMap 代替）加载图片并显示在文档中。
-
-具体要求是：继承 QTextBrowser 创建 CustomTextBrowser，覆写 loadResource 处理 "imgdb://" 协议的图片请求；准备若干张测试图片存入 QMap<QString, QImage> 作为模拟数据库；构建一个 HTML 文档，其中用 `<img src="imgdb://image1">` 引用这些图片；实现安全的历史导航（后退、前进按钮在空栈时禁用）；所有外部链接通过 anchorClicked 在系统浏览器中打开，内部链接由 QTextBrowser 处理。完成标准是文档中的自定义协议图片能正确显示，历史导航不会崩溃，外部链接不会在 QTextBrowser 内部打开。
-
-提示几个关键点：loadResource 的 type 参数为 QTextDocument::ImageResource 时表示图片资源；文档中的 imgdb:// 链接会被传入 loadResource 的 name 参数；setOpenLinks(false) 配合手动 anchorClicked 处理是最可控的方案。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QTextBrowser](https://doc.qt.io/qt-6/qtextbrowser.html) -- 只读富文本浏览器，包含 loadResource、历史栈、 setOpenLinks 等进阶 API
-
-[Qt 文档 · QTextDocument](https://doc.qt.io/qt-6/qtextdocument.html) -- 底层文档模型，ResourceType 枚举定义了 loadResource 的 type 参数
-
-[Qt 文档 · QTextDocument::ResourceType](https://doc.qt.io/qt-6/qtextdocument.html#ResourceType-enum) -- 资源类型枚举值
-
-[Qt 文档 · QDesktopServices](https://doc.qt.io/qt-6/qdesktopservices.html) -- 系统服务，openUrl 用于打开外部链接
+[Qt 文档 · QDesktopServices](https://doc.qt.io/qt-6/qdesktopservices.html) -- 系统服务，openUrl 把外部链接交给默认浏览器
 
 ---
 
-到这里，QTextBrowser 的进阶内容我们就过了一遍。loadResource 覆写让我们可以自由控制文档中的资源来源——从数据库、网络、或者任何自定义协议加载图片和样式。历史栈的安全操作原则是"先检查后调用"，backwardHistoryCount/forwardHistoryCount 是保护程序不崩溃的关键。anchorClicked 和 setOpenExternalLinks 之间的关系搞清楚了，以后做链接拦截就不会踩坑了。下一篇我们来看 QKeySequenceEdit 的进阶用法。
+输入类五连走到第四站，还剩 [3.26 QKeySequenceEdit 进阶](./26-qkeysequenceedit-advanced.md) 收尾，那是个只管一件事的小控件，录入快捷键、拦截冲突，思路与本篇完全两样。想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/25-qtextbrowser-advanced/，可执行文件 25-qtextbrowser-advanced），页面上三张 myapp:// 协议的图片出自模拟数据库，点外部链接会在您的默认浏览器里打开。两步实验顺着正文走，仪表提前备好，您在 handleAnchorClicked 的 openUrl 分支里，加一行 qDebug。第一步把 custom_resource_browser.cpp 第 31 行的 setOpenLinks(false) 注释掉，openLinks 回到默认的 true，示例原本 openLinks 是 false，openExternalLinks 那道关卡排在它后面，流程到第 211-213 行就返回了，不改这行实验不成立。这时点页面的外部链接，默认浏览器开，qDebug 照打，正文四组合表第 1 行的自动导航也照走，页面内容跟着被清空，不用意外。第二步把第 32 行改成 setOpenExternalLinks(true)，再点同一个链接，浏览器还是照样开，qDebug 却一声不响，anchorClicked 发不出来当场可见，这回开浏览器的是 qtextbrowser.cpp 第 225-228 行那道，第 228 行的 return 站在第 232 行的 emit 前面。接着试历史，前两步动过的第 31-32 两行要还原回来，不还原的话 openExternalLinks 开着，回程那颗拼好的绝对 URL 会在第 225 行命中那道关卡被送进系统浏览器，槽就收不到了。然后把 handleAnchorClicked 里 page1/page2 两处 setHtml 换成 setSource，myapp 演示分支里还有第三处 setHtml，那个不用动。loadResource 那边加一个 HtmlResource 分支，myapp://page1 与 myapp://page2 这样的文档 URL，也从内存里给出去。从第一页点进第二页，底部标签走到 0，历史计数就活了，首页出自 setHtml 本来就不在栈里，而 backwardAvailable 要等压栈之后才发，出处是 qtextbrowser.cpp 第 840 行，标签一次导航内就走到位。再从第二页点回第一页，这一下进槽的已经是 resolveUrl 拼好的绝对 URL myapp://page2/page1，page1/page2 的匹配认 path 照样命中，点满一来回，后退按钮亮起，标签走到 1。按下后退回到第二页，前进按钮跟着亮。完成标准咱们给您列好，自定义协议图片三张全显示，历史来回导航不断链，每次外部链接点击都有日志可查。

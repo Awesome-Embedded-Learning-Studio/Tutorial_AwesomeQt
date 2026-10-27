@@ -19,12 +19,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 DynamicRadioGroup::DynamicRadioGroup(QWidget* parent)
-    : QWidget(parent)
-    , m_nextDeviceId(0)
-    , m_deviceGroupExclusive(true)
-    , m_idClickedCount(0)
-    , m_buttonClickedCount(0)
-{
+    : QWidget(parent), m_nextDeviceId(0), m_deviceGroupExclusive(true), m_idClickedCount(0),
+      m_buttonClickedCount(0) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // 三个演示区域依次排列
@@ -41,18 +37,16 @@ DynamicRadioGroup::DynamicRadioGroup(QWidget* parent)
 // 设备选择区——动态增删 QRadioButton
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* DynamicRadioGroup::createDeviceSection()
-{
+QWidget* DynamicRadioGroup::createDeviceSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
-    auto* sectionTitle =
-        new QLabel(QStringLiteral("1. 动态设备选择器（运行时增删按钮）"));
+    auto* sectionTitle = new QLabel(QStringLiteral("1. 动态设备选择器（运行时增删按钮）"));
     sectionTitle->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 14px;"));
 
     // QButtonGroup 管理 exclusive 互斥关系
-    // QRadioButton 的 autoExclusive 是基于同一 parent 的独立机制
-    // 要真正关闭互斥，需要同时 setExclusive(false) 和 setAutoExclusive(false)
+    // 按钮一旦进了组，互斥只由组的 exclusive 说了算，
+    // autoExclusive 对组内按钮整段不起作用（教程正文 3.19）
     m_deviceGroup = new QButtonGroup(this);
     m_deviceGroup->setExclusive(true);
 
@@ -73,14 +67,11 @@ QWidget* DynamicRadioGroup::createDeviceSection()
 
     // 操作区：输入框 + 添加/移除按钮
     auto* controlRow = new QHBoxLayout;
-    m_deviceNameInput =
-        new QLineEdit(QStringLiteral("新传感器"));
-    m_deviceNameInput->setPlaceholderText(
-        QStringLiteral("输入设备名称"));
+    m_deviceNameInput = new QLineEdit(QStringLiteral("新传感器"));
+    m_deviceNameInput->setPlaceholderText(QStringLiteral("输入设备名称"));
     m_addDeviceBtn = new QPushButton(QStringLiteral("添加设备"));
     m_removeDeviceBtn = new QPushButton(QStringLiteral("移除选中设备"));
-    m_toggleExclusiveBtn =
-        new QPushButton(QStringLiteral("切换 Exclusive（当前：ON）"));
+    m_toggleExclusiveBtn = new QPushButton(QStringLiteral("切换 Exclusive（当前：ON）"));
 
     controlRow->addWidget(m_deviceNameInput, 1);
     controlRow->addWidget(m_addDeviceBtn);
@@ -98,14 +89,11 @@ QWidget* DynamicRadioGroup::createDeviceSection()
 
     // 信号连接
     // idClicked 只在用户实际点击时触发，程序 setChecked 不会触发
-    connect(m_deviceGroup, QOverload<int>::of(&QButtonGroup::idClicked),
-            this, &DynamicRadioGroup::updateDeviceInfo);
-    connect(m_addDeviceBtn, &QPushButton::clicked, this,
-            &DynamicRadioGroup::addDevice);
-    connect(m_removeDeviceBtn, &QPushButton::clicked, this,
-            &DynamicRadioGroup::removeDevice);
-    connect(m_toggleExclusiveBtn, &QPushButton::clicked, this,
-            &DynamicRadioGroup::toggleExclusive);
+    connect(m_deviceGroup, QOverload<int>::of(&QButtonGroup::idClicked), this,
+            &DynamicRadioGroup::updateDeviceInfo);
+    connect(m_addDeviceBtn, &QPushButton::clicked, this, &DynamicRadioGroup::addDevice);
+    connect(m_removeDeviceBtn, &QPushButton::clicked, this, &DynamicRadioGroup::removeDevice);
+    connect(m_toggleExclusiveBtn, &QPushButton::clicked, this, &DynamicRadioGroup::toggleExclusive);
 
     // 初始状态
     updateDeviceInfo();
@@ -117,13 +105,11 @@ QWidget* DynamicRadioGroup::createDeviceSection()
 // 两个独立 exclusive 组互不干扰
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* DynamicRadioGroup::createDualGroupSection()
-{
+QWidget* DynamicRadioGroup::createDualGroupSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
-    auto* sectionTitle =
-        new QLabel(QStringLiteral("2. 两个独立的 Exclusive 组（互不干扰）"));
+    auto* sectionTitle = new QLabel(QStringLiteral("2. 两个独立的 Exclusive 组（互不干扰）"));
     sectionTitle->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 14px;"));
 
     // 组 A：颜色选择
@@ -194,15 +180,9 @@ QWidget* DynamicRadioGroup::createDualGroupSection()
 
     // 信号连接
     connect(m_groupA, QOverload<int>::of(&QButtonGroup::idClicked), this,
-            [this](int id) {
-                m_groupALabel->setText(
-                    QStringLiteral("选中颜色 ID: %1").arg(id));
-            });
+            [this](int id) { m_groupALabel->setText(QStringLiteral("选中颜色 ID: %1").arg(id)); });
     connect(m_groupB, QOverload<int>::of(&QButtonGroup::idClicked), this,
-            [this](int id) {
-                m_groupBLabel->setText(
-                    QStringLiteral("选中尺寸 ID: %1").arg(id));
-            });
+            [this](int id) { m_groupBLabel->setText(QStringLiteral("选中尺寸 ID: %1").arg(id)); });
 
     // 初始状态
     m_groupALabel->setText(QStringLiteral("选中颜色 ID: 0"));
@@ -215,18 +195,15 @@ QWidget* DynamicRadioGroup::createDualGroupSection()
 // idClicked vs buttonClicked 对比
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* DynamicRadioGroup::createSignalCompareSection()
-{
+QWidget* DynamicRadioGroup::createSignalCompareSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
-    auto* sectionTitle =
-        new QLabel(QStringLiteral("3. idClicked vs buttonClicked 信号对比"));
+    auto* sectionTitle = new QLabel(QStringLiteral("3. idClicked vs buttonClicked 信号对比"));
     sectionTitle->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 14px;"));
 
-    auto* hint = new QLabel(
-        QStringLiteral("idClicked 只在用户点击时触发，程序 setChecked 不触发。"
-                       "点击按钮观察计数差异。"));
+    auto* hint = new QLabel(QStringLiteral("idClicked 只在用户点击时触发，程序 setChecked 不触发。"
+                                           "点击按钮观察计数差异。"));
     hint->setWordWrap(true);
 
     // 三个测试按钮
@@ -251,8 +228,7 @@ QWidget* DynamicRadioGroup::createSignalCompareSection()
 
     // 信号计数标签
     m_idClickedLog = new QLabel(QStringLiteral("idClicked 触发次数: 0"));
-    m_buttonClickedLog =
-        new QLabel(QStringLiteral("buttonClicked 触发次数: 0"));
+    m_buttonClickedLog = new QLabel(QStringLiteral("buttonClicked 触发次数: 0"));
 
     auto* logRow = new QHBoxLayout;
     logRow->addWidget(m_idClickedLog);
@@ -265,25 +241,20 @@ QWidget* DynamicRadioGroup::createSignalCompareSection()
 
     // 信号连接
     // idClicked(int) 只在用户实际点击时触发
-    connect(m_signalGroup, QOverload<int>::of(&QButtonGroup::idClicked),
-            this, [this](int id) {
-                ++m_idClickedCount;
-                m_idClickedLog->setText(
-                    QStringLiteral("idClicked 触发次数: %1 (最后 ID: %2)")
-                        .arg(m_idClickedCount)
-                        .arg(id));
-            });
+    connect(m_signalGroup, QOverload<int>::of(&QButtonGroup::idClicked), this, [this](int id) {
+        ++m_idClickedCount;
+        m_idClickedLog->setText(
+            QStringLiteral("idClicked 触发次数: %1 (最后 ID: %2)").arg(m_idClickedCount).arg(id));
+    });
 
     // buttonClicked(QAbstractButton*) 也只在用户实际点击时触发
     // 与 idClicked 的区别是参数类型：按钮指针 vs 整数 ID
-    connect(m_signalGroup,
-            QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked),
-            this, [this](QAbstractButton* button) {
+    connect(m_signalGroup, QOverload<QAbstractButton*>::of(&QButtonGroup::buttonClicked), this,
+            [this](QAbstractButton* button) {
                 ++m_buttonClickedCount;
-                m_buttonClickedLog->setText(
-                    QStringLiteral("buttonClicked 触发次数: %1 (按钮: %2)")
-                        .arg(m_buttonClickedCount)
-                        .arg(button->text()));
+                m_buttonClickedLog->setText(QStringLiteral("buttonClicked 触发次数: %1 (按钮: %2)")
+                                                .arg(m_buttonClickedCount)
+                                                .arg(button->text()));
             });
 
     return container;
@@ -293,8 +264,7 @@ QWidget* DynamicRadioGroup::createSignalCompareSection()
 // 槽函数实现
 // ─────────────────────────────────────────────────────────────────────────────
 
-void DynamicRadioGroup::addDevice()
-{
+void DynamicRadioGroup::addDevice() {
     const QString name = m_deviceNameInput->text().trimmed();
     if (name.isEmpty()) {
         return;
@@ -309,8 +279,7 @@ void DynamicRadioGroup::addDevice()
     updateDeviceInfo();
 }
 
-void DynamicRadioGroup::removeDevice()
-{
+void DynamicRadioGroup::removeDevice() {
     // 获取当前选中按钮的 ID
     const int checkedId = m_deviceGroup->checkedId();
     if (checkedId < 0) {
@@ -339,37 +308,31 @@ void DynamicRadioGroup::removeDevice()
     updateDeviceInfo();
 }
 
-void DynamicRadioGroup::toggleExclusive()
-{
+void DynamicRadioGroup::toggleExclusive() {
     m_deviceGroupExclusive = !m_deviceGroupExclusive;
     m_deviceGroup->setExclusive(m_deviceGroupExclusive);
 
     if (m_deviceGroupExclusive) {
-        m_toggleExclusiveBtn->setText(
-            QStringLiteral("切换 Exclusive（当前：ON）"));
+        m_toggleExclusiveBtn->setText(QStringLiteral("切换 Exclusive（当前：ON）"));
     } else {
-        m_toggleExclusiveBtn->setText(
-            QStringLiteral("切换 Exclusive（当前：OFF）"));
+        m_toggleExclusiveBtn->setText(QStringLiteral("切换 Exclusive（当前：OFF）"));
 
-        // 注意：setExclusive(false) 不会取消按钮的 autoExclusive
-        // QRadioButton 的 autoExclusive 默认为 true，基于同一 parent 生效
-        // 要实现完全非互斥，还需手动关闭 autoExclusive
+        // 按钮已进组：setExclusive(false) 一行就关掉了互斥，
+        // 组内按钮的 autoExclusive 不参与（进了组整段不起作用，正文 3.19）
     }
 
     updateDeviceInfo();
 }
 
-void DynamicRadioGroup::updateDeviceInfo()
-{
+void DynamicRadioGroup::updateDeviceInfo() {
     const int checkedId = m_deviceGroup->checkedId();
     const bool exclusive = m_deviceGroup->exclusive();
     const int count = m_deviceGroup->buttons().size();
 
-    QString info =
-        QStringLiteral("设备数量: %1 | Exclusive: %2 | checkedId: %3")
-            .arg(count)
-            .arg(exclusive ? QStringLiteral("ON") : QStringLiteral("OFF"))
-            .arg(checkedId);
+    QString info = QStringLiteral("设备数量: %1 | Exclusive: %2 | checkedId: %3")
+                       .arg(count)
+                       .arg(exclusive ? QStringLiteral("ON") : QStringLiteral("OFF"))
+                       .arg(checkedId);
 
     if (checkedId >= 0) {
         auto* checkedBtn = m_deviceGroup->button(checkedId);

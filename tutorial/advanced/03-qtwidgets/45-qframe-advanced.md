@@ -1,159 +1,101 @@
 ---
 title: "3.45 QFrame 进阶"
-description: "入门篇我们用 QFrame 做了分隔线和简单边框容器，掌握了 setFrameShape/setFrameShadow/setLineWidth 以及 QSS border 定制的基本用法。"
+description: "入门篇用 QFrame 画分隔线和包边框容器，进阶篇把本体对着 6.9.1 读穿：frameStyle 是一个整型按位装进 shape 与 shadow 两个位段而 setFrameStyle 会顺手替换尺寸策略、frameWidth 只读且由样式经 SE_ShapedFrameContents 按形状与阴影算出（Box 系立体时等于 lineWidth 乘 2 加 midLineWidth、StyledPanel 问 PM_DefaultFrameWidth、Panel 恒等于 lineWidth）、绘制链 paintEvent 到 drawFrame 到 CE_ShapedFrame 四行交接而 StyledPanel 分支转手 PE_Frame、frameRect 与 contentsMargins 互为镜像经 setContentsMargins 存储并同步 SE_FrameLayoutItem 布局边距、QSS border 一旦接管边框绘制挪到 PE_Widget 且 frameWidth 改随 border 宽度、sizeHint 对 HLine 与 VLine 给出 3 像素厚的固定建议、QLabel 与 QLCDNumber 复用 drawFrame 而 QAbstractScrollArea 构造自带 StyledPanel 配 Sunken、示例 ShadowFrame 撤掉默认边框用四遍固定低透明度叠层的圆角矩形手绘投影并预留内容边距，配套示例在 examples/advanced/03-qtwidgets/45-qframe-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.45——QFrame 进阶
 
-## 1. 前言 / 当边框不再只是"一条线"
+[3.44 QScrollArea 进阶](./44-qscrollarea-advanced.md) 结尾把话递了过来：滚动区的本体是个带框 QFrame，带框控件们的共同基类，本篇把它读穿。入门篇您用 setFrameShape 与 setFrameShadow 画过分隔线和边框容器，调出想要的样子就算完成。进阶篇咱们换一双更细的眼睛：frameStyle 那个整型里装了什么，frameWidth 由谁定，绘制链从 paintEvent 走到哪一步，QSS 一来边框换谁画。源稿把重心压在手绘圆角与投影上，机制层几乎没碰，本篇按源码重排，改准的地方随文给出行号。
 
-入门篇我们用 QFrame 做了分隔线和简单边框容器，掌握了 setFrameShape / setFrameShadow / setLineWidth 以及 QSS border 定制的基本用法。对于大多数"画个分隔线"或者"给面板加个边框"的需求，入门篇的内容已经够用了。但一旦你想要更精致的视觉效果——圆角边框、带模糊的投影阴影、半透明的毛玻璃容器——QFrame 的 setFrameShape 就完全不够看了。setFrameShape 提供的几种预定义形状（Box、Panel、HLine、VLine 等）都是硬编码的直角矩形，你不能改变圆角半径，不能加阴影，更不能做半透明。
+本篇引用以 qframe.cpp 与 qframe.h 为主，咱们把形状分派补到 qcommonstyle.cpp，样式表接管补到 qstylesheetstyle.cpp，阴影效果的取材补到 qgraphicseffect.cpp。配套示例的完整玩法放在结语，正文引用文件名加行号。
 
-今天我们把 QFrame 的视觉定制能力推到 QPainter 层面。核心内容是三个方面：重写 paintEvent 用 QPainter 绘制圆角矩形边框和投影阴影、QGraphicsDropShadowEffect 的使用与性能陷阱、以及 QFrame 作为自定义卡片容器的布局实践。
+## frameStyle 是一个整型装两样东西，setFrameStyle 顺手换了尺寸策略
 
-## 2. 环境说明
+默认值咱们从头数。QFramePrivate 构造时 frameStyle 拿 NoFrame 配 Plain，lineWidth 是 1，midLineWidth 是 0（qframe.cpp 第 18-27 行）。Shape 枚举占低四位，NoFrame 的 0 到 StyledPanel 的 6，Shadow 占 0x10 到 0x30 的档位，Shadow_Mask 与 Shape_Mask 两个掩码，就是为按位取出它们准备的（qframe.h 第 38-58 行）。
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。自定义绘制涉及 QPainter（QtGui）、QGraphicsDropShadowEffect（QtWidgets）。链接 Qt6::Widgets 即可。所有行为在 Qt 6.9.1 上验证通过。
+setFrameShape 与 setFrameShadow 是同一个入口的两个半边，您设哪一个，它都保住另一半再重组。setFrameShape 拿旧 frameStyle 与 Shadow_Mask 按位与，或上新形状（qframe.cpp 第 263-267 行），setFrameShadow 反着来（第 282-286 行）。setFrameStyle 是它们的全量版，文档写明，参数由 shape 与 shadow 按位或而来，出处第 288-305 行。
 
-## 3. 核心概念讲解
-
-### 3.1 重写 paintEvent 绘制圆角边框与投影阴影
-
-QFrame 的默认 paintEvent 会根据 frameShape 和 frameShadow 调用 QStyle::drawPrimitive 来绘制边框。如果你需要圆角、渐变背景、或者带模糊的阴影效果，就需要重写 paintEvent 用 QPainter 自己画。
-
-绘制圆角边框的核心是 QPainterPath::addRoundedRect。你先构造一个圆角矩形路径，然后用 drawPath 或 fillPath 来绘制。投影阴影通过在背景矩形之前画一个偏移的、半透明的、更大的圆角矩形来模拟。
+setFrameStyle 里还藏着一笔容易被忽略的动作，笔者读到这儿停了一下。
 
 ```cpp
-class CardFrame : public QFrame
-{
-    Q_OBJECT
+// setFrameStyle 开头的隐藏动作（qframe.cpp 第 309-323 行）
+if (!testAttribute(Qt::WA_WState_OwnSizePolicy)) {
+    QSizePolicy sp;
 
-public:
-    explicit CardFrame(QWidget *parent = nullptr)
-        : QFrame(parent)
-    {
-        setAttribute(Qt::WA_StyledBackground);
-        // 关闭默认边框绘制
-        setFrameShape(QFrame::NoFrame);
+    switch (style & Shape_Mask) {
+    case HLine:
+        sp = QSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed, QSizePolicy::Line);
+        break;
+    case VLine:
+        sp = QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Minimum, QSizePolicy::Line);
+        break;
+    default:
+        sp = QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred, QSizePolicy::Frame);
     }
-
-protected:
-    void paintEvent(QPaintEvent *) override
-    {
-        QPainter painter(this);
-        painter.setRenderHint(QPainter::Antialiasing);
-
-        int radius = 12;
-        int shadow_offset = 4;
-        int shadow_blur = 8;
-
-        QRect shadow_rect = rect().adjusted(
-            shadow_offset, shadow_offset,
-            -shadow_blur + shadow_offset,
-            -shadow_blur + shadow_offset);
-
-        // 绘制投影阴影（多层半透明模拟模糊）
-        for (int i = shadow_blur; i > 0; --i) {
-            int alpha = 30 - i * 3;
-            if (alpha <= 0) continue;
-            QColor shadow_color(0, 0, 0, alpha);
-            painter.setPen(Qt::NoPen);
-            painter.setBrush(shadow_color);
-            QRect r = shadow_rect.adjusted(-i, -i, i, i);
-            painter.drawRoundedRect(r, radius + i, radius + i);
-        }
-
-        // 绘制背景
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(255, 255, 255));
-        painter.drawRoundedRect(rect().adjusted(2, 2, -2, -2),
-                                radius, radius);
-
-        // 绘制边框
-        QPen border_pen(QColor(220, 220, 220), 1);
-        painter.setPen(border_pen);
-        painter.setBrush(Qt::NoBrush);
-        painter.drawRoundedRect(rect().adjusted(2, 2, -2, -2),
-                                radius, radius);
-    }
-};
+    setSizePolicy(sp);
+    setAttribute(Qt::WA_WState_OwnSizePolicy, false);
+}
 ```
 
-这段代码做了三层绘制：先画阴影（多层半透明圆角矩形由外到内叠加模拟模糊效果），再画白色背景填充，最后画灰色边框线。注意绘制顺序——先阴影再背景再边框，后画的覆盖先画的，层次关系才正确。
+判断标志 WA_WState_OwnSizePolicy，由您显式调 QWidget::setSizePolicy 时置位，出处 qwidget.cpp 第 10396-10399 行。也就是说，只要策略不是您亲手设的，setFrameStyle 就按形状替您设一份：分隔线自动拿 Line 型，其余形状拿 Frame 型。末尾又把标志清回假（第 323 行），于是您不设策略，之后每次调 setFrameStyle 都可能重设。分隔线塞进 QVBoxLayout 天然压成 3 像素高，也与 sizeHint 呼应：HLine 给 QSize(-1, 3)，VLine 给 QSize(3, -1)，负一那一维交给布局去拉伸，其余形状回落到 QWidget::sizeHint，出处第 464-478 行。
 
-这里有一个性能考量：多层阴影循环绘制意味着每次 paintEvent 要画 shadow_blur 个圆角矩形。如果 shadow_blur 设得太大（比如 20），在一个包含多个 CardFrame 的界面上，重绘开销会明显增加。如果你的界面有频繁重绘的场景（比如 resize 动画、滚动），建议把阴影绘制缓存到 QPixmap 中——第一次绘制时创建 QPixmap 并绘制阴影，后续 paintEvent 直接 drawPixmap。
+应用面咱们顺带认全。QAbstractScrollArea 的私有 init 给本体设了 setFrameStyle，样式是 StyledPanel 配 Sunken，出处 qabstractscrollarea.cpp 第 274 行，44 篇那圈凹陷边框的出处就在这儿。QLabel 与 QLCDNumber 重写了 paintEvent 又要复用边框绘制，调的是受保护的 drawFrame（qlabel.cpp 第 969 行、qlcdnumber.cpp 第 665 行），qframe.cpp 第 492 行的注释写明函数供它们两位使用。QStackedWidget、QSplitter、QToolBox 也都从 QFrame 派生（各自头文件），一份边框机制全家族共用。
 
-### 3.2 QGraphicsDropShadowEffect 的使用与性能陷阱
+## frameWidth 只读，由样式按形状与阴影算给您
 
-Qt 提供了 QGraphicsDropShadowEffect 作为一种更简单的方式来给 QWidget 添加阴影——不需要自己画，设置属性就行。
+frameWidth 在 qframe.h 里是只读属性（第 24 行），咱们设不进值，setFrameStyle、setLineWidth、setMidLineWidth，收尾都调 updateFrameWidth（qframe.cpp 第 342-349、366-373 行）。算的过程走 updateStyledFrameWidths：拿当前选项问样式的 SE_ShapedFrameContents，内容矩形与外框的差值是四边各自的边框宽，frameWidth 取四边最大（第 385-398 行）。
+
+分派表的正文在 QCommonStyle，咱们按形状数（qcommonstyle.cpp 第 2985-3027 行）。NoFrame 恒为 0。Box、HLine、VLine 一组，Plain 影子下等于 lineWidth，Raised 或 Sunken 下等于 lineWidth 乘 2 加 midLineWidth，立体边框要画明暗两圈。StyledPanel 特殊，转手问 SE_FrameContents，那里取像素度量 PM_DefaultFrameWidth（第 2966-2971 行），Fusion 风格给 1（qfusionstyle.cpp 第 2850-2851 行）。WinPanel 恒为 2。Panel 不分影子，恒等于 lineWidth（第 3016-3024 行）。
+
+算的时机也值得记一笔。StyleChange、ParentChange 与 Polish 三类事件，都会重跑 updateFrameWidth（qframe.cpp 第 504-526 行），部件换风格、换父对象、完成初始化时边框宽都会重算，您在构造函数里读到的 frameWidth 未必是定稿。
+
+## 绘制链四行交接，StyledPanel 半路转手 PE_Frame
+
+QFrame 的 paintEvent 只有两行正文，咱们跟着走（qframe.cpp 第 483-487 行）。QStylePainter 起笔，drawFrame 收尾。drawFrame 也是薄壳，initStyleOption 填好选项，再交给 drawControl，控件类型是 CE_ShapedFrame（第 494-499 行）。源稿说默认绘制直接调 drawPrimitive 画边框，笔者对着源码核过，改准为：这一步走 drawControl，PE_Frame 只在后面 StyledPanel 分支出现。
+
+选项里带了什么，咱们看 initStyleOption（第 195-227 行）。Box、HLine、VLine、StyledPanel、Panel 五种形状原样透传 lineWidth 与 midLineWidth，其余形状只给 frameWidth（第 203-221 行），Sunken 与 Raised 则被翻译成 State_Sunken 与 State_Raised，成为两个风格状态位（第 223-226 行）。
+
+CE_ShapedFrame 的分派表，咱们逐格看（qcommonstyle.cpp 第 2354-2423 行）。Box 由 qDrawShadeRect 负责，Plain 时换 qDrawPlainRect，单色描线（第 2371-2377 行）。Panel 走 qDrawShadePanel，见第 2387-2393 行。HLine 与 VLine 算出两端点画一条线，立体时 qDrawShadeLine（第 2401-2420 行）。StyledPanel 是唯一不自己画的，转手 drawPrimitive(PE_Frame)，边框长相完全交给当前风格（第 2378-2386 行），44 篇说 QScrollArea 边框随平台变脸，根子在这步转手。
+
+分派表也向咱们解释了源稿那句“预定义形状都是直角”。表里每一格用的都是矩形描线函数，没有一个带圆角参数，想要圆角边框，机制层帮不上忙，只能重写 paintEvent 自己画，示例正是这么做的。
+
+## frameRect 与 contentsMargins 互为镜像，geometry 管外壳
+
+frameRect 名字像个存储属性，实现却是现场算的。frameRect 从 contentsRect 出发，四边各向外扩对应的边框宽（qframe.cpp 第 446-452 行）。setFrameRect 反着写，咱们看摘录。
 
 ```cpp
-auto *shadow = new QGraphicsDropShadowEffect;
-shadow->setOffset(4, 4);
-shadow->setBlurRadius(12);
-shadow->setColor(QColor(0, 0, 0, 60));
-cardFrame->setGraphicsEffect(shadow);
+// setFrameRect 落到 contentsMargins 上（qframe.cpp 第 454-460 行）
+QRect cr = r.isValid() ? r : rect();
+cr.adjust(d->leftFrameWidth, d->topFrameWidth, -d->rightFrameWidth, -d->bottomFrameWidth);
+setContentsMargins(cr.left(), cr.top(), rect().right() - cr.right(), rect().bottom() - cr.bottom());
 ```
 
-三行代码就能得到一个看起来不错的阴影效果。但 QGraphicsDropShadowEffect 有一个严重的性能问题：它会在每次 paint 时把整个 widget 渲染到一个临时 QPixmap，对 QPixmap 做高斯模糊，再把模糊后的图像叠加到 widget 下面作为阴影。这个过程涉及一次完整的 widget 渲染 + 一次图像模糊运算。对于简单的小控件这不算什么，但如果你给一个包含大量子控件的大面板加了 QGraphicsDropShadowEffect，或者给一个在 QScrollArea 中频繁重绘的控件加了阴影——每次滚动都会触发模糊运算，帧率会肉眼可见地下降。
+您给的矩形无效时回落整个部件（文档第 433-444 行），有效时四边内缩边框宽，差值写进 setContentsMargins。所以 frameRect 与 contentsMargins 是同一份数据的两个视图，改谁另一个跟着变，QSS 下它还被标成 DESIGNABLE false（qframe.h 第 25 行），设计器都不让您碰。与 geometry 的分工一句话摆平：geometry 与 resize 管部件外壳的位置大小，frameRect 只管边框画在壳内哪个矩形。布局那边还有联动，updateFrameWidth 收尾调 setLayoutItemMargins(SE_FrameLayoutItem)（第 33-42、411 行），边框宽变化会同步成布局项的边距，子内容自动避开边框。
 
-更糟糕的是 QGraphicsDropShadowEffect 会破坏 QWidget 的裁剪优化。正常情况下 Qt 只重绘脏区域（dirty region），但 effect 需要完整的 widget 渲染结果来生成阴影，所以它会强制重绘整个 widget——即使只有一小块区域变了。
+## QSS 一接管，绘制与宽度一起换主
 
-实际工程中的建议是：对于静态的、不频繁重绘的控件（比如工具栏背景、固定位置的面板），QGraphicsDropShadowEffect 是 OK 的。对于频繁重绘的控件（滚动列表中的项目、动画中的控件），用 paintEvent 手动画阴影或者用缓存的 QPixmap 阴影图。
+样式表层给绘制链做了岔路口。QSS 规则带原生边框（hasNativeBorder，即规则没写 border 属性、留给底风格画）时，CE_ShapedFrame 把矩形裁成 borderRect，之后仍交给底风格（qstylesheetstyle.cpp 第 4528-4535 行）。您一旦写了 border 属性，分支直接跳过，源码注释写明边框已在 PE_Widget 里画过（第 4536 行）。
 
-### 3.3 QFrame 作为卡片容器的布局实践
+frameWidth 同步换主。SE_ShapedFrameContents 遇到 box 或非原生边框，返回 rule.contentsRect（第 6200-6205 行），PM_DefaultFrameWidth 遇到非原生边框，直接返回 border 宽（第 5052-5054 行），您写了 3 像素的 border，frameWidth 就是 3，回不到 lineWidth 那套算法。所以 QSS border 与 frameStyle 的关系是接管，别当两层妆叠着，写 QSS 定制边框时 setFrameStyle 一套可以整个放掉。44 篇那句“本体那圈边框另走 QFrame 的绘制路径”，链路到这儿闭合。
 
-现代 UI 中"卡片"布局非常常见——每个卡片是一个独立的视觉单元，有圆角边框、轻微阴影、内部内容。QFrame 天然适合做卡片容器——它可以有布局管理子控件，可以自定义绘制外观，可以作为 QWidget 的子类参与对象树管理。
+## 官方文档参考
 
-用 QFrame 做卡片容器时的布局实践有几个要点。第一是内容区域的内边距——你不能让子控件紧贴着圆角边框，否则圆角区域的内容会被裁切。解决方法是在 QFrame 的内部布局中设置较大的 contentsMargins。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，全部行为在 6.9.1 源码核对。QFrame 属于 QtWidgets 模块，链接 Qt6::Widgets 即可。手绘部分会用到 QtGui 的 QPainter，以及 QPainterPath。
 
-```cpp
-auto *card = new CardFrame;
-auto *layout = new QVBoxLayout(card);
-layout->setContentsMargins(16, 16, 16, 16);  // 内边距
-layout->setSpacing(8);
+[Qt 文档 · QFrame](https://doc.qt.io/qt-6/qframe.html) -- frameStyle 与 frameWidth 属性的定义处
 
-auto *title = new QLabel("项目名称");
-title->setStyleSheet("font-size: 16px; font-weight: bold;");
-layout->addWidget(title);
+[Qt 文档 · QStyle](https://doc.qt.io/qt-6/qstyle.html) -- CE_ShapedFrame 与 SE_ShapedFrameContents 的所属类
 
-auto *desc = new QLabel("项目描述文字");
-desc->setWordWrap(true);
-layout->addWidget(desc);
-```
+[Qt 文档 · QPainterPath](https://doc.qt.io/qt-6/qpainterpath.html) -- addRoundedRect 画圆角路径
 
-第二是 QFrame 的 sizePolicy。卡片容器通常是 QSizePolicy::Preferred —— 它有理想大小但愿意被布局系统伸缩。如果你把卡片放在 QFlowLayout（Qt 没有内置的，需要自己实现或者用 QGridLayout 动态调整）中，需要确保卡片的 sizeHint 返回一个合理的值。
+[Qt 文档 · QGraphicsDropShadowEffect](https://doc.qt.io/qt-6/qgraphicsdropshadoweffect.html) -- 另一条阴影路线，代价随重绘频率走
 
-第三是 setAttribute(Qt::WA_StyledBackground, true)。这个属性告诉 Qt 这个 widget 的背景由 QSS 负责绘制。如果你重写了 paintEvent 完全自己画背景和边框，这个属性其实可以不设——但如果你同时在 QSS 中设了 background-color（作为 fallback），设上这个属性更安全。
-
-第四是 clipChildren 的考虑。圆角边框意味着四个角是弧形的，但子控件不受圆角裁切——它们会延伸到圆角区域之外。如果你的卡片有纯色背景，这个问题看不出来（背景挡住了溢出）。但如果卡片有半透明背景或者边框线很细，子控件在圆角区域的溢出就会很明显。解决方法是在 paintEvent 中用 QPainter::setClipPath 设置圆角裁切路径，或者给内容 widget 也设一个带圆角的 QSS clip。
-
-## 4. 踩坑预防
-
-第一个坑是 QGraphicsDropShadowEffect 导致滚动卡顿。QGraphicsDropShadowEffect 在每次 paint 时都要做一次 widget 全渲染 + 高斯模糊。如果你的卡片在 QScrollArea 中，每次滚动都会触发重绘，模糊运算的开销会累积到可感知的卡顿。后果是滚动帧率从 60fps 掉到 30fps 甚至更低。解决方案是对滚动中的卡片用 paintEvent 手动画阴影（或者用缓存的 QPixmap），只在静态面板上用 QGraphicsDropShadowEffect。
-
-第二个坑是圆角区域子控件溢出。QFrame 的圆角是通过 QPainter 画的——它只影响 QFrame 自身的绘制，不影响子控件的绘制区域。子控件仍然按照矩形区域渲染，在圆角处会超出边框线。后果是卡片看起来像有圆角，但文字或控件在四个角溢出了圆角线。解决方案是在 paintEvent 开头设置 clipPath，或者把内容放在一个带 stylesheet border-radius 的内部 QWidget 里。
-
-第三个坑是手动阴影绘制的性能随 blur 半径线性增长。循环画多层半透明矩形模拟模糊的方案，blur 半径越大画的层数越多。shadow_blur = 8 要画 8 层，shadow_blur = 20 要画 20 层。后果是包含很多卡片的界面 resize 时明显卡顿。解决方案是限制 blur 半径在 8-12 之间，或者把阴影预渲染到 QPixmap 缓存。
-
-## 5. 练习项目
-
-练习项目：卡片式仪表盘面板。我们要做一个由多个自定义卡片组成的仪表盘界面。
-
-完成标准是：主窗口使用 QGridLayout 放置 6 个 CardFrame 卡片（2 行 3 列）。每个卡片有 12px 圆角、轻微投影阴影（手绘，不用 QGraphicsDropShadowEffect）、16px 内边距。6 张卡片分别是："CPU 使用率"（显示一个 QProgressBar）、"内存"（显示百分比 QLabel）、"磁盘"（显示 QProgressBar）、"网络"（显示 QLabel 文字）、"进程"（显示 QListWidget 列表 5 项）、"日志"（显示 QTextEdit 5 行日志）。卡片之间有 12px 间距。窗口深色背景，卡片浅色背景，对比度明显。
-
-提示几个关键点：QGridLayout 的 setSpacing 控制卡片间距；CardFrame 的 paintEvent 中先画阴影再画背景再画边框；把阴影预渲染到 QPixmap 缓存提升重绘性能——在 resizeEvent 中重建缓存。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QFrame](https://doc.qt.io/qt-6/qframe.html) -- 基础边框容器，包含 setFrameShape/setFrameShadow 等接口
-
-[Qt 文档 · QPainterPath](https://doc.qt.io/qt-6/qpainterpath.html) -- 绘图路径，addRoundedRect 用于绘制圆角矩形
-
-[Qt 文档 · QGraphicsDropShadowEffect](https://doc.qt.io/qt-6/qgraphicsdropshadoweffect.html) -- 阴影效果，setBlurRadius/setOffset/setColor 控制阴影外观
-
-[Qt 文档 · QPainter](https://doc.qt.io/qt-6/qpainter.html) -- 绘图引擎，setRenderHint(Antialiasing) 开启抗锯齿
+[Qt 文档 · QPainter](https://doc.qt.io/qt-6/qpainter.html) -- setRenderHint(Antialiasing) 开抗锯齿
 
 ---
 
-到这里，QFrame 的进阶内容就拆完了。自定义绘制圆角边框和投影阴影的路径很清晰：重写 paintEvent，用 QPainterPath::addRoundedRect 画圆角，多层半透明矩形模拟模糊阴影。QGraphicsDropShadowEffect 方便但有性能陷阱，滚动场景别用它。QFrame 做卡片容器时注意内容内边距和圆角裁切。把这些搞透后，你就能做出精致的自定义面板——而不只是"画条分隔线"的基本用法。
+位段、宽度来源、绘制链、镜像与接管都对上了号，44 篇递过来的话在这里收梢。QFrame 往下撑着 QLabel 与 QLCDNumber 这类小件，往上撑着滚动区这类大件，本系列也该去看内容更重的部件了，[3.46 QListWidget 进阶](./46-qlistwidget-advanced.md)，列表部件怎么把条目管起来，咱们接着看。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/45-qframe-advanced/，可执行文件 45-qframe-advanced）。窗口是 2 行 3 列六张卡片，各拿不同的圆角、模糊与偏移参数对着看（main.cpp 第 68-122 行）。ShadowFrame 构造里两步关门，setFrameShape(NoFrame) 撤掉默认边框，WA_StyledBackground 显式置假，出处 shadow_frame.cpp 第 22-23 行，随后 updateContentMargins 预留阴影边距，出处第 24 行。paintEvent 的投影是四遍叠加（第 136-155 行），每遍把圆角矩形向外扩一截，透明度每遍固定取 alpha 的四分之一，靠四遍叠层渐隐，软边就出来了。内容矩形与布局边距共用一个边距公式，模糊半径加两个方向偏移的绝对值再加 2（第 108-109、116-117 行），子控件因此不压进阴影。另一条路 QGraphicsDropShadowEffect，生效绘制时，它把源部件渲染成一张 QPixmap，再交给滤镜，出处 qgraphicseffect.cpp 第 1014-1034 行，静态面板用它省事，滚动里频繁重绘的卡片学示例手绘更划算。
+
+完成标准照旧。frameStyle 里两个位段各占哪几位，您数得出。Box 配 Sunken 时 frameWidth 等于什么，您算得出。paintEvent 到 PE_Frame 中间经过谁的手，您数得清。QSS border 写上之后，绘制与宽度各自换到谁手里，您说得出口。

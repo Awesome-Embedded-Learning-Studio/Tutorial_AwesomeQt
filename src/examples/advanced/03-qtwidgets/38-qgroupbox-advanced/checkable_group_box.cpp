@@ -22,25 +22,20 @@
 // 常量
 // ─────────────────────────────────────────────────────────────────────────────
 
-namespace
-{
-    constexpr int kCornerRadius = 8;         // 边框圆角半径
-    constexpr int kTitlePadding = 8;         // 标题背景条左右内边距
-    constexpr int kTitleVerticalPadding = 2; // 标题背景条上下内边距
-    constexpr int kTitleLeftOffset = 12;     // 标题距左边框的距离
-}
+namespace {
+constexpr int kCornerRadius = 8;         // 边框圆角半径
+constexpr int kTitlePadding = 8;         // 标题背景条左右内边距
+constexpr int kTitleVerticalPadding = 2; // 标题背景条上下内边距
+constexpr int kTitleLeftOffset = 12;     // 标题距左边框的距离
+} // namespace
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
 CheckableGroupBox::CheckableGroupBox(QWidget* parent)
-    : QGroupBox(parent)
-    , m_nameEdit(nullptr)
-    , m_portSpin(nullptr)
-    , m_protocolCombo(nullptr)
-    , m_statusLabel(nullptr)
-{
+    : QGroupBox(parent), m_nameEdit(nullptr), m_portSpin(nullptr), m_protocolCombo(nullptr),
+      m_statusLabel(nullptr) {
     setTitle(QStringLiteral("代理设置"));
     setCheckable(true);
     setChecked(true);
@@ -57,8 +52,7 @@ CheckableGroupBox::CheckableGroupBox(QWidget* parent)
 // paintEvent 重写——自定义边框和标题绘制
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CheckableGroupBox::paintEvent(QPaintEvent* event)
-{
+void CheckableGroupBox::paintEvent(QPaintEvent* event) {
     Q_UNUSED(event)
 
     QPainter painter(this);
@@ -82,8 +76,8 @@ void CheckableGroupBox::paintEvent(QPaintEvent* event)
     // 2) 绘制标题背景条——用窗口背景色遮断边框线
     const QString titleText = title();
     QRect titleBoundingRect = fontMetrics().boundingRect(titleText);
-    titleBoundingRect.adjust(-kTitlePadding, -kTitleVerticalPadding,
-                             kTitlePadding, kTitleVerticalPadding);
+    titleBoundingRect.adjust(-kTitlePadding, -kTitleVerticalPadding, kTitlePadding,
+                             kTitleVerticalPadding);
     titleBoundingRect.moveLeft(kTitleLeftOffset);
     titleBoundingRect.moveTop(0);
 
@@ -101,8 +95,7 @@ void CheckableGroupBox::paintEvent(QPaintEvent* event)
 // changeEvent 重写——拦截 EnabledChange
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CheckableGroupBox::changeEvent(QEvent* event)
-{
+void CheckableGroupBox::changeEvent(QEvent* event) {
     QGroupBox::changeEvent(event);
 
     if (event->type() == QEvent::EnabledChange) {
@@ -110,9 +103,8 @@ void CheckableGroupBox::changeEvent(QEvent* event)
         // 实际工程中可在此添加日志或通知外部组件
         const bool enabledNow = isEnabled();
         if (m_statusLabel) {
-            m_statusLabel->setText(
-                enabledNow ? QStringLiteral("状态：已启用 - 子控件可操作")
-                           : QStringLiteral("状态：已禁用 - 子控件不可操作"));
+            m_statusLabel->setText(enabledNow ? QStringLiteral("状态：已启用 - 子控件可操作")
+                                              : QStringLiteral("状态：已禁用 - 子控件不可操作"));
         }
     }
 }
@@ -121,8 +113,7 @@ void CheckableGroupBox::changeEvent(QEvent* event)
 // 私有方法实现
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CheckableGroupBox::setupChildWidgets()
-{
+void CheckableGroupBox::setupChildWidgets() {
     auto* layout = new QVBoxLayout(this);
 
     // 名称输入行
@@ -157,11 +148,10 @@ void CheckableGroupBox::setupChildWidgets()
     layout->addWidget(m_statusLabel);
 }
 
-void CheckableGroupBox::onToggled(bool checked)
-{
+void CheckableGroupBox::onToggled(bool checked) {
     if (!checked) {
-        // 取消勾选时将焦点转移到分组框自身
-        // Qt 的 enabled 传播只改变 isEnabled() 返回值，不清除已有焦点
+        // 取消勾选时把焦点收进分组框自身
+        // 子控件被禁用时 Qt 自带焦点交接（交不出才 clearFocus），这里收进自身是给焦点一个明确的去处
         setFocus();
     }
     // 不清空子控件内容——用户可能只是暂时关闭，再次勾选时应保留之前填写的内容

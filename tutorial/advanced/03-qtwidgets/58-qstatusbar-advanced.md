@@ -1,179 +1,118 @@
 ---
 title: "3.58 QStatusBar 进阶"
-description: "入门篇我们学会了往状态栏塞 QLabel 和显示临时消息。但真正的 IDE 级状态栏远不止这些——多区域协调、嵌入复杂控件、控制高度和 SizeGrip，这些才是进阶篇要解决的问题。"
+description: "进阶篇把 QStatusBar 的内部机制读明白：临时消息只是私有类里一枚 QString（qstatusbar.cpp 第 50 行），showMessage 惰性建定时器直连 clearMessage（第 494-499 行），文本相同早退、只重置定时器不发 messageChanged（第 504-505 行），非永久控件由 hideOrShow 逐只 hide 并清显隐标记、循环遇第一枚永久项即 break（第 558-584 行），消息文本由 paintEvent 直接 drawText 画进 messageRect（第 627-630 行），messageRect 右界取第一枚可见永久件左缘减 2、可见 sizegrip 也收窄、RTL 镜像（第 91-118 行），addWidget 永远插在最后一枚非永久件之后（第 62-71、229-234 行），addPermanentWidget 押列表末尾（第 294-299 行），insertWidget 遇在场消息当场藏新件（第 270-271 行），reformat 整删整建布局、非永久件与 stretch 与永久件依次入列（第 417-474 行），removeWidget 只藏不删、重加须 addWidget 加 show（第 351-365 行），ChildRemoved 分支自清列表（第 670-676 行），高度由 strut 决定、逐项取 qSmartMinSize 与 maximumHeight 的较小值（第 442-469 行），resizeEvent 只转基类、重活在 LayoutRequest 分支（第 636-668 行），sizegrip 在最大化或全屏时自动隐藏（qsizegrip.cpp 第 451-464 行），菜单悬停提示经 QMainWindow 的 StatusTip 处理直通 showMessage（qmainwindow.cpp 第 1270-1276 行），示例四枚永久件与模拟任务在 examples/advanced/03-qtwidgets/58-qstatusbar-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.58——QStatusBar 进阶
 
-## 1. 前言 / 为什么状态栏的"进阶"值得单独一篇
+窗口三件套——菜单栏、工具栏、状态栏——走到最后一件。55 篇咱们读 QMainWindow 时见过 setStatusBar，旧栏被藏起来排队销毁，那一篇把状态栏当成一只普通部件对待。本篇咱们进 QStatusBar 自己的内部。笔者把 qstatusbar.cpp 从头读到尾，统共 686 行，公开接口背后只有一个私有类撑着，家当少得意外，咱们挨样清点。
 
-入门篇我们把 QStatusBar 的基本用法过了一遍：showMessage 显示临时消息，addWidget 加一个 QLabel 显示永久状态。说实话，如果你只是做一个简单的工具软件，一个 QLabel 加上偶尔弹一条临时消息就够了。但如果你要做的是一个 IDE 风格的应用——比如代码编辑器底部那行状态栏，左边显示当前行号列号和文件编码，右边显示缩进模式、语言服务器状态、Git 分支名，中间还能弹出一条"编译成功"的绿色提示两秒后自动消失——那状态栏就不是"一个标签加一条消息"那么简单了。
+引用文件交代清楚。咱们把主战场定在 qstatusbar.cpp 与 qstatusbar.h（qtbase/src/widgets/widgets），sizegrip 的显隐逻辑下探到 qsizegrip.cpp，菜单悬停的转发链路到 qmainwindow.cpp 里核对。配套示例是 examples/advanced/03-qtwidgets/58-qstatusbar-advanced/ 的多区域状态栏，完整玩法放结语。
 
-本篇要解决的核心问题是：QStatusBar 内部有两套完全不同的显示机制——临时消息（showMessage）和永久控件（addWidget/addPermanentWidget），它们共享同一个水平空间，布局协调是最大的坑。我们要搞清楚 addWidget 和 addPermanentWidget 到底把控件放到了哪个分区，showMessage 为什么会遮住非永久控件，嵌入 QProgressBar 或自定义控件时怎么避免被临时消息覆盖，以及 setSizeGripEnabled 对状态栏高度的影响。把这些搞明白，你的状态栏就能承载任意复杂的信息展示了。
+## 家当只有三样：一张列表、一个字符串、一只定时器
 
-## 2. 环境说明
+QStatusBarPrivate 在文件开头（第 30-88 行），成员咱们数得过来。items 是一张 QList，每枚 SBItem 装着控件指针、stretch 因子和一枚类别（第 42-47 行），类别只有 Normal 与 Permanent 两个值。tempItem 是一枚 QString，装的正是临时消息（第 50 行）。timer 惰性创建，resizer 指着右下角的 QSizeGrip，出处第 53-57 行。
 
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。仅涉及 QtWidgets 模块（QStatusBar、QProgressBar、QLabel）和 QtCore 模块（QTimer）。所有 API 在 Qt 5.15 和 Qt 6.x 之间没有 breaking change，但 Qt 6 的 QStatusBar 内部布局引擎使用新的 QBoxLayout 实现，性能略有差异，对应用层代码无影响。
+您在类文档里读到的三类状态指示（第 130-141 行），落进实现只剩两个户口：Temporary 在 items 里没有席位，它就是 tempItem 这枚字符串本身，Normal 与 Permanent 才是列表住户。咱们往下看这枚字符串怎么变成屏幕上的字。
 
-## 3. 核心概念讲解
+## showMessage：控件被藏起来，文字直接画上去
 
-### 3.1 addWidget / addPermanentWidget 的分区机制
-
-QStatusBar 的内部布局把水平空间分成三个区域。从左到右依次是：非永久控件区（通过 addWidget 添加的控件）、临时消息区（showMessage 显示的文本）、永久控件区（通过 addPermanentWidget 添加的控件）。这三个区域的布局规则是这样的：永久控件区始终贴在最右侧，addPermanentWidget 添加的控件从右往左依次排列。非永久控件区紧贴在永久控件区的左侧，addWidget 添加的控件从左往右依次排列。而临时消息区是一个独立层，showMessage 显示的消息会覆盖非永久控件区——也就是说，当有临时消息时，addWidget 添加的控件会被隐藏，但 addPermanentWidget 添加的控件永远不受影响。
-
-这个分区机制背后的设计意图很清晰：永久控件（比如输入法指示器、缩放比例、CapsLock 状态）不管发生什么都不能被遮挡；非永久控件（比如当前行号、文件名）可以被临时消息短暂遮盖，因为临时消息（比如"保存成功"）的优先级更高。如果你有一个信息必须始终可见，就把它放到永久区；如果它被临时消息遮挡两三秒也没关系，就放到非永久区。
+showMessage 全文在第 490-509 行，咱们把主干摘出来：
 
 ```cpp
-// 左侧非永久区——可以被 showMessage 遮盖
-auto *pos_label = new QLabel("行 1, 列 1");
-statusBar()->addWidget(pos_label);
+// 定时器惰性创建，同文本早退（qstatusbar.cpp 第 490-509 行，摘录）
+void QStatusBar::showMessage(const QString &message, int timeout)
+{
+    Q_D(QStatusBar);
 
-// 右侧永久区——永远不被遮盖
-auto *encoding_label = new QLabel("UTF-8");
-statusBar()->addPermanentWidget(encoding_label);
+    if (timeout > 0) {
+        if (!d->timer) {
+            d->timer = new QTimer(this);
+            connect(d->timer, &QTimer::timeout, this, &QStatusBar::clearMessage);
+        }
+        d->timer->start(timeout);
+    } else if (d->timer) {
+        delete d->timer;
+        d->timer = nullptr;
+    }
+    if (d->tempItem == message)
+        return;
+    d->tempItem = message;
 
-auto *mode_label = new QLabel("C++");
-statusBar()->addPermanentWidget(mode_label);
+    hideOrShow();
+}
 ```
 
-addWidget 和 addPermanentWidget 的第二个参数是 stretch 因子，默认为 0。如果你希望某个控件占据多余的可用空间，可以给一个正整数值。比如让一个 QLabel 占据中间所有空间来显示当前文件路径：
+timeout 大于 0 时定时器头一回才建，timeout 信号直连 clearMessage，start(timeout) 把旧倒计时作废重走，出处第 494-499 行。timeout 传 0 就删定时器，消息常驻，等 clearMessage 或下一条消息来接班。这里有个细节值得停一停：您发了一条与当前文本一模一样的消息，函数在第 504-505 行早退，messageChanged 不发，hideOrShow 也不调，但定时器已经重启。倒计时重新走，界面一个字不动，靠 messageChanged 统计消息条数的代码在这里会漏。
+
+笔者把消息露出界面的链路追完了，分两步。第一步 hideOrShow（第 558-584 行）遍历 items，走到第一枚永久项就 break（第 563-565 行），这就是“永久件永不被打断”的实现级保证，藏的动作压根轮不到它们。非永久件被 hide，同时清掉 WA_WState_ExplicitShowHide 标记（第 566-568 行），标记清了，消息过场的 show 分支（第 569-571 行）才把它们放回来。随后 emit messageChanged（第 574 行），update 只刷 messageRect 一块（第 583 行）。第二步在 paintEvent（第 605-631 行）：给整条栏画 PE_PanelStatusBar 底子，给可见件逐个画 PE_FrameStatusBarItem 小框（第 613-626 行），消息在场时，drawText 把 tempItem 画进 messageRect，出处第 627-630 行。所以入门篇说临时消息会“覆盖” addWidget 的控件，控件确实会被藏起来，入门篇也自注了这半截，本篇补上的是另外半截：腾出来的地方由 drawText 画上文字，没有谁盖在谁上面。
+
+messageRect 的边界在私有类里算（第 91-118 行）。左起 6 像素，右界取第一枚可见永久件左缘减 2，取不到就退到宽度减 12，可见的 sizegrip 也会把右界往左推，RTL 布局整面镜像。currentMessage 把 tempItem 原样奉还（第 536-540 行），咱们拿它配合 messageChanged 就能跟踪消息的完整生命周期。
+
+还有一条白送的通道顺路看。菜单或工具栏动作悬停时的状态提示，QMainWindow::event 收到 QEvent::StatusTip 直接转给 statusBar()->showMessage(tip)，不带超时（qmainwindow.cpp 第 1270-1276 行），QApplication 沿父链上传事件，直到有人接住为止，出处 qapplication.cpp 第 2994-3002 行。您给 QAction 的 setStatusTip 填了文字，状态栏就自动亮，一行连接代码都不用写。
+
+## 两区就是一张列表：addWidget 插队，永久件押尾
+
+addWidget（第 229-234 行）一行转手，落点交给 indexToLastNonPermanentWidget() 决定，返回值加一就是插入位。这个私有函数从列表尾部往前找第一枚非永久件（第 62-71 行），所以您每次 addWidget，新件都落在已有非永久件之后、全部永久件之前，与添加时机无关。addPermanentWidget 反着来，插到 items.size()，永远押尾（第 294-299 行）。
+
+咱们再看 insertWidget（第 255-278 行），里面还有一处贴心：临时消息在场时，新进的 Normal 件当场 hide（第 270-271 行），免得它闪一下又被藏。索引越界时，qWarning 提示一句，回落到合法位置，出处第 264-267 行。
+
+分区落进几何要靠 reformat（第 417-474 行），它每次都把旧布局整只 delete 再重建。有 sizegrip 时外层是 QHBoxLayout 套一只 QVBoxLayout（第 425-429 行），没有就单只 QVBoxLayout（第 433 行）。内层再起一只水平布局，间距 6（第 440 行），咱们看入列的顺序：
 
 ```cpp
-auto *file_label = new QLabel("/home/user/project/main.cpp");
-statusBar()->addWidget(file_label, 1);  // stretch=1，占据多余空间
+// 非永久件入列，弹性占位，永久件随后（qstatusbar.cpp 第 444-461 行，摘录）
+    for (i = 0; i < d->items.size(); ++i) {
+        const auto &item = d->items.at(i);
+        if (item.isPermanent())
+            break;
+        l->addWidget(item.widget, item.stretch);
+        int itemH = qMin(qSmartMinSize(item.widget).height(), item.widget->maximumHeight());
+        maxH = qMax(maxH, itemH);
+    }
+
+    l->addStretch(0);
 ```
 
-现在有一个问题给大家思考。如果你先用 addWidget 添加了三个控件 A、B、C，然后调用 showMessage("Hello")，用户看到的状态栏是什么样的？答案是：A、B、C 全部被隐藏，状态栏只显示 "Hello"（右侧的永久控件不受影响）。当 clearMessage 被调用后（或者 timeout 到期后），A、B、C 重新显示出来。这就是"临时消息覆盖非永久区"的具体行为。
+非永久件依次入列，中间 addStretch(0) 弹性占位（第 454 行），永久件排在 stretch 之后（第 456-461 行），sizegrip 挂在外层行布局最右，底对齐（第 463-467 行）。您在屏幕上看到的左边普通件、中间弹性空档、右边永久件加把手，几何来源就是这几行。
 
-### 3.2 临时消息与永久控件的布局协调
+嵌入什么控件它都不挑，您塞 QLabel、QProgressBar、QCheckBox，是 QWidget 子类就收。示例把四枚永久件摆进右区：坐标标签（status_bar_demo.cpp 第 54 行）、建好即 hide 的进度条（第 57-62 行）、编辑模式复选框（第 65-66 行）、模式标签（第 69-71 行），复选框一勾，模式标签跟着换字（第 73-75 行）。
 
-showMessage 有两种使用模式：带超时和不带超时。showMessage("编译中...", 3000) 会在 3 秒后自动清除临时消息，恢复非永久控件的显示。showMessage("就绪") 不带超时参数（或 timeout=0），消息会一直显示直到你手动调用 clearMessage()。不带超时的临时消息常见于"就绪"、"空闲"这种持续状态，但要注意，只要你不去 clearMessage，非永久控件就一直被遮盖。
+## removeWidget：只藏不删，回来要 addWidget 加 show
 
-这里有一个比较隐蔽的坑：连续调用 showMessage 时，新的消息会直接覆盖旧消息，超时定时器也会重置。如果你先调 showMessage("编译中...", 5000)，过了 2 秒后又调 showMessage("链接中...", 5000)，第二条消息的 5 秒倒计时从第二次调用开始算，而不是总共 5 秒。这在实现多阶段进度提示时很方便，但如果你期望的是"每条消息各显各的时长"，就得自己维护一个消息队列。
+removeWidget（第 351-365 行）用 removeIf 把项摘出列表，widget->hide()，然后 reformat()。它不 delete，父子关系原样保留，控件您随时可以收回自己处置。查无此件时，debug 构建里补一句 qDebug，出处第 361-364 行。
 
-```cpp
-// 阶段式消息——每条消息的 timeout 独立计时
-statusBar()->showMessage("正在编译...", 2000);
-// 2 秒后自动清除，非永久控件恢复显示
+想把它加回去有个机关。removeWidget 里的 hide 给控件打上了显式隐藏标记，insertWidget 结尾的复活检查 isExplicitlyHidden 会把 show 拦下（第 274-275 行），所以文档叮嘱重新入列要 addWidget 加 show 两句一起调。另一条路也通：您直接 delete 掉子控件，event() 的 ChildRemoved 分支会把列表里的残项清干净（第 670-676 行），不留野项。
 
-// 如果需要在中途更新消息
-statusBar()->showMessage("正在链接...", 2000);
-// 前一条消息被覆盖，2 秒倒计时重新开始
-```
+频繁显隐的场景咱们换工具。add 一次，之后全靠 show 与 hide 切换，布局自动收缩。示例的进度条就是这么干的：建好时 hide（第 61 行），任务启动 show（第 96 行），收尾再 hide（第 111 行），从头到尾没碰过 removeWidget。
 
-在实际工程中，临时消息和永久控件之间的布局协调有一个常见模式：用非永久区显示"次要信息"（可以临时被遮盖），用永久区显示"核心状态"（绝对不能被遮盖），用临时消息显示"操作反馈"。比如一个代码编辑器：非永久区放行号列号和文件路径，永久区放编码格式和缩进模式，临时消息用来显示"保存成功"、"编译失败"这类操作反馈。
+## 高度由 strut 说了算，reformat 整删整建
 
-另一个实用技巧是用 QTimer 配合 clearMessage 实现自定义的消息清除逻辑。showMessage 的 timeout 精度依赖 Qt 的定时器系统，在某些情况下可能不够精确（特别是 Qt::CoarseTimer 粒度下）。如果你需要精确控制消息的显示时长，可以用 QTimer::singleShot 手动管理：
+咱们逐行看 reformat 里算高度那段。maxH 起步于字体行高 fontMetrics().height()（第 442 行），随后每枚件取 qSmartMinSize 高度与控件 maximumHeight 的较小值来比较（第 450-451、459-460 行），sizegrip 的 sizeHint 高度也来比一场（第 464 行），末尾 addStrut(maxH) 把这个高度定成内层布局的最低高，出处第 469 行。状态栏莫名偏高时，赢家常常是 sizegrip，把它关掉或者给子控件设 maximumHeight，strut 就降下来了。
 
-```cpp
-statusBar()->showMessage("文件已保存");
-QTimer::singleShot(1500, this, [this]() {
-    statusBar()->clearMessage();
-});
-```
+窗口尺寸变化走哪条路？resizeEvent 只有转给基类的一行（第 636-639 行），布局归 QLayout 管。重活在 event() 的 LayoutRequest 分支（第 650-668 行）：重算一遍 maxH，与 savedStrut 不同才重建布局，相同就只 update 一把。您 addWidget 之后高度没变的场景，走的正是省事的短路。
 
-### 3.3 嵌入复杂控件——进度条、动画标签与自定义 Widget
+## sizegrip：建房归状态栏，显隐归它自己
 
-状态栏不只能放 QLabel。任何 QWidget 的子类都可以通过 addWidget 或 addPermanentWidget 嵌入状态栏。最常见的三种复杂控件是：QProgressBar 用于显示后台任务进度，带 QMovie 的 QLabel 用于显示加载动画（比如转圈的小 GIF），以及自定义 Widget 用于显示复合信息。
+咱们从构造函数看起。setSizeGripEnabled(true) 是默认动作，注释里写明它带出一次 reformat，出处第 198-203 行。开它时 new 一只 QSizeGrip 挂给自己，藏起来，installEventFilter，再立一个 showSizeGrip 待办标志（第 393-397 行）。关它时直接 delete（第 399-401 行）。isSizeGripEnabled 只问 resizer 指针在不在（第 376-384 行），不管它此刻可见与否。
 
-先说 QProgressBar。把一个进度条嵌入状态栏是几乎所有 IDE 都会做的事。关键点是：进度条应该用 addWidget 添加到非永久区（因为进度信息可以被临时消息短暂遮盖），并且要设置一个合理的固定高度和最大宽度，否则进度条会撑满整个状态栏。
+显隐的裁判权在 QSizeGrip 自己手里。状态栏这边的 tryToShowSizeGrip 经 invokeMethod 调它的 _q_showIfNotHidden 槽，两处出处分别在 qstatusbar.cpp 第 74-84 行与 qsizegrip.cpp 第 73-88 行，这个槽多问一句：顶层窗口最大化或全屏就不出场。showEvent 也会再试一次（第 589-596 行）。窗口运行中切换状态时，QSizeGrip::eventFilter 过滤顶层的 WindowStateChange，最大化或全屏把自己藏起来，恢复普通状态再现身，出处 qsizegrip.cpp 第 451-464 行。笔者特意去 qsizegrip.cpp 核对了整段链路，看过之后可以放心：咱们不用在最大化切换的代码里伺候它，Qt 替咱们看着。
 
-```cpp
-auto *progress = new QProgressBar();
-progress->setRange(0, 100);
-progress->setValue(0);
-progress->setMaximumWidth(200);
-progress->setMaximumHeight(16);  // 状态栏空间有限，紧凑一点
-statusBar()->addWidget(progress);
+## 官方文档参考
 
-// 后台任务推进时更新
-connect(task, &BackgroundTask::progressChanged,
-        progress, &QProgressBar::setValue);
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 6.9.1 源码核对过。
 
-// 任务完成后移除进度条
-connect(task, &BackgroundTask::finished, this, [this, progress]() {
-    statusBar()->removeWidget(progress);
-    progress->deleteLater();
-});
-```
+[Qt 文档 · QStatusBar](https://doc.qt.io/qt-6/qstatusbar.html) -- 状态栏类，showMessage 与两区添加接口的定义处
 
-这里有一个细节值得注意：removeWidget 之后，状态栏不会自动刷新布局。如果你发现移除控件后状态栏留了一块空白，手动调用 statusBar()->update() 即可。但实际上 Qt 内部在 removeWidget 之后会触发 layout invalidate，大多数情况下布局会自动更新。如果确实没更新，再调 update。
+[Qt 文档 · QSizeGrip](https://doc.qt.io/qt-6/qsizegrip.html) -- 右下角调整把手，最大化与全屏下的显隐规则
 
-再说带动画的 QLabel。如果你想在状态栏显示一个"正在同步"的旋转图标，可以用 QMovie 加载一个 GIF，设给 QLabel，然后把这个 QLabel 加到状态栏。QMovie 的 start/stop 控制动画的播放和停止。
+[Qt 文档 · QMainWindow](https://doc.qt.io/qt-6/qmainwindow.html) -- 主窗口类，statusBar 懒创建与 StatusTip 的转发处
 
-```cpp
-auto *sync_label = new QLabel();
-auto *movie = new QMovie(sync_label);
-movie->setFileName(":/icons/spinner.gif");
-movie->setScaledSize(QSize(16, 16));
-sync_label->setMovie(movie);
-statusBar()->addPermanentWidget(sync_label);
-
-// 开始同步
-movie->start();
-// 同步完成
-movie->stop();
-sync_label->setText("已同步");
-```
-
-最后说自定义 Widget。如果你需要一个状态栏控件同时显示多种信息——比如一个网络状态指示器包含一个颜色圆点和文字——可以继承 QWidget 自己画。QStatusBar 对嵌入的控件没有任何类型限制，只要它是 QWidget 的子类就行。唯一要留意的是控件的高度：QStatusBar 会根据内部所有控件的最大 sizeHint().height() 来决定自身高度，如果你的自定义控件 sizeHint 返回了一个很大的值，状态栏就会被撑高。
-
-### 3.4 setSizeGripEnabled 与状态栏高度控制
-
-QStatusBar 默认在右下角显示一个 SizeGrip（一个三角形的小手柄，用户拖拽它可以调整主窗口大小）。这个 SizeGrip 本质上是一个 QWidget，由 QStatusBar 内部创建和管理。setSizeGripEnabled(false) 可以隐藏它。
-
-SizeGrip 对状态栏高度的影响是这样的：SizeGrip 的大小由 QStyle 计算，不同平台有不同的默认尺寸。QStatusBar 的最小高度取所有子控件 sizeHint 的最大值和 SizeGrip 的高度中的较大者。如果你发现状态栏比预期的高，可能不是你的控件有问题，而是 SizeGrip 在撑高度。这时有两种解决方案：一是 setSizeGripEnabled(false) 干掉 SizeGrip，二是给状态栏设置一个固定高度 statusBar()->setFixedHeight(24)。
-
-但 setFixedHeight 有一个隐患：如果你的某个子控件需要更多空间（比如进度条需要更高），setFixedHeight 会强制裁剪，控件可能被截断。更灵活的做法是 setMaximumHeight 而不是 setFixedHeight，这样控件可以缩小但不能超过你设定的上限。
-
-还有一个经常被忽略的点：setSizeGripEnabled(false) 在窗口已经是最大化或全屏状态时没有效果，因为最大化状态下用户不能调整窗口大小，Qt 内部自动隐藏了 SizeGrip。所以不需要手动在 maximize/minimize 切换时控制 SizeGrip 的显隐。
-
-```cpp
-// 如果你不需要用户通过状态栏调整窗口大小
-statusBar()->setSizeGripEnabled(false);
-
-// 如果状态栏太高了，限制一下
-statusBar()->setMaximumHeight(22);
-```
-
-## 4. 踩坑预防
-
-第一个坑是 addWidget 添加的控件被 showMessage 遮盖后"消失"。这个问题在 3.1 节已经详细解释了机制，这里从踩坑角度再说一遍。现象是：你用 addWidget 加了一个行号 QLabel，一切正常，但当 showMessage("保存成功") 被调用后，行号 QLabel 不见了。很多新手会以为控件被删除了，其实它只是被临时消息层遮盖了。当 showMessage 的 timeout 到期或 clearMessage 被调用后，控件会自动恢复显示。如果你不希望某个控件被遮盖，把它从 addWidget 改为 addPermanentWidget 就行了。如果你的临时消息设置了 timeout=0（不自动清除），别忘了在合适的时机手动 clearMessage，否则非永久控件会一直被遮盖。
-
-第二个坑是 addWidget / addPermanentWidget 之后调用 removeWidget 导致布局错乱。removeWidget 从状态栏中移除一个控件，但不会删除这个控件对象（它只是从布局中拿掉，QObject 的父子关系不变）。如果你随后又 addWidget 一个新控件，它会被添加到布局末尾。如果你频繁地 add/remove 控件，可能导致控件在状态栏中的顺序和你期望的不一致。解决方案是：对于需要频繁显示和隐藏的控件，不要用 add/remove 循环，而是 add 一次，然后用 show/hide 控制显隐。QStatusBar 的布局在子控件 hide 时会自动收缩，不需要 remove。
-
-```cpp
-// 错误做法：反复 add/remove
-statusBar()->addWidget(progress);
-statusBar()->removeWidget(progress);
-statusBar()->addWidget(progress);  // 顺序可能不对
-
-// 正确做法：add 一次，用 show/hide 控制
-statusBar()->addWidget(progress);
-progress->hide();  // 需要时 hide
-progress->show();  // 需要时 show
-```
-
-第三个坑是 QProgressBar 嵌入状态栏时不设置大小约束，导致进度条撑满整个宽度或高度异常。QProgressBar 的 sizePolicy 默认是 (Expanding, Fixed)，水平方向会尽可能占据空间。如果不设 setMaximumWidth，进度条会把非永久区全部占满，其他 addWidget 的控件被挤出可见区域。解决方案是给进度条设一个合理的 maximumWidth（比如 200 像素），同时设 setMaximumHeight 控制高度。如果多个控件需要精确排列，可以用一个 QWidget 做容器，内部放 QHBoxLayout，把这个容器作为一个整体 addWidget 到状态栏。
-
-第四个坑是 setSizeGripEnabled 在 QMainWindow 以外的窗口中使用 QStatusBar 时引发断言失败或异常。SizeGrip 的工作原理是向父窗口发送 WM_SIZING（Windows）或 ConfigureNotify（X11）来改变窗口大小。如果 QStatusBar 所在的顶层窗口不支持用户调整大小（比如设置了固定大小或无边框），SizeGrip 的拖拽操作可能触发 Qt 内部的 Q_ASSERT。如果你在 QDialog 或 QWidget（而不是 QMainWindow）中使用 QStatusBar，建议默认 setSizeGripEnabled(false)。
-
-## 5. 练习项目
-
-练习项目：模拟 IDE 底部状态栏。我们要实现一个包含三个区域的状态栏：左侧非永久区放一个 QLabel 显示"行 X, 列 Y"（模拟光标位置），中间非永久区放一个 QProgressBar（模拟编译进度，0% 到 100% 自动推进），右侧永久区依次放三个 QLabel 分别显示"UTF-8"、"C++"、"就绪"。点击窗口上的"编译"按钮时，进度条从 0 跑到 100%，每 50ms 推进 1%，同时永久区的"就绪"变为"编译中..."，编译完成后 showMessage 显示"编译成功 (耗时 X.Xs)"，3 秒后自动清除，"就绪"标签恢复为"就绪"。
-
-完成标准是：进度条推进期间临时消息不干扰进度条（因为进度条在非永久区，需要处理它被遮盖的问题——提示：把进度条也放到永久区，或者临时消息期间暂停进度更新），编译完成后临时消息正确显示和自动清除，所有控件在窗口 resize 时布局合理不重叠，进度条在不编译时隐藏，编译时出现。提示几个关键点：用 QTimer 以 50ms 间隔驱动进度条递增；进度条用 addPermanentWidget 而非 addWidget 可以避免被 showMessage 遮盖；编译结束后用 removeWidget 或 hide 移除进度条。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QStatusBar](https://doc.qt.io/qt-6/qstatusbar.html) -- 状态栏类，包含 showMessage/clearMessage/addWidget/addPermanentWidget/removeWidget 全套 API
-
-[Qt 文档 · QProgressBar](https://doc.qt.io/qt-6/qprogressbar.html) -- 进度条控件，状态栏中常用的嵌入控件
-
-[Qt 文档 · QMainWindow](https://doc.qt.io/qt-6/qmainwindow.html) -- 主窗口类，statusBar() 返回主窗口的状态栏实例
-
-[Qt 文档 · QLabel](https://doc.qt.io/qt-6/qlabel.html) -- 标签控件，状态栏中最常用的信息展示控件，支持富文本和 QMovie
+[Qt 文档 · QProgressBar](https://doc.qt.io/qt-6/qprogressbar.html) -- 进度条控件，状态栏里最常见的嵌入件
 
 ---
 
-到这里，QStatusBar 的进阶内容就过了一遍。核心就是理解它内部的三个分区——非永久控件区、临时消息区、永久控件区——以及临时消息会遮盖非永久控件这个关键行为。addWidget 还是 addPermanentWidget 的选择决定了你的控件会不会被 showMessage 干扰，show/hide 比 remove/add 更适合频繁切换显隐的场景，嵌入复杂控件时别忘了设大小约束。把这些搞清楚，你的状态栏就能承载 IDE 级别的复杂信息展示了。下一篇我们进入 QDockWidget 的进阶——多文档编辑器的布局持久化，那是另一个维度的布局管理。
+三件套读完，下一站轮到停靠部件。[3.59 QDockWidget 进阶](./59-qdockwidget-advanced.md) 咱们去读多文档布局的持久化，正好接上 55 篇 saveState 埋下的伏笔。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/58-qstatusbar-advanced/，可执行文件 58-qstatusbar-advanced）。在中央区域移动鼠标，右区坐标标签跟着走（status_bar_demo.cpp 第 86-90 行）。点 Start Task，进度条现身推进，期间 “Task running...” 常驻左区（无超时，第 118 行），任务收尾 500 毫秒后进度条退场，“Task completed!” 亮 3 秒（第 110-113 行），四枚永久件全程纹丝不动。再把第 54 行的 addPermanentWidget 改成 addWidget 编译一遍，随便触发一条临时消息，坐标标签当场消失，消息清掉又回来，这就是 Normal 件的待遇。
+
+完成标准照旧。临时消息上屏分哪两步，您指得出。hideOrShow 的循环遇到谁就 break，您说得出。removeWidget 之后想加回控件要补哪一句，您讲得明。状态栏偏高时 strut 里谁在撑，您数得清。

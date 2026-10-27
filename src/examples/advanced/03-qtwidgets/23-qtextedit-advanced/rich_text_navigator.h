@@ -18,12 +18,11 @@ class QPushButton;
 /// - QTextCursor::movePosition 与 select block/line/word 的导航操作
 /// - insertHtml 在光标位置插入富文本片段
 /// - QTextDocument::find 进行文本搜索并用 ExtraSelection 高亮
-class RichTextNavigator : public QTextEdit
-{
+class RichTextNavigator : public QTextEdit {
     Q_OBJECT
 
-public:
-    /// @brief 构造函数，初始化界面布局与信号槽连接。
+  public:
+    /// @brief 构造函数，初始化编辑器并装载演示内容。
     /// @param[in] parent 父控件指针。
     explicit RichTextNavigator(QWidget* parent = nullptr);
 
@@ -40,7 +39,7 @@ public:
     /// @brief 更新状态栏显示（光标位置、block 号、文档统计）。
     void updateStatusBar();
 
-private:
+  private:
     /// @brief 初始化编辑器，加载一段演示用的富文本内容。
     void loadSampleContent();
 
@@ -65,7 +64,7 @@ private:
     /// @brief 执行搜索：高亮所有匹配项并跳转到第一个。
     void performSearch();
 
-private:
+  private:
     // --- 工具栏控件 ---
     QPushButton* m_btnStart;       // 跳到文档起始
     QPushButton* m_btnEnd;         // 跳到文档末尾
@@ -73,11 +72,11 @@ private:
     QPushButton* m_btnSelectLine;  // 选中当前行
     QPushButton* m_btnSelectWord;  // 选中当前单词
     QPushButton* m_btnInsert;      // 插入富文本
-    QLineEdit*   m_searchInput;    // 搜索输入框
+    QLineEdit* m_searchInput;      // 搜索输入框
     QPushButton* m_btnSearch;      // 搜索按钮
 
     // --- 状态栏控件 ---
-    QLabel* m_cursorPosLabel;      // 光标位置
-    QLabel* m_blockInfoLabel;      // 当前 block 编号
-    QLabel* m_docStatsLabel;       // 文档统计（block 数 / 字符数）
+    QLabel* m_cursorPosLabel; // 光标位置
+    QLabel* m_blockInfoLabel; // 当前 block 编号
+    QLabel* m_docStatsLabel;  // 文档统计（block 数 / 字符数）
 };

@@ -1,163 +1,106 @@
 ---
 title: "3.32 QScrollBar 进阶"
-description: "入门篇我们用 QScrollBar 驱动了一个自定义时间轴控件，掌握了独立使用滚动条的基本模式——setRange 配合 setPageStep 定义滚动范围，valueChanged 信号驱动 QPainter::translate 做内容偏移。"
+description: "入门篇把 QScrollBar 当驱动自定义绘制的数值源用，进阶篇对着 6.9.1 源码把滚动语义认清，手柄长度由 style 按 pageStep 乘可用长度除以 range 加 pageStep 的公式算出并钳到 PM_ScrollBarSliderMin（common 给 9 像素、Fusion 给 26 像素），空范围时手柄撑满且对鼠标装死，把滚动条收起来的是 QAbstractScrollArea 的 AsNeeded 策略，滚轮一格的步数是 wheelScrollLines 默认 3 乘 delta 的一百二十分之一乘 singleStep、单次封顶一页，Ctrl 或 Shift 按整页走，点 groove 翻一页并以 500 毫秒首延 50 毫秒间隔连发，绝对跳转要左右键或中键的 hint 放行（common 默认都不放行，Fusion 放行中键），resize 前存下 value 与 max 的比例再恢复，pageStep 为 0 时手柄被钳到下限且 groove 点击步长为零，QSS 接管几何但公式照跑，min-height 正好落在钳位下限，配套示例在 examples/advanced/03-qtwidgets/32-qscrollbar-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.32——QScrollBar 进阶
 
-## 1. 前言 / 滚动条的数学不简单
+[3.31 QSlider 进阶](./31-qslider-advanced.md) 收尾说，双值机制、tracking 与页步进到滚动条这儿原样适用，多出来的滚动语义接着认。分岔就在滚动语义上，滑条的手柄长短只是画出来的样子，滚动条的手柄长短本身携带信息，它告诉您一屏占了整份文档的多少。手柄长短的像素值您设不了，长度由一个公式算出来，range 与 pageStep 的联动也绕着这个公式转。咱们从公式认起，滚轮、点击、resize、QSS 逐个落回源码。
 
-入门篇我们用 QScrollBar 驱动了一个自定义时间轴控件，掌握了独立使用滚动条的基本模式——setRange 配合 setPageStep 定义滚动范围，valueChanged 信号驱动 QPainter::translate 做内容偏移。那套模式在"内容总尺寸固定、视口尺寸固定"的场景下完全够用。但实际项目中滚动条的配置远比"设一次 range 就完事"复杂得多：内容尺寸会动态变化，视口大小随窗口 resize 改变，pageStep 和 range 之间存在联动关系。更麻烦的是，当你想自定义滚动条的外观时，会发现 QScrollBar 的手柄大小（slider size）是一个由 QStyle 根据数学公式自动计算出来的值，你没法通过 QSS 直接指定它的像素大小——你得理解那个公式，才能控制手柄在什么条件下变大变小。今天这篇进阶，我们就把 QScrollBar 背后的数学公式、range/pageStep/singleStep 三者之间的联动关系，以及 style-aware 的自定义渲染思路拆开来讲。
+默认值照 31 篇的样子记下。不带参数的构造出来是垂直方向（qscrollbar.cpp 第 315-318 行），默认范围 0 到 99，pageStep 10，singleStep 1，tracking 开（qabstractslider.cpp 第 178-183 行）。与基类有一处分歧值得您记下，QScrollBar 的 invertedControls、也就是操作反转，默认开，出处 qscrollbar.cpp 第 350 行，基类默认关，出处 qabstractslider.cpp 第 182 行，键盘与滚轮的方向在滚动条这边默认按反转语义解读，滚轮一节咱们再对着源码看。focusPolicy 默认 NoFocus（qscrollbar.cpp 第 357 行），想要键盘翻页得自己开。正文行号都带出处，Qt 内部实现指源码树里的 qscrollbar.cpp 与 qabstractslider.cpp，style 侧落在 qcommonstyle.cpp、qfusionstyle.cpp 与 qstylesheetstyle.cpp，滚动区域的部分在 qabstractscrollarea.cpp。笔者把六个文件对着源稿断言逐条过了一遍，隐藏机制与除零两处偏得最远，正文按源码改准。
 
-## 2. 环境说明
+## 手柄多长不归您定，公式与钳位都在 style 手里
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。QScrollBar 属于 QtWidgets 模块，涉及 QStyle 的部分需要了解 QStyleOptionSlider 和 QStyle::subControlRect 的基本接口。所有内容在 Qt 6.9.1 上验证通过。
-
-## 3. 核心概念讲解
-
-### 3.1 手柄大小的计算公式
-
-QScrollBar 的手柄（slider，也叫 thumb）大小不是随便画的——它的大小和内容比例直接相关。QStyle 在计算手柄大小时使用的核心公式是：
-
-```text
-slider_size = pageStep / (max - min + pageStep) * available_length
-```
-
-其中 available_length 是滚动条 groove 的可用长度（像素），也就是整个 groove 减去两端箭头按钮占用的空间。这个公式的语义是：手柄的大小占整个 groove 的比例，等于"一页可见内容"占"总内容"的比例。如果你的内容总高度是 2000 像素，视口高度是 500 像素，那么手柄占 groove 的比例就是 500 / 2000 = 25%。内容越少，手柄越大；内容越多，手柄越小。
-
-这个公式有几个边界条件值得注意。当 pageStep 等于 max - min + pageStep 时（即内容恰好等于视口大小），slider_size 等于 available_length，手柄撑满整个 groove。当 pageStep 远小于 max - min 时，手柄会非常小。Qt 内部会给手柄设一个最小尺寸（通常是系统 style 决定的，比如 Windows 上大约是 20 像素），当计算出来的 slider_size 小于这个最小值时，会被钳位到最小值。这意味着当内容非常多的时候，手柄大小不再反映真实的比例关系——用户看到的滚动条手柄可能比实际比例大。
+咱们翻出 QCommonStyle::subControlRect，只看 CC_ScrollBar 分支，从可用长度看起。滚动条总长减去两端箭头按钮占的位置，按钮的宽度只在非 transient 的 style 里才扣，出处 qcommonstyle.cpp 第 4104-4108 行，SH_ScrollBar_Transient 默认 false，出处第 5367-5369 行。长度按比例切：
 
 ```cpp
-// 手柄大小计算示意（非 Qt 源码，简化版）
-int calcSliderSize(int min_val, int max_val,
-                   int page_step, int available)
-{
-    int range = max_val - min_val;
-    if (range <= 0) return available;  // 无内容或内容不满一页
-
-    int divider = range + page_step;
-    int slider = page_step * available / divider;
-    int min_slider = style()->pixelMetric(QStyle::PM_ScrollBarSliderMin);
-    return qMax(slider, min_slider);
+// qcommonstyle.cpp 第 4112-4114 行
+if (scrollbar->maximum != scrollbar->minimum) {
+    uint range = scrollbar->maximum - scrollbar->minimum;
+    sliderlen = (qint64(scrollbar->pageStep) * maxlen) / (range + scrollbar->pageStep);
 }
 ```
 
-理解这个公式的实际意义在于：如果你觉得滚动条的手柄太小不好拖，你不能直接设一个像素值来放大它。你有两个选择：一是增大 pageStep（但这会改变点击槽时的跳转行为），二是通过 QProxyStyle 重写 pixelMetric 返回一个更大的 PM_ScrollBarSliderMin 值，让手柄的最小尺寸变大。
+写成数学式就是 pageStep 除以 range 加 pageStep，再乘可用长度。语义是手柄占 groove 的比例等于一屏占整份文档的比例，100 行的文档显示 20 行，手柄就占五分之一。QScrollBar 的文档把范围与文档长度的关系写成了等式，document length 等于 maximum 减 minimum，再加 pageStep，出处 qscrollbar.cpp 第 112 行，您想让 range 表达“内容超出视口的部分”，就把 max 设成内容尺寸减视口尺寸，20 行视口配 100 行文档，max 是 80，文档被切成整整齐齐五页（第 100-103 行）。文档同时提醒，范围超过十万在现在的屏幕上没法用，手柄细到拖不住（第 117-120 行）。
 
-### 3.2 range / singleStep / pageStep 三者的联动
+算出的长度要过两道闸。第一道是下限 PM_ScrollBarSliderMin，算出来比它小就抬到它（第 4116-4118 行），数值各 style 自己定，QCommonStyle 给 dpiScaled(9)（第 4536-4538 行），Fusion 给 26（qfusionstyle.cpp 第 2759-2761 行）。第二道与第一道写在同一个 if 里，range 超过 INT_MAX 的一半也直接抬到最小值（第 4117 行），笔者核到这一行才看清钳位有两个并列条件，那是防乘法溢出的保险，与视觉无关。上限另有一道，长度不许超过可用长度（第 4119-4120 行）。maximum 与 minimum 相等时根本不进公式，手柄直接取满可用长度（第 4121-4122 行），空范围的滚动条画出来是一根实心槽。sizeHint 也拿这批 style 的量来算，顺着滚动方向，它要两个 extent 加一个最小手柄的长度，出处 qscrollbar.cpp 第 418-426 行，保证滚动条至少装得下最小手柄。
 
-这三个参数不是独立的——它们之间存在语义上的约束关系，搞混了滚动条的行为就会变得很奇怪。
+您嫌手柄太小想放大，直接设像素没有入口。可行的路有两条。调大 pageStep，手柄按比例变长，代价是点 groove 翻页的步长跟着变大。或者 QProxyStyle 重写 pixelMetric，把 PM_ScrollBarSliderMin 抬高，只动下限不动比例，比例仍由 pageStep 与 range 说了算。
 
-range 定义的是"内容超出视口的部分"，计算方式是 `max = content_size - viewport_size`。当 content_size <= viewport_size 时，max 应该是 0，此时滚动条没有滚动范围。pageStep 定义的是"一页的大小"，通常等于 viewport_size。当用户点击 groove 上手柄两侧的空白区域时，值会以 pageStep 为步长跳转。singleStep 定义的是"单次滚动的步长"，对应鼠标滚轮每格的滚动距离。
+## resize 前存下比例再恢复，value 的钳位发生在两处
 
-联动关系是这样的：如果 pageStep 大于 range，说明"一页"比"总超出量"还大，手柄会撑满 groove，用户无法滚动（因为没有可滚动的空间）。如果 singleStep 大于 pageStep，方向键每次跳的距离比点击槽还大，逻辑上说不通。如果你把 singleStep 设得比 1 还小（比如 0），虽然 QScrollBar 不会崩溃，但每帧滚轮事件带来的值变化为 0，等于滚轮无效。
+内容尺寸或视口尺寸一变，range 就得重配。您若只调 setRange 不管 value，值会被悄悄改写，钳位有两处。setValue 一进门就把传入值夹进范围，出处 qabstractslider.cpp 第 496-501 行，setRange 改完范围后，拿旧 value 重跑一遍 setValue，注释写着 re-bound（第 207-218 行）。窗口变宽把 max 从 2000 压到 1500，停在 1800 的值自己落到 1500，valueChanged 跟着发一轮。内容缩到不超过视口时 max 归零，值跟着归零，画面跳回顶部。resize 后位置的“跳”，来路都在钳位上。
+
+咱们把比例存下来再恢复：
 
 ```cpp
-void configureScrollBar(QScrollBar *bar,
-                        int content_size, int viewport_size)
-{
-    if (content_size <= viewport_size) {
-        bar->setRange(0, 0);
-        bar->setValue(0);
-        bar->setEnabled(false);
-        return;
-    }
-
-    int range_max = content_size - viewport_size;
-    bar->setRange(0, range_max);
-    bar->setPageStep(viewport_size);
-    bar->setSingleStep(qMax(1, viewport_size / 20));
-    bar->setEnabled(true);
-}
+double ratio = double(bar->value()) / qMax(1, bar->maximum())
+bar->setRange(0, qMax(0, contentHeight - viewportHeight))
+bar->setValue(int(ratio * bar->maximum()))
 ```
 
-这里有一个实战中经常遇到的场景：窗口 resize 导致视口大小变化，你需要重新配置滚动条。如果新的视口比内容还大，你要把 range 设为 (0, 0) 并禁用滚动条。如果当前 value 超出了新的 max，QScrollBar 会自动钳位，但你不应该依赖这个自动行为——最好在重新配置后显式检查 value 是否合法。
+这样您看到的内容位置前后大体一致，不会突然跳到底或跳回顶。动态内容同理，列表项增删后忘了重配 range，滚到底剩空白只是表象，更隐蔽的是手柄比例与真实内容脱节，您拖动手柄时“拖了多少”与“内容滚了多少”对不上，因为手柄长度还是拿旧的 pageStep 与 range 算的，出处 qcommonstyle.cpp 第 4114 行。
 
-还有一个关于动态内容更新的陷阱。如果你的内容高度是列表项的累加（item_count * item_height），每次增删列表项都要重新调用 configureScrollBar。如果你忘了这一步，滚动条的 range 还是旧的值，用户会发现滚不到最底部或者滚到底部还有空白。更隐蔽的问题是：pageStep 没更新意味着手柄大小也没更新，手柄的比例和实际内容比例脱节，用户拖动手柄时感知到的"拖了多少"和"内容滚了多少"不匹配。
+配步长有两处源码级的事实，咱们摆出来。setSteps 对两个步长都取绝对值再存，出处 qabstractslider.cpp 第 222-228 行，负数存不进去。pageStep 设 0 也走不到除零，maximum 不等于 minimum 时分母是 range 加 0，必然大于零，出处 qcommonstyle.cpp 第 4112-4114 行，真实后果是分子为 0，手柄长度算出 0，被钳到最小值，出处第 4117-4118 行，同时点 groove 的翻页步长也是 0，出处 qabstractslider.cpp 第 591-595 行，整根滚动条失去交互。pageStep 至少给 1，正常场景给一屏的量。
 
-### 3.3 style-aware 的自定义渲染
+## 滚轮一格走多远，三个数相乘再封顶
 
-QScrollBar 的外观完全由 QStyle 控制，包括 groove 的形状、手柄的圆角和颜色、两端箭头按钮的图标。如果你通过 QSS 自定义了 QScrollBar 的外观，需要注意你的 QSS 规则是否和 QStyle 的内部计算冲突。
+您滚一格滚轮，事件最终汇进 scrollByDelta，出处 qabstractslider.cpp 第 669 行起。普通滚动的步数由三个数相乘，QApplication::wheelScrollLines()，默认 3，出处 qplatformtheme.cpp 第 626-627 行，乘上 delta 除以 120 的比例，再乘 singleStep，出处 qabstractslider.cpp 第 686-690 行。singleStep 是 5 的滚动条，一格实际走 15，一格并不等于一个 singleStep。小数零头也不丢，除不尽的部分攒在 offset_accumulated 里等下一个事件（第 695 行），触控板轻拂能积累出一次滚动。单次滚动有封顶，步数夹在正负 pageStep 之间（第 698 行），一格滚不出一页多。按住 Ctrl 或 Shift 再滚，步数直接按整页算（第 678-681 行）。
 
-一个常见的问题是：你在 QSS 中给 groove 设了一个固定高度（比如 8px），但 QStyle 在计算手柄位置时使用的是 styleOption 的 rect，而不是你 QSS 设的 groove 尺寸。结果就是手柄的位置和 groove 的视觉位置对不上——手柄可能画在 groove 外面，或者 groove 太窄手柄溢出。
+方向上有一串取反，咱们理一理。水平滚动条的 delta 会被取一次反，出处 qscrollbar.cpp 第 489 行，基类在水平方向也有同款取反，出处 qabstractslider.cpp 第 674-675 行，invertedControls 再决定翻不翻，出处第 714-715 行，滚动条默认 true，出处 qscrollbar.cpp 第 350 行，开篇说的分歧在这儿兑现。还有个小便利，垂直滚轮也能滚水平滚动条，前提是没有同时的水平滚动分量，出处 qscrollbar.cpp 第 479-483 行，那是为了触控板上两个方向一起滚时不打架。
 
-正确的自定义方式是理解 QScrollBar 的四个子控件：groove（背景槽）、handle（手柄）、add-line（向下/向右箭头按钮）、sub-line（向上/向左箭头按钮）。QSS 可以分别定制这些子控件的外观，但你必须确保它们的尺寸关系和 QStyle 的几何计算一致。
+singleStep 的量级咱们按内容挑。设 1 的话，几千像素的内容每格滚 3 像素，太慢，常见做法是给视口高度的二十分之一到十分之一，行高固定的列表给一个行高。设 0 更干脆，步数恒为 0，scrollByDelta 走零步分支直接返回（第 690、701-711 行），滚轮整个失效，源稿那句“滚轮无效”的准确出处就是这段。
+
+## 点 groove 翻一页还自动连发，绝对跳转要 style 放行
+
+咱们从 mousePressEvent 的门口看起，一进门过三道检查，空范围、事件发生时还按着别的键、按下的不是左键，出处 qscrollbar.cpp 第 537-542 行。中键想被受理，得看 SH_ScrollBar_MiddleClickAbsolutePosition 给不给，出处第 531-532、539 行。检查全过，才拿 hitTestComplexControl 问 style，点中了哪个子控件，出处第 544 行。
+
+您点中手柄两侧的空白区，activateControl 把 AddPage 或 SubPage 翻译成 SliderPageStepAdd 或 Sub，出处第 227-232 行，triggerAction 拿 pageStep 加减值，出处 qabstractslider.cpp 第 591-595 行。按住不放还有连发，动作被挂上 repeatAction（qscrollbar.cpp 第 249-251 行），首延 500 毫秒，之后每 50 毫秒一发（第 569、580-581 行）。
+
+“点哪跳哪”的绝对跳转不是默认行为。mousePressEvent 里确实有这个分支（第 558-568 行），但要 hint 放行：左键要 SH_ScrollBar_LeftClickAbsolutePosition，QCommonStyle 默认 false（qcommonstyle.cpp 第 5447 行，落在第 5458 行返回 false 的大组里），中键要 SH_ScrollBar_MiddleClickAbsolutePosition，common 同样 false（第 5424 行同组）。笔者读到 Fusion 的 styleHint 才发现例外，它对中键这个 hint 返回 1（qfusionstyle.cpp 第 3389、3398 行），Fusion 桌面上中键点空白就是直接跳。对照 [3.31 QSlider 进阶](./31-qslider-advanced.md)，滑条把绝对跳转固定给了中键、页步进固定给了左键，出处 qcommonstyle.cpp 第 5075-5080 行，滚动条这边把两个都交给 style 表决，默认全关。
+
+拖手柄维持的是抓取点。按下时 clickOffset 记下按点相对手柄左上角的偏移（第 553-556 行），move 时鼠标坐标减掉这个偏移再换算（第 620-622 行），您按在边缘拖起来就还是边缘跟手。拖远了还有回弹，PM_MaximumDragDistance 大于等于 0 时，鼠标离控件超出这个距离，位置弹回 snapBackPosition（第 623-629 行）。换算函数是 pixelPosToRangeValue，跨度取 groove 长度减一个手柄长（第 676-686 行），映射交给 QStyle::sliderValueFromPosition（第 688-689 行），与 31 篇滑条那套同构。
+
+## 空范围它不自己躲，收起它的是 QAbstractScrollArea
+
+源稿有个说法要改，它说 setRange(0, 0) 之后部分 style 会把滚动条整个隐藏。咱们把源码翻遍，QScrollBar 没有隐藏自己的路径，空范围时它对鼠标装死（mousePressEvent 门口短路，qscrollbar.cpp 第 537-542 行），画出来是撑满的手柄（qcommonstyle.cpp 第 4121-4122 行），控件仍在原地。收起滚动条的是 QAbstractScrollArea，布局时按策略判断，ScrollBarAsNeeded 下的条件是 minimum 小于 maximum，出处 qabstractscrollarea.cpp 第 302-311 行，不满足就 setVisible(false) 把滚动条容器收掉，出处第 407-408 行。
+
+所以“滚动条一消失布局抖一下”的场景，动手的是滚动区域的策略，style 只是照常画。您独立使用 QScrollBar 自己搭布局，它不会消失，除非您自己 setVisible。想按内容量控制显隐，听 rangeChanged 比监听 resize 稳，范围一空就按自己的布局策略处理，别等控件替您决定。
+
+## QSS 换皮不换骨架，min-height 落在钳位下限上
+
+QScrollBar::paintEvent 一笔都不自己画，构造 option、填上 SC_All，交给 drawComplexControl，出处 qscrollbar.cpp 第 504-519 行。QSS 的接管比您想的深，QStyleSheetStyle 对 groove 与手柄，另有一套 subControlRect 分支，groove 矩形按 QSS 规则算（qstylesheetstyle.cpp 第 6025-6035 行），手柄长度在这个 groove 上重新跑一遍同款公式与钳位，出处第 6036-6048 行。皮换了，骨架没换，pageStep 与 range 该怎么联动还怎么联动。
+
+手柄的 min-height 有正式的落点。QSS 路径下 PM_ScrollBarSliderMin 直接取值，取的是 handle 规则的 minimumSize（第 5168-5175 行），您写 min-height 就是在给钳位下限赋值。几行示意，每块只放一条声明，真实样式表里照常补分隔符：
 
 ```css
-QScrollBar:vertical {
-    background: #F0F0F0;
-    width: 12px;
-    margin: 0;
-}
-
-QScrollBar::handle:vertical {
-    background: #BDBDBD;
-    min-height: 30px;    /* 手柄最小高度 */
-    border-radius: 4px;
-}
-
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-    height: 0px;         /* 隐藏箭头按钮 */
-}
-
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-    background: none;    /* 手柄两侧不留背景色 */
-}
+QScrollBar:vertical { width: 12px }
+QScrollBar::handle:vertical { min-height: 30px }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px }
 ```
 
-注意 `min-height: 30px` 这个属性——它告诉 QStyle 手柄的最小高度是 30 像素，和前面讲的 PM_ScrollBarSliderMin 是一回事。通过 QSS 的 min-height 可以间接控制手柄的最小尺寸，但手柄的实际大小仍然由 pageStep / range 公式决定，min-height 只是一个下限。
+您想动公式本身，QSS 够不着，得用 QProxyStyle 重写 subControlRect，或改 pixelMetric。子控件的名单您记下来够用：groove 是槽，handle 是手柄，add-line 与 sub-line 是两端按钮，add-page 与 sub-page 是手柄两侧的空白，QSS 里按名分别定制。
 
-如果你需要更彻底的定制——比如完全去掉 groove 让手柄浮在内容上方，或者给手柄加上拖拽时的阴影效果——你需要通过 QProxyStyle 重写 drawComplexControl。在重写的函数里你可以完全控制手柄的绘制方式，包括位置、大小、形状和颜色。
+## 官方文档参考
 
-现在有一道调试题给大家。下面这段代码在窗口 resize 之后重新配置了滚动条，但用户发现 resize 后手柄的位置跳动非常剧烈，甚至有时候会跳到最顶部。问题在哪？
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，QScrollBar 与 QAbstractSlider 都在 QtWidgets，链接 Qt6::Widgets 即可。
 
-```cpp
-void resizeEvent(QResizeEvent *event) override
-{
-    QWidget::resizeEvent(event);
-    int new_max = contentHeight - height();
-    scrollBar->setRange(0, qMax(0, new_max));
-    scrollBar->setPageStep(height());
-}
-```
+[Qt 文档 · QScrollBar](https://doc.qt.io/qt-6/qscrollbar.html) -- 滚动条控件，document length 等式与子控件的说明在这页
 
-问题在于没有保存和恢复 value。当 setRange 缩小了 max 时，如果当前 value 超出了新的 max，QScrollBar 会自动把 value 钳位到新的 max。这就导致了"跳动"——用户明明在中间位置，resize 之后突然跳到底部或者顶部。正确的做法是在 setRange 之前保存当前 value 的比例，setRange 之后按比例恢复：
+[Qt 文档 · QAbstractSlider](https://doc.qt.io/qt-6/qabstractslider.html) -- 抽象基类，range、两档步长与 triggerAction 的定义
 
-```cpp
-double ratio = static_cast<double>(scrollBar->value())
-               / qMax(1, scrollBar->maximum());
-scrollBar->setRange(0, qMax(0, new_max));
-scrollBar->setValue(static_cast<int>(ratio * scrollBar->maximum()));
-```
+[Qt 文档 · QScrollArea](https://doc.qt.io/qt-6/qscrollarea.html) -- 滚动区域容器，ScrollBarAsNeeded 策略与滚动条显隐的归属
 
-这样用户在 resize 前后看到的内容位置是相对一致的，不会出现突然跳动。
+[Qt 文档 · QStyle](https://doc.qt.io/qt-6/qstyle.html) -- subControlRect 与 pixelMetric 的正式说明
 
-## 4. 踩坑预防
-
-第一个坑是 setRange(0, 0) 会隐藏滚动条。当 range 的 max 等于 min 时，QScrollBar 会认为自己没有工作要做，部分 style 会把整个滚动条隐藏。这本身是合理行为，但如果你在布局中依赖了滚动条的宽度来计算其他控件的尺寸（比如垂直滚动条占 12px，剩余空间给内容区域），滚动条突然消失会导致内容区域突然变宽 12px，整个布局抖一下。解决方案：不要在布局中硬编码滚动条的宽度，或者设置 `scrollBar->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding)` 保持它在布局中的占位，但用 setEnabled(false) 来表示不可操作。
-
-第二个坑是 pageStep 设为 0 导致手柄大小计算出现除零。回到手柄大小的公式 `slider_size = pageStep / (max - min + pageStep) * available`，如果 pageStep 为 0，分子就是 0，slider_size 也变成 0。Qt 内部有保护——它会用 PM_ScrollBarSliderMin 作为下限，所以不会真的画出 0 像素的手柄。但 0 像素手柄意味着用户完全无法拖拽滚动条，点击 groove 也无法跳转（因为 pageStep 为 0，跳转步长为 0）。所以 pageStep 永远不要设为 0，至少设为 1。
-
-第三个坑是 singleStep 太小导致平滑滚动变成"一格一格跳"。如果你把 singleStep 设为 1，鼠标滚轮每格只滚动 1 像素，对于几千像素的内容来说体验极差。合理的 singleStep 应该是视口高度的 1/20 到 1/10，让用户每滚一格能看到明显的内容位移但不会跳太多。如果你的内容是行高固定的列表，singleStep 设为一个行高也是常见的做法。
-
-## 5. 练习项目
-
-练习项目：自适应平滑滚动浏览器。我们要实现一个自定义的可滚动控件，核心特性是滚动行为完全自适应内容大小和视口大小。
-
-完成标准是：控件内容是一组高度不一的卡片（数据用一个 QVector 存储，每个卡片有标题和不等的内容高度），垂直 QScrollBar 的 range 和 pageStep 随窗口 resize 自动更新，手柄大小正确反映"可见卡片占总卡片的高度比例"，窗口 resize 时滚动位置按比例保持不跳动，鼠标滚轮的 singleStep 等于视口高度的 1/15，点击 groove 跳转一整屏。
-
-提示几个关键点：卡片的实际位置需要累加每张卡片的高度来计算，range 的 max 应该是所有卡片高度之和减去视口高度；paintEvent 中根据当前 value 和卡片累计高度来裁剪可见卡片；resize 事件中保存 value/max 的比例再重新配置滚动条；singleStep 可以在 resize 时动态更新为 height() / 15。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QScrollBar](https://doc.qt.io/qt-6/qscrollbar.html) -- 滚动条控件，包含 range/step 相关接口
-
-[Qt 文档 · QAbstractSlider](https://doc.qt.io/qt-6/qabstractslider.html) -- 抽象滑动条基类，sliderPosition / pageStep / singleStep 定义在此
-
-[Qt 文档 · QStyle](https://doc.qt.io/qt-6/qstyle.html) -- Qt 样式系统基类，包含 subControlRect 和 pixelMetric
-
-[Qt 文档 · QScrollArea](https://doc.qt.io/qt-6/qscrollarea.html) -- 滚动区域容器，内部自动管理 QScrollBar 的参考实现
+[Qt 文档 · QProxyStyle](https://doc.qt.io/qt-6/qproxystyle.html) -- 样式代理，改 PM_ScrollBarSliderMin 的入口
 
 ---
 
-到这里，QScrollBar 的进阶内容就过了。手柄大小的计算公式 `pageStep / (range + pageStep) * available` 是理解 QScrollBar 行为的核心——它决定了手柄多大、能拖多远、滚多少内容。range / pageStep / singleStep 三者的联动关系搞清楚后，你就不会再配出"滚到底还有空白"或者"手柄比例不对"的问题。style-aware 的自定义渲染需要理解 QScrollBar 的四个子控件和 QStyle 的几何计算之间的关系，硬改 QSS 而不尊重 QStyle 的计算会导致视觉错位。把这些搞清楚后，任何自定义滚动场景都能配置出行为正确、视觉美观的滚动条。
+滚动条认完，QAbstractSlider 家族还剩最后一站，[3.33 QDial 进阶](./33-qdial-advanced.md) 的圆形表盘等着咱们给整个家族收尾。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/32-qscrollbar-advanced/，可执行文件 32-qscrollbar-advanced）。窗口分三块，四只输入框调参数（slider_size_demo.cpp 第 58-114 行），中间一根固定 300 像素高的竖滚动条（第 129-131 行），底下公式区实时代入计算（第 172-271 行），默认 max 100、pageStep 20、singleStep 5，出处第 25、28、31 行。
+
+实验走三步。第一步把 max 拉到 5000，公式区按 pageStep 乘 300、再除以 range 加 pageStep，算出 1 像素（第 220 行），窗口里的手柄却留着一小截，那是 style 的最小值在兜底，Fusion 是 26 像素（qfusionstyle.cpp 第 2759-2761 行），common 是 9（qcommonstyle.cpp 第 4536-4538 行），公式区“小于 20 像素”的警告线（第 236-239 行）只是演示阈值，真实下限以您桌面的 style 为准。第二步把 pageStep 调到 400，range 还是 100，手柄占到 groove 的八成，警告提示“手柄几乎撑满、滚动空间极小”（第 245-251 行），触发条件是 pageStep 不小于 range，这就是内容比视口大不了多少时的样子。第三步把 pageStep 归回 20，singleStep 调到 50，警告说方向键步进比点 groove 还大（第 253-258 行），然后您在滚动条上滚一格滚轮，步数 3 乘 50 算出 150，被 pageStep 封顶截回 20，封顶的出处就是 qabstractslider.cpp 第 698 行的 qBound，一格滚不出一页。
+
+完成标准照旧。手柄长短由谁定、钳位在源码哪两行，您说得清。pageStep 设 0 与 singleStep 设 0 各废掉哪条交互，您能分开报。resize 跳动的两个来路与比例恢复的写法，您拿得出来。

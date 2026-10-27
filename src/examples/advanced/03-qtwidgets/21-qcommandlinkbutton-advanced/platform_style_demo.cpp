@@ -17,10 +17,7 @@
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-PlatformStyleDemo::PlatformStyleDemo(QWidget* parent)
-    : QWidget(parent)
-    , m_descIndex(0)
-{
+PlatformStyleDemo::PlatformStyleDemo(QWidget* parent) : QWidget(parent), m_descIndex(0) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // 顶部标题
@@ -48,8 +45,7 @@ PlatformStyleDemo::PlatformStyleDemo(QWidget* parent)
 // 原生 QCommandLinkButton（无 QSS）
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* PlatformStyleDemo::createNativeSection()
-{
+QWidget* PlatformStyleDemo::createNativeSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
@@ -67,8 +63,7 @@ QWidget* PlatformStyleDemo::createNativeSection()
 
     // 自定义安装——短描述
     auto* customBtn = new QCommandLinkButton(
-        QStringLiteral("自定义安装"),
-        QStringLiteral("选择需要安装的组件，适合有经验的开发者。"),
+        QStringLiteral("自定义安装"), QStringLiteral("选择需要安装的组件，适合有经验的开发者。"),
         container);
     connect(customBtn, &QCommandLinkButton::clicked, this,
             [this]() { onChoiceSelected(QStringLiteral("自定义安装（原生风格）")); });
@@ -84,43 +79,40 @@ QWidget* PlatformStyleDemo::createNativeSection()
 // QSS 美化的 QCommandLinkButton（跨平台统一样式）
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* PlatformStyleDemo::createStyledSection()
-{
+QWidget* PlatformStyleDemo::createStyledSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
     auto* sectionTitle =
-        new QLabel(QStringLiteral("2. QSS 美化（跨平台统一样式，description 颜色无法通过 QSS 控制）"));
+        new QLabel(QStringLiteral("2. QSS 美化（跨平台统一样式，color 同时作用于标题与描述）"));
     sectionTitle->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 13px;"));
     sectionTitle->setWordWrap(true);
 
-    // QSS 只能控制标题颜色、背景、边框；description 的字号和颜色由 QStyle 绘制，QSS 无法覆盖
-    const QString btnStyle =
-        QStringLiteral("QCommandLinkButton {"
-                       "  color: #0066CC;"
-                       "  background: transparent;"
-                       "  border: 1px solid #cccccc;"
-                       "  border-radius: 4px;"
-                       "  padding: 8px 16px;"
-                       "}"
-                       "QCommandLinkButton:hover {"
-                       "  color: #004499;"
-                       "  background: #f0f6ff;"
-                       "  border: 1px solid #88aacc;"
-                       "}");
+    // QSS 的 color 落进 QPalette::ButtonText，标题与描述读同一个角色，一起变色。
+    // 背景与边框归面板绘制，QSS 同样够得着。两带文字没有能单独对准的选择器。
+    const QString btnStyle = QStringLiteral("QCommandLinkButton {"
+                                            "  color: #0066CC;"
+                                            "  background: transparent;"
+                                            "  border: 1px solid #cccccc;"
+                                            "  border-radius: 4px;"
+                                            "  padding: 8px 16px;"
+                                            "}"
+                                            "QCommandLinkButton:hover {"
+                                            "  color: #004499;"
+                                            "  background: #f0f6ff;"
+                                            "  border: 1px solid #88aacc;"
+                                            "}");
 
     auto* minBtn = new QCommandLinkButton(
         QStringLiteral("最小安装"),
-        QStringLiteral("仅安装运行时必需的核心组件，占用磁盘空间最小。"),
-        container);
+        QStringLiteral("仅安装运行时必需的核心组件，占用磁盘空间最小。"), container);
     minBtn->setStyleSheet(btnStyle);
     connect(minBtn, &QCommandLinkButton::clicked, this,
             [this]() { onChoiceSelected(QStringLiteral("最小安装（QSS美化）")); });
 
     auto* portableBtn = new QCommandLinkButton(
         QStringLiteral("便携安装"),
-        QStringLiteral("不写入注册表，可放在 U 盘中使用。适合需要移动办公的用户。"),
-        container);
+        QStringLiteral("不写入注册表，可放在 U 盘中使用。适合需要移动办公的用户。"), container);
     portableBtn->setStyleSheet(btnStyle);
     connect(portableBtn, &QCommandLinkButton::clicked, this,
             [this]() { onChoiceSelected(QStringLiteral("便携安装（QSS美化）")); });
@@ -136,21 +128,18 @@ QWidget* PlatformStyleDemo::createStyledSection()
 // 动态 description 切换——演示 sizeHint 随描述长度变化
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* PlatformStyleDemo::createDynamicSection()
-{
+QWidget* PlatformStyleDemo::createDynamicSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
-    auto* sectionTitle = new QLabel(
-        QStringLiteral("3. 动态 description 切换（观察 sizeHint 变化导致布局重排）"));
+    auto* sectionTitle =
+        new QLabel(QStringLiteral("3. 动态 description 切换（观察 sizeHint 变化导致布局重排）"));
     sectionTitle->setStyleSheet(QStringLiteral("font-weight: bold; font-size: 13px;"));
     sectionTitle->setWordWrap(true);
 
     // 初始描述较短
-    m_dynamicBtn = new QCommandLinkButton(
-        QStringLiteral("高级选项"),
-        QStringLiteral("短描述：配置高级参数。"),
-        container);
+    m_dynamicBtn = new QCommandLinkButton(QStringLiteral("高级选项"),
+                                          QStringLiteral("短描述：配置高级参数。"), container);
 
     connect(m_dynamicBtn, &QCommandLinkButton::clicked, this,
             [this]() { onChoiceSelected(QStringLiteral("高级选项（动态描述）")); });
@@ -184,7 +173,6 @@ QWidget* PlatformStyleDemo::createDynamicSection()
 // 槽函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-void PlatformStyleDemo::onChoiceSelected(const QString& choice)
-{
+void PlatformStyleDemo::onChoiceSelected(const QString& choice) {
     m_resultLabel->setText(QStringLiteral("已选择: %1").arg(choice));
 }

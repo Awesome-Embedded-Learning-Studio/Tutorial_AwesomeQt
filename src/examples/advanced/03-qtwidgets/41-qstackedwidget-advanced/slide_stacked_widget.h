@@ -14,15 +14,15 @@
 
 /// @brief A QStackedWidget that animates page transitions with a slide effect.
 ///
-/// When setCurrentIndex() or setCurrentWidget() is called, the old page slides
-/// out and the new page slides in using QPropertyAnimation on the widgets'
-/// geometry property. The animation direction reverses automatically when
-/// navigating backward.
-class SlideStackedWidget : public QStackedWidget
-{
+/// When setCurrentIndex() is called, the old page slides out and the new page
+/// slides in using QPropertyAnimation on the widgets' geometry property. The
+/// animation direction reverses automatically when navigating backward.
+/// setCurrentWidget() is NOT overridden — it goes straight to the base class
+/// and switches without animation.
+class SlideStackedWidget : public QStackedWidget {
     Q_OBJECT
 
-public:
+  public:
     /// @brief Constructs the slide-stacked widget.
     /// @param[in] parent Parent widget for Qt object-tree ownership.
     explicit SlideStackedWidget(QWidget* parent = nullptr);
@@ -32,7 +32,8 @@ public:
     /// @note QStackedWidget::setCurrentIndex is not virtual, so this method
     ///       shadows the base class version. Callers must use a SlideStackedWidget
     ///       pointer or reference (not a QStackedWidget pointer) to get animation.
-    ///       If an animation is already running, it is stopped before starting a new one.
+    ///       If an animation is already running, new switch requests are ignored
+    ///       (dropped) until it finishes.
     void setCurrentIndex(int index);
 
     /// @brief Sets the animation duration in milliseconds.
@@ -43,7 +44,7 @@ public:
     /// @return Duration in milliseconds.
     int animationDuration() const;
 
-private:
+  private:
     /// @brief Performs the actual slide animation between two widget indices.
     /// @param[in] fromIndex The page index currently visible.
     /// @param[in] toIndex   The page index to animate into view.
@@ -58,6 +59,6 @@ private:
     /// @return True if target index is greater than current (forward direction).
     bool isForward(int fromIndex, int toIndex) const;
 
-    int m_animationDuration{300};  ///< Animation duration in milliseconds
-    bool m_animating{false};       ///< True while a slide animation is active
+    int m_animationDuration{300}; ///< Animation duration in milliseconds
+    bool m_animating{false};      ///< True while a slide animation is active
 };

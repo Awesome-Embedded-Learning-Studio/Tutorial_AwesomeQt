@@ -1,196 +1,98 @@
 ---
 title: "3.66 QFileDialog 进阶"
-description: "入门篇我们学会了 QFileDialog 的基本用法——getOpenFileName、getSaveFileName 这几个静态方法一调就完事。进阶篇要把火力集中在静态方法力不从心的那些场景：多文件类型过滤、自定义侧边栏 URL、以及最重要的——在非原生对话框中嵌入自定义预览 widget。"
+description: "进阶篇从静态四兄弟读进 QFileDialog 内部：静态函数全是 QFileDialogArgs 流水线造出的整只对话框（qfiledialog.cpp 第 2128-2153、2470-2497、2580-2592 行），原生与 Qt 内置在构造时就分岔（第 2910-2922 行），canBeNativeDialog 三条否决加类名比对（第 694-708 行），setOptions 里 DontUseNativeDialog 当场建控件（第 768-781 行），mimeTypeFilters 是 nameFilter 的翻译层（第 1533-1576 行），保存不补扩展名要靠 defaultSuffix（第 1183-1271、3829-3855 行），accept 把关文件存在与覆盖确认（第 2679-2700、2768-2797 行），setSidebarUrls 在原生路上被静默丢掉（第 401-415、551-572 行），QtProject/FileDialog 设置组记着上回逛到的目录（第 2803-2861、2910-2941 行），示例在 examples/advanced/03-qtwidgets/66-qfiledialog-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.66——QFileDialog 进阶
 
-## 1. 前言 / 静态方法够用吗？
+对话框一家从 62 走到 65，静态族每位成员的便捷函数几只就数完了，QFileDialog 一出手就是四个兄弟，getOpenFileName、getSaveFileName、getExistingDirectory、getOpenFileNames，分量最重。笔者把 qfiledialog.cpp 从头读到尾，四千二百多行，读下来的印象是两只对话框住在同一个类名下，平台原生的一只，Qt 自己画的一只。走哪只、什么时候定、哪些设置在哪只身上会失效，答案都在构造与 setVisible 的几行代码里。
 
-入门篇我们学会了 QFileDialog 的基本用法——getOpenFileName、getSaveFileName 这几个静态方法一调就完事。说实话，90% 的场景下静态方法确实够用了。但当你要做的事情稍微超出"弹一个框选一个文件"这个范围时，静态方法就暴露出它的局限了：你没法自定义侧边栏的快捷目录，你没法在文件列表旁边嵌入一个实时预览面板，你甚至连文件类型过滤的优先级都没法精确控制。
+引用文件咱们交代清楚。主战场是 qfiledialog.cpp 与 qfiledialog.h（src/widgets/dialogs），界面骨架另有一份 qfiledialog.ui，讲预览面板时会用到。defaultSuffix 这类属性，本体在 gui 一侧的 qplatformdialoghelper.cpp。QFileDialogOptions 就定义在那里，讲保存场景时会下探一次。60 篇 QDialog 的 exec 模态语义本篇挂链不重讲，62 篇消息盒静态族的写法也不重讲。配套示例是一只四按钮演示窗口，完整玩法放结语。
 
-这篇文章我们要把四个进阶话题掰开揉碎：静态方法和实例化方式的根本区别以及什么时候必须实例化，setNameFilter 和 setMimeTypeFilters 的文件类型过滤机制，setFileMode 和 DontUseNativeDialog 选项的配合，以及在非原生对话框中嵌入自定义预览 widget 的完整套路。
+## 静态四兄弟：每一个背后都是一只完整的对话框
 
-## 2. 环境说明
+咱们从静态函数看起。getOpenFileName（qfiledialog.cpp 第 2085-2099 行）自己不干活，转手调 getOpenFileUrl（第 2128-2153 行），后者把参数装进一只 QFileDialogArgs，mode 填 ExistingFile（第 2140 行），接着 `QAutoPointer<QFileDialog> dialog(new QFileDialog(args))`，构造、exec、取 selectedUrls 的第一项，出了作用域指针自动销毁（第 2143-2153 行）。getSaveFileName 同一条流水线（第 2427-2441 行），只是 getSaveFileUrl 把 mode 换成 AnyFile，再补一句 setAcceptMode(AcceptSave)，两处出处是第 2482 行与第 2487 行。getExistingDirectoryUrl 填 Directory（第 2580-2592 行），getOpenFileNames 则走 getOpenFileUrls 收一串回来，出处是第 2195-2209 行与第 2240 行。
 
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。QFileDialog 属于 QtWidgets 模块，自定义预览 widget 部分涉及 QImage/QPixmap（QtGui）。平台差异在本篇非常重要——Linux 上的原生对话框由 GTK 或 KDialog 提供，macOS 上是原生 NSOpenPanel，Windows 上是系统通用对话框。非原生对话框（DontUseNativeDialog）在三个平台上行为一致，但外观会退化为 Qt 内置风格。
+所以静态函数与实例化的分野不在能力，静态函数内部造的就是一只完整实例，您传的 options 也从 args 构造函数原样进了 setOptions，出处是第 361-379 行。分野在生命周期：exec 一把就销毁，显示前调 setSidebarUrls 或 setProxyModel 的机会，静态函数不给您。还有一处默认值您留意，getExistingDirectory 的 options 实参默认是 ShowDirsOnly，出处见 qfiledialog.h 第 189-192 行，其余三兄弟默认空选项，示例里选择目录那个按钮显式传了 ShowDirsOnly 加 DontResolveSymlinks，等的就是这层差别。
 
-## 3. 核心概念讲解
+## 原生与内置：构造时就分岔，DontUseNativeDialog 当场换路
 
-### 3.1 静态方法 vs 实例化
+QFileDialog 构造时，咱们跟着私有类的 init（qfiledialog.cpp 第 2910-2956 行）看它开头做什么：向平台要一名助手，`nativeDialogInUse = platformFileDialogHelper() != nullptr`，要到了就走原生，内置控件一个不建，要不到才 createWidgets（第 2920-2922 行）。真到显示时 setVisible 再核一遍，canBeNativeDialog 放行就试原生，平台那边没铺好就 createWidgets 兜底，Qt 内置的一套当场建起来（第 858-887 行）。
 
-我们先搞清楚静态方法和实例化的根本区别。getOpenFileName、getSaveFileName、getExistingDirectory、getOpenFileNames 这四个静态方法的内部实现其实也是创建了一个 QFileDialog 实例，exec() 完之后销毁。它们的局限不是技术上的，而是封装上的——你没法在 exec() 之前设置任何自定义属性。
+canBeNativeDialog（第 694-708 行）的否决清单咱们数一遍：全局属性 AA_DontUseNativeDialogs，控件属性 WA_DontShowOnScreen，还有选项 DontUseNativeDialog，任一条命中就回 false（第 699-703 行）。末尾还有一道类名比对，实例的类名与 QFileDialog 不完全一致，就回 false（第 707 行）。您要是继承了 QFileDialog，原生路从此对您关闭，strcmp 的比对结果替您做了主。
 
-具体来说，静态方法无法做到以下事情：自定义侧边栏的 URL（setSidebarUrls）、嵌入自定义预览 widget、设置非默认的文件模式（ExistingFiles 多选需要用实例化方式更方便地控制）、在对话框显示后动态修改过滤器。如果你需要以上任何一个功能，就必须用实例化方式。
+DontUseNativeDialog 平时怎么设？setOptions 里专门有一段：选项里带 DontUseNativeDialog，就把 nativeDialogInUse 置 false，紧接着 createWidgets（第 778-780 行）。所以示例的调用顺序是对的，setOption(DontUseNativeDialog, true) 一调，内置控件当场建好，后面的 setSidebarUrls 才有落点。setOption 的文档也叮嘱在案，选项要在改其他属性或显示之前设，晚了某些属性就不生效了（第 715-729 行）。Option 枚举一共七项（qfiledialog.h 第 47-56 行），本篇讲到了 DontUseNativeDialog、ShowDirsOnly、DontResolveSymlinks 与 DontConfirmOverwrite，剩下三项是 ReadOnly、HideNameFilterDetails、DontUseCustomDirectoryIcons，您查文档能见到同款处理。
+
+## 双轨过滤：mimeTypeFilters 是 name filter 的翻译层
+
+nameFilter 一侧咱们从写入端看。setNameFilter 收一整串用 `;;` 隔开的过滤描述，切成列表再交给 setNameFilters（qfiledialog.cpp 第 1371-1373 行）。setNameFilters（第 1417-1435 行）把列表做一次 simplified 清洗，然后写进 options。有一处您记一下，name filter 是进了 options 的，原生对话框也拿得到，后面讲侧边栏时会形成对照。内置控件这一路才有动作：喂给 fileTypeCombo，HideNameFilterDetails 开着时只显示括号前面的名字（qt_strip_filters 第 1380-1397 行），最后 useNameFilter(0) 选中第一项（第 1439 行）。文档另有一句提醒值得带上，`*.*` 不跨平台，无扩展名的文件如 Makefile 在有的对话框里匹配不上，想表达任意文件就写 `*`（第 1403-1408 行）。
+
+mimeTypeFilters 一侧，setMimeTypeFilters（第 1565-1576 行）进门就把每个 MIME 类型交给 nameFilterForMime（第 1533-1545 行）：QMimeDatabase 查出 QMimeType，globPatterns 用空格连起来，comment 做显示名，拼成一条普普通通的 name filter，再调 setNameFilters。MIME 一侧没有自己的过滤引擎，它是站在 name filter 机制前面的翻译层，好处是扩展名清单不用您手抄，系统 MIME 数据库认得多少它就写出多少。文档里有个特例，application/octet-stream 翻出来就是 `All files (*)`，出处见第 1547-1562 行。副作用也写明了，调完 setMimeTypeFilters，nameFilters() 的返回值跟着变（第 1560-1562 行），两个接口读的是同一份名单。
+
+## defaultSuffix：过滤器不会替您补扩展名
+
+保存场景有个流传很广的误会：选了下拉里的 `Text files (*.txt)`，输入 notes，确认后拿到的路径自动带 .txt。笔者把内置实现的代码路径走了一遍，不补。您手输的名字走 typedFiles（第 1183-1217 行），它结尾把名单交给 addDefaultSuffixToFiles（第 1246-1271 行），而那个函数只认 defaultSuffix 属性，文件名里不含点才补一个点加后缀（第 1253-1255 行）。属性默认是空的，过滤器选了什么它一概不问。证据在 gui 一侧的 qplatformdialoghelper.cpp 第 410 行，QString defaultSuffix 默认构造为空。想补，自己 setDefaultSuffix 传 `txt`（第 1853-1857 行），文档说实参带前导点会被剥掉。
+
+有一个动作倒是真的：保存模式下切换过滤器，useNameFilter 会把文件名里已有的扩展名替换成新过滤器第一个扩展名（第 3841-3851 行），notes.txt 切到 `*.json` 就变 notes.json。但前提是名字里本来有点，没有点的名字它不碰。咱们用一段伪代码把保存姿势立起来。
 
 ```cpp
-// 静态方法：一行搞定，但无法自定义
-QString file = QFileDialog::getOpenFileName(
-    this, "选择文件", QDir::homePath(),
-    "图片 (*.png *.jpg);;所有文件 (*)");
+// 伪代码：保存时自己保扩展名，selectedFilter 指针顺手收下用户选的过滤器
+QString selectedFilter;
+const QString path = QFileDialog::getSaveFileName(
+    this, tr("保存"), QString(),
+    tr("文本 (*.txt);;JSON (*.json)"), &selectedFilter);
+// path 不含点时按 selectedFilter 补齐后缀，比赌对话框的默认行为可靠
+```
 
-// 实例化方式：完全控制
-auto *dlg = new QFileDialog(this, "选择文件", QDir::homePath());
-dlg->setFileMode(QFileDialog::ExistingFiles);  // 多选
-dlg->setNameFilter("图片 (*.png *.jpg *.bmp)");
-dlg->setSidebarUrls({QUrl::fromLocalFile("/home/user/projects")});
-// 设置更多自定义属性...
-if (dlg->exec() == QDialog::Accepted) {
-    QStringList files = dlg->selectedFiles();
+## accept 的把关：文件不存在不关门，覆盖要问过您
+
+内置实现的确认按钮按下后，accept（qfiledialog.cpp 第 2708-2797 行）按 FileMode 分三截把关。ExistingFile 与 ExistingFiles 一截：挨个查文件存在，不存在就弹 itemNotFound 的提示并且直接 return，对话框不关（第 2780-2790、2692-2700 行），您输错文件名想蒙混过去，窗是关不上的。选中的是个目录，它也不报错，当成导航钻进去（第 2791-2794 行）。AnyFile 一截管保存，目标已存在、又没开 DontConfirmOverwrite，就弹 itemAlreadyExists 问您要不要替换，QMessageBox 摆出 Yes 与 No，默认落在 No 上（第 2768-2776、2679-2690 行），替换要的是一次明确的 Yes。开了 DontConfirmOverwrite，问话整个跳过（第 2768 行）。Directory 一截最短，路径存在且真是目录就收下，不存在照旧 itemNotFound（第 2737-2751 行）。
+
+这三截都只管内置实现，原生对话框的确认行为归平台管，qfiledialog.cpp 的代码够不着。咱们把边界记下，跨平台测试时它就在差异清单的头几行里。
+
+## 侧边栏与预览：setSidebarUrls 在原生路上会被静默丢掉
+
+对照来了。setNameFilters 写 options，原生拿得到，setSidebarUrls（第 401-406 行）只干一件事：内置控件在的时候把 URL 列表写进 qFileDialogUi->sidebar，nativeDialogInUse 为真时整个函数体直接跳过，一行警告都没有。sidebarUrls 同一套待遇，原生在用时返回一张空表（第 411-415 行）。原生助手那边也不是全无通道，helperPrepareShow 只有在 usingWidgets 的情况下才把侧边栏塞进 options（第 551-562 行），helperDone 在接受后把 options 里的写回控件（第 564-572 行），一来一回都建立在控件存在这个前提上。您把上头几段连起来读就明白，侧边栏是内置实现的私产，想在原生对话框上设置它，原生路径根本不读这些设置。
+
+嵌预览面板的套路就顺理成章了：必须关掉原生路。界面骨架在 qfiledialog.ui 里写得明白，根布局是一枚 QGridLayout（第 19 行），中部一道 QSplitter（第 135 行），左边挂 QSidebar（第 148 行），右边 QStackedWidget 里装 listView 与 treeView 两个视图页，行号在第 180 行到第 228 行。咱们的做法是 setOption(DontUseNativeDialog, true) 之后用 findChild 摸到根布局，把预览面板作为新的一列加进去，currentChanged 信号驱动刷新，信号声明在 qfiledialog.h 第 147 行，文档在第 279-284 行。这个信号原生路上也有转发，私有类 initHelper 把平台助手的 currentChanged 接到 nativeCurrentChanged（第 542-543 行），但您自己造的 widget 塞不进系统管理的窗口，信号再勤快也没有落脚的地方。
+
+该说清的另一面是，findChild 找内部布局是踩在私有实现上的做法，qfiledialog.ui 的结构 Qt 没承诺稳定，版本升级挪了位置，您那行 addWidget 就找不着北。稳妥的写法是找不到布局就退回一只普通对话框，预览功能静默缺席，别让主流程跟着受牵连。咱们给一段骨架。
+
+```cpp
+// 伪代码：给内置文件对话框嵌一块预览面板
+dialog->setOption(QFileDialog::DontUseNativeDialog, true);   // 内置控件当场建好
+auto* grid = dialog->findChild<QGridLayout*>();              // 摸 qfiledialog.ui 的根布局
+if (grid) {
+    auto* preview = new ImagePreview(dialog);
+    grid->addWidget(preview, 0, grid->columnCount(),
+                    grid->rowCount(), 1);                    // 挂到最右侧新列
+    connect(dialog, &QFileDialog::currentChanged, this,
+            [preview](const QString& path) { preview->show(path); });
 }
 ```
 
-实例化方式的另一个好处是你可以复用对话框实例。如果你的应用有一个"最近打开的目录"功能，你可以在 exec() 之后通过 directory() 获取用户最后浏览的目录，下次打开时设置为起始目录。静态方法每次都从默认目录开始。
+## 上回逛到的目录：QSettings 里那份 QtProject/FileDialog
 
-有一个细节值得注意：实例化方式创建的 QFileDialog，如果不传 parent，你需要自己管理它的生命周期。传了 parent 的话 Qt 对象树会帮你管理，但注意 exec() 结束后对话框只是隐藏了，并没有被销毁——如果你想每次打开都是干净状态，要么手动 resetState()，要么每次 new 一个新的。
+有种说法是静态函数每次都从默认目录起步，想把上次的目录留下来得实例化自己存。笔者翻到的实情相反。私有类的 init 在构造时就读 QSettings（UserScope，组织名 QtProject，组名 FileDialog），把 lastVisited、viewMode、shortcuts、history 一并恢复（第 2910-2941 行，restoreFromSettings 第 2826-2861 行）。析构函数再调 saveSettings 写回，出处是第 373-378 行与第 2803-2824 行。而 lastVisitedDir 是一只进程级静态 QUrl（Q_GLOBAL_STATIC 在第 57 行，赋值点第 593、3960 行），同进程里几只对话框共享，跨进程重启靠 QSettings 续上。所以您什么都不传，弹出来的多半就是上回逛到的目录，程序重启了也一样。
 
-### 3.2 setNameFilter / setMimeTypeFilters 文件类型过滤
+想要每次都从固定目录起步，办法是把 dir 实参传足，静态函数与构造函数都收这个参数（qfiledialog.h 第 159-165 行），或者实例化之后 setDirectory（qfiledialog.cpp 第 925 行）。再顺一句，saveSettings 记的键里还有 sidebarWidth 与 treeViewHeader（第 2803-2813 行），用户拖过的侧边栏宽度和列头布局它也存。存的位置不在您应用的 QSettings 里，Qt 把它们私底下记在 QtProject 名下。
 
-文件类型过滤是 QFileDialog 最常用的功能之一，但它的细节比大多数人想象的要多。
+## 官方文档参考
 
-setNameFilter 接受的格式是 "显示名称 (扩展名列表)"，多个过滤器用 ";;" 分隔。这个格式看起来简单，但有几个容易忽略的细节。首先，扩展名列表中的通配符匹配是不区分大小写的——"*.PNG" 和 "*.png" 会匹配到相同的文件。其次，你可以用多个扩展名在一个过滤器里，比如 "图片 (*.png*.jpg *.jpeg*.bmp)"。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 6.9.1 源码核对过。
 
-```cpp
-dlg->setNameFilter("源代码 (*.cpp *.h *.hpp);;项目文件 (*.pro *.cmake);;所有文件 (*)");
-```
+[Qt 文档 · QFileDialog](https://doc.qt.io/qt-6/qfiledialog.html) -- 文件对话框类，静态函数族与选项、属性的定义处
 
-setMimeTypeFilters 是一个更现代的替代方案。它接受 MIME 类型字符串列表，内部会根据系统的 MIME 数据库自动匹配扩展名。好处是你不需要手动枚举所有可能的扩展名——"image/png" 会自动匹配 ".png"，而且在不同平台上表现一致。
+[Qt 文档 · QMimeType](https://doc.qt.io/qt-6/qmimetype.html) -- MIME 类型查询，setMimeTypeFilters 的数据来源
 
-```cpp
-dlg->setMimeTypeFilters({"image/png", "image/jpeg", "image/bmp"});
-```
+[Qt 文档 · QSettings](https://doc.qt.io/qt-6/qsettings.html) -- 对话框记忆的存放机制，组织名 QtProject
 
-这里有一个实际工程中的选择问题：如果你的文件类型是标准的 MIME 类型，优先用 setMimeTypeFilters，因为它能正确处理平台差异（比如 macOS 的文件类型系统和 Linux 的 MIME 系统不同）。如果你的文件类型是自定义的（比如 ".myapp"），只能用 setNameFilter。
-
-多个过滤器同时存在时，用户可以通过对话框的下拉框切换。默认选中的是第一个过滤器。你可以通过 selectNameFilter 来预选某个过滤器。在对话框关闭后，通过 selectedNameFilter() 获取用户最终选择的过滤器——这在保存文件时特别有用，你可以根据过滤器决定默认扩展名。
-
-### 3.3 setFileMode / DontUseNativeDialog 与自定义侧边栏
-
-setFileMode 决定了对话框的交互模式，它直接影响用户能选什么、选几个。QFileDialog 提供了四种文件模式：AnyFile（可以输入任意文件名，用于"另存为"场景）、ExistingFile（只能选一个已存在的文件）、ExistingFiles（可以选多个已存在的文件）、Directory（只能选目录）。
-
-DontUseNativeDialog 是一个容易让人困惑的选项。QFileDialog 默认使用平台的原生对话框——Windows 上是系统通用对话框，macOS 上是 NSOpenPanel，Linux 上可能是 GTK 对话框。原生对话框的外观和交互与系统一致，但你没法对它做任何自定义。当你在实例化方式下设置了自定义侧边栏 URL、或者嵌入了预览 widget，Qt 会自动回退到非原生对话框——因为原生对话框的 API 根本不支持这些功能。
-
-但有一个坑：如果你显式设置了 setOption(QFileDialog::DontUseNativeDialog, true)，即使你没有做任何自定义，对话框也会强制使用 Qt 内置实现。这在某些平台上外观会明显不一样——比如 Windows 上的原生对话框有导航栏、地址栏、搜索框，而 Qt 内置实现就是一个朴素的 QTreeView 加几个按钮。所以除非你确实需要自定义，否则不要主动开启这个选项。
-
-```cpp
-auto *dlg = new QFileDialog(this);
-dlg->setFileMode(QFileDialog::ExistingFiles);
-dlg->setSidebarUrls({
-    QUrl::fromLocalFile(QDir::homePath()),
-    QUrl::fromLocalFile("/data/projects"),
-    QUrl::fromLocalFile(QStandardPaths::writableLocation(
-        QStandardPaths::DocumentsLocation))
-});
-```
-
-自定义侧边栏 URL 是实例化方式的一个实用功能。你可以把项目常用目录加到侧边栏里，这样用户不用每次都从根目录一层层点进去。setSidebarUrls 接受一个 QUrl 列表，每个 URL 会在侧边栏显示为一个快捷按钮。这个功能只在非原生对话框中有效——因为原生对话框的侧边栏由系统控制。
-
-### 3.4 在非原生对话框中嵌入自定义预览 widget
-
-这是本篇最核心的实战内容。如果你做过图片编辑器或者 3D 模型查看器，你一定希望在文件选择对话框里就能预览文件内容，而不是选完之后发现不对再回来重选。
-
-QFileDialog 提供了一个机制来嵌入自定义预览 widget：通过访问对话框内部的布局，把你的预览 widget 插入到文件列表旁边。核心思路是找到 QFileDialog 内部的 QStackedWidget（包含文件列表的那个区域），获取它的布局，然后把你自己的 widget 作为一个新的列或行插入进去。
-
-```cpp
-class ImagePreview : public QWidget
-{
-public:
-    explicit ImagePreview(QWidget* parent = nullptr)
-        : QWidget(parent)
-    {
-        m_label = new QLabel(this);
-        m_label->setAlignment(Qt::AlignCenter);
-        m_label->setMinimumSize(200, 200);
-        auto *layout = new QVBoxLayout(this);
-        layout->addWidget(m_label);
-    }
-
-    void previewFile(const QString& path)
-    {
-        QPixmap pixmap(path);
-        if (!pixmap.isNull()) {
-            // 缩放到预览区域大小，保持宽高比
-            m_label->setPixmap(pixmap.scaled(
-                m_label->size(), Qt::KeepAspectRatio,
-                Qt::SmoothTransformation));
-        } else {
-            m_label->setText("无法预览");
-        }
-    }
-
-private:
-    QLabel* m_label;
-};
-```
-
-嵌入预览 widget 的关键步骤是找到对话框内部的布局结构。QFileDialog 的内部布局在不同 Qt 版本间可能变化，但一个相对稳定的方案是找到对话框中所有 QListView 和 QTreeView（文件列表视图），获取它们的父 widget，然后把你自己的 widget 添加到同一个布局中。
-
-```cpp
-auto *dlg = new QFileDialog(this);
-dlg->setOption(QFileDialog::DontUseNativeDialog, true);
-
-auto *preview = new ImagePreview(dlg);
-
-// 连接文件选择信号到预览更新
-connect(dlg, &QFileDialog::currentChanged,
-        preview, [preview](const QString& path) {
-    preview->previewFile(path);
-});
-
-// 找到内部布局并插入预览 widget
-auto *gridLayout = dlg->findChild<QGridLayout*>();
-if (gridLayout) {
-    // 在第二行第三列插入预览 widget，跨所有行
-    gridLayout->addWidget(preview, 0, gridLayout->columnCount(),
-                          gridLayout->rowCount(), 1);
-}
-```
-
-这里有几个关键细节。第一，必须设置 DontUseNativeDialog 为 true，否则 connect currentChanged 信号虽然能连上，但你的 widget 无法嵌入到原生对话框的窗口里。第二，findChild 找 QGridLayout 是一个 hack——它依赖 QFileDialog 的内部实现，不同 Qt 版本可能布局结构不同。第三，currentChanged 信号在用户点击文件或目录时都会触发，你需要在 previewFile 里判断文件是否可读、是否是你支持的格式。
-
-预览的性能也需要注意。如果用户快速在文件列表中上下移动鼠标，currentChanged 会高频触发。对于图片预览，每次都从磁盘加载并缩放图片是有性能开销的。一个实用的优化是维护一个小型缓存（比如 QHash 缩略图），或者在预览里用 QTimer 延迟 200ms 再加载——如果 200ms 内又来了新的 currentChanged，就取消上一次的加载。
-
-现在有一道调试题给大家。下面这段嵌入预览的代码有什么问题？
-
-```cpp
-auto *dlg = new QFileDialog(this);
-// 没有设置 DontUseNativeDialog
-auto *preview = new ImagePreview(dlg);
-connect(dlg, &QFileDialog::currentChanged, preview,
-        [preview](const QString& path) {
-    preview->previewFile(path);
-});
-dlg->exec();
-```
-
-问题出在缺少 DontUseNativeDialog 设置上。在 Windows 和 macOS 上，默认使用原生对话框，你的 preview widget 虽然被创建了，但它不会出现在对话框窗口里——因为原生对话框是系统管理的窗口，不是 Qt 窗口。currentChanged 信号在原生模式下可能根本不会触发。解决方案是加一行 `dlg->setOption(QFileDialog::DontUseNativeDialog, true);`。
-
-## 4. 踩坑预防
-
-第一个坑是在 Windows/macOS 上嵌入自定义 widget 后不生效。根本原因是 QFileDialog 默认使用平台原生对话框，原生对话框是操作系统管理的窗口，Qt 无法往里面塞 widget。解决方案是必须设置 `setOption(QFileDialog::DontUseNativeDialog, true)`，强制使用 Qt 内置实现。代价是外观会退化为 Qt 风格，不再和系统原生对话框一致。
-
-第二个坑是 findChild 找布局在不同 Qt 版本间不稳定。QFileDialog 的内部布局结构不是公开 API，Qt 升级后布局可能变化，导致你的 findChild 找不到正确的 QGridLayout，预览 widget 无法正确嵌入。解决方案是在嵌入后检查 widget 是否真的可见（isVisible()），并且做好降级处理——如果找不到布局就让对话框正常工作，只是没有预览功能。也可以考虑完全自己用 QTreeView + 自定义 Model 做一个文件选择对话框，彻底绕开这个问题。
-
-第三个坑是 setNameFilter 的扩展名匹配在某些平台上对大写扩展名处理不一致。虽然 Qt 文档说通配符匹配是不区分大小写的，但在配合原生对话框时（特别是 Linux 的 GTK 对话框），大小写处理委托给了平台，行为可能不一致。解决方案是如果扩展名匹配有问题，改用 setMimeTypeFilters，它走的是 MIME 类型匹配路径，不受平台通配符行为差异影响。
-
-第四个坑是 currentChanged 信号在高频触发时导致预览卡顿。用户在文件列表中快速移动鼠标时，currentChanged 可能每秒触发数十次，如果每次都从磁盘加载文件生成预览，对话框会明显卡顿。解决方案是用一个 QTimer 做防抖处理，延迟 150-200ms 后再真正加载预览；或者维护一个最近 N 个文件的预览缓存，命中缓存时直接使用。
-
-## 5. 练习项目
-
-练习项目：带图片预览的文件选择对话框。我们要封装一个 ImageFileDialog 类，继承自 QFileDialog，在文件列表右侧嵌入一个 200x200 的预览面板。用户点击任何图片文件时，预览面板实时显示缩略图；点击非图片文件时，显示文件图标和文件大小信息。
-
-完成标准是：预览面板在 Fusion style 下正常工作（必须 DontUseNativeDialog），支持 PNG/JPG/BMP/GIF 格式预览，大图片（4000x3000 以上）预览时不卡顿（需要做缩放和延迟加载），切换文件时预览即时更新但不造成明显延迟。提示几个关键点：用 currentChanged 信号驱动预览更新，QPixmap 加载后用 scaled 缩放到 200x200 以内，用 QTimer 做防抖避免高频加载，findChild 找 QGridLayout 然后把预览 widget 加到最后一列。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QFileDialog](https://doc.qt.io/qt-6/qfiledialog.html) -- 文件对话框控件，包含静态方法、setFileMode、setNameFilter 等完整 API
-
-[Qt 文档 · QFileDialog::Options](https://doc.qt.io/qt-6/qfiledialog.html#Option-enum) -- DontUseNativeDialog 等选项说明
-
-[Qt 文档 · QMimeType](https://doc.qt.io/qt-6/qmimetype.html) -- MIME 类型类，配合 setMimeTypeFilters 使用
-
-[Qt 文档 · QStandardPaths](https://doc.qt.io/qt-6/qstandardpaths.html) -- 标准路径枚举，用于设置侧边栏 URL
+[Qt 文档 · QUrl](https://doc.qt.io/qt-6/qurl.html) -- 侧边栏与 Url 系静态函数共用的地址类型
 
 ---
 
-到这里，QFileDialog 的进阶内容就过了一遍。静态方法方便但能力有限，需要自定义侧边栏、预览面板、多选模式时必须实例化。文件类型过滤有两种路径——setNameFilter 手动枚举扩展名，setMimeTypeFilters 走 MIME 系统更稳健。嵌入预览 widget 是实战中最常见的高级需求，核心是 DontUseNativeDialog 加 findChild 找布局，但要注意这是依赖内部实现的 hack 方案，Qt 版本升级时可能需要适配。把这些搞清楚，文件对话框在工程实践中就没有搞不定的场景了。
+62 起步的这套静态便捷函数到本篇收官，下一站 [3.67 QProgressDialog 进阶](./67-qprogressdialog-advanced.md)。它跟本篇走的是两条路，文件对话框等用户表态，进度对话框跟着长任务跑表，任务预计够慢它才肯露面，那边等咱们。
+
+想动手的您把示例跑起来（examples/advanced/03-qtwidgets/66-qfiledialog-advanced/，可执行文件 66-qfiledialog-advanced）。四枚按钮挨个点。Open File (with filters) 弹出的框，过滤器下拉摆着 Images、Text files、All files 三项，出处见 file_dialog_demo.cpp 第 60-63 行，选中文件后路径回显在 Result 标签。Save File 里输入一个不带点的名字比如 notes，若弹出来的是 Qt 内置实现，Result 里的路径就是裸的，defaultSuffix 没设，过滤器也没补，defaultSuffix 一节的说法当场应验。Select Directory 传了 ShowDirsOnly 与 DontResolveSymlinks（第 96 行），框里只列目录。Open File (Qt Dialog) 强制内置实现（第 110 行），侧边栏多出 /tmp 与主目录两条快捷（第 114-117 行），跟头一枚按钮弹出的框并排一比，两条路的差别就摆在您眼前，若头一枚弹的是系统原生长相，这一枚就是朴素得多的 Qt 画框。
+
+完成标准照旧。静态四兄弟各自把 FileMode 设成什么，谁还多设了 AcceptSave，您说得出。构造时原生与内置怎么分岔，哪三个条件能否决原生，子类为什么回不去原生，您讲得明。保存时扩展名谁补谁不补，您分得清。侧边栏设置在原生路上落在哪里，您答得上。

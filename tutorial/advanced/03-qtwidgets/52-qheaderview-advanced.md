@@ -1,217 +1,122 @@
 ---
 title: "3.52 QHeaderView 进阶"
-description: "入门篇我们用 QHeaderView 配合 QTableView/QTreeView 做了列头点击排序、列宽拖动调整，掌握了 setSectionResizeMode/setSortIndicatorShown/clicked 信号。"
+description: "进阶篇把 QHeaderView 当正主读细，列有两套编号，logicalIndex 是模型户口，visualIndex 是屏幕位置，没人拖过列时映射数组根本不建、visualIndex 原样返回自身（qheaderview.cpp 第 1083-1088 行），moveSection 一来才建映射并 emit sectionMoved（第 750、781 行），出厂 movableSections 是 false（qheaderview_p.h 第 67 行），调宽模式五个值里 Custom 只是 Fixed 的别名（qheaderview.h 第 40-47 行），全局 setSectionResizeMode 重置两个私有计数器（qheaderview.cpp 第 1231-1236 行），单列版逐列增减（第 1264-1290 行），末列自己的模式会被 stretchLastSection 盖过（第 1256-1258 行），私有分配算法把剩余长度均分再拿余数逐列加一（第 3735-3740、3769-3771 行），defaultSectionSize 出厂跟样式走（第 4033-4042 行），minimumSectionSize 出厂 -1、真取值时按字体最宽字符加两倍 PM_HeaderMargin（第 1613-1621 行），resizeSection 是唯一写入口，程序与拖动同一条路（第 860-933、2643-2707 行），按内容调宽的精度旋钮出厂一千、0 只看可见区、-1 全量（qheaderview_p.h 第 87 行），消费方其实在视图的 sizeHintForColumn（qheaderview.cpp 第 4138-4144 行、qtableview.cpp 第 2499-2507 行），隐藏列的尺寸记忆存在 hiddenSectionSize 映射里（qheaderview.cpp 第 1023-1036 行），sectionSize 对隐藏列报 0（第 633-638 行），点击翻转排序箭头只看 clickableSections、不看箭头显示开关（第 2848-2851、3853-3883 行），setSortIndicator 只发信号不排序，接线在 QTableView 的 setSortingEnabled（qtableview.cpp 第 1020-1023、2730-2745 行），saveState 用 QDataStream 存下整套私有状态、restoreState 兼容两种流版本并在收尾代发一次 sortIndicatorChanged（qheaderview.cpp 第 1808-1858、4199-4240 行），setOffset 滚动并在拖动顶到边缘时把光标顶回 handle（第 423-448 行），配套示例在 examples/advanced/03-qtwidgets/52-qheaderview-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.52——QHeaderView 进阶
 
-## 1. 前言 / 当表头不只是一行文字
+[3.51 QTableView 进阶](./51-qtableview-advanced.md) 结尾说，49 篇预告过的表头深水区在本篇，51 自己只摸了表头最外层的开关。深水区咱们这就潜下去。49 留的原话是尺寸精度、隐藏列与保存恢复状态，51 又补了一句藏列的记录跟着表头走，两句预告本篇都兑现。51 讲过的换头五接线、藏列转手、角钮，本篇只挂链不重讲。
 
-入门篇我们用 QHeaderView 配合 QTableView/QTreeView 做了列头点击排序、列宽拖动调整，掌握了 setSectionResizeMode / setSortIndicatorShown / clicked 信号。大多数表格的表头就是一行文字，点击排序，拖动调宽——入门篇完全够用。但如果你需要"多级表头"（比如第一级是"上半年/下半年"，第二级是"Q1/Q2/Q3/Q4"），或者需要在表头中嵌入自定义控件（比如表头中放一个筛选下拉框），QHeaderView 的基础接口就不够了。
+引用文件咱们交代清楚。表头本体读 qheaderview.cpp 与 qheaderview.h，私有默认值在 qheaderview_p.h，视图侧的接线落到 qtableview.cpp。配套示例是一只分组表头 GroupHeaderView，完整玩法放结语，正文引用文件名加行号。
 
-今天我们把 QHeaderView 的两个高级能力拆透：多级表头的实现方案和自定义排序逻辑。
+## 列号有两套，没人拖过列时连映射表都不建
 
-## 2. 环境说明
-
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。QHeaderView 属于 QtWidgets 模块，链接 Qt6::Widgets 即可。所有行为在 Qt 6.9.1 上验证通过。
-
-## 3. 核心概念讲解
-
-### 3.1 多级表头的实现方案
-
-QHeaderView 本身不支持多级表头——它只有一级 section，没有"section 的 section"这种嵌套概念。实现多级表头的标准方案是重写 QHeaderView 的 paintEvent，在现有表头上方手动绘制上级表头。
-
-核心思路是这样的：创建一个 GroupHeaderView 继承自 QHeaderView，维护一个"分组"数据结构记录每个上级表头跨越哪些子 section。在 paintEvent 中先调 QHeaderView::paintEvent 画正常的单级表头，然后在表头上方额外画上级表头的文字和边框。
+两套编号咱们说定。模型给列发的编号叫 logicalIndex，屏幕上排第几个叫 visualIndex，表头管的就是这两套编号的换算。有人想当然觉得表头随时维护着一张映射表，实现比这懒得多，也聪明得多：
 
 ```cpp
-struct HeaderGroup {
-    QString title;
-    int start_section;
-    int span;
-};
-
-class GroupHeaderView : public QHeaderView
-{
-    Q_OBJECT
-
-public:
-    explicit GroupHeaderView(Qt::Orientation orientation,
-                             QWidget *parent = nullptr)
-        : QHeaderView(orientation, parent)
-    {
-        // 上级表头高度
-        m_group_height = 30;
-    }
-
-    void addGroup(const QString &title,
-                  int start, int span)
-    {
-        m_groups.append({title, start, span});
-        // 增加 header 的总高度以容纳上级表头
-        int total_height = m_group_height + defaultSectionSize();
-        setFixedHeight(total_height);
-        viewport()->update();
-    }
-
-protected:
-    void paintEvent(QPaintEvent *event) override
-    {
-        QHeaderView::paintEvent(event);
-
-        QPainter painter(viewport());
-        painter.setRenderHint(QPainter::Antialiasing, false);
-
-        // 在表头上方绘制分组
-        int y = 0;
-        int h = m_group_height;
-
-        for (const auto &group : m_groups) {
-            int x = sectionViewportPosition(group.start_section);
-            int w = 0;
-            for (int i = 0; i < group.span; ++i) {
-                w += sectionSize(group.start_section + i);
-            }
-
-            // 绘制分组背景和边框
-            painter.fillRect(x, y, w, h,
-                QColor(240, 240, 240));
-            painter.setPen(QPen(QColor(200, 200, 200)));
-            painter.drawRect(x, y, w, h);
-
-            // 绘制分组文字
-            painter.setPen(QColor(60, 60, 60));
-            painter.drawText(QRect(x, y, w, h),
-                Qt::AlignCenter, group.title);
-        }
-    }
-
-    void paintSection(QPainter *painter, const QRect &rect,
-                      int logical_index) const override
-    {
-        // 将底层表头绘制位置下移
-        QRect adjusted = rect.translated(0, m_group_height);
-        QHeaderView::paintSection(painter, adjusted, logical_index);
-    }
-
-    QSize sizeHint() const override
-    {
-        QSize hint = QHeaderView::sizeHint();
-        hint.setHeight(m_group_height
-                       + defaultSectionSize());
-        return hint;
-    }
-
-private:
-    int m_group_height = 30;
-    QVector<HeaderGroup> m_groups;
-};
+// visualIndex 的直通捷径（qheaderview.cpp 第 1083-1088 行，摘录）
+if (d->visualIndices.isEmpty()) { // nothing has been moved, so we have no mapping
+    if (logicalIndex < d->sectionCount())
+        return logicalIndex;
+} else if (logicalIndex < d->visualIndices.size()) {
 ```
 
-使用时创建 GroupHeaderView 替换默认的水平表头：
+映射数组为空就把 logical 原样奉还，两套编号此时是同一个数。moveSection 一来才 initializeIndexMapping（第 750 行），visualIndices 与 logicalIndices 一对数组互相反查，搬完 emit sectionMoved（第 781 行）。您在代码里换列调 moveSection 或 swapSections，用户拖列换位得开 setSectionsMovable(true)，出厂是 false（qheaderview_p.h 第 67 行），树侧默认打开的那层 49 篇讲过。拖动还有个第 0 列豁免，私有的 allowUserMoveOfSection0 注释写明树视图为假、表格为真（第 73 行），所以树的第一列默认拖不动，放开它靠 setFirstSectionMovable。想问用户动没动过列，sectionsMoved 的实现，就是查映射数组空不空（第 1740-1744 行）。
+
+查坐标咱们有三件套，sectionSize 问宽，sectionPosition 给内容坐标，sectionViewportPosition 给视口坐标，声明在 qheaderview.h 第 68-70 行。位置是内容坐标，视口坐标等于位置减 offset（qheaderview.cpp 第 678-697 行）。示例的分组表头就靠它们现算跨度，起点取首列的 sectionViewportPosition，宽度把组内各列 sectionSize 逐个加起来，出处 group_header_view.cpp 第 64-69 行。分组的记录用的是模型列号，用户一旦拖列换位，分组还指着旧列，视觉就错了，示例干脆 setSectionsMovable(false) 关掉换位，出处第 19 行。
+
+## 调宽模式五个值，Stretch 的分配算法值得读一遍
+
+枚举咱们翻 qheaderview.h 第 40-47 行，Interactive 手动可拖，Stretch 平分剩余宽度，Fixed 固定不可拖，ResizeToContents 按内容算，Custom 只是 Fixed 的别名。全局 setSectionResizeMode 重置两个私有计数器，拉伸列数与按内容列数各归各（qheaderview.cpp 第 1231-1236 行），几何一变，私有侧靠计数决定要不要重排。单列版 setSectionResizeMode(logical, mode) 逐列增减计数（第 1264-1290 行），可以让一列 Stretch 配其余 Interactive。有一处例外，stretchLastSection 开着时，末列自己设的模式被无视（第 1256-1258 行的文档注释），这个属性出厂 false（qheaderview_p.h 第 70 行）。
+
+Stretch 怎么分宽度，笔者把私有 resizeSections 的分配段翻给您看：
 
 ```cpp
-auto *header = new GroupHeaderView(Qt::Horizontal);
-tableView->setHorizontalHeader(header);
-
-// 添加分组："上半年"覆盖列 0-2，"下半年"覆盖列 3-5
-header->addGroup("上半年", 0, 3);
-header->addGroup("下半年", 3, 3);
-
-// 添加子列
-model->setHorizontalHeaderLabels(
-    {"Q1", "Q2", "Q3", "Q4", "Q5", "Q6"});
-```
-
-这个方案有一个局限：上级表头不支持交互——没有点击排序、没有拖动调宽。如果你需要上级表头也支持排序，需要在 paintEvent 中检测鼠标点击位置，判断落在哪个分组上，然后对该分组下的所有列做排序。
-
-另一种实现多级表头的方案是在表格顶部插入额外的行作为表头——把表头数据作为普通数据行放在 model 的前几行。这种方案更简单但不灵活——表头行会和数据行一起滚动，表头行的样式需要通过 delegate 自定义，而且排序时表头行会被排到数据中去。
-
-### 3.2 自定义排序逻辑
-
-QHeaderView 的 sortIndicatorChanged(int logicalIndex, Qt::SortOrder) 信号在用户点击列头时触发。默认行为是调用 QAbstractItemModel::sort() 进行排序。但 model 的 sort() 默认实现是按字符串字典序排序——"100"排在"20"前面，因为"1" < "2"。如果你需要按数值排序，需要在 model 中重写 sort() 方法。
-
-```cpp
-void sort(int column, Qt::SortOrder order) override
-{
-    // 构建排序用的索引列表
-    QVector<QPair<QVariant, int>> sort_data;
-    sort_data.reserve(rowCount());
-    for (int i = 0; i < rowCount(); ++i) {
-        QVariant val = index(i, column).data(Qt::EditRole);
-        sort_data.append({val, i});
-    }
-
-    // 根据数据类型选择排序方式
-    std::sort(sort_data.begin(), sort_data.end(),
-        [order](const auto &a, const auto &b) {
-        if (a.first.userType() == QMetaType::Int) {
-            return order == Qt::AscendingOrder
-                ? a.first.toInt() < b.first.toInt()
-                : a.first.toInt() > b.first.toInt();
-        }
-        return order == Qt::AscendingOrder
-            ? a.first.toString() < b.first.toString()
-            : a.first.toString() > b.first.toString();
-    });
-
-    // 重新排列数据
-    // ... emit layoutChanged ...
+// 拉伸列的分配（qheaderview.cpp 第 3735-3739 行，摘录）
+if (numberOfStretchedSections > 0 && lengthToStretch > 0) {
+    int hintLengthForEveryStretchedSection = lengthToStretch / numberOfStretchedSections;
+    stretchSectionLength = qMax(hintLengthForEveryStretchedSection, q->minimumSectionSize());
+    pixelReminder = lengthToStretch % numberOfStretchedSections;
 }
 ```
 
-对于 QSortFilterProxyModel，排序逻辑通过 lessThan 虚函数定制。QSortFilterProxyModel 的 sort() 方法内部会调用 lessThan 来比较两个 QModelIndex 的值。
+咱们把分配读完。非拉伸列的尺寸从可用长度里逐个扣掉，剩下长度除以拉伸列数得基准，每列下限守 minimumSectionSize，取余的零头在后面的循环里逐列加一像素（第 3769-3771 行）。三列分十像素，基准三像素，最前面的列多拿那一像素。零头不走四舍五入，排在前面的列吃加成。
+
+出厂尺寸有两个来路。defaultSectionSize 跟样式走，横表头问 PM_HeaderDefaultSectionSizeHorizontal，竖表头问 Vertical（第 4033-4042 行），您调 setDefaultSectionSize 就立起自定义标志，resetDefaultSectionSize 把裁定权交还样式，出处第 1581-1601 行。minimumSectionSize 出厂 -1，真取值时横表头按字体最宽字符加两倍 PM_HeaderMargin，竖表头按字高加边距（第 1613-1621 行），所有调宽模式都守住下限。
+
+## resizeSection 是唯一写入口，程序与拖动同一条路
+
+您在代码里调 resizeSection，进来就被 qBound 夹在最小与最大尺寸之间（qheaderview.cpp 第 860-871 行）。列若正藏着，尺寸不进条目表，改存 hiddenSectionSize 映射（第 871-874 行），等它重见天日再放回去。末列若在被拉伸，尺寸记进 lastSectionSize（第 892-893 行），视口一变它接着吃剩余宽度。收尾 emit sectionResized（第 933 行），分组表头正是接它得知列宽变了，一接到就重绘（group_header_view.cpp 第 21-22、89-90 行）。
+
+用户拖动没有旁门，mouseMoveEvent 里那段非级联分支咱们看一眼：
 
 ```cpp
-class NumericSortProxy : public QSortFilterProxyModel
-{
-    Q_OBJECT
-
-protected:
-    bool lessThan(const QModelIndex &left,
-                  const QModelIndex &right) const override
-    {
-        QVariant left_data = left.data(Qt::EditRole);
-        QVariant right_data = right.data(Qt::EditRole);
-
-        bool ok_left = false, ok_right = false;
-        double left_num = left_data.toDouble(&ok_left);
-        double right_num = right_data.toDouble(&ok_right);
-
-        if (ok_left && ok_right) {
-            return left_num < right_num;
-        }
-        // 非数值按字符串比较
-        return QSortFilterProxyModel::lessThan(left, right);
-    }
-};
+// 拖动调宽的落点（qheaderview.cpp 第 2704-2707 行，摘录）
+int delta = d->reverse() ? d->firstPos - pos : pos - d->firstPos;
+int newsize = qBound(minimumSectionSize(), d->originalSize + delta, maximumSectionSize());
+resizeSection(d->section, newsize);
 ```
 
-使用 NumericSortProxy 替代默认的 proxy model 后，点击列头排序时会自动按数值大小排序而不是按字符串字典序。
+走起来也有门槛，mousePressEvent 要命中列间 handle 且该列模式是 Interactive，才进 ResizeSection 状态（第 2643-2670 行），Fixed 连 handle 都不认。手势拿按下时记下的 originalSize 加位移，再夹一次上下限，最后还是调 resizeSection。所以您接管 sectionResized 重算分组时，分不清这次调用来自代码还是手势，也不需要分，两条路在同一个函数会合。
 
-## 4. 踩坑预防
+## 精度旋钮拧在表头，用在视图
 
-第一个坑是多级表头的 sectionViewportPosition 在列被隐藏时返回负值。如果你在分组中引用的某个 section 被 hideSection 隐藏了，sectionViewportPosition 返回 -1 或者不正确的值。后果是分组的绘制位置错误，分组文字出现在表格外面。解决方案是在绘制分组时检查 section 的 visible 状态，跳过被隐藏的 section。
+ResizeToContents 的精度出厂一千，出处 qheaderview_p.h 第 87 行，51 篇改准过百万行的老说法。旋钮咱们拧过三个档，正数就是最多考虑多少行，0 只看可见区，-1 全量（qheaderview.cpp 第 1315-1331 行）。
 
-第二个坑是 QSortFilterProxyModel 的排序在大数据量下性能不够。QSortFilterProxyModel::sort() 内部对 model 的所有行做一次完整排序。对于百万行数据，排序需要 O(N log N) 次比较，每次比较调用 lessThan，lessThan 又调用 sourceModel->data()——总计数百万次 data() 调用。如果你的 data() 是 O(1) 的还好，如果是 O(log N) 的数据库查询，排序可能需要几分钟。解决方案是在 model 端直接排序（重写 model 的 sort()），避免 proxy 层的额外开销。
+有意思的地方笔者留到现在，表头自己不扫模型，算尺寸时它把问题转给所在视图的 sizeHintForColumn 或 sizeHintForRow（viewSectionSizeHint，第 4138-4144 行）。数行数的活落在 QTableView::sizeHintForColumn，循环里数到精度值就 break（qtableview.cpp 第 2499-2507 行起）。您重写视图的 sizeHintForColumn，旋钮就没了着力点，官方文档也写明了。
 
-第三个坑是 setSortIndicatorShown(true) 但实际没有排序。sort indicator 只是一个视觉标记——在列头上画一个上/下箭头。它不会自动触发排序。如果你手动设了 setSortIndicator(column, order) 但没有调用 model->sort()，列头上会出现排序箭头但数据没排。解决方案是确保 sort indicator 和 model->sort() 总是同步调用。
+## 隐藏列的尺寸有记忆，存在一张映射里
 
-## 5. 练习项目
+头文件里的 hideSection 与 showSection，只是 inline 转手，出处 qheaderview.h 第 227-230 行，真活在 setSectionHidden。藏列那几行笔者抄在下面：
 
-练习项目：多级表头的学生成绩表。我们要实现一个包含两级表头的成绩展示表格。
+```cpp
+// 藏列时把尺寸存起来（qheaderview.cpp 第 1023-1026 行，摘录）
+int size = d->headerSectionSize(visual);
+if (!d->hasAutoResizeSections())
+    resizeSection(logicalIndex, 0);
+d->hiddenSectionSize.insert(logicalIndex, size);
+```
 
-完成标准是：QTableView 配合自定义 QAbstractTableModel。水平表头使用 GroupHeaderView，两级结构：上级"文科"覆盖"语文/历史/地理"三列，"理科"覆盖"数学/物理/化学"三列。子列可以按数值排序（使用 QSortFilterProxyModel 重写 lessThan）。数据包含 20 名学生的成绩，每列随机生成 60-100 的整数分数。点击子列排序时按分数数值排序而不是字符串排序。上级分组列不响应点击排序。
+条目随后按 0 长计入总长（第 3754-3756 行），sectionSize 对隐藏列直接报 0（第 633-638 行），length() 因此不含隐藏列。showSection 时把存的尺寸放回去，查无此记录就用 defaultSectionSize 兜底，出处第 1033-1036 行。想问表头有没有藏列，sectionsHidden 查的就是映射空不空，出处第 1752-1757 行。51 讲过 QTableView 那批藏列函数全是转手到这层，模型侧的世界您去看，一个字都不改。
 
-提示几个关键点：GroupHeaderView 的 addGroup 设置分组范围；NumericSortProxy 重写 lessThan 对数值列做数值比较；setSectionsClickable(true) 让子列可点击排序。
+## 箭头是显示件，排序的接线在视图手里
 
-## 6. 官方文档参考链接
+showSortIndicator 出厂 false，出处 qheaderview_p.h 第 55 行。点击翻转的判定咱们翻 mouseReleaseEvent 看，门槛是 clickableSections 加按下同一列，并不检查箭头显示开关（qheaderview.cpp 第 2848-2851 行），翻转逻辑 flipSortIndicator 默认升序起跳，模型 headerData 里的 InitialSortOrderRole 能改每列的初值，出处第 3853-3883 行。
 
-[Qt 文档 · QHeaderView](https://doc.qt.io/qt-6/qheaderview.html) -- 表头控件，包含 setSectionResizeMode/setSortIndicator/sectionResized 等接口
+setSortIndicator 只改内部状态再 emit sortIndicatorChanged（第 1404-1438 行），传 -1 可以把箭头收掉。咱们看到接信号去排序的是视图，QTableViewPrivate::sortIndicatorChanged 就一句 model->sort，出处 qtableview.cpp 第 1020-1023 行，接线只在 setSortingEnabled(true) 时建立，出处第 2730-2745 行。
 
-[Qt 文档 · QSortFilterProxyModel](https://doc.qt.io/qt-6/qsortfilterproxymodel.html) -- 排序过滤代理模型，lessThan 用于自定义排序比较
+配套示例正好停在这个断层上。GroupHeaderView 自己开了箭头显示，出处 group_header_view.cpp 第 18 行，窗口却没调 setSortingEnabled，您点表头，箭头会翻，数据纹丝不动。补一句 tableView->setSortingEnabled(true)，接线一通，排序才接活。
 
-[Qt 文档 · QAbstractItemModel::sort](https://doc.qt.io/qt-6/qabstractitemmodel.html#sort) -- 模型排序虚函数
+## saveState 存下整套状态，恢复时还会代发一次排序信号
+
+saveState 返回 QByteArray，里面是 QDataStream 序列化的私有数据，开头一个 VersionMarker 加版本号 0，出处 qheaderview.cpp 第 1808-1821 行。写进去的不止列宽，write 函数咱们数过（第 4199-4240 行），视觉映射、隐藏列的位图与尺寸记忆、总长、可拖可点、末列拉伸、两个计数器、默认与最小尺寸、对齐、全局调宽模式、每列条目、精度，全在。
+
+restoreState 依次尝试 Qt_5_0 与 Qt_6_0 两种流版本，标记对不上直接返回 false（第 1827-1858 行）。有一处行为您得心里有数，恢复完成时它 emit 一次 sortIndicatorChanged（第 1849 行），视图若已接着排序线，恢复状态当场触发一次排序，想只还原外观的场合记得留意时序。
+
+## offset 是表头自己的滚动刻度
+
+表头也会滚，咱们从总长看起。length() 给内容方向的总长（qheaderview.cpp 第 489-497 行），offset 出厂 0（qheaderview_p.h 第 52 行），setOffset 用 viewport()->scroll 挪内容，出处 qheaderview.cpp 第 423-441 行，setOffsetToLastSection 拿总长减视口尺寸，出处第 475-485 行。滚动条联动在私有 setScrollOffset，逐项滚动模式拿 setOffsetToSectionPosition 对齐到列起点，出处第 4163-4173 行。
+
+一个冷细节，拖动调宽顶到边缘触发自动滚动时，setOffset 会把鼠标光标反向顶回 handle 上（第 442-448 行），不然您拖着的列会从光标底下溜走。
+
+## 官方文档参考
+
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 6.9.1 源码核对过。QHeaderView 在 QtWidgets，应用链接 Qt6::Widgets 即可。
+
+[Qt 文档 · QHeaderView](https://doc.qt.io/qt-6/qheaderview.html) -- 本篇主角，调宽模式、视觉映射与状态存取的定义处
+
+[Qt 文档 · QTableView](https://doc.qt.io/qt-6/qtableview.html) -- setSortingEnabled 的接线与 sizeHintForColumn 的精度消费
+
+[Qt 文档 · QSortFilterProxyModel](https://doc.qt.io/qt-6/qsortfilterproxymodel.html) -- 排序比较的定制入口，49 篇讲过 lessThan
+
+[Qt 文档 · QDataStream](https://doc.qt.io/qt-6/qdatastream.html) -- saveState 字节数组的序列化格式
+
+[Qt 文档 · QStyle](https://doc.qt.io/qt-6/qstyle.html) -- PM_HeaderDefaultSectionSize 系列像素度量的出处
 
 ---
 
-到这里，QHeaderView 的进阶内容就拆完了。多级表头没有内置支持，但通过重写 paintEvent 在表头上方额外绘制分组是标准方案。自定义排序的关键是区分字符串排序和数值排序——QSortFilterProxyModel::lessThan 是最干净的介入点。把这些搞透后，你就能做出专业的多级表头表格——而不只是"一行文字能点击排序"的简单表头。
+表头的深水区咱们潜完了。下一站 [3.53 QColumnView 进阶](./53-qcolumnview-advanced.md)，条目视图家族的最后一位，浏览器式的分栏形态在那里等着。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/52-qheaderview-advanced/，可执行文件 52-qheaderview-advanced），四列两组的分组表头。做三个实验。拖动列宽，分组条跟着伸缩，sectionResized 到重绘的路径就在眼前。点表头，箭头翻了数据没动，补一句 setSortingEnabled(true) 再点，排序接活，断层自己补上了。把 Contact 组的 Email 列用 horizontalHeader()->hideSection(2) 藏起来，分组条缩到只剩 Phone 那一列宽，再把 saveState 的返回值存下来，hideSection 与 restoreState 走一个来回，尺寸记忆与状态恢复都能亲眼看到。
+
+完成标准照旧。logical 与 visual 什么时候是同一个数，您说得出。三列 Stretch 分十像素各得多少，您算得开。程序调宽与用户拖动在哪里会合，您指得出。点表头翻箭头为什么数据不动，您讲得清。恢复状态为什么可能触发一次排序，您有数。

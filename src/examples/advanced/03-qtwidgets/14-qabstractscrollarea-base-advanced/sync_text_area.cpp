@@ -17,13 +17,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 SyncTextArea::SyncTextArea(QWidget* parent)
-    : QAbstractScrollArea(parent)
-    , m_lineHeight(0)
-    , m_totalHeight(0)
-{
+    : QAbstractScrollArea(parent), m_lineHeight(0), m_totalHeight(0) {
     // 根据当前字体计算行高
     QFontMetrics fm(font());
-    m_lineHeight = fm.height() + 4;  // 4 像素行间距
+    m_lineHeight = fm.height() + 4; // 4 像素行间距
 
     // 隐藏水平滚动条——本示例只关注垂直滚动同步
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -36,20 +33,17 @@ SyncTextArea::SyncTextArea(QWidget* parent)
 // 公有方法
 // ─────────────────────────────────────────────────────────────────────────────
 
-void SyncTextArea::setTextLines(const QStringList& lines)
-{
+void SyncTextArea::setTextLines(const QStringList& lines) {
     m_lines = lines;
     updateScrollBarRange();
     viewport()->update();
 }
 
-int SyncTextArea::scrollValue() const
-{
+int SyncTextArea::scrollValue() const {
     return verticalScrollBar()->value();
 }
 
-void SyncTextArea::setScrollValueSilently(int value)
-{
+void SyncTextArea::setScrollValueSilently(int value) {
     // blockSignals 防止 setValue 触发 valueChanged 导致循环同步
     verticalScrollBar()->blockSignals(true);
     verticalScrollBar()->setValue(value);
@@ -61,17 +55,18 @@ void SyncTextArea::setScrollValueSilently(int value)
 // 保护方法
 // ─────────────────────────────────────────────────────────────────────────────
 
-void SyncTextArea::scrollContentsBy(int dx, int dy)
-{
+void SyncTextArea::scrollContentsBy(int dx, int dy) {
     Q_UNUSED(dx)
     Q_UNUSED(dy)
 
     // 滚动时通知外部当前滚动位置，用于双区域同步
     emit scrollChanged(verticalScrollBar()->value());
+
+    // 基类默认实现就是这一句，重写时丢了它，被直接滚动的面板就不会重画
+    viewport()->update();
 }
 
-void SyncTextArea::paintEvent(QPaintEvent* event)
-{
+void SyncTextArea::paintEvent(QPaintEvent* event) {
     QPainter painter(viewport());
 
     // 内容坐标系：scrollY 表示内容被向上滚动的像素数
@@ -84,8 +79,7 @@ void SyncTextArea::paintEvent(QPaintEvent* event)
     const int yOffset = firstLine * m_lineHeight - scrollY;
 
     // 只绘制落在 event->rect() 范围内的行，避免不必要的绘制
-    const int lastLine = qMin(firstLine + viewport()->height() / m_lineHeight + 2,
-                              m_lines.size());
+    const int lastLine = qMin(firstLine + viewport()->height() / m_lineHeight + 2, m_lines.size());
 
     painter.setPen(Qt::black);
 
@@ -103,8 +97,7 @@ void SyncTextArea::paintEvent(QPaintEvent* event)
     }
 }
 
-void SyncTextArea::wheelEvent(QWheelEvent* event)
-{
+void SyncTextArea::wheelEvent(QWheelEvent* event) {
     // 将滚轮事件转发给垂直滚动条
     QApplication::sendEvent(verticalScrollBar(), event);
 }
@@ -113,8 +106,7 @@ void SyncTextArea::wheelEvent(QWheelEvent* event)
 // 私有方法
 // ─────────────────────────────────────────────────────────────────────────────
 
-void SyncTextArea::updateScrollBarRange()
-{
+void SyncTextArea::updateScrollBarRange() {
     m_totalHeight = m_lines.size() * m_lineHeight;
 
     // singleStep = 一行的距离，pageStep = 视口高度
@@ -124,8 +116,7 @@ void SyncTextArea::updateScrollBarRange()
     verticalScrollBar()->setRange(0, qMax(0, m_totalHeight - viewport()->height()));
 }
 
-QStringList SyncTextArea::generateSampleText()
-{
+QStringList SyncTextArea::generateSampleText() {
     QStringList lines;
     for (int i = 1; i <= 100; ++i) {
         lines << QStringLiteral("Line %1: QAbstractScrollArea provides a scrolling area with "

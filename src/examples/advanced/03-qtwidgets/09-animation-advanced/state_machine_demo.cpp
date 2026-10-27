@@ -5,6 +5,7 @@
 
 #include "state_machine_demo.h"
 
+#include <QGraphicsOpacityEffect>
 #include <QLabel>
 #include <QParallelAnimationGroup>
 #include <QPropertyAnimation>
@@ -23,8 +24,8 @@ static const QRect kNormalGeometry = QRect(20, 20, 80, 80);
 /// 目标方块在 Focused 状态下的几何（放大并右移）。
 static const QRect kFocusedGeometry = QRect(60, 10, 140, 140);
 
-/// 目标方块在 Animated 状态下的位置（移到右侧）。
-static const QPoint kAnimatedPos = QPoint(350, 120);
+/// 目标方块在 Animated 状态下的几何（移到右侧并缩到 100x100）。
+static const QRect kAnimatedGeometry = QRect(350, 120, 100, 100);
 
 /// 动画时长——聚焦过渡。
 static constexpr int kFocusDuration = 300;
@@ -39,9 +40,7 @@ static constexpr int kResetDuration = 400;
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-StateMachineDemo::StateMachineDemo(QWidget* parent)
-    : QWidget(parent)
-{
+StateMachineDemo::StateMachineDemo(QWidget* parent) : QWidget(parent) {
     setupUI();
     buildStateMachine();
 
@@ -53,8 +52,7 @@ StateMachineDemo::StateMachineDemo(QWidget* parent)
 // 界面搭建
 // ─────────────────────────────────────────────────────────────────────────────
 
-void StateMachineDemo::setupUI()
-{
+void StateMachineDemo::setupUI() {
     auto* mainLayout = new QVBoxLayout(this);
 
     // 上方：动画演示区域（目标方块在此区域内移动）
@@ -96,14 +94,18 @@ void StateMachineDemo::setupUI()
 // 状态机构建
 // ─────────────────────────────────────────────────────────────────────────────
 
-void StateMachineDemo::buildStateMachine()
-{
+void StateMachineDemo::buildStateMachine() {
     auto* machine = new QStateMachine(this);
+
+    // 透明度走 QGraphicsOpacityEffect：windowOpacity 只对顶层窗口生效，
+    // 方块是舞台里的子控件，动画与状态赋值都指向效果器的 opacity。
+    auto* opacityEffect = new QGraphicsOpacityEffect(m_target);
+    m_target->setGraphicsEffect(opacityEffect);
 
     // ── Normal 状态 ──────────────────────────────────────────────────────────
     auto* sNormal = new QState();
     sNormal->assignProperty(m_target, "geometry", kNormalGeometry);
-    sNormal->assignProperty(m_target, "windowOpacity", 1.0);
+    sNormal->assignProperty(opacityEffect, "opacity", 1.0);
     sNormal->assignProperty(m_statusLabel, "text", QStringLiteral("当前状态：Normal"));
     sNormal->assignProperty(m_focusBtn, "enabled", true);
     sNormal->assignProperty(m_animateBtn, "enabled", true);
@@ -119,9 +121,10 @@ void StateMachineDemo::buildStateMachine()
 
     // ── Animated 状态 ────────────────────────────────────────────────────────
     auto* sAnimated = new QState();
-    sAnimated->assignProperty(m_target, "pos", kAnimatedPos);
-    sAnimated->assignProperty(m_target, "windowOpacity", 0.4);
-    sAnimated->assignProperty(m_statusLabel, "text", QStringLiteral("当前状态：Animated (Parallel)"));
+    sAnimated->assignProperty(m_target, "geometry", kAnimatedGeometry);
+    sAnimated->assignProperty(opacityEffect, "opacity", 0.4);
+    sAnimated->assignProperty(m_statusLabel, "text",
+                              QStringLiteral("当前状态：Animated (Parallel)"));
     sAnimated->assignProperty(m_focusBtn, "enabled", false);
     sAnimated->assignProperty(m_animateBtn, "enabled", false);
     sAnimated->assignProperty(m_resetBtn, "enabled", true);
@@ -137,24 +140,21 @@ void StateMachineDemo::buildStateMachine()
     tToFocused->addAnimation(focusAnim);
 
     // Normal -> Animated：点击动画按钮
-    // 并行动画组：位移 + 透明度 + 缩放同时播放
+    // 并行动画组：几何（位移 + 缩放合并一路）+ 透明度同时播放
     auto* parallelGroup = new QParallelAnimationGroup;
 
-    auto* moveAnim = new QPropertyAnimation(m_target, "pos");
-    moveAnim->setDuration(kAnimateDuration);
-    moveAnim->setEasingCurve(QEasingCurve::InOutQuad);
-    parallelGroup->addAnimation(moveAnim);
+    // 几何一路：起止 QRect 同时覆盖位移与尺寸，终点值由 sAnimated 的赋值提供。
+    // 拆成 pos、geometry 两路的话，geometry 每帧重写会盖掉 pos 刚写的位置。
+    auto* geometryAnim = new QPropertyAnimation(m_target, "geometry");
+    geometryAnim->setDuration(kAnimateDuration);
+    geometryAnim->setEasingCurve(QEasingCurve::OutBounce);
+    parallelGroup->addAnimation(geometryAnim);
 
-    auto* opacityAnim = new QPropertyAnimation(this, "windowOpacity");
+    // 透明度一路：驱动效果器的 opacity，同样由 sAnimated 的赋值提供终点值
+    auto* opacityAnim = new QPropertyAnimation(opacityEffect, "opacity");
     opacityAnim->setDuration(kAnimateDuration);
     opacityAnim->setEasingCurve(QEasingCurve::InOutQuad);
     parallelGroup->addAnimation(opacityAnim);
-
-    auto* scaleAnim = new QPropertyAnimation(m_target, "geometry");
-    scaleAnim->setDuration(kAnimateDuration);
-    scaleAnim->setEndValue(QRect(kAnimatedPos.x(), kAnimatedPos.y(), 100, 100));
-    scaleAnim->setEasingCurve(QEasingCurve::OutBounce);
-    parallelGroup->addAnimation(scaleAnim);
 
     auto* tToAnimated = sNormal->addTransition(m_animateBtn, &QPushButton::clicked, sAnimated);
     tToAnimated->addAnimation(parallelGroup);
@@ -162,7 +162,7 @@ void StateMachineDemo::buildStateMachine()
     // Focused -> Normal：点击重置按钮
     sFocused->addTransition(m_resetBtn, &QPushButton::clicked, sNormal);
 
-    // Focused -> Animated：复用同一个动画组
+    // Focused -> Animated：不带动画，属性赋值直接切到位（硬切）
     sFocused->addTransition(m_animateBtn, &QPushButton::clicked, sAnimated);
 
     // Animated -> Normal：点击重置按钮，带恢复动画
@@ -170,7 +170,7 @@ void StateMachineDemo::buildStateMachine()
     resetAnim->setDuration(kResetDuration);
     resetAnim->setEasingCurve(QEasingCurve::OutCubic);
 
-    auto* resetOpacity = new QPropertyAnimation(this, "windowOpacity");
+    auto* resetOpacity = new QPropertyAnimation(opacityEffect, "opacity");
     resetOpacity->setDuration(kResetDuration);
     resetOpacity->setEasingCurve(QEasingCurve::OutCubic);
 

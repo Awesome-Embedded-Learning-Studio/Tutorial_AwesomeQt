@@ -13,8 +13,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
     // 主窗口使用 QScrollArea 包裹，确保窗口 resize 时内容可滚动
@@ -25,12 +24,11 @@ int main(int argc, char* argv[])
     auto* mainLayout = new QVBoxLayout(container);
 
     // 标题说明
-    auto* title = new QLabel(QStringLiteral(
-        "QGroupBox 进阶演示\n"
-        "勾选/取消勾选「代理设置」观察：\n"
-        "1. 子控件自动禁用/启用\n"
-        "2. 状态标签实时更新\n"
-        "3. 再次勾选时输入内容保留"));
+    auto* title = new QLabel(QStringLiteral("QGroupBox 进阶演示\n"
+                                            "勾选/取消勾选「代理设置」观察：\n"
+                                            "1. 子控件自动禁用/启用\n"
+                                            "2. 取消勾选时焦点被收进分组框自身\n"
+                                            "3. 再次勾选时输入内容保留"));
     title->setWordWrap(true);
     mainLayout->addWidget(title);
 
@@ -38,9 +36,8 @@ int main(int argc, char* argv[])
     auto* groupBox = new CheckableGroupBox;
     mainLayout->addWidget(groupBox);
 
-    // 添加一个外部控件用于对比——取消勾选分组框后可以 Tab 到这里
-    auto* outsideLabel = new QLabel(
-        QStringLiteral("我是分组框外部的控件，用于验证焦点转移。"));
+    // 添加一个外部控件用于对比（QLabel 默认不吃焦点，焦点去向看分组框自身）
+    auto* outsideLabel = new QLabel(QStringLiteral("我是分组框外部的控件，用于验证焦点转移。"));
     outsideLabel->setFrameShape(QFrame::Box);
     outsideLabel->setAlignment(Qt::AlignCenter);
     mainLayout->addWidget(outsideLabel);

@@ -8,21 +8,15 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-namespace
-{
-    constexpr int kDefaultRows = 1000000;
-    constexpr int kDefaultCols = 10;
-}
+namespace {
+constexpr int kDefaultRows = 1000000;
+constexpr int kDefaultCols = 10;
+} // namespace
 
 BigTableModel::BigTableModel(int rowCount, int columnCount, QObject* parent)
-    : QAbstractTableModel(parent)
-    , m_rowCount(rowCount)
-    , m_columnCount(columnCount)
-{
-}
+    : QAbstractTableModel(parent), m_rowCount(rowCount), m_columnCount(columnCount) {}
 
-int BigTableModel::rowCount(const QModelIndex& parent) const
-{
+int BigTableModel::rowCount(const QModelIndex& parent) const {
     // 顶层（parent 无效）才有行，子项无行
     if (parent.isValid()) {
         return 0;
@@ -30,25 +24,21 @@ int BigTableModel::rowCount(const QModelIndex& parent) const
     return m_rowCount;
 }
 
-int BigTableModel::columnCount(const QModelIndex& parent) const
-{
+int BigTableModel::columnCount(const QModelIndex& parent) const {
     if (parent.isValid()) {
         return 0;
     }
     return m_columnCount;
 }
 
-QVariant BigTableModel::data(const QModelIndex& index, int role) const
-{
+QVariant BigTableModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid()) {
         return {};
     }
 
     if (role == Qt::DisplayRole) {
         // 数据完全按需生成——不存储、不缓存、不预计算
-        return QString("Row %1, Col %2")
-            .arg(index.row() + 1)
-            .arg(index.column() + 1);
+        return QString("行 %1 列 %2").arg(index.row() + 1).arg(index.column() + 1);
     }
 
     if (role == Qt::TextAlignmentRole) {
@@ -58,15 +48,13 @@ QVariant BigTableModel::data(const QModelIndex& index, int role) const
     return {};
 }
 
-QVariant BigTableModel::headerData(int section, Qt::Orientation orientation,
-                                    int role) const
-{
+QVariant BigTableModel::headerData(int section, Qt::Orientation orientation, int role) const {
     if (role != Qt::DisplayRole) {
         return {};
     }
 
     if (orientation == Qt::Horizontal) {
-        return QString("Column %1").arg(section + 1);
+        return QString("列 %1").arg(section + 1);
     }
 
     // 纵向表头直接显示行号
@@ -74,9 +62,7 @@ QVariant BigTableModel::headerData(int section, Qt::Orientation orientation,
 }
 
 BigTableWindow::BigTableWindow(QWidget* parent)
-    : QMainWindow(parent)
-    , m_model(new BigTableModel(kDefaultRows, kDefaultCols, this))
-{
+    : QMainWindow(parent), m_model(new BigTableModel(kDefaultRows, kDefaultCols, this)) {
     auto* centralWidget = new QWidget(this);
     auto* layout = new QVBoxLayout(centralWidget);
 
@@ -92,9 +78,7 @@ BigTableWindow::BigTableWindow(QWidget* parent)
     setCentralWidget(centralWidget);
 
     // 状态栏显示总行数，直观证明百万行模型可以流畅滚动
-    statusBar()->showMessage(
-        QString("Total rows: %1  |  Data is generated on-the-fly in data()")
-            .arg(kDefaultRows));
+    statusBar()->showMessage(QString("总行数: %1  |  数据在 data() 里即时生成").arg(kDefaultRows));
 
     setWindowTitle("QTableView 百万行虚拟滚动");
     resize(900, 600);

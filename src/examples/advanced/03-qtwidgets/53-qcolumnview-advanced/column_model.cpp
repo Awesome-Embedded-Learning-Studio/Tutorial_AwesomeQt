@@ -4,15 +4,10 @@
 #include "column_model.h"
 
 #include <QColumnView>
-#include <QHeaderView>
-#include <QScrollArea>
 
 PreviewPanel::PreviewPanel(QWidget* parent)
-    : QWidget(parent)
-    , m_titleLabel(new QLabel("Select an item", this))
-    , m_typeLabel(new QLabel("", this))
-    , m_descLabel(new QLabel("", this))
-{
+    : QWidget(parent), m_titleLabel(new QLabel("Select an item", this)),
+      m_typeLabel(new QLabel("", this)), m_descLabel(new QLabel("", this)) {
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(12, 12, 12, 12);
 
@@ -36,8 +31,7 @@ PreviewPanel::PreviewPanel(QWidget* parent)
     setMinimumWidth(200);
 }
 
-void PreviewPanel::onSelectionChanged(const QModelIndex& index)
-{
+void PreviewPanel::onSelectionChanged(const QModelIndex& index) {
     if (!index.isValid()) {
         m_titleLabel->setText("Select an item");
         m_typeLabel->setText("");
@@ -54,8 +48,7 @@ void PreviewPanel::onSelectionChanged(const QModelIndex& index)
     m_descLabel->setText(descriptionForType(type));
 }
 
-QString PreviewPanel::descriptionForType(const QString& type) const
-{
+QString PreviewPanel::descriptionForType(const QString& type) const {
     // 根据分类类型返回不同描述
     if (type == "category") {
         return "This is a top-level category. Click to expand and see "
@@ -77,10 +70,8 @@ QString PreviewPanel::descriptionForType(const QString& type) const
 }
 
 ColumnViewWindow::ColumnViewWindow(QWidget* parent)
-    : QMainWindow(parent)
-    , m_model(new QStandardItemModel(this))
-    , m_preview(new PreviewPanel(this))
-{
+    : QMainWindow(parent), m_model(new QStandardItemModel(this)),
+      m_preview(new PreviewPanel(this)) {
     buildModel();
 
     auto* central = new QWidget(this);
@@ -94,14 +85,13 @@ ColumnViewWindow::ColumnViewWindow(QWidget* parent)
 
     // 将预览面板设为 QColumnView 的预览组件
     // 预览组件会出现在最右侧列，当用户选中叶子节点时显示
-    auto* scrollArea = new QScrollArea(this);
-    scrollArea->setWidget(m_preview);
-    scrollArea->setWidgetResizable(true);
-    columnView->setPreviewWidget(scrollArea);
+    // 预览列本身带滚动管理（QColumnViewPreviewColumn），直接挂面板即可，
+    // 再包一层 QScrollArea 会造成双层滚动
+    columnView->setPreviewWidget(m_preview);
 
     // 选中项变化时更新预览
-    connect(columnView->selectionModel(), &QItemSelectionModel::currentChanged,
-            m_preview, &PreviewPanel::onSelectionChanged);
+    connect(columnView->selectionModel(), &QItemSelectionModel::currentChanged, m_preview,
+            &PreviewPanel::onSelectionChanged);
 
     layout->addWidget(columnView);
     setCentralWidget(central);
@@ -110,26 +100,22 @@ ColumnViewWindow::ColumnViewWindow(QWidget* parent)
     resize(800, 500);
 }
 
-void ColumnViewWindow::buildModel()
-{
+void ColumnViewWindow::buildModel() {
     m_model->clear();
     m_model->setHorizontalHeaderLabels(QStringList{"Name"});
 
     // 顶层分类
-    struct Category
-    {
+    struct Category {
         QString name;
         std::vector<std::pair<QString, QString>> children;
     };
 
     const Category categories[] = {
-        {"Documents", {{"readme.txt", "document"}, {"notes.md", "document"},
-                       {"report.pdf", "document"}}},
-        {"Images",    {{"photo.png", "image"}, {"icon.svg", "image"},
-                       {"banner.jpg", "image"}}},
-        {"Source",    {{"main.cpp", "source"}, {"widget.h", "source"},
-                       {"utils.py", "source"}}},
-        {"Misc",      {{"config.ini", "document"}, {"data.csv", "document"}}},
+        {"Documents",
+         {{"readme.txt", "document"}, {"notes.md", "document"}, {"report.pdf", "document"}}},
+        {"Images", {{"photo.png", "image"}, {"icon.svg", "image"}, {"banner.jpg", "image"}}},
+        {"Source", {{"main.cpp", "source"}, {"widget.h", "source"}, {"utils.py", "source"}}},
+        {"Misc", {{"config.ini", "document"}, {"data.csv", "document"}}},
     };
 
     for (const auto& cat : categories) {
@@ -141,10 +127,8 @@ void ColumnViewWindow::buildModel()
     }
 }
 
-void ColumnViewWindow::addChildren(
-    QStandardItem* parent,
-    const std::vector<std::pair<QString, QString>>& children)
-{
+void ColumnViewWindow::addChildren(QStandardItem* parent,
+                                   const std::vector<std::pair<QString, QString>>& children) {
     for (const auto& child : children) {
         auto* item = new QStandardItem(child.first);
         item->setData(child.second, Qt::UserRole);

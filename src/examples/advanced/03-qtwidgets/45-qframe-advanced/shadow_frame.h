@@ -18,11 +18,11 @@
 /// All visual parameters (border radius, shadow color, shadow offset,
 /// shadow blur) are configurable via setter methods. The frame automatically
 /// reserves padding for the shadow so it is not clipped.
-class ShadowFrame : public QFrame
-{
+class ShadowFrame : public QFrame {
     Q_OBJECT
 
-    /// @brief Property for border radius (used by QSS if desired).
+    /// @brief Property for border radius (QSS qproperty- writes once at polish;
+    ///        no NOTIFY signal, so later changes don't refresh QSS or repaint).
     Q_PROPERTY(int borderRadius READ borderRadius WRITE setBorderRadius)
     /// @brief Property for shadow blur radius.
     Q_PROPERTY(int shadowBlur READ shadowBlur WRITE setShadowBlur)
@@ -31,7 +31,7 @@ class ShadowFrame : public QFrame
     /// @brief Property for shadow Y offset.
     Q_PROPERTY(int shadowOffsetY READ shadowOffsetY WRITE setShadowOffsetY)
 
-public:
+  public:
     /// @brief Constructs the shadow frame.
     /// @param[in] parent Parent widget for Qt ownership.
     explicit ShadowFrame(QWidget* parent = nullptr);
@@ -94,7 +94,7 @@ public:
     /// @param[in] color Border color.
     void setBorderColor(const QColor& color);
 
-protected:
+  protected:
     /// @brief Paints the rounded rectangle with drop shadow.
     /// @param[in] event The paint event.
     /// @note The shadow is drawn first as a filled rounded rect at the offset
@@ -102,7 +102,7 @@ protected:
     ///       needing QGraphicsDropShadowEffect, which can cause performance issues.
     void paintEvent(QPaintEvent* event) override;
 
-private:
+  private:
     /// @brief Returns the content rectangle, inset to leave room for the shadow.
     /// @return The rectangle available for the main frame content.
     /// @note The inset is calculated from the shadow blur, offset, and a small
@@ -113,11 +113,11 @@ private:
     /// @note Without this, child widgets overlap the shadow area and get clipped.
     void updateContentMargins();
 
-    int m_borderRadius{12};          ///< Rounded corner radius in pixels
-    int m_shadowBlur{15};            ///< Shadow blur/softness radius
-    int m_shadowOffsetX{4};          ///< Horizontal shadow offset
-    int m_shadowOffsetY{4};          ///< Vertical shadow offset
-    QColor m_shadowColor{0, 0, 0, 60};   ///< Shadow color with alpha
-    QColor m_backgroundColor{255, 255, 255, 255};  ///< Frame background color
-    QColor m_borderColor{200, 200, 200, 255};       ///< Border stroke color
+    int m_borderRadius{12};                       ///< Rounded corner radius in pixels
+    int m_shadowBlur{15};                         ///< Shadow blur/softness radius
+    int m_shadowOffsetX{4};                       ///< Horizontal shadow offset
+    int m_shadowOffsetY{4};                       ///< Vertical shadow offset
+    QColor m_shadowColor{0, 0, 0, 60};            ///< Shadow color with alpha
+    QColor m_backgroundColor{255, 255, 255, 255}; ///< Frame background color
+    QColor m_borderColor{200, 200, 200, 255};     ///< Border stroke color
 };

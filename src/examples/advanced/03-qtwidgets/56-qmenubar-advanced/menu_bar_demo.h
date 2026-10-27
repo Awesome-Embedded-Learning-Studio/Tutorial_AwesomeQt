@@ -3,7 +3,7 @@
 ///
 /// 对应教程：进阶层 03-QtWidgets/56-QMenuBar 进阶。
 /// 展示运行时动态构建菜单、"最近文件"子菜单的 aboutToShow 重建模式，
-/// 以及 QMenu::addAction 的多种重载用法。
+/// 以及 QMenu::addAction(text) 单一重载的用法（多重载演示见 57 篇工具栏）。
 
 #pragma once
 
@@ -18,16 +18,15 @@ class QMenu;
 /// - 运行时动态添加/移除菜单项
 /// - "最近文件"子菜单在 aboutToShow 时动态重建
 /// - 最近文件列表的最大条目限制（最多 5 条）
-class MenuBarDemo : public QMainWindow
-{
+class MenuBarDemo : public QMainWindow {
     Q_OBJECT
 
-public:
+  public:
     /// @brief 构造函数。
     /// @param[in] parent 父控件指针，Qt 对象树自动管理生命周期。
     explicit MenuBarDemo(QWidget* parent = nullptr);
 
-private slots:
+  private slots:
     /// @brief 打开一个新文件（模拟），将其加入最近文件列表。
     void openFile();
 
@@ -37,7 +36,7 @@ private slots:
     /// @brief 从最近文件列表中打开指定文件。
     void openRecentFile();
 
-private:
+  private:
     /// @brief 构建菜单栏。
     void setupMenus();
 
@@ -49,9 +48,9 @@ private:
     /// @param[in] message 要显示的消息。
     void updateStatus(const QString& message);
 
-    QLabel* m_statusLabel;              ///< 状态栏标签
-    QMenu* m_recentMenu;                ///< "最近文件"子菜单
-    QStringList m_recentFiles;          ///< 最近打开的文件列表
+    QLabel* m_statusLabel;     ///< 状态栏标签
+    QMenu* m_recentMenu;       ///< "最近文件"子菜单
+    QStringList m_recentFiles; ///< 最近打开的文件列表
 
-    static const int kMaxRecentFiles = 5;  ///< 最近文件列表最大条目数
+    static const int kMaxRecentFiles = 5; ///< 最近文件列表最大条目数
 };

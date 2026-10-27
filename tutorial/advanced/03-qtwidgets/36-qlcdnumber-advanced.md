@@ -1,152 +1,110 @@
 ---
 title: "3.36 QLCDNumber 进阶"
-description: "入门篇我们把 QLCDNumber 的 display 三重载、setDigitCount 位数控制、setMode 进制切换、仪表盘场景都过了一遍。进阶篇要深挖的是那些看似简单的 API 背后藏着的行为边界。"
+description: "入门篇用 QLCDNumber 过了 display 三重载、setDigitCount、setMode 与仪表盘场景，进阶篇对着 6.9.1 源码把行为边界重新量了一遍，溢出时 digitStr 原样保留、画面停在最近一次成功显示的内容上、只发 overflow() 信号而 d->val 已换新值，display(double) 的溢出判定在 double2string 里按含小数点的字符串长度算，%g 降精度把 12.34 显示成 12.3，-99.9 这类四舍五入后指数不小于精度的值落进科学计数法判溢，smallDecimalPoint 的省位只对 display(QString) 生效、点号从字符流剥进 points 位图，int 路径的负号嵌进右对齐的前导空格，setMode 只是换 base 再拿 val 重显、intValue() 的 qRound 与显示用的 (int) 截断在 255.99 上分家，SegmentStyle 落成 fill 与 shadow 两个标志位、两个构造的默认都是 Filled 而无参构造的文档写 Outline，paintEvent 不经 QStyle，drawString 的格距在 smallDecimalPoint 下从 segLen*6/5 放宽到 segLen*7/5，drawDigit 的差分更新表是 Sinclair Spectrum 年代的思路且 newString 为真的路径无人调用，sizeHint 每格按 9 像素粗估、高固定 23，配套示例在 examples/advanced/03-qtwidgets/36-qlcdnumber-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.36——QLCDNumber 进阶
 
-## 1. 前言 / 七段数码管的边界比你想象的窄
+[3.35 QProgressBar 进阶](./35-qprogressbar-advanced.md) 把显示家族送进第三站。QProgressBar 难在把画笔全交给 QStyle，自己只把值与范围记准，QLCDNumber 正相反，paintEvent 里 QStyle 一次都没出现，格子坐标、七段多边形、明暗描边全由自己画。官方文档说它是 Qt 里最老的部分，来源能追到 Sinclair Spectrum 上的一段 BASIC 程序，出处 qlcdnumber.cpp 第 69-70 行。咱们对着源码把行为边界重新量一遍，源稿在溢出表现和 smallDecimalPoint 的占位上偏得最远，正文按源码改准。
 
-入门篇我们把 QLCDNumber 的 display 三重载、setDigitCount 位数控制、setMode 进制切换、仪表盘场景都过了一遍。说真的，QLCDNumber 的 API 表面上看起来简单得不能再简单了——display 一个值，设好位数，选好进制，就完事了。但如果你在工程中真的拿它做过仪表盘或者调试面板，你大概率踩过这些坑：明明 setDigitCount(5) 了但一个四位数就显示溢出，小数点的位置莫名其妙地偏移了一位，切换进制后显示的内容和预期完全对不上。
+默认值照 35 篇的样子记下。不带参数构造直接委托 QLCDNumber(5, parent)，出处第 295-298 行，init() 里落定的状态是 val 为 0、base 十进制、smallPoint 假、段样式 Filled、边框 Box 加 Raised，出处第 320-331 行，digitCount 默认 5，属性文档在第 351 行。正文引用以 qlcdnumber.cpp 为主，源稿的断言笔者逐条对着源码核过，三处推翻、几处补边界，都在下面各节里。
 
-这篇文章要深挖的是那些看似简单的 API 背后藏着的行为边界：七段数码管的字形映射和 digitCount 的精确计算规则（含小数点和负号的占位），setSmallDecimalPoint 对字形布局的实际影响，三种 SegmentStyle 的视觉差异和渲染行为，以及 setMode 切换进制时内部存储值与显示值的分离机制。
+## 溢出时画面停在旧内容上，value() 已经换了新值
 
-## 2. 环境说明
-
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。QLCDNumber 属于 QtWidgets 模块，不需要额外的模块依赖。
-
-## 3. 核心概念讲解
-
-### 3.1 七段数码管的字形映射与 digitCount 精确计算
-
-入门篇我们知道了 setDigitCount 设置显示位数，display 超出范围会触发 overflow。现在我们要精确搞清楚的是"位数"到底怎么算的——因为这里的计算规则直接影响你该给 digitCount 设多大的值。
-
-QLCDNumber 内部维护了一个字符槽位数组，每个槽位可以渲染一个七段数码管字符。关键在于"一个槽位"到底对应什么：对于数字 0-9 来说，每个数字占一个槽位，这没问题。但小数点、负号、冒号这些非数字字符呢？答案是：取决于 setSmallDecimalPoint 的设置。
-
-当 setSmallDecimalPoint 为 false（默认值）时，小数点和负号各自独立占用一个槽位。也就是说 display(12.34) 在 digitCount(4) 的情况下会溢出——因为 "12.34" 有 5 个字符（1、2、.、3、4），需要 digitCount(5) 才放得下。display(-999) 需要 digitCount(4)（负号 + 三个数字）。
-
-当 setSmallDecimalPoint 为 true 时，小数点不再独立占位，而是"挤"在相邻两个数字之间的缝隙里。此时 display(12.34) 只需要 digitCount(4) 就够了（1、2、3、4 四个数字，小数点插在 2 和 3 之间）。但负号仍然独立占位。
+display(double) 的实现咱们原样摆出来看：
 
 ```cpp
-auto *lcd = new QLCDNumber;
-
-// smallDecimalPoint == false（默认）
-lcd->setDigitCount(4);
-lcd->display(12.34);  // 溢出！需要 5 个槽位
-lcd->display(12.3);   // 正常，4 个槽位刚好
-
-// 开启 smallDecimalPoint
-lcd->setSmallDecimalPoint(true);
-lcd->display(12.34);  // 正常，小数点不占位
-lcd->display(-12.3);  // 溢出！负号仍占位，需要 5 个槽位
+// qlcdnumber.cpp 第 502-512 行
+void QLCDNumber::display(double num)
+{
+    Q_D(QLCDNumber);
+    d->val = num;
+    bool of;
+    QString s = double2string(d->val, d->base, d->ndigits, &of);
+    if (of)
+        emit overflow();
+    else
+        d->internalSetString(s);
+}
 ```
 
-这里有一个容易搞混的地方：display(double) 在传入浮点数时，Qt 内部会先把 double 转换为字符串，转换的精度由当前 digitCount 决定。也就是说 digitCount 不仅控制"能放多少字符"，还会反过来影响"浮点数转字符串时保留多少位小数"。这个双向关系是很多人计算 digitCount 时出错的原因。
+d->val = num 排在溢出判断前面。您要是拿 value() 做联动，溢出那一刻读到的已经是塞不进去的新值，屏幕上却还挂着旧字符串。溢出分支只发 overflow() 信号，internalSetString 没被调用，digitStr 原样保留，画面停在最近一次成功显示的内容上。源稿说超出范围会 “显示全横线”，6.9.1 里找不到依据，推翻。display(int) 同款结构，出处第 539-549 行。溢出信号的文档另有说明，它从不因 setDigitCount() 而发出，出处第 108 行，调位数这个动作本身不会误报。
 
-### 3.2 setSmallDecimalPoint 的字形布局影响
+display(QString) 不做溢出检查，超长的字符串在 internalSetString 里被静默截断，smallPoint 关着取右端 ndigits 位，开着装满即停，出处第 685-689 与 705-706 行，overflow 信号在字符串路径上一次都不会响。您用字符串重载显示动态内容时，长度得自己把关。
 
-setSmallDecimalPoint 不仅影响小数点是否独立占位，还会改变七段数码管的字形布局方式。当 smallDecimalPoint 关闭时，小数点被渲染为一个完整的段，占据一个数字槽位的全部宽度——就像一个小的圆点站在一个独立的"房间"里。当 smallDecimalPoint 开启时，小数点被渲染在两个相邻数字之间的间隙中——它不是一个独立的槽位，而是借用右侧数字槽位的左边缘空间来绘制。
+## digitCount 反过来决定精度，smallDecimalPoint 的省位只认字符串
 
-这个布局差异导致了几个实际影响。第一，开启 smallDecimalPoint 后，右侧数字的视觉位置会微微向右偏移，因为左侧空间被小数点占了一部分。在 digitCount 较大（比如 8 位以上）时这个偏移不太明显，但在 digitCount 较小（比如 3-4 位）时会比较显眼。第二，某些 QStyle 下开启 smallDecimalPoint 后小数点会渲染得非常小，在低分辨率屏幕上几乎看不见。如果你需要在不同平台和分辨率下保持一致的显示效果，建议实际编译测试。
+display(double) 的字符串来自 double2string，降精度的循环值得咱们盯着看：
 
 ```cpp
-auto *lcd = new QLCDNumber;
-lcd->setDigitCount(6);
-lcd->setSmallDecimalPoint(true);
-
-// 这些值在 smallDecimalPoint 开启时的实际显示
-lcd->display(123.45);   // "123.45" — 5 个数字 + 1 个挤入的小数点
-lcd->display(0.12345);  // "0.12345" — 刚好 6 个数字
-lcd->display(0.123456); // 可能溢出，取决于精度截断
+// qlcdnumber.cpp 第 181-189 行（double2string 内）
+        int nd = ndigits;
+        do {
+            s = QString::asprintf("%*.*g", ndigits, nd, num);
+            qsizetype i = s.indexOf(u'e');
+            if (i > 0 && s[i+1]==u'+') {
+                s[i] = u' ';
+                s[i+1] = u'e';
+            }
+        } while (nd-- && (int)s.size() > ndigits);
 ```
 
-现在有一道调试题给大家。下面这段代码有什么问题？
+咱们看 %g 的精度参数，它从 ndigits 起步，字符串超长就减一位重试，所以 digitCount 不只管放得下几个字符，还反过来决定浮点数留几位有效数字，源稿讲的双向关系是真的。降法有两条路，定点压位数，压不动就落科学计数法，“e+” 被换成空格加 e，出处第 184-188 行。
 
-```cpp
-auto *lcd = new QLCDNumber;
-lcd->setDigitCount(4);
-lcd->setSmallDecimalPoint(true);
-lcd->display(-9.9);
-```
+咱们拿三个值推一遍。display(12.34) 配 digitCount(4)，“12.34” 五个字符压不进四格，精度降到三位有效数字得 “12.3”，四个字符放下，不溢出，屏幕显示 12.3。display(-99.9) 配 digitCount(4) 进的是另一条支线：“-99.9” 五字符超，降到两位有效数字，四舍五入得 -100，可指数不小于精度，%g 就改走科学计数法，-100 是 1.0 乘 10 的平方，指数 2 等于精度 2，出来的是 “-1e+02”，经 e+ 替换成 “-1 e02” 六字符，出处第 184-188 行，还是放不下，判溢，画面停在旧内容上，digitCount 给 5 才放得下原样的 “-99.9”。源稿按负号加三个数字共四格的算术说它刚好放下，算式看着对上，%g 的科学计数法支线根本没让它走到那一步。display(-999.9) 配 digitCount(4) 同样溢出，%4.3g 直接给 “-1e+03”，替换成 “-1 e03” 六字符，判溢发信号。
 
-看起来 "-9.9" 只有两个数字、一个负号、一个小数点——开启 smallDecimalPoint 后小数点不占位，应该只需要 3 个槽位（负号 + 9 + 9）。但实际情况是：负号始终独立占位，所以需要 3 个槽位（负号 + 数字9 + 数字9），digitCount(4) 足够。这段代码实际上没有问题，能正常显示。那如果 display(-99.9) 呢？负号 + 9 + 9 + 小数点 + 9 = 负号(1) + 三个数字(3) = 4 个槽位，digitCount(4) 刚好放得下。但 display(-999.9) 就溢出了——负号 + 四个数字需要 5 个槽位。
+smallDecimalPoint 的省位只对字符串路径生效。display(QString) 直进 internalSetString，smallPoint 为真时点号从字符流里剥出来记进 points 位图，槽位只数数字，出处第 690-724 行，您拿 “12.34” 走字符串重载、digitCount 给 4，就靠它省下一位。display(double) 的溢出判定发生在 double2string，那里不知道 smallPoint 的存在，判的是含小数点的字符串总长，您开了 smallDecimalPoint，digitCount 的需求一位都没省下来。源稿说开了它 display(12.34) 只需 digitCount(4)，照源码跑出来是显示 12.3，同样推翻。
 
-### 3.3 SegmentStyle 三种风格
+int 路径的负号另有一套嵌位法。int2string 把 num 取过绝对值再格式化，负号嵌进右对齐的前导空格里，出处第 151-161 行。您按 int 重载喂 -999、digitCount 给 4，“ 999” 嵌成 “-999”，四个字符。digitCount(3) 时前导空格没了，insert 把总长顶到五，判溢。负号要多要一位，这一点成立，机制是借前导空格，跟格子算术不相干。
 
-QLCDNumber 提供了三种段样式（SegmentStyle），通过 setSegmentStyle 设置，影响七段数码管的视觉外观。
+digitCount 自身带着钳位，大于 99 警告并压到 99，小于 0 压到 0，出处第 360-372 行。警告文案里还留着 setNumDigits 这个改名前的老 API 名，您在控制台看到它，别去找一个当前版本里不存在的函数。
 
-QLCDNumber::Outline 是默认样式，每个线段只画轮廓边框，内部是空的或者浅色的。这种样式在浅色背景上看起来比较清晰，但在深色背景上线段的轮廓可能和背景融为一体。QLCDNumber::Filled 在 Outline 的基础上把线段内部填充为前景色，看起来像一个实心的发光数码管——这是工业仪表盘最常用的样式，配合深色背景和绿色/红色前景色效果很好。QLCDNumber::Flat 和 Filled 类似，但不画轮廓边框，线段直接以前景色扁平绘制，看起来更简洁但缺少立体感。
+## setMode 两行完成换制，intValue 与屏幕各算各的
 
-```cpp
-auto *lcd = new QLCDNumber;
-lcd->setSegmentStyle(QLCDNumber::Filled);
-lcd->setStyleSheet("QLCDNumber { background-color: #1a1a2e; color: #00ff88; }");
-lcd->setDigitCount(6);
-lcd->display(1234.56);
-```
+咱们把 setMode 的实现看全，一共两行，d->base = m，接着 display(d->val)，出处第 470-475 行。base 换掉，拿存的 val 重显一遍，val 没动，您切完 Hex 再读 value()，报的还是 255.0。格式化交给 int2string，十六、十、八进制分别走 %*x、%*i、%*o，二进制分支自己拿缓冲区从低位往高位拼，出处第 122-150 行。
 
-三种样式的选择主要取决于你的界面风格。Outline 适合传统的 LCD 模拟效果，Filled 适合现代工业仪表盘风格，Flat 适合极简风格。QSS 的 color 属性影响线段的前景色（以及 Filled 模式下的填充色），background-color 影响整个控件的背景。
+非十进制下的 double 要过一道 int 域检查，num 超出 int 范围直接判溢返回空串，出处第 172-179 行，检查过了用 (int) 强转截断，出处第 179 行。intValue() 的取整方式跟这里不一致，它返回 qRound(d->val)，四舍五入，出处第 527-531 行。255.99 在 Hex 模式下屏幕显示 FF，截断成 255，intValue() 却报 256。两处各算各的，您在联动代码里别混用。
 
-有一点需要注意：SegmentStyle 只影响七段数码管的线段绘制方式，不影响文字内容的显示。也就是说不管你选哪种 SegmentStyle，display(QString("HELLO")) 都能用同样的方式渲染字母——字母也是用七段线段拼出来的。
+display(QString) 喂进来的值走另一套语义，s.toDouble(&ok) 转得动就存，转不动存 0，出处第 565-574 行。您拿 “0xFF” 走 display(QString)，digitStr 里存的是原文，接着调 setMode，重显的是 val 里的 0，字符串画面被数值化显示顶掉。文档对这个重载写着 `disregards mode() and smallDecimalPoint()`，出处第 555-556 行，前半句与实现一致，后半句要打折扣，布局照样受 smallPoint 影响，点号照旧剥进位图。查溢出有现成的 checkOverflow 两重载，内部把 int2string 或 double2string 预演一遍看长度，出处第 427-449 行，您显示大数之前可以拿它探路。
 
-### 3.4 setMode 与内部存储值的分离
+## SegmentStyle 落成两个标志位，默认值以代码为准
 
-入门篇我们知道 setMode 可以切换十进制/十六进制/八进制/二进制显示。现在我们要搞清楚一个容易混淆的关键点：setMode 只影响显示，不影响内部存储的值。
+setSegmentStyle 的实现只有两行赋值，咱们直接看，d->fill 在 Flat 或 Filled 时为真，d->shadow 在 Outline 或 Filled 时为真，出处第 1142-1148 行。三档样式落成两个位的组合，Outline 只描边，Filled 填充加描边，Flat 只填充。绘制侧 drawSegment 里，fill 位管拿 fgColor 填多边形，出处第 863-987 行，shadow 位管拿 palette 的 light 与 dark 画明暗边线，出处第 999 行起，取色集中在第 846-856 行。
 
-QLCDNumber 内部用 double 存储最后一次 display(int) 或 display(double) 传入的值。当你调用 setMode(QLCDNumber::Hex) 时，QLCDNumber 不是把内部值转换成十六进制重新存储，而是每次需要渲染时用当前的 mode 去格式化那个 double 值。这意味着你可以随时切换 mode 而不会丢失原始值。
+Outline 因此是只描边不填充的空心段，段内露出控件背景。QSS 的 color 改的是 foregroundRole，只影响填充，对 Outline 的可见度帮不上忙，深背景上想看清轮廓得动 palette 的 light 与 dark。您配深色工业风的仪表盘，Filled 或 Flat 配亮色 color 才走得通，示例第一区三只并排的 LCD 就是这么配的，出处 segment_style_demo.cpp 第 73-75 行。
 
-```cpp
-auto *lcd = new QLCDNumber;
-lcd->setDigitCount(8);
-lcd->display(255);
+默认值有个文档与实现不一致的地方。无参构造的文档说段样式设成 Outline，出处第 288 行，可无参构造实际委托 QLCDNumber(5, parent)，出处第 295-298 行，init() 里设的是 Filled，出处第 329 行。您不带参数 new 出来的 LCD 是 Filled 的，文档那句当不了 6.9.1 的依据。
 
-lcd->setMode(QLCDNumber::Dec);  // 显示 "255"
-qDebug() << lcd->value();       // 255.0
+## paintEvent 里没有 QStyle，段是从多边形画起的
 
-lcd->setMode(QLCDNumber::Hex);  // 显示 "FF"
-qDebug() << lcd->value();       // 依然是 255.0，内部值没变
+咱们从 paintEvent 顺着往下走。起手画边框、开抗锯齿，shadow 位为真时把画笔平移半个像素，一像素宽的描边线才落在像素中心，出处第 661-674 行。往下 drawString 算格子，格距公式里装着 smallDecimalPoint 的全部布局影响，digitSpace 在 smallPoint 时取 2 否则取 1，每格步进是 segLen*(5+digitSpace)/5，出处第 745-750 行。开了 smallDecimalPoint，整排格距加宽，每格步进从 segLen*6/5 放宽到 segLen*7/5，段长上限跟着变小，单个数字并不挪位。属性文档也只说数字之间的空隙变宽，出处第 636-637 行。
 
-lcd->setMode(QLCDNumber::Oct);  // 显示 "377"
-lcd->setMode(QLCDNumber::Bin);  // 显示 "11111111"
-```
+小数点自己是段号 7，smallPoint 时画在两格之间的下方，否则画在本格底部中央，出处第 947-950 行。冒号是段 8 与 9 的上下两点。全部字形排在 getSegments 的表里，三十项，数字之外还有 A 到 F、h、H、L、o、P、r、u、U、Y、度数符号和空格，非法字符落到空表，画出来是空格，出处第 197-281 行。您想让 LCD 显示 “HELLO” 没问题，H、E、L、O 都在表里，想显示 “W” 就只剩一排空格。
 
-这里有一个重要的行为边界：setMode 对 display(QString) 传入的内容没有影响。如果你用 display(QString("HELLO")) 显示了一个字符串，然后调用 setMode，显示内容不会变化——因为 QString 模式不走进制转换逻辑。value() 在 display(QString) 之后返回 0，因为字符串内容无法转换为数值。
+drawDigit 收新旧两个字符，旧字符的段标成擦除、新字符的段标成绘制、重合的标成不动，只处理有变化的段，出处第 782-824 行。这套增量更新是省重绘年代的思路。可 paintEvent 调 drawString 时把 newString 显式传了 false，出处第 670-673 行，旧字符一律按空格算，差分逻辑空转，每次全量重画。笔者把 qlcdnumber.cpp 里 drawString 的调用者数了一遍，newString 为真的路径当前没有任何人走，差分表留在源码里没有调用者。
 
-另外一个需要特别注意的边界是 display(double) 在非十进制模式下的行为。setMode(Hex) 后调用 display(3.14) 不会显示 "3.14" 的十六进制——它会把 3.14 截断为整数 3，然后显示十六进制的 "3"。十六进制浮点数表示不是 QLCDNumber 支持的功能。如果你需要在十六进制模式下显示带小数的值，唯一的办法是自己格式化好字符串然后用 display(QString)。
+sizeHint 宽按每格 9 像素乘位数再加 10，smallDecimalPoint 关着时位数还要加一给点号，高固定 23，出处第 1164-1167 行。每格 9 像素是粗估，您要精确排版别指望它，自己 setMinimumSize。
 
-```cpp
-auto *lcd = new QLCDNumber;
-lcd->setDigitCount(8);
-lcd->setMode(QLCDNumber::Hex);
+## 官方文档参考
 
-lcd->display(255);      // 显示 "FF"
-lcd->display(255.0);    // 也是 "FF"（255.0 截断为 255）
-lcd->display(255.99);   // 还是 "FF"（截断为 255）
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，QLCDNumber 在 QtWidgets，自绘话题涉及的 QPainter 在 QtGui，链接 Qt6::Widgets 即可。
 
-// 显示十六进制带前缀——只能用 QString
-lcd->display(QString("0xFF"));  // 显示 "0xFF"
-```
+[Qt 文档 · QLCDNumber](https://doc.qt.io/qt-6/qlcdnumber.html) -- 液晶数字显示控件，digitCount、mode、segmentStyle、smallDecimalPoint 属性说明
 
-## 4. 踩坑预防
+[Qt 文档 · QFrame](https://doc.qt.io/qt-6/qframe.html) -- QLCDNumber 的父类，frameShape 与 frameShadow 影响边框外观
 
-第一个坑是 value 超出 digitCount 静默溢出。QLCDNumber 不会自动扩展位数，超出范围就显示全横线并触发 overflow 信号。更坑的是 display(double) 的精度截断行为和 digitCount 互相影响，很容易算错需要的位数。解决方案是手动计算最大位数时采用一个简单公式：整数位数 + （可能有的负号 1 位）+ （如果 smallDecimalPoint 关闭则小数点 1 位）+ 小数位数 = 最小 digitCount，宁多勿少。
+[Qt 文档 · QPalette](https://doc.qt.io/qt-6/qpalette.html) -- 调色板，light 与 dark 角色决定 Outline 样式的描边色
 
-第二个坑是 smallDecimalPoint 改变后的布局偏移。开启 smallDecimalPoint 后小数点挤入数字间隙，右侧数字会微微偏移。在 digitCount 较大时不太明显，但在 3-4 位时偏移可能让数字看起来"歪了"。如果你对显示精度和视觉对齐有严格要求，建议实际运行测试各个值的表现。
+[Qt 文档 · QPainter](https://doc.qt.io/qt-6/qpainter.html) -- 绘图引擎，drawPolygon 画段与 translate 半像素平移
 
-第三个坑是 setMode 不改变存储值但改变 display(double) 的截断行为。setMode(Hex) 后 display(3.14) 会截断为整数 3 再显示十六进制——如果你期望看到浮点数的十六进制表示，这是不可能的，QLCDNumber 不支持。需要在非十进制模式下显示带小数的值时，必须自己格式化字符串用 display(QString)。
-
-## 5. 练习项目
-
-练习项目：多功能进制转换器面板。我们要实现一个窗口，中间是一个大号的 QLCDNumber（digitCount 设为 12），下方是四个 QPushButton 分别标注 "Dec"、"Hex"、"Oct"、"Bin"。用户通过一个 QSpinBox 输入一个 0-65535 的整数，LCD 实时显示对应的进制值。切换进制时自动调整 digitCount——十进制最多 5 位，十六进制最多 4 位，八进制最多 6 位，二进制最多 16 位。LCD 使用 Filled 段样式配深色背景绿色数字，同时在下方用独立的 QLabel 显示当前 mode 和 digitCount 的值，方便验证。
-
-完成标准是：切换进制时 LCD 显示正确的值且不会溢出，digitCount 随进制自动调整，二进制模式下 16 位数字不溢出。提示几个关键点：每次切换 mode 前先调整 digitCount 再 display，二进制 16 位需要 setDigitCount(16)；用 value() 获取当前存储值而不是重新从 SpinBox 读取，这样可以验证 setMode 不改变内部值的行为。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QLCDNumber](https://doc.qt.io/qt-6/qlcdnumber.html) -- 液晶数字显示控件，包含 SegmentStyle、Mode、smallDecimalPoint 属性说明
-
-[Qt 文档 · QFrame](https://doc.qt.io/qt-6/qframe.html) -- QLCDNumber 的父类，frameShape 和 frameShadow 影响边框外观
+[Qt 文档 · QBitArray](https://doc.qt.io/qt-6/qbitarray.html) -- 位图容器，smallDecimalPoint 模式下点号的存储
 
 ---
 
-到这里，QLCDNumber 的进阶内容就过了一遍。digitCount 的计算不是一个简单的"几位数字"问题——小数点是否独立占位取决于 smallDecimalPoint，负号永远独立占位，display(double) 的精度截断和 digitCount 互相影响。setSmallDecimalPoint 不仅改变占位规则，还会导致数字的视觉位置偏移。三种 SegmentStyle 各有适用场景，Filled 配深色背景是工业仪表盘的标配。setMode 与内部存储值完全分离，切换进制只影响显示格式，不影响 value() 的返回值。把这些边界搞清楚，QLCDNumber 在你的仪表盘里就不会再出幺蛾子了。
+数码管到这就收住，显示家族的下一程换日期方向，等咱们跟 QCalendarWidget 把整月日历翻起来，入口在 [3.37 QCalendarWidget 进阶](./37-qcalendarwidget-advanced.md)。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/36-qlcdnumber-advanced/，可执行文件 36-qlcdnumber-advanced）。第一区三种风格并排，同一数值喂三只 LCD。三只依次设成 Outline、Filled、Flat，出处 segment_style_demo.cpp 第 63、73-75、85-87 行。第二区管溢出，digitCount 与显示值都做成旋钮，默认 4 位配 12.34，出处第 127、137 行，checkOverflow 里设好位数再 display，出处第 251-252 行。第三区切进制，按进制换 digitCount，十进制 5 位、十六进制 4 位、八进制 6 位、二进制 16 位，出处第 287-308 行，设好 digitCount 再 setMode 再 display 的次序在第 311-313 行，下方标签实时报 value()，出处第 316-320 行。
+
+实验补两步，都在第二区。您第一步把值敲成 12.00、digitCount 留 4：提示标签说需要五个槽位，屏幕却显示 12。标签用 QString::number(value, 'f', 2) 按两位小数算长度，出处 segment_style_demo.cpp 第 255-256 行，真实路径是 %g 把 12.00 压成 “12”，标签在 .00 结尾的值上会误报。接着敲 -99.9、digitCount 仍留 4，这一回真溢出，屏幕停在旧内容 12 上，提示标签报文本 -99.90 需要 6 个槽位，数字比真实需求多算一位，但溢出与画面停旧内容这次报对了，巧在 %g 的科学计数法支线，四舍五入出的 -100 被支线送进科学计数法，落不到屏幕上。第二步把值敲成 99999、digitCount 留 2，触发真溢出，画面停在旧内容上，overflow 信号发了、屏幕没换，出处 qlcdnumber.cpp 第 508-511 行。
+
+完成标准照旧。溢出时画面停在什么上、value() 报什么，您说得出来。display(12.34) 配 digitCount(4)，屏幕出什么、-99.9 出什么，您不跑程序就能推。setMode 之后 value() 变不变，intValue() 与屏幕在 255.99 上差在哪，您指得出两处行号。三种 SegmentStyle 各对应 fill 与 shadow 的哪种组合，您答得上来。

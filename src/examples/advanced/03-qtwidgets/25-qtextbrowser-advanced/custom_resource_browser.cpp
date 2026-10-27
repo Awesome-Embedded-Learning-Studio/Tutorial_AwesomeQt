@@ -19,12 +19,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 CustomResourceBrowser::CustomResourceBrowser(QWidget* parent)
-    : QTextBrowser(parent)
-    , m_btnBack(nullptr)
-    , m_btnForward(nullptr)
-    , m_btnHome(nullptr)
-    , m_historyLabel(nullptr)
-{
+    : QTextBrowser(parent), m_btnBack(nullptr), m_btnForward(nullptr), m_btnHome(nullptr),
+      m_historyLabel(nullptr) {
     initMockDatabase();
 
     // 禁用默认导航——完全手动控制链接行为
@@ -32,13 +28,18 @@ CustomResourceBrowser::CustomResourceBrowser(QWidget* parent)
     setOpenExternalLinks(false);
 
     // 连接 anchorClicked 进行自定义链接处理
-    connect(this, &QTextBrowser::anchorClicked,
-            this, &CustomResourceBrowser::handleAnchorClicked);
+    connect(this, &QTextBrowser::anchorClicked, this, &CustomResourceBrowser::handleAnchorClicked);
 
     // sourceChanged 信号用于更新导航状态
-    connect(this, &QTextBrowser::sourceChanged, this, [this]() {
-        updateNavigationState();
-    });
+    connect(this, &QTextBrowser::sourceChanged, this, [this]() { updateNavigationState(); });
+
+    // backwardAvailable/forwardAvailable 在历史栈压栈之后才发
+    // （qtextbrowser.cpp 第 840 与 844 行），接上它们按钮和标签
+    // 在一次导航内就能刷新到位，不用等下一趟
+    connect(this, &QTextBrowser::backwardAvailable, this,
+            &CustomResourceBrowser::updateNavigationState);
+    connect(this, &QTextBrowser::forwardAvailable, this,
+            &CustomResourceBrowser::updateNavigationState);
 
     // 加载首页内容
     setHtml(buildPageOne());
@@ -48,8 +49,7 @@ CustomResourceBrowser::CustomResourceBrowser(QWidget* parent)
 // 导航工具栏创建
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* CustomResourceBrowser::createNavigationToolBar()
-{
+QWidget* CustomResourceBrowser::createNavigationToolBar() {
     auto* bar = new QWidget;
     auto* layout = new QHBoxLayout(bar);
     layout->setContentsMargins(4, 4, 4, 4);
@@ -80,8 +80,7 @@ QWidget* CustomResourceBrowser::createNavigationToolBar()
 // 模拟图片数据库
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CustomResourceBrowser::initMockDatabase()
-{
+void CustomResourceBrowser::initMockDatabase() {
     const int kImageSize = 120;
 
     // 图片 1：蓝色，标注 "Product A"
@@ -119,30 +118,27 @@ void CustomResourceBrowser::initMockDatabase()
 // HTML 页面构建
 // ─────────────────────────────────────────────────────────────────────────────
 
-QString CustomResourceBrowser::buildPageOne() const
-{
-    return QStringLiteral(
-        "<html><body>"
-        "<h2>Page 1: 自定义协议资源加载演示</h2>"
-        "<p>以下图片通过 <code>myapp://</code> 协议加载，由覆写的 loadResource() "
-        "从模拟数据库中获取：</p>"
-        "<table cellpadding='8'><tr>"
-        "<td align='center'><img src='myapp://product_a'/><br/>Product A</td>"
-        "<td align='center'><img src='myapp://product_b'/><br/>Product B</td>"
-        "<td align='center'><img src='myapp://product_c'/><br/>Product C</td>"
-        "</tr></table>"
-        "<hr/>"
-        "<p><a href='page2'>前往第二页 (内部导航)</a></p>"
-        "<p><a href='https://doc.qt.io/qt-6/qtextbrowser.html'>"
-        "Qt 文档 - QTextBrowser (外部链接)</a></p>"
-        "<hr/>"
-        "<p><i>提示：内部链接由 anchorClicked 手动处理，"
-        "外部链接通过 QDesktopServices::openUrl 打开。</i></p>"
-        "</body></html>");
+QString CustomResourceBrowser::buildPageOne() const {
+    return QStringLiteral("<html><body>"
+                          "<h2>Page 1: 自定义协议资源加载演示</h2>"
+                          "<p>以下图片通过 <code>myapp://</code> 协议加载，由覆写的 loadResource() "
+                          "从模拟数据库中获取：</p>"
+                          "<table cellpadding='8'><tr>"
+                          "<td align='center'><img src='myapp://product_a'/><br/>Product A</td>"
+                          "<td align='center'><img src='myapp://product_b'/><br/>Product B</td>"
+                          "<td align='center'><img src='myapp://product_c'/><br/>Product C</td>"
+                          "</tr></table>"
+                          "<hr/>"
+                          "<p><a href='page2'>前往第二页 (内部导航)</a></p>"
+                          "<p><a href='https://doc.qt.io/qt-6/qtextbrowser.html'>"
+                          "Qt 文档 - QTextBrowser (外部链接)</a></p>"
+                          "<hr/>"
+                          "<p><i>提示：内部链接由 anchorClicked 手动处理，"
+                          "外部链接通过 QDesktopServices::openUrl 打开。</i></p>"
+                          "</body></html>");
 }
 
-QString CustomResourceBrowser::buildPageTwo() const
-{
+QString CustomResourceBrowser::buildPageTwo() const {
     return QStringLiteral(
         "<html><body>"
         "<h2>Page 2: 历史栈导航演示</h2>"
@@ -164,8 +160,7 @@ QString CustomResourceBrowser::buildPageTwo() const
 // loadResource 覆写
 // ─────────────────────────────────────────────────────────────────────────────
 
-QVariant CustomResourceBrowser::loadResource(int type, const QUrl& name)
-{
+QVariant CustomResourceBrowser::loadResource(int type, const QUrl& name) {
     // 只处理图片资源且 scheme 为 "myapp" 的情况
     if (type == QTextDocument::ImageResource && name.scheme() == QStringLiteral("myapp")) {
         // 从 URL 的 host 部分提取图片键名：myapp://product_a -> "product_a"
@@ -193,23 +188,20 @@ QVariant CustomResourceBrowser::loadResource(int type, const QUrl& name)
 // 安全导航操作
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CustomResourceBrowser::safeBackward()
-{
-    // 空历史栈上调用 backward() 可能导致崩溃，必须先检查
+void CustomResourceBrowser::safeBackward() {
+    // backward() 空栈时自己就返回不会崩，先查一遍是让调用点的意图显式，判据与按钮 enabled 的一致
     if (backwardHistoryCount() > 0) {
         backward();
     }
 }
 
-void CustomResourceBrowser::safeForward()
-{
+void CustomResourceBrowser::safeForward() {
     if (forwardHistoryCount() > 0) {
         forward();
     }
 }
 
-void CustomResourceBrowser::goHome()
-{
+void CustomResourceBrowser::goHome() {
     setHtml(buildPageOne());
 }
 
@@ -217,35 +209,39 @@ void CustomResourceBrowser::goHome()
 // 链接点击处理
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CustomResourceBrowser::handleAnchorClicked(const QUrl& url)
-{
-    // 内部页面导航：相对路径代表内部页面切换
-    if (url.isRelative()) {
-        const QString path = url.path();
-        if (path == QStringLiteral("page1")) {
-            setHtml(buildPageOne());
-        } else if (path == QStringLiteral("page2")) {
-            setHtml(buildPageTwo());
-        }
+void CustomResourceBrowser::handleAnchorClicked(const QUrl& url) {
+    // 内部页面导航：page1/page2 两页按 path 认，相对与绝对写法都命中。
+    // 匹配不能裹在 isRelative() 守卫里：页面改走 setSource 装载之后
+    // （文档挂在 myapp://page2 这类绝对 URL 上），页内的 href='page1'
+    // 会被 resolveUrl 拼成 myapp://page2/page1（qtextbrowser.cpp 第 185 行），
+    // 进来时已是绝对 URL，isRelative() 守卫会把它错送进 myapp 演示分支
+    QString page = url.path();
+    if (page.startsWith(u'/'))
+        page.remove(0, 1);
+    if (page == QStringLiteral("page1")) {
+        setHtml(buildPageOne());
+        return;
+    }
+    if (page == QStringLiteral("page2")) {
+        setHtml(buildPageTwo());
         return;
     }
 
     // 外部 http/https 链接用系统默认浏览器打开
-    if (url.scheme() == QStringLiteral("http")
-        || url.scheme() == QStringLiteral("https")) {
+    if (url.scheme() == QStringLiteral("http") || url.scheme() == QStringLiteral("https")) {
         QDesktopServices::openUrl(url);
         return;
     }
 
     // 自定义 myapp:// 协议的非图片链接（展示完整 scheme 处理）
     if (url.scheme() == QStringLiteral("myapp")) {
-        setHtml(QStringLiteral(
-            "<html><body>"
-            "<h2>自定义协议链接</h2>"
-            "<p>你点击了一个 myapp:// 协议的链接：</p>"
-            "<pre>%1</pre>"
-            "<p><a href='page1'>返回第一页</a></p>"
-            "</body></html>").arg(url.toString()));
+        setHtml(QStringLiteral("<html><body>"
+                               "<h2>自定义协议链接</h2>"
+                               "<p>你点击了一个 myapp:// 协议的链接：</p>"
+                               "<pre>%1</pre>"
+                               "<p><a href='page1'>返回第一页</a></p>"
+                               "</body></html>")
+                    .arg(url.toString()));
     }
 }
 
@@ -253,8 +249,7 @@ void CustomResourceBrowser::handleAnchorClicked(const QUrl& url)
 // 导航状态更新
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CustomResourceBrowser::updateNavigationState()
-{
+void CustomResourceBrowser::updateNavigationState() {
     // 根据历史栈数量安全地启用/禁用导航按钮
     if (m_btnBack) {
         m_btnBack->setEnabled(backwardHistoryCount() > 0);
@@ -263,9 +258,8 @@ void CustomResourceBrowser::updateNavigationState()
         m_btnForward->setEnabled(forwardHistoryCount() > 0);
     }
     if (m_historyLabel) {
-        m_historyLabel->setText(
-            QStringLiteral("后退栈: %1 | 前进栈: %2")
-                .arg(backwardHistoryCount())
-                .arg(forwardHistoryCount()));
+        m_historyLabel->setText(QStringLiteral("后退栈: %1 | 前进栈: %2")
+                                    .arg(backwardHistoryCount())
+                                    .arg(forwardHistoryCount()));
     }
 }

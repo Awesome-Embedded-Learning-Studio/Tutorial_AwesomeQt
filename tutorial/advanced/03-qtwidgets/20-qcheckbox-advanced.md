@@ -1,27 +1,27 @@
 ---
 title: "3.20 QCheckBox 进阶"
-description: "入门篇我们把 QCheckBox 的三态模式、两个信号的区别、全选/全不选逻辑、以及 QTreeWidget 层级复选过了一遍。进阶篇我们要深入三态 checkState 的传播机制、PartiallyChecked 在树形结构中的冒泡模式，以及 blockSignals 防递归的正确用法。"
+description: "入门篇会调 setTristate、checkStateChanged 与 m_updating 防递归，进阶篇把三态勾选搬进多层权限树。父节点状态由全部子孙综合算出，blockSignals 挡的是树而且一挡挡全部信号，向下传播走完再向上冒泡，深树用延迟与缓存两条路压开销，配套示例在 examples/advanced/03-qtwidgets/20-qcheckbox-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.20——QCheckBox 进阶
 
-## 1. 前言 / 三态传播的坑比你想象的深
+[入门篇 QCheckBox 基础](../../beginner/03-qtwidgets/20-qcheckbox-beginner.md) 把 setTristate 的三态模式、checkStateChanged 与 toggled 的取舍、全选/全不选连同层级复选过了一遍，摆扁平列表够用。[3.19 QRadioButton 进阶](./19-qradiobutton-advanced.md) 收尾预告过，三态的传播、PartiallyChecked 在树形结构里的冒泡、blockSignals 防递归都在本篇展开。为什么值得单独一篇，咱们把入门篇的“向下传播 + 向上冒泡”搬进一棵三层权限树，m_updating 守卫没跟着一起搬，勾一下角色节点想全选，程序当场没了动静，itemChanged 一层勾起一层，传播链自己咬住了自己。死循环只是最先碰到的一个难题，后面还有中间态算错、静默设值找错对象、深树冒泡拖慢，全都藏在多层嵌套里。
 
-入门篇我们把 QCheckBox 的三态复选框、checkStateChanged 和 toggled 信号的区别、全选/全不选逻辑、以及 QTreeWidget 的层级复选全部过了一遍。如果你只是做一两个"全选/全不选"的扁平列表，那些知识确实够用。但如果你需要在树形结构中实现完整的父子联动——比如一个文件管理器的多级文件夹选择，或者一个权限配置树中的角色勾选——你会发现入门篇的"向下传播 + 向上冒泡"模式在多层嵌套下面临一些棘手的问题：信号递归触发导致的死循环、中间状态传播时的多次冗余计算、以及 blockSignals 使用不当导致的状态丢失。这一篇我们就把三态 checkState 的传播机制、PartiallyChecked 的冒泡模式、以及 blockSignals 防递归的正确用法这三个进阶问题拆透。
+笔者把多层树里最容易把人问住的三个场面摆出来。想静默地给节点设状态，对 QTreeWidgetItem 调 blockSignals，编译器当场报错，树节点根本不是 QObject。点一个角色节点想全选，九个权限全亮了，角色节点却停在半选，算它状态的那次冒泡跑在子节点改完之前。用 blockSignals 把树的信号一挡到底做完批量更新，恢复后发现靠这些信号刷新的别处界面没了动静，block 期间被挡掉的不止 itemChanged 一个。三个场面各有一套根因，本篇讲四件事：父节点的状态怎么从子孙算出来，传播的次序怎么排，blockSignals 的正确对象与作用域怎么拿捏，深树频繁勾选时冒泡的开销怎么压下去。
 
-## 2. 环境说明
+## 第三态是算出来的：子孙全亮，父节点才给 Checked
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。所有内容依赖 QtWidgets 模块，涉及 QCheckBox、QTreeWidget 和 QTreeWidgetItem。示例可在任何支持 Qt6 的桌面平台上编译运行。
+咱们回到规则本身。入门篇的两层联动里，全选框看子项，子项全亮给 Checked、全灭给 Unchecked、有亮有灭给 PartiallyChecked，一层的布尔值就够算。树一旦多出层次，PartiallyChecked 自己也成了输入：一个子节点可能因为它的子孙混合了选中和未选中，自己就处于半选，那么它算选中还是没选中？拿 bool 去套就翻车了。[3.12 QAbstractButton 基类进阶](./12-qabstractbutton-base-advanced.md) 讲过第三态的来历，PartiallyChecked 在 isChecked() 眼里报 true，旧的 stateChanged 自 Qt 6.9 起废弃，由 checkStateChanged 接替，本篇的判断一律落在 Qt::CheckState 枚举上，Unchecked、PartiallyChecked、Checked 三个值，谁也不折算成 bool。
 
-## 3. 核心概念讲解
+父节点该设成什么，咱们用一张表说全：
 
-### 3.1 checkState 传播的本质——从枚举值到视觉语义
+| 子节点的状态分布 | 父节点设成 |
+| --------------- | --------- |
+| 全部是 Checked | Checked |
+| 全部是 Unchecked | Unchecked |
+| 其余任何组合，混了选中与未选中，或子节点里有 PartiallyChecked | PartiallyChecked |
 
-入门篇我们讲了三态复选框的三个值：Qt::Unchecked（0）、Qt::PartiallyChecked（1）、Qt::Checked（2）。但三个枚举值只是数据表示，checkState 传播的核心问题是"语义一致性"——父节点的视觉状态必须正确反映所有子孙节点的选中情况。
-
-在两态场景中，传播逻辑是简单的布尔运算：所有子项为 true 则父为 true，所有子项为 false 则父为 false，混合则父为 PartiallyChecked。但在实际的三态传播中，PartiallyChecked 本身也是一个合法的输入——一个子节点可能是 PartiallyChecked（因为它的子孙节点混合了选中和未选中），这会影响父节点的状态计算。
-
-正确的三态传播规则是这样的：如果所有子节点的 checkState 都是 Checked，父节点设为 Checked。如果所有子节点的 checkState 都是 Unchecked，父节点设为 Unchecked。其他任何情况（包括混合了 Checked/Unchecked/PartiallyChecked，或者某个子节点本身就是 PartiallyChecked），父节点都设为 PartiallyChecked。
+咱们把规则写成代码，就是一次递归汇总：
 
 ```cpp
 Qt::CheckState computeParentState(QTreeWidgetItem* parent)
@@ -47,13 +47,17 @@ Qt::CheckState computeParentState(QTreeWidgetItem* parent)
 }
 ```
 
-这里有一个关键的实现细节：computeParentState 是递归的——它先递归计算每个子节点的"有效状态"（如果子节点有自己的子节点，先计算子节点的父状态），然后再根据所有子节点的有效状态来决定当前父节点的状态。这保证了无论树有多深，每个节点的状态都是基于其所有子孙节点的综合结果。
+computeParentState(parent->child(i)) 这一行把递归带了下去：子节点自己有孩子时，它先把子节点当成一个父节点，把孙辈全部算完再报上来。报上来的咱们叫它有效状态，无论树多深，每个节点拿到的都是整棵子树的综合结果，第三态的语义在每一层都成立。配套示例的树只有三层，角色、模块、权限各占一层，递归的好处看不出来，您在权限底下再垫一层新条目，模块那层照样算得对，汇总代码一行不用改。
 
-### 3.2 blockSignals 防递归的正确用法
+次序是另一个容易出错的地方，开篇第二个场面就出在这里。向下传播与向上冒泡两步都得做，先做哪个却不能随便。咱们假如让冒泡跑在传播前面，父节点算状态时它名下的孩子还没改完，computeParentState 读到的是旧摊子，算出来的档位（Qt::CheckState 的取值）与传播后的实情对不上。传播做完又没人补算，错档就停在那里。明明子孙全亮，角色节点显示的可能是半选，也可能是空选，取决于冒泡那一瞬孩子改到了哪一步。配套示例在 onItemChanged 里给的次序是先用 propagateToChildren 把整棵子树改完，再用 bubbleToParents 从当前节点逐层向上算，两步各走一遍，冒泡读到的就永远是改完的终态。
 
-入门篇我们用 m_updating 标志位来防止信号递归触发。这个方案在小规模树结构中工作得很好，但有一个缺点：m_updating 是一个全局标志，在多线程或嵌套调用场景中可能出现状态不一致。Qt 提供了一个更优雅的工具：QObject::blockSignals(bool)。
+配套示例（examples/advanced/03-qtwidgets/20-qcheckbox-advanced/，可执行文件 20-qcheckbox-advanced）就是一棵 Administrator、Editor、Viewer 三个角色下挂三个模块、每个模块下挂 View、Edit、Delete 三个权限的树，咱们拿三个实验把规则摸实。勾选 Administrator，九个权限一次全亮，角色节点保持全选，这是全 Checked 才给 Checked。勾亮某个模块下的 View，它所在的模块当场变成半选，Administrator 跟着半选，半选沿路径一层层冒上去，Editor 与 Viewer 纹丝不动。这个半选只是勾亮那一刻的瞬时态，把 View 再取消，模块与 Administrator 又退回全灭。再做一个破坏性实验，把 onItemChanged 里 propagateToChildren 与 bubbleToParents 两行对调，重新编译后点一个此前一项未选的模块节点，三个权限全亮了，角色节点却空着，冒泡先跑，computeParentState 读到的还是传播前的全灭权限层，给角色算了个全不选。要是点之前那个模块已有亮着的权限，角色停的就是半选，同样是旧摊子算出来的。改回来，一切如常。
 
-blockSignals(true) 会阻止对象发射任何信号，blockSignals(false) 恢复信号发射。在树形复选的场景中，当你需要程序化地设置某个节点的 checkState 而不触发 itemChanged 信号时，可以先 blockSignals(true)、setCheckState、blockSignals(false)。
+## blockSignals 挡的是树，一挡就是全部信号
+
+防递归这头，入门篇给的办法是 m_updating 标志位，咱们在信号处理器入口查标志，正在更新就提前返回。小树里它工作得很好，但标志是处理器手工维护的一件全局状态，多线程或嵌套调用的场景下可能状态不一致。Qt 另有现成的工具，QObject::blockSignals(bool)，传 true 让对象停止发射一切信号，传 false 恢复。
+
+用之前有一个对象得认清楚，就是开篇第一个场面里编译报错的来处。QTreeWidgetItem 不是 QObject，qtreewidget.h 里它的声明连基类都没有，blockSignals 这个方法它天生没有，您对着 item 调，编译器当场拒绝。itemChanged 的发射方另有其人：您在节点上改状态，setCheckState 一路调到模型，模型的数据变更最后由 QTreeWidget 在 emitItemChanged 里把 itemChanged emit 出来，写在 qtreewidget.cpp 里。所以要静默的是树，不是节点：
 
 ```cpp
 void setCheckStateSilent(QTreeWidgetItem* item, int column, Qt::CheckState state)
@@ -67,11 +71,9 @@ void setCheckStateSilent(QTreeWidgetItem* item, int column, Qt::CheckState state
 }
 ```
 
-这里有一个重要的区别：QTreeWidgetItem 不是 QObject 的子类，它没有 blockSignals 方法。信号是由 QTreeWidget 发射的（itemChanged），所以我们需要 block 的是 QTreeWidget 的信号，而不是 item 的。这一点很容易搞混——很多开发者会习惯性地对 item 调用 blockSignals，结果编译错误。
+批量的活它也接得住。点一下“全选”要改几十上百个节点，与其让每个 itemChanged 都进处理器跑一遍标志判断，不如在开始更新前把树的信号 block 住，全部设完再放开，一条信号都不用白跑。配套示例是两件工具搭着用的：onItemChanged 入口先用 m_updating 挡住重入，propagateToChildren 与 bubbleToParents 内部的每一处 setCheckState 又各自用最小作用域的 blockSignals 包住，一道防整体重入，一道管单次设值的静默。您要是嫌两道累赘，留 blockSignals 一道也能防住，前提是作用域圈得对，圈不对就引出下一个麻烦。
 
-blockSignals 的另一个使用场景是批量更新。如果你需要一次性更新多个节点的 checkState（比如用户点击了"全选"），可以在开始更新前 blockSignals(true)，更新完所有节点后再 blockSignals(false)。这比 m_updating 标志位更简洁——不需要在每个信号处理器的入口处检查标志位。
-
-但 blockSignals 也有一个需要注意的坑：blockSignals(true) 会阻止该对象发射所有信号，不只是你想要阻止的那个信号。如果你 block 了 QTreeWidget 的信号，在 block 期间 itemSelectionChanged、itemExpanded 等信号也都不会发射。如果你的代码依赖这些信号来更新其他 UI 状态，block 期间这些更新会被跳过。解决方案是尽量缩短 blockSignals 的作用域——只在 setCheckState 调用的前后 block，不要在整个函数执行期间都 block。
+blockSignals 的脾气是一挡挡全部。它拦的不只是 itemChanged，itemSelectionChanged、itemExpanded 一类信号在 block 期间同样发不出去，信号发射的必经之路 doActivate 进门第一件事就是查 blockSig 标志，查到被挡就直接返回。您要是让界面靠那些信号驱动别处的刷新，block 一大段，刷新就漏一段。开篇第三个场面就是它：批量更新一路 block 到底，恢复之后那块界面没了动静。对策是把作用域压到最小，只包住要静默的那一次设值：
 
 ```cpp
 // 正确：最小作用域
@@ -86,7 +88,9 @@ updateAllParents(parent->parent()); // 同上
 tree->blockSignals(false);
 ```
 
-现在有一道调试题给大家。下面这段代码有什么问题？
+### 一道调试题：逐层挡信号的冒泡，窗口开在哪
+
+咱们再看一段向上冒泡的实现，它在 itemChanged 的处理器里被调用，跑起来偶尔会重入，您先自己找找毛病：
 
 ```cpp
 void updateParentState(QTreeWidgetItem* parent)
@@ -101,13 +105,13 @@ void updateParentState(QTreeWidgetItem* parent)
 }
 ```
 
-问题出在递归调用 updateParentState 时，每次递归都会 blockSignals(true) 再 blockSignals(false)——这本身没问题。但如果 computeState 的计算依赖于子节点的 checkState，而子节点的状态在之前的向下传播中是通过 blockSignals 设置的，那么 computeState 读到的状态是正确的。真正的问题在于：如果这个函数在 itemChanged 信号的处理器中被调用，而信号处理器里没有判断"是否是程序设置的状态变化"，那么在 blockSignals(false) 之后、下一次递归的 blockSignals(true) 之前，可能会有其他 pending 的信号被发射。解决方案是在最外层入口处 blockSignals(true)，完成所有操作后再 blockSignals(false)。
+咱们把毛病定位到 unblock 的时机上。每一层递归都自己 block 再自己 unblock，unblock 一执行完，树就回到了可发信号的状态，而后面还有一整条递归路径要走。递归本身不改状态还好，路径上任何一层在 unblock 之后调了会改 checkState 的代码，itemChanged 立刻发射，处理器里没有防重入的判断，整条传播链重跑一遍，跑的过程中再有设值，就再进一次。修法是把挡信号的责任从每一层收拢到最外层入口，进了处理器先 blockSignals(true)，所有层全部做完再 blockSignals(false)，可发信号的窗口从头到尾就没开过。作用域的大小以一组联动为边界来定，向下传播加冒泡是一次不可分的更新，组内一次挡完，组外一概不挡，与前面说的最小作用域并不冲突，那里拦的是另一头，把与设值无关的动作圈进 block 区间，白闷掉别的信号。配套示例的 m_updating 加的正是同一道保险，只是它挡在处理器入口，连重入的机会都不给。
 
-### 3.3 PartiallyChecked 冒泡的性能考量
+## 深树频繁勾选：把子树遍历换成沿路径计数
 
-在大型树形结构中，每次叶子节点的 checkState 变化都会触发一条从叶子到根的冒泡路径——每个祖先节点都需要重新计算自己的状态。如果树有 N 层深度，每次叶子节点的变化就需要 O(N) 次计算。这在大多数情况下不是问题，但如果你有一个非常深的树（比如文件系统的完整目录树），而且用户频繁地切换叶子节点的选中状态，冒泡计算的开销就可能变得明显。
+树一深，咱们就得把冒泡的代价算一算。叶子节点每变一次，从它到根的路径上每个祖先都要重算状态，深度 N 的树一次变化带来 O(N) 级别的计算量。权限树、配置树通常毫无压力，怕的是文件系统完整目录树那种非常深的树，用户频繁切换叶子的选中状态，冒泡一次接一次，开销就攒起来了。
 
-优化策略有两个方向。第一个方向是延迟冒泡——不在每次变化时立即计算祖先节点的新状态，而是标记祖先节点为"需要更新"，在下一次事件循环中统一计算。这可以用 QMetaObject::invokeMethod 配合 Qt::QueuedConnection 来实现。第二个方向是缓存——给每个节点缓存一个"子树全选计数"和"子树总数"，这样计算父节点状态时只需要检查这两个缓存值，不需要遍历所有子孙节点。
+优化有两条路。一条是延迟冒泡，变化发生时不立刻算祖先，只把祖先标成待更新，攒到下一次事件循环统一算，QMetaObject::invokeMethod 配合 Qt::QueuedConnection 就能搭出来。另一条是缓存，咱们给每个节点记两个数，子树里选中的叶子数与叶子总数，算父节点时看这两个数就定，不用再遍历子孙：
 
 ```cpp
 struct NodeCache {
@@ -136,23 +140,11 @@ Qt::CheckState stateFromCache(const NodeCache& cache)
 }
 ```
 
-这个缓存方案把冒泡计算从 O(N * M)（N 层深度、M 个子节点）降低到了 O(N)——每层只需要 O(1) 的缓存更新。对于有几千个节点的树，这个优化能带来明显的性能提升。
+缓存的收益在复杂度上看得清楚。逐层现算时，每到一个祖先都要把它的孩子各问一遍，深度 N、每个节点 M 个孩子的树，一次冒泡是 O(N * M) 的量级，换成缓存后每层只做 O(1) 的加减，整条路径 O(N) 收工。几千个节点的树，差别跑得出来。计数挂在哪儿，咱们也有现成的位置，QTreeWidgetItem 本身能存自定义数据，setData 塞一个 QVariant 进去，把 NodeCache 的两个整数装在里面随节点走，不用另开一张映射表。配套示例满打满算三十九个节点，直接现算就够快，缓存留给深树再上不迟。
 
-## 4. 踩坑预防
+## 官方文档参考
 
-第一个坑是 blockSignals 阻止了所有信号而不是只阻止目标信号。对 QTreeWidget 调用 blockSignals(true) 会阻止 itemChanged、itemSelectionChanged、itemExpanded 等所有信号的发射。如果你的 UI 更新逻辑依赖这些信号，block 期间这些更新会被跳过。解决方案是最小化 blockSignals 的作用域，只在 setCheckState 的前后 block。
-
-第二个坑是对 QTreeWidgetItem 调用 blockSignals 导致编译错误。QTreeWidgetItem 不是 QObject，它没有 blockSignals 方法。信号是由 QTreeWidget 发射的，所以应该 block QTreeWidget 的信号。
-
-第三个坑是冒泡计算中 PartiallyChecked 的传播导致祖先节点"过早"变为 PartiallyChecked。如果你在向下传播的过程中逐层向上冒泡（而不是等向下传播全部完成后再冒泡），祖先节点可能在中间状态时被错误地设为 PartiallyChecked——因为此时子节点的状态还没有全部更新完毕。解决方案是先完成整棵子树的向下传播，再从叶子开始逐层向上冒泡。
-
-## 5. 练习项目
-
-练习项目：权限配置树。我们要实现一个三层的 QTreeWidget：第一层是"角色"（管理员、编辑者、查看者），第二层是"模块"（用户管理、内容管理、系统设置），第三层是"权限"（查看、编辑、删除）。每个节点都有复选框，实现完整的三态联动：点击角色节点向下传播到所有模块和权限，点击权限节点向上冒泡到模块和角色。使用 blockSignals 来防止信号递归，使用缓存来优化冒泡性能。
-
-完成标准是三态联动正确、点击任意层级的节点都能正确传播、窗口 resize 时树形控件正确重排、无信号死循环。提示几个关键点：向下传播时先 blockSignals 再 setCheckState 再 unblock，传播完成后再向上冒泡；冒泡时根据子节点的 checkState 计算 PartiallyChecked；缓存方案可以为每个 QTreeWidgetItem 存一个 QVariant 作为自定义数据。
-
-## 6. 官方文档参考链接
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17。QCheckBox 与 QTreeWidget 属于 QtWidgets 模块，QTreeWidgetItem 的身份与 itemChanged 的发射路径对照 qtbase 源码核过，示例可在任何支持 Qt 6 的桌面平台上编译运行。
 
 [Qt 文档 · QCheckBox](https://doc.qt.io/qt-6/qcheckbox.html) -- 复选框，三态模式说明
 
@@ -166,4 +158,4 @@ Qt::CheckState stateFromCache(const NodeCache& cache)
 
 ---
 
-到这里，QCheckBox 的进阶内容就过完了。checkState 的三态传播机制搞清楚了，就知道 PartiallyChecked 不只是一个"半选中"的视觉状态，它是基于所有子孙节点的综合语义。blockSignals 防递归的正确用法掌握了——block 的是 QTreeWidget 而不是 QTreeWidgetItem，作用域要尽量小。冒泡性能的优化方向了解了，以后遇到几千节点的权限树就不会卡顿。三态复选框的核心难点就在于"传播"二字——向下传播要彻底，向上冒泡要准确，防递归要可靠。
+19 篇预告的三态话头到这里兑现了。想再动手的，请您把配套示例（examples/advanced/03-qtwidgets/20-qcheckbox-advanced/，可执行文件 20-qcheckbox-advanced）完整玩一轮。勾选 Administrator 看九个权限一次点亮，再勾亮某个 View，看半选怎样从权限层冒到角色层，又随着取消退回全灭，路径一步步追得到。把 onItemChanged 里两行对调再编译，停错的角色状态摆在眼前，次序的分量不用多讲。想练缓存的，拿 setData 给每个节点挂一份计数，勾选前后 qDebug 打出来对一对。下一篇 [3.21 QCommandLinkButton 进阶](./21-qcommandlinkbutton-advanced.md) 讲按钮五连的收尾 QCommandLinkButton，平台样式适配与 description 的布局行为在那边展开。
