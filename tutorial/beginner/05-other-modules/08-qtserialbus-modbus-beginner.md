@@ -212,7 +212,7 @@ if (reply) {
 
 把前面学的串起来，我们写一个 Modbus 客户端调试工具。程序支持 TCP 和 RTU 两种连接方式（通过界面切换），提供读写保持寄存器和线圈的功能，并将结果显示在日志区。由于实际硬件可能不可用，程序会检测连接失败并给出清晰的错误提示——你可以在没有真实设备的情况下了解整个 API 的使用流程。
 
-完整代码见 `examples/beginner/05-other-modules/08-qtserialbus-modbus-beginner/`，下面是关键部分的讲解。
+完整代码见 `src/examples/beginner/05-other-modules/08-qtserialbus-modbus-beginner/`，下面是关键部分的讲解。
 
 CMake 配置：
 

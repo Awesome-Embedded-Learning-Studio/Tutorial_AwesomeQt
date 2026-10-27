@@ -480,7 +480,7 @@ ListView {
 
 ## 6. 完整示例代码
 
-完整的项目包含 CMakeLists.txt、main.cpp、fruit_model.h/cpp 和 Main.qml，请参考 `examples/beginner/06-qml/06-qml-model-delegate-beginner/` 目录。示例中包含了一个 TabBar，分别展示 `ListView`（竖向列表）和 `GridView`（网格）两种视图模式，以及一个添加/删除水果的操作面板，所有数据都由 C++ 端的 `FruitModel` 驱动。
+完整的项目包含 CMakeLists.txt、main.cpp、fruit_model.h/cpp 和 Main.qml，请参考 `src/examples/beginner/06-qml/06-qml-model-delegate-beginner/` 目录。示例中包含了一个 TabBar，分别展示 `ListView`（竖向列表）和 `GridView`（网格）两种视图模式，以及一个添加/删除水果的操作面板，所有数据都由 C++ 端的 `FruitModel` 驱动。
 
 ---
 

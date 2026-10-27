@@ -10,7 +10,7 @@ description: "深入 Qt 源码，解析核心机制的设计原理和实现细�
 ## 规划内容（102 篇）
 
 - **00 · 环境搭建（2 篇）** — 从源码编译 Qt6、CMake 专家级配置（生成器表达式 · INTERFACE/PUBLIC/PRIVATE 传播 · 交叉工具链）
-- **01 · QtBase（21 篇）** — QObject 元对象系统源码、信号槽 activate 调用链、QString SSO/COW、容器隐式共享、事件循环源码、QIODevice 抽象层、QThread 平台封装、MOC 编译器原理、信号槽深度拆解、COW 全解、对象树所有权（`setParent_helper` / `deleteChildren` / `deleteLater` / 线程亲和）
+- **01 · QtBase（21 篇）** — QObject 元对象系统源码、信号槽 activate 调用链、QString 无 SSO 的源码证明与 COW、容器隐式共享、事件循环源码、QIODevice 抽象层、QThread 平台封装、MOC 编译器原理、信号槽深度拆解、COW 全解、对象树所有权（`setParent_helper` / `deleteChildren` / `deleteLater` / 线程亲和）
 - **02 · QtGui（6 篇）** — QPainter 渲染后端、QTransform 矩阵运算、QImage 像素格式、字体引擎、OpenGL 上下文管理、拖放平台协议
 - **03 · QtWidgets（43 篇）** — 主题能力 11 篇（布局算法、事件分发 `QApplication::notify`、Model/View 解耦、QSS 解析器、控件渲染脏矩形 / BackingStore、对话框模态事件循环、主窗口布局引擎、图形视图 BSP 树、动画时间轴、MDI 子窗口、QStyle 绘制委托）+ 控件速查 32 篇（从 QWidget / QAbstractButton 等枢纽控件到 QDialog / QFileDialog 等对话框，逐个拆源码；8 个无自研算法的 trivial 控件标「无专家层」）
 - **04 · QtNetwork（6 篇）** — QAbstractSocket 十一态状态机、QUdpSocket 平台封装、QNetworkAccessManager 后端、QWebSocket 帧解析、SSL OpenSSL 抽象层、QSerialPort POSIX/Win32 封装

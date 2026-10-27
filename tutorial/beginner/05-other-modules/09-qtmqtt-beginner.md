@@ -150,7 +150,7 @@ MQTT 的 QoS 是分段的：发布者到 Broker 一段，Broker 到订阅者另�
 
 把前面学的串起来，我们写一个 MQTT 消息调试工具。程序提供连接 Broker 的配置界面，支持订阅话题和发布消息，所有收到的消息显示在日志区。你可以用它来调试任何 MQTT 系统——只需要运行一个 Mosquitto Broker 就能实际测试发布和订阅的完整流程。
 
-完整代码见 `examples/beginner/05-other-modules/09-qtmqtt-beginner/`，下面是关键部分的讲解。
+完整代码见 `src/examples/beginner/05-other-modules/09-qtmqtt-beginner/`，下面是关键部分的讲解。
 
 CMake 配置：
 

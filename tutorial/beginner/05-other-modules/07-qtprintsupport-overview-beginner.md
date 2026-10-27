@@ -187,7 +187,7 @@ printer.setPageSize(QPageSize(QPageSize::A4));
 
 把前面学的串起来，我们写一个简单的报表打印工具。程序提供一个文本编辑区和一个图片加载区，支持三种输出方式：直接打印、导出 PDF、打印预览。渲染逻辑统一放在一个函数里，三条路径共享。
 
-完整代码见 `examples/beginner/05-other-modules/07-qtprintsupport-beginner/`，下面是关键部分的讲解。
+完整代码见 `src/examples/beginner/05-other-modules/07-qtprintsupport-beginner/`，下面是关键部分的讲解。
 
 CMake 配置只需要 PrintSupport 和 Widgets：
 

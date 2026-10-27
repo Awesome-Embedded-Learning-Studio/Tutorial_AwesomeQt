@@ -209,7 +209,7 @@ macOS 和 iOS 使用 CoreBluetooth 框架，需要在 Info.plist 中添加 NSBlu
 
 ## 4. 综合示例：蓝牙设备扫描与通信工具
 
-把前面学的串起来，我们写一个蓝牙设备扫描工具。程序启动后扫描周围的蓝牙设备，显示设备名称、地址、类型和信号强度。对于经典蓝牙设备，展示其基本信息；对于 BLE 设备，额外显示其 GATT 服务列表。完整代码见 `examples/beginner/05-other-modules/10-qtbluetooth-beginner/`，下面是关键部分的讲解。
+把前面学的串起来，我们写一个蓝牙设备扫描工具。程序启动后扫描周围的蓝牙设备，显示设备名称、地址、类型和信号强度。对于经典蓝牙设备，展示其基本信息；对于 BLE 设备，额外显示其 GATT 服务列表。完整代码见 `src/examples/beginner/05-other-modules/10-qtbluetooth-beginner/`，下面是关键部分的讲解。
 
 CMake 配置：
 

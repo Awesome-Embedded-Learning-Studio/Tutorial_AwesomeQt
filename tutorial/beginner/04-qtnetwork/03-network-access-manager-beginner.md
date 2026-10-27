@@ -283,7 +283,7 @@ connect(reply, &QNetworkReply::finished, [=]() {
 
 ## 6. 完整示例代码
 
-本篇的完整示例代码在 `examples/beginner/04-qtnetwork/03-network-access-manager-beginner/` 目录下，包含一个控制台程序，演示了 HTTP GET/POST 请求、请求头设置和下载进度追踪。
+本篇的完整示例代码在 `src/examples/beginner/04-qtnetwork/03-network-access-manager-beginner/` 目录下，包含一个控制台程序，演示了 HTTP GET/POST 请求、请求头设置和下载进度追踪。
 
 ## 7. 官方文档参考
 

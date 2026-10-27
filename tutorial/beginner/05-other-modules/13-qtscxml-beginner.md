@@ -285,7 +285,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE Qt6::Core Qt6::Scxml Qt6::Widgets)
 ```
 
-C++ 主程序。QScxmlStateMachine::fromFile 加载状态图，连接状态变化信号更新 UI，按钮点击调用 submitEvent 触发转换。完整代码见 `examples/beginner/05-other-modules/13-qtscxml-beginner/`，下面是关键部分：
+C++ 主程序。QScxmlStateMachine::fromFile 加载状态图，连接状态变化信号更新 UI，按钮点击调用 submitEvent 触发转换。完整代码见 `src/examples/beginner/05-other-modules/13-qtscxml-beginner/`，下面是关键部分：
 
 加载状态机并连接信号：
 

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""批量编译 examples/ + 实例库根 的 Qt6 CMake 工程，保证「克隆即跑」不退化。
+"""批量编译 src/examples/ + 实例库根 的 Qt6 CMake 工程，保证「克隆即跑」不退化。
 
 发现策略：
-- examples/ 下只编译**叶子工程**（CMakeLists 不含 add_subdirectory）。每个叶子按
+- src/examples/ 下只编译**叶子工程**（CMakeLists 不含 add_subdirectory）。每个叶子按
   example_style 规范自洽（自带 AUTOMOC + find_package），可独立 `cmake -B build`。
   这天然跳过所有聚合器（beginner 顶层根、各模块聚合器、05-other-modules 聚合器）。
-- widget/app/model/industrial 是 root-owns-config，编译各自的**根 CMakeLists**。
+- src/{widget,app,model,industrial} 是 root-owns-config，编译各自的**根 CMakeLists**。
 - CI 不安装的小众/不可用模块示例（NFC/MQTT/SCXML/Quick3D-Physics/WebChannel/
   WebEngine/RemoteObjects/SpatialAudio/TextToSpeech）从发现中排除。
 
 用法：
   python3 scripts/build_examples.py                 # 全量
-  python3 scripts/build_examples.py --root examples/beginner   # 分层放量
+  python3 scripts/build_examples.py --root src/examples/beginner   # 分层放量
   python3 scripts/build_examples.py --dry-run       # 只列出编译单元，不编译
 """
 import argparse
@@ -23,7 +23,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-EXAMPLES_ROOT = REPO_ROOT / "examples"
+CODE_ROOT = REPO_ROOT / "src"
+EXAMPLES_ROOT = CODE_ROOT / "examples"
 LIB_ROOTS = ["widget", "app", "model", "industrial"]
 
 # CI 不安装的小众/不可用模块（目录名片段匹配，大小写不敏感）——从发现中排除
@@ -63,7 +64,7 @@ def discover_build_units() -> list[Path]:
                 continue
             units.append(cmake.parent)
     for lib in LIB_ROOTS:
-        root_cmake = REPO_ROOT / lib / "CMakeLists.txt"
+        root_cmake = CODE_ROOT / lib / "CMakeLists.txt"
         if root_cmake.exists() and not is_ci_excluded(root_cmake.parent):
             units.append(root_cmake.parent)
     return units
@@ -89,7 +90,7 @@ def build_one(unit: Path, use_ccache: bool) -> tuple[Path, bool, str, float]:
 
 
 def main():
-    ap = argparse.ArgumentParser(description="批量编译 examples/ + 实例库 Qt6 CMake 工程")
+    ap = argparse.ArgumentParser(description="批量编译 src/examples/ + 实例库 Qt6 CMake 工程")
     ap.add_argument("--workers", type=int, default=8, help="并行编译数（默认 8）")
     ap.add_argument("--root", help="只编译匹配此前缀的工程（相对仓库根，分层放量用）")
     ap.add_argument("--no-ccache", action="store_true", help="禁用 ccache")

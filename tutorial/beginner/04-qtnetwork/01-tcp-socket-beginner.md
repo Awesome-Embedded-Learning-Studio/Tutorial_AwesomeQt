@@ -241,7 +241,7 @@ connect(&server, &QTcpServer::newConnection, [&]() {
 
 ## 6. 完整示例代码
 
-本篇的完整示例代码在 `examples/beginner/04-qtnetwork/01-tcp-socket-beginner/` 目录下，包含一个控制台程序，演示了 TCP 服务端和客户端的基本通信流程，包括连接建立、数据收发和断线检测。
+本篇的完整示例代码在 `src/examples/beginner/04-qtnetwork/01-tcp-socket-beginner/` 目录下，包含一个控制台程序，演示了 TCP 服务端和客户端的基本通信流程，包括连接建立、数据收发和断线检测。
 
 ## 7. 官方文档参考
 

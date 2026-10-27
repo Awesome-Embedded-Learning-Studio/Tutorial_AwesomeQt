@@ -22,7 +22,7 @@
 
 ```
 Tutorial_AwesomeQt/
-├── widget/                              ← 自定义控件
+├── src/widget/                          ← 自定义控件
 │   ├── button/ label/ input/             ← 基础交互控件
 │   ├── progress/ meter/ slider/          ← 进度/仪表/滑块
 │   ├── chart/ table/ tree/ list/         ← 数据展示控件
@@ -31,7 +31,7 @@ Tutorial_AwesomeQt/
 │   ├── datetime/ network/ multimedia/    ← 专用领域控件
 │   └── ... (共 22 个子类)
 │
-├── app/                                 ← 完整应用
+├── src/app/                             ← 完整应用
 │   ├── dev-tools/       开发工具         (30)
 │   ├── network-tools/   网络工具         (20)
 │   ├── file-tools/      文件工具         (25)
@@ -43,7 +43,7 @@ Tutorial_AwesomeQt/
 │   ├── security-tools/  安全工具         (10)
 │   └── database-tools/  数据库工具       (15)
 │
-├── model/                               ← 控件组合与设计模式
+├── src/model/                           ← 控件组合与设计模式
 │   ├── window-framework/    窗口框架     (20)
 │   ├── navigation-layout/   导航与布局   (25)
 │   ├── page-transition/     页面切换     (15)
@@ -62,7 +62,7 @@ Tutorial_AwesomeQt/
 │   ├── context-menu/        右键菜单     (10)
 │   └── status-feedback/     状态反馈     (15)
 │
-├── qml/                                 ← QML 专项 (52)
+├── src/qml/                             ← QML 专项 (52)
 ├── tutorial/                            ← 教程文档（镜像上述目录）
 └── todo/                                ← 本规划目录
 ```

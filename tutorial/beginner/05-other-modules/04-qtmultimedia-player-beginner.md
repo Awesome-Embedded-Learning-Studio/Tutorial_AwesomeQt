@@ -168,7 +168,7 @@ if (!devices.isEmpty()) {
 
 把前面学的串起来，我们写一个包含播放/暂停/停止、进度条、音量控制、状态显示的完整视频播放器。程序使用 `QMediaPlayer` + `QAudioOutput` + `QVideoWidget` 构建播放管线，通过信号槽同步 UI 状态。
 
-完整代码见 `examples/beginner/05-other-modules/04-qtmultimedia-player-beginner/`，下面是关键部分的讲解。
+完整代码见 `src/examples/beginner/05-other-modules/04-qtmultimedia-player-beginner/`，下面是关键部分的讲解。
 
 CMake 配置需要引入 Multimedia 和 MultimediaWidgets：
 

@@ -4,7 +4,7 @@ description: "Qt 对象间解耦通信的机制：信号是事件声明、槽是
 函数指针 connect 自带编译期检查，跨线程时 Qt 自动把参数打包排队投递到目标线程。
 四个坑各有各的崩法——Lambda 捕获野指针的偶发崩溃、漏 Q_OBJECT 信号连不上、
 工作线程直接碰 GUI、重载信号连接歧义。配套可跑示例在
-examples/beginner/01-qtbase/02-signal-slot-beginner/。"
+src/examples/beginner/01-qtbase/02-signal-slot-beginner/。"
 ---
 
 # 现代Qt开发教程（新手篇）1.2——信号与槽
@@ -111,7 +111,7 @@ connect(sender, &Sender::signal,
 
 绝大多数场景让 Qt 自动判断就好。"自动"背后怎么认线程归属，是 [进阶篇 1.02](../../advanced/01-qtbase/02-signal-slot-advanced.md) 和 [专家篇 1.02 源码拆解](../../expert/01-qtbase/02-signal-slot-internals-expert.md) 的主菜，这里只要求会用，机制细节留给上面两篇。
 
-异步这一端有个容易被忽视的前提：排队执行靠的是事件循环在转。空口说不直观，咱们动手看：配套示例在 `examples/beginner/01-qtbase/02-signal-slot-beginner/`（`cmake -B build && cmake --build build` 跑起来，七段输出对应七种用法）。做个实验：示例 5 里等定时器的那行 `QCoreApplication::processEvents();` 注释掉再跑，程序卡死在示例 5——事件不派发，`QTimer::singleShot` 的回调永远不来，`timerDone` 永远不翻转，while 循环空转。排队调用能不能落地，取决于事件循环在不在转，这个实验比文字描述直观。
+异步这一端有个容易被忽视的前提：排队执行靠的是事件循环在转。空口说不直观，咱们动手看：配套示例在 `src/examples/beginner/01-qtbase/02-signal-slot-beginner/`（`cmake -B build && cmake --build build` 跑起来，七段输出对应七种用法）。做个实验：示例 5 里等定时器的那行 `QCoreApplication::processEvents();` 注释掉再跑，程序卡死在示例 5——事件不派发，`QTimer::singleShot` 的回调永远不来，`timerDone` 永远不翻转，while 循环空转。排队调用能不能落地，取决于事件循环在不在转，这个实验比文字描述直观。
 
 跨线程还有一条 Qt 的硬规定：所有 GUI 操作必须在主线程。您在工作线程里直接 `label->setText("Done")`，可能崩、可能界面诡异、也可能暂时没事然后在某个不可预测的时刻出错——而且崩溃位置常常不在碰 GUI 的那一行，排查难度翻倍。正确做法就是用信号槽：工作线程发信号，主线程的槽更新 UI，跨线程排队 Qt 自动做。
 

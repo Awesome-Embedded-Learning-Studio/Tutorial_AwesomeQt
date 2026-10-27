@@ -256,7 +256,7 @@ SVG 文件的结构如下：
 
 把前面学的串起来，我们写一个 SVG 查看器，支持加载显示、缩放、动态着色和元素提取。程序使用 `QSvgWidget` 显示 SVG，通过 `QSvgRenderer` 实现着色和元素访问，提供缩放控制和颜色修改功能。
 
-完整代码见 `examples/beginner/05-other-modules/06-qtsvg-beginner/`，下面是关键部分的讲解。
+完整代码见 `src/examples/beginner/05-other-modules/06-qtsvg-beginner/`，下面是关键部分的讲解。
 
 CMake 配置需要引入 Svg 和 SvgWidgets：
 

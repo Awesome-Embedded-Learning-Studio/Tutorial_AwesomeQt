@@ -16,8 +16,8 @@ body:
       options:
         - "新增正式教程（入门/进阶/专家）"
         - "改进现有文章"
-        - "新增代码示例（examples/）"
-        - "新增实例库组件（widget/app/model/industrial）"
+        - "新增代码示例（src/examples/）"
+        - "新增实例库组件（src/ 下 widget/app/model/industrial）"
         - "其他"
     validations:
       required: true
@@ -43,7 +43,7 @@ body:
     attributes:
       label: "建议放置位置"
       description: "如果你知道，可以写对应层级、模块或目录；不确定可以写“不确定”。"
-      placeholder: "例如：进阶层 QtWidgets / 03-qtwidgets，或实例库 widget/。"
+      placeholder: "例如：进阶层 QtWidgets / 03-qtwidgets，或实例库 src/widget/。"
 
   - type: textarea
     id: outline

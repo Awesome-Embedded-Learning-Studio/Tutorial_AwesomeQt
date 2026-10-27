@@ -7,8 +7,8 @@
 - [ ] 内容勘误
 - [ ] 站点显示或导航问题
 - [ ] 链接或搜索问题
-- [ ] 示例代码问题（examples/）
-- [ ] 实例库代码问题（widget/app/model/industrial）
+- [ ] 示例代码问题（src/examples/）
+- [ ] 实例库代码问题（src/ 下 widget/app/model/industrial）
 - [ ] 构建、CI 或脚本问题
 - [ ] 专家层源码引用更新（文件:行号 对齐当前 Qt 源码）
 - [ ] 其他: 请在这里说明

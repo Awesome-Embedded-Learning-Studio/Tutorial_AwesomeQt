@@ -5,7 +5,7 @@ description: emit 是空宏，发射真身是 moc 插进信号函数体的 QMeta
 
 # 信号发射入口——emit 与 activate
 
-> 本索引收录 Qt 6.9.1 源码中信号发射入口相关的已验证证据。对应专家篇《02 信号槽底层——activate 调用链》§3.1-§3.2。
+> 本索引收录 Qt 6.9.1 源码中信号发射入口相关的已验证证据。对应专家篇《02 信号槽底层——activate 调用链》正文 emit 的真相、activate 三重载两节。有参信号 activate 重载的两组引文出自正文四类连接一节的补充块，也归本组。
 
 ## emit 空宏
 
@@ -22,6 +22,15 @@ description: emit 是空宏，发射真身是 moc 插进信号函数体的 QMeta
 | 论点 | 行号 | 原文摘要 | 解读 |
 |---|---|---|---|
 | moc 在无参信号函数体里插 QMetaObject::activate(this,&staticMetaObject,index,nullptr) | :1308-1311 | `fprintf(out, "QMetaObject::activate(%s, &staticMetaObject, %d, nullptr);\n", ...)` | 信号发射的本质就是调 activate；有参信号会先准备 argv 再调。 |
+| moc 给有参信号打印 `QMetaObject::activate<Ret>(this, &staticMetaObject, index, std::addressof(_t0), _t1, ...)` 可变参数调用 | :1340-1350 | `fprintf(out, "    QMetaObject::activate<%s>(%s, &staticMetaObject, %d, ", ...)` | 调的是 activate 可变参数模板重载，实参逐个取地址传，不再是老式 void *argv[] 数组写法。 |
+
+## activate 可变参数模板重载
+
+源码文件：`qtbase/src/corelib/kernel/qobjectdefs.h`
+
+| 论点 | 行号 | 原文摘要 | 解读 |
+|---|---|---|---|
+| 带参 activate 可变参数模板重载在栈上搭 void *_a[]，元素是信号函数帧上返回位与各参数的地址 | :299-307 | `template <typename Ret, typename... Args> static inline void activate(... Ret *ret, const Args &... args) { void *_a[] = { ...std::addressof(args))... }; activate(sender, mo, local_signal_index, _a); }` | Direct 同步调用全程无拷贝，argv 活在发送线程的栈上。 |
 
 ## activate 索引转换 + 委托 doActivate
 

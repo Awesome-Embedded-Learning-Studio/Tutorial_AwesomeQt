@@ -1,68 +1,62 @@
 ---
 title: QVariant 源码拆解
-description: QVariant 凭什么装下任意类型（packedType 位域的类型擦除）、小类型怎么内联省堆（SSO-like 存储）、QMetaTypeInterface 这张「虚表」长什么样、setValue/value 的快慢两条路、convert 的三层 fallback、Qt6 怎么把 QVariant 整个塞进 QMetaType、以及两处 Qt5→Qt6 的 breaking change（isNull/equals 行为变了）——从源码拆透。
+description: QVariant 凭什么装下任意类型（packedType 位域做的类型擦除）、小类型怎么内联在 24 字节联合体里省掉堆分配、QMetaTypeInterface 的函数指针虚表怎么驱动构造析构、setValue 与 value 的快慢两条路、convert 的三层回退查找链、Qt6 怎么把 QVariant 并入 QMetaType，以及 Qt5 升 Qt6 后 isNull 与 equals 的两处行为变化（breaking change），全部从源码里拆出来讲。
 ---
 
-# 现代Qt开发教程（专家篇）1.05——QVariant 源码拆解
+# QVariant 源码拆解
 
-## 1. 前言——一个能装下任何东西的容器
+## 前言：QVariant 天天在用，它凭什么装下任意类型
 
-`QVariant` 是 Qt 里一个挺神奇的东西——它能装 `int`、能装 `QString`、能装自定义结构体，甚至能装 `QObject*`。一个变量能换着类型装，这在强类型的 C++ 里是怎么做到的？很多人用了好几年 `QVariant`，也说不清它内部到底是个什么结构。
+`QVariant` 是 Qt 里一个挺神奇的东西，咱们拿它能装 `int`、能装 `QString`，也能装自己写的结构体，连 `QObject*` 这样的指针都装得进去。C++ 明明是强类型的语言，一个变量却装得进不同的类型，这件事是怎么做到的？笔者见过用了好几年 `QVariant` 的人，也说不清它的内部到底是个什么结构。
 
-先抛几个笔者当年答不上来的问题。`QVariant` 既不是模板、也没有虚函数，它凭什么在运行时知道里面装的是什么类型？装一个 `int` 和装一个自定义的 200 字节结构体，`QVariant` 对象本身的大小一样吗？还有个最容易踩的——`QVariant v("hello"); v.isNull()` 在 Qt5 和 Qt6 里结果不一样，为什么？
+笔者当年有几个答不上来的问题。咱们知道 `QVariant` 不是拿模板写的，类里的虚函数也一个都没有，那它凭什么在运行时知道装的是什么类型？装一个 `int` 和装一个自定义的 200 字节结构体，`QVariant` 对象本身的大小会一样吗？还有最容易误判的一处：装着默认构造 `QString()` 的 `QVariant`，`isNull()` 在 Qt5 和 Qt6 里的结果不一样，为什么会不一样？
 
-这几个问题压在 `QVariant` 设计的两条主轴上：类型擦除（运行时怎么记住类型）和存储策略（不同大小的类型怎么放）。入门篇的 [5.变体与类型](../../beginner/01-qtbase/05-variant-type-beginner.md) 教了 `QVariant` 怎么用，进阶篇的 [5.QVariant 与 QMetaType 进阶](../../advanced/01-qtbase/05-qvariant-metatype-advanced.md) 讲了类型注册、转换这些用法。本篇要往源码里捅：咱们打开 `qvariant.h` 和 `qmetatype.h`，看看 `QVariant` 怎么用位域把类型描述符指针藏进一个 `quintptr`、小类型怎么内联在 24 字节的联合体里省掉堆分配、`QMetaTypeInterface` 这张「虚表」怎么驱动构造析构，还有 Qt6 做的那场把 `QVariant` 整个塞进 `QMetaType` 的重构。
+头两个问题的答案，落在 `QVariant` 设计的两条主轴上。咱们把两条主轴分开看：类型擦除管的是运行时怎么识别装进来的类型，存储策略管的是不同大小的类型怎么放。第三个问题是 Qt6 的重构动过的行为，咱们放到后面的 isNull 一节单独讲。入门篇的 [5.变体与类型](../../beginner/01-qtbase/05-variant-type-beginner.md) 教了 `QVariant` 怎么用，进阶篇的 [5.QVariant 与 QMetaType 进阶](../../advanced/01-qtbase/05-qvariant-metatype-advanced.md) 则讲了类型注册，也讲了转换的用法。本篇咱们要往源码里走：打开 `qvariant.h` 和 `qmetatype.h`，看看 `packedType` 位域怎么把类型描述符的指针藏进一个 `quintptr`，小类型怎么内联在 24 字节的联合体里省掉堆分配，`QMetaTypeInterface` 那串函数指针又是怎么驱动构造和析构的，还有 Qt6 做的那场把 `QVariant` 整个塞进 `QMetaType` 的重构。
 
-边界先划清楚。`QVariant` 的序列化（`QDataStream` 读写、JSON 互转）不在本篇 scope——那涉及 `QMetaTypeInterface` 的 `dataStream` 函数指针和 `QDataStream` 的二进制格式，另属主题。用户自定义类型注册（`Q_DECLARE_METATYPE` 宏）只点到「编译期生成 `QMetaTypeInterface` 静态实例」，不深入宏的模板元编程。
+边界咱们也交代清楚。`QVariant` 的序列化不在本篇的范围内。您要找 JSON 互转的用法，[16 JSON 解析与 CBOR 内核](./16-json-parser-expert.md) 的 3.5 节有整节的拆解（QVariant 互转中间绕一道 CBOR），本篇就不重复了。`QDataStream` 读写涉及 `QMetaTypeInterface` 的 `dataStream` 函数指针和 `QDataStream` 自己的二进制格式，本篇也就不往里走了。用户自定义类型的注册（`Q_DECLARE_METATYPE` 宏）咱们只讲到“编译期生成 `QMetaTypeInterface` 静态实例”，宏背后的模板元编程不展开。
 
-## 2. 环境说明
+## 环境说明
 
-本篇源码引用基于 `qt_src/qt6.9.1`，行号随 Qt 版本会漂移，拿函数名定位最稳。涉及的关键文件：
+本篇的源码引用都基于 `qt_src/qt6.9.1`，这个目录是官方 Qt 6.9.1 源码在咱们本地的检出，被 gitignore 了、不随仓库分发。行号会随着 Qt 版本的升级而漂移，您对照阅读时要是发现行号对不上，拿函数名或字段名去对应的文件里搜一下就能定位。涉及的关键文件，咱们按出场顺序列在下面：
 
 | 文件 | 角色 |
 |---|---|
 | `qtbase/src/corelib/kernel/qvariant.h` / `qvariant.cpp` | QVariant 公共声明与实现（构造/setValue/value/equals） |
 | `qtbase/src/corelib/kernel/qvariant_p.h` | QVariantPrivate（Private 结构 + Data 联合体 + 模板构造） |
 | `qtbase/src/corelib/kernel/qmetatype.h` | QMetaType 句柄 + QMetaTypeInterface 虚表 |
-| `qtbase/src/corelib/kernel/qmetatype.cpp` | QMetaType 实现（construct/convert/canConvert） |
 | `qtbase/src/corelib/kernel/qmetatype_p.h` | QtMetaTypePrivate（函数指针分发 + 短路） |
+| `qtbase/src/corelib/kernel/qmetatype.cpp` | QMetaType 实现（construct/convert/canConvert） |
 
-本篇无配套 example，原因和前几篇一样：纯源码拆解，对照 `qt_src` 翻代码就是最好的实验。
+本篇跟前几篇走了一样的路子，不配 example 的工程，对照 `qt_src` 翻代码就是最好的实验，动手验证的练习咱们放在文末的练习项目里。
 
-## 3. 核心概念讲解
+## 核心概念讲解
 
-下源码之前，咱们先把 `QVariant` 对象的内部结构对一下。这张图能帮您看清一个 `QVariant` 实例在内存里到底由什么组成：
+咱们动手翻源码以前，把 `QVariant` 对象的内部结构对一遍。下面这幅图能帮您看清一个 `QVariant` 实例在内存里到底由什么组成：
 
 ```mermaid
 flowchart LR
-    Q["QVariant 实例"] --> P["Private d（一个 quintptr 大小）"]
+    Q["QVariant 实例"] --> P["Private d<br/>（位域 + Data 联合体）"]
     P --> B["位域：is_shared:1 / is_null:1 / packedType:N-2"]
     P --> D["Data 联合体"]
     B -->|"packedType 左移2位"| IF["QMetaTypeInterface* 指针<br/>(类型虚表)"]
-    D -->|"小类型"| IN["uchar data[24]<br/>(内联 SSO)"]
+    D -->|"小类型"| IN["uchar data[24]<br/>内联存储（SSO）"]
     D -->|"大类型"| SH["PrivateShared*<br/>(堆 + 引用计数)"]
     IF -.驱动.-> D
 ```
 
-一个 `QVariant` 实例的核心就是 `Private d`——它把「类型信息」和「数据」都塞进一个极紧凑的结构里。类型信息藏在位域 `packedType` 里（实际是个右移过的指针），数据在 `Data` 联合体里（小类型内联、大类型堆指针）。咱们顺着这张图拆。
+一个 `QVariant` 实例的核心就是 `Private d`，它把类型信息和数据都塞进了一个紧凑的结构：类型信息藏在位域 `packedType` 里（存的实际是个右移过的指针），数据放在了 `Data` 联合体里（小类型内联、大类型堆指针）。位域占掉一个字长的空间，联合体再占 24 字节的空间，64 位平台上的 `sizeof(QVariant)` 就是 32。咱们顺着图上的结构往下拆。
 
-### 3.1 类型擦除——把类型指针藏进位域
+### 类型擦除：类型指针右移两位，藏进位域
 
-`QVariant` 不是模板，也没在类里放虚函数，那它运行时怎么知道「我装的是 `int` 还是 `QString`」？笔者第一次翻到答案的时候，有点被它的简洁惊到——答案在一个位域里：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:115-119`
+咱们前面提过，`QVariant` 不是拿模板写的，类里的虚函数也一个都没有，那它运行时怎么知道装的是 `int` 还是 `QString`？笔者头一回翻到答案的时候，有点被它的简洁惊到了。答案咱们直接看位域（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:116-118`）：
 
 ```cpp
-    struct Private
-    {
         quintptr is_shared : 1;
         quintptr is_null : 1;
         quintptr packedType : sizeof(QMetaType) * 8 - 2;
 ```
 
-`packedType` 是个位域，占了 `sizeof(QMetaType) * 8 - 2` 个 bit。前面还有 `is_shared` 和 `is_null` 各 1 bit，加起来正好一个 `quintptr`（64 位上是 8 字节）。这个 `packedType` 存的不是 typeId，是一个右移过的 `QMetaTypeInterface*` 指针。看还原逻辑：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:128-132`
+`packedType` 这个位域占了 `sizeof(QMetaType) * 8 - 2` 个 bit，前面的 `is_shared` 和 `is_null` 各占 1 bit，全部加起来就是一个 `quintptr` 的大小（64 位平台上 8 字节）。咱们要注意，`packedType` 里存的并非 typeId，它存的是一个右移过的 `QMetaTypeInterface*` 指针。咱们看还原的逻辑（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:130-133`）：
 
 ```cpp
         inline const QtPrivate::QMetaTypeInterface *typeInterface() const
@@ -71,24 +65,19 @@ flowchart LR
         }
 ```
 
-`packedType << 2`——左移 2 位还原成指针。为什么能右移 2 位存？因为 `QMetaTypeInterface` 这个对象由 Qt 静态生成，指针至少 4 字节对齐，低 2 位一定是 0，存起来浪费，干脆右移 2 位省 2 个 bit 给 `is_shared`/`is_null` 用。构造的时候反着来：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant_p.h:77-79`
+`packedType << 2`，左移 2 位就还原成了指针。为什么存进去的时候敢右移 2 位？因为 `QMetaTypeInterface` 的实例由 Qt 静态生成，指针至少做了 4 字节的对齐，低 2 位是恒定的 0，存着也是白费的。Qt 的做法是干脆右移 2 位再存，把省下来的 2 个 bit 给 `is_shared` 和 `is_null` 用。构造的时候咱们反过来看（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant_p.h:77-79`）：
 
 ```cpp
-        : is_shared(...), is_null(...),
-          packedType(quintptr(iface) >> 2)
-    {
-        Q_ASSERT((quintptr(iface) & 0x3) == 0);
+    : is_shared(false), is_null(false), packedType(quintptr(iface) >> 2)
+{
+    Q_ASSERT((quintptr(iface) & 0x3) == 0);
 ```
 
-`quintptr(iface) >> 2` 右移存进去，还带个 `Q_ASSERT((quintptr(iface) & 0x3) == 0)` 断言——确认指针低 2 位确实是 0（4 字节对齐）。这个断言是无条件的，所有平台都查。这就是 `QVariant` 类型擦除的实质：它不需要模板参数，运行时拿着 `typeInterface()` 还原出来的 `QMetaTypeInterface*`，就能知道数据是什么类型、怎么构造析构。
+咱们看存的过程：右移了 2 位才存进去，旁边还跟着一个兜底的 `Q_ASSERT((quintptr(iface) & 0x3) == 0)` 断言，确认指针的低 2 位确实是 0（4 字节对齐），任何平台的构建它都参与检查。类型擦除的实质就在这儿了：`QVariant` 不需要任何的模板参数，运行时拿着 `typeInterface()` 还原出来的 `QMetaTypeInterface*`，咱们就能知道里面装的是什么类型，构造和析构该怎么做也一清二楚了。
 
-### 3.2 SSO-like 存储——小类型内联，大类型堆
+### 存储策略：小类型内联，大类型上堆
 
-接下来看数据怎么放。笔者觉得这部分设计最能体现 Qt 的工程功夫——`Private` 里有个 `Data` 联合体：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:99-115`
+接下来咱们看数据怎么放，笔者觉得这部分最能体现 Qt 的工程功夫。咱们在 `Private` 里能找到一个 `Data` 联合体（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:99-115`）：
 
 ```cpp
     static constexpr size_t MaxInternalSize = 3 * sizeof(void *);
@@ -104,24 +93,20 @@ flowchart LR
     } data;
 ```
 
-`MaxInternalSize` 是 `3 * sizeof(void *)`——64 位上 24 字节，32 位上 12 字节。`Data` 是个联合体，三个成员：`uchar data[24]` 用来内联存小类型；`PrivateShared *shared` 指向堆分配的大类型；`double _forAlignment` 是个 trick，保证即使在 32 位系统上联合体也是 8 字节对齐（`double` 是 8 字节对齐的）。
+`MaxInternalSize` 的大小由 `3 * sizeof(void *)` 决定，在 64 位平台上的尺寸是 24 字节，32 位平台上的尺寸是 12 字节。咱们看联合体的三个成员：`uchar data[24]` 是内联放小类型的地方，`PrivateShared *shared` 指向堆分配的大类型，`double _forAlignment` 是个对齐用的小技巧，它保证了 32 位系统上的联合体也有 8 字节的对齐，靠的就是 `double` 自带的 8 字节对齐。
 
-能不能内联，靠 `CanUseInternalSpace` 三个条件：类型是 relocatable（可安全 `memcpy`，没有内部指针）、`sizeof(T) <= 24`、`alignof(T) <= 8`。三条都满足，placement-new 直接把对象构造到 `data.data[24]` 里，不分配堆；不满足，走 `PrivateShared` 堆分配，`is_shared` 位置 1。读数据的时候分流：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:124-125`
+咱们来看类型能不能内联，这件事由 `CanUseInternalSpace` 说了算，它定下了三个条件：类型得是 relocatable 的，能安全地 `memcpy`，内部也没有自指的指针，大小要装得进 24 字节的空间，对齐要落在 8 字节的范围之内。三个条件都满足了，placement-new 就直接把对象构造到联合体的 `data.data` 里，连一次堆分配的代价都没有。条件不满足的，就走上 `PrivateShared` 的堆分配，`is_shared` 标志位也就置成了 1。咱们读数据的时候在这里分流（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:124-125`）：
 
 ```cpp
-    const void *storage() const
-    { return is_shared ? data.shared->data() : &data.data; }
+        const void *storage() const
+        { return is_shared ? data.shared->data() : &data.data; }
 ```
 
-`is_shared` 为真返回堆指针，否则返回内联数组地址。这是个教科书级的 SSO（Small/Short String Optimization 的泛化版）——小类型省一次 `malloc`/`free`，对 `int`/`QChar`/小结构体这种高频类型意义很大。
+`is_shared` 为真就返回堆的指针，不然就返回内联数组的地址。这就是 SSO 的泛化版。SSO 是 Small String Optimization 的缩写，也有的资料写成 Short String Optimization，中文的说法叫小字符串优化：小类型省掉一次 `malloc` 和 `free` 的开销，对 `int`、`QChar`、小结构体这类高频的类型意义很大。有意思的对照是，咱们在 [03 QString 内存模型](./03-qstring-memory-expert.md) 里看过，QString 的栈上薄壳连一个字符的位置都没留，QVariant 反而给小类型留足了 24 字节。
 
-### 3.3 QMetaTypeInterface——类型的「虚表」
+### QMetaTypeInterface：一张静态生成的函数指针表
 
-刚才反复提到的 `QMetaTypeInterface`，是 Qt 类型擦除的核心。它长得像一张虚表：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qmetatype.h:270-301`
+前面反复出场的 `QMetaTypeInterface`，就是 Qt 类型擦除的核心，笔者看它长得像一张手写的虚表（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qmetatype.h:270-300`）：
 
 ```cpp
 class QMetaTypeInterface
@@ -151,13 +136,11 @@ public:
     EqualsFn equals;
 ```
 
-咱们看字段。`size`/`alignment`/`flags` 描述布局，`typeId`（mutable，延迟注册时填）是类型编号，`name` 是类型名字符串。后面一串函数指针：`defaultCtr`（默认构造）、`copyCtr`（拷贝构造）、`moveCtr`（移动构造）、`dtor`（析构）、`equals`（相等比较）、还有后面的 `lessThan`/`debugStream`/`dataStreamOut`/`dataStreamIn`。每个 C++ 类型在编译期，由 Qt 的模板机制生成一份静态的 `QMetaTypeInterface` 实例——这就是这个类型的「身份证」。
+咱们看字段。`size`、`alignment`、`flags` 描述的是布局，`typeId` 是类型的编号（mutable，延迟注册时才填的），`name` 是类型名的字符串。后面跟着的一串函数指针：默认的构造走 `defaultCtr`，拷贝的构造走 `copyCtr`，移动的构造走 `moveCtr`，析构的活交给 `dtor`，相等的比较交给 `equals`，再往后还有管小于比较的 `lessThan`，管流操作的 `debugStream`、`dataStreamOut`、`dataStreamIn` 也排在后面。每个 C++ 类型在编译期由 Qt 的模板机制生成一份静态的 `QMetaTypeInterface` 实例，相当于这个类型的身份证，构造、析构、比较的事全查它。
 
-这里笔者要专门纠正一个我自己写笔记时也犯过的错——很多人以为这张表里有「convert/canConvert」函数指针。没有。翻遍 `QMetaTypeInterface` 的字段，没有任何转换相关的函数指针。类型转换走的是另一套全局注册表，咱们 3.5 节讲。
+这里笔者要专门纠正一个自己也犯过的错，很多人以为函数指针的表里有 `convert` 或 `canConvert`，答案是没有的。咱们把 `QMetaTypeInterface` 的字段从头到尾翻一遍，也找不到任何转换相关的函数指针。类型转换走的是另一套全局的注册表，咱们留到 convert 一节讲。
 
-`QMetaType` 本身只是这张表的「轻量句柄」：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qmetatype.h:457-479`
+咱们再把 `QMetaType` 本身看一眼，它只是函数指针表的轻量句柄（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qmetatype.h:457-479`）：
 
 ```cpp
     explicit constexpr QMetaType(const QtPrivate::QMetaTypeInterface *d) : d_ptr(d) {}
@@ -173,13 +156,11 @@ public:
     }
 ```
 
-`QMetaType` 只持一个 `d_ptr` 指针（指向 `QMetaTypeInterface`），拷贝廉价。`registerType()` 是延迟注册——第一次调 `id()` 时才把这个 iface 注册进全局类型表、拿到 typeId 写回 `iface->typeId`。这个延迟设计让 `QMetaType::fromType<T>()` 是 `constexpr`，没有运行时副作用。
+`QMetaType` 只持一个 `d_ptr` 的指针（指向 `QMetaTypeInterface`），拷贝起来的代价很低。咱们再留意 `registerType()`，它是延迟的注册，头一次调 `id()` 的时候，才把这个 iface 注册进全局的类型表，拿到了 typeId 再写回 `iface->typeId`。延迟的设计让 `QMetaType::fromType<T>()` 做成了 `constexpr`，没有任何运行时的副作用。
 
-### 3.4 setValue/value——快慢两条路
+### setValue 与 value：快慢两条路
 
-`setValue` 和 `value` 是 `QVariant` 最常用的两个模板接口。它们都设计了「快路径」和「慢路径」，笔者仔细看才发现这俩接口藏着不少小心思：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:491-503`
+`setValue` 和 `value` 是 `QVariant` 最常用的两个模板接口，它们内部都备了快慢两条路，笔者仔细读了一圈才看出里面的小心思（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:491-503`）：
 
 ```cpp
     void setValue(T &&avalue)
@@ -196,11 +177,9 @@ public:
     }
 ```
 
-`setValue` 先判断：如果当前 `QVariant` 已经独占（`isDetached`）而且类型正好匹配，直接 `*reinterpret_cast<VT*>` 到现有内存上 in-place 赋值——不走构造链。这是个快路径，省了重新分配。否则走慢路径 `fromValue`，那才会调 `customConstruct` 重新构造。
+咱们看 `setValue` 开头做的判断：当前的 `QVariant` 已经独占了（`isDetached`）而且类型正好匹配，就直接 `*reinterpret_cast<VT *>` 到现有的内存上做 in-place 的赋值，构造链一遍都不用走了，省下了重新分配。条件不满足的，就走 `fromValue` 的慢路，重新构造的活交给 `customConstruct` 去做。
 
-`value` 的快路径更直观：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:752-767`
+咱们接着看 `value`，它的快路更直观（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:752-767`）：
 
 ```cpp
 template<typename T> inline T qvariant_cast(const QVariant &v)
@@ -215,11 +194,9 @@ template<typename T> inline T qvariant_cast(const QVariant &v)
 }
 ```
 
-类型完全匹配——直接 `v.d.get<T>()`（本质是 `static_cast`），零开销。类型不匹配——走 `QMetaType::convert` 尝试转换，失败就返回默认构造的 `T`。这是「同类型零成本、跨类型走转换」的经典设计。
+类型完全匹配的，咱们直接拿 `v.d.get<T>()`（本质是 `static_cast`），这一路的开销是零。类型不匹配的，就走 `QMetaType::convert` 的转换路径，转换失败了就返回默认构造的 `T`。
 
-`QMetaTypeInterface` 那串函数指针，在实际构造析构时还有个隐藏优化。当类型是 trivially copyable 时（比如 `int`），函数指针会是 null，分发逻辑直接 `memcpy`/`memset` 短路：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qmetatype_p.h:171-184`
+咱们接着看 `QMetaTypeInterface` 的那串函数指针，在实际的构造析构里还藏着一个优化。类型是 trivially copyable 的时候（比如 `int`），函数指针就退化成了 null，分发逻辑直接用 `memset` 或 `memcpy` 做了短路（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qmetatype_p.h:166-182`）：
 
 ```cpp
     inline void defaultConstruct(const QtPrivate::QMetaTypeInterface *iface, void *where)
@@ -241,13 +218,11 @@ template<typename T> inline T qvariant_cast(const QVariant &v)
     }
 ```
 
-`defaultCtr` 为 null 就 `memset` 清零，`copyCtr` 为 null 就 `memcpy`——绕过函数指针调用。这就是 Qt 内置基本类型极快的原因，它们走的是和原生 `memcpy` 一个量级的路径。
+`defaultCtr` 为 null 的分支走 `memset` 清零，`copyCtr` 为 null 的分支走 `memcpy`，连函数指针的调用都绕过去了。咱们看 Qt 的内置基本类型，快的原因就在这儿，它们走的是和原生 `memcpy` 一个量级的路径。
 
-### 3.5 convert——三层 fallback 的转换链
+### convert：三层回退的转换查找链
 
-类型转换（`canConvert`/`convert`）不靠 `QMetaTypeInterface` 里的字段（前面说了，没有），那靠什么？笔者追到这里的时候才发现它比想象的复杂——靠一张三层 fallback 的查找链：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qmetatype.cpp:2390-2410`
+类型转换（`canConvert` 和 `convert`）不靠 `QMetaTypeInterface` 里的字段，前面咱们说了它没有，那靠什么？笔者追到这儿才发现，它比咱们想象的复杂，靠的是一条三层回退的查找链（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qmetatype.cpp:2390-2411`）：
 
 ```cpp
 bool QMetaType::convert(QMetaType fromType, const void *from, QMetaType toType, void *to)
@@ -268,13 +243,11 @@ bool QMetaType::convert(QMetaType fromType, const void *from, QMetaType toType, 
         return (*f)(from, to);
 ```
 
-三层。第一层：类型完全相同，直接 construct 一份（不算转换）。第二层：`moduleHelper`——QtCore/QtGui/QtWidgets 各自内置的转换表（比如 `QString`↔`int`、`QColor`↔`QString` 这些 Qt 自己定义的），`qModuleHelperForType` 按类型所属模块找对应的 helper，调它的 convert。第三层：`customTypesConversionRegistry`——用户用 `Q_DECLARE_METATYPE` 加 `QMetaType::registerConverter` 注册的全局映射表，key 是 `(fromTypeId, toTypeId)` 这个 pair。三层都找不到，还有枚举↔字符串、容器、`QObject` 元对象这些特殊路径。`canConvert` 用同样的查找逻辑，只是不实际转换（用 nullptr 探测能力）。
+咱们一层层看。头一层是类型完全相同的情况，直接 construct 一份新的出来，而不是做转换。第二层的主角是 `moduleHelper`：QtCore、QtGui、QtWidgets 各自内置了一张转换表（`QString` 和 `int` 互转、`QColor` 和 `QString` 互转这类 Qt 自己定义的），`qModuleHelperForType` 按类型所属的模块找到对应的 helper，再去调它的 convert。第三层的主角是 `customTypesConversionRegistry`：用户用 `Q_DECLARE_METATYPE` 加 `QMetaType::registerConverter` 注册的转换函数，都落进一张全局的映射表里，key 是 `(fromTypeId, toTypeId)` 组成的 pair。三层都落空了，后面还有枚举和字符串互转、容器、`QObject` 元对象这些特殊的路径。`canConvert` 用的是同一套查找的逻辑，只是不动真格地去转，拿 nullptr 做能力上的探测。
 
-### 3.6 Qt6 的重构——QVariant 整个塞进 QMetaType
+### Qt6 的重构：类型系统整个并入 QMetaType
 
-如果您从 Qt5 迁移过来，本节要重点看。Qt6 把 `QVariant` 的类型系统整个重做了——它不再有自己的 `QVariant::Type` 枚举，完全臣服于 `QMetaType`：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:141-145`
+您要是从 Qt5 迁移过来，接下来这部分值得您花点工夫。Qt6 把 `QVariant` 的类型系统整个重做了，它不再有自己的 `QVariant::Type` 枚举，类型的事全听 `QMetaType` 的（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:141-146`）：
 
 ```cpp
 #if QT_DEPRECATED_SINCE(6, 0)
@@ -285,11 +258,9 @@ bool QMetaType::convert(QMetaType fromType, const void *from, QMetaType toType, 
         Int = QMetaType::Int,
 ```
 
-整个 `QVariant::Type` 枚举被标了 `QT_DEPRECATED_VERSION_X_6_0("Use QMetaType::Type instead.")`，而且每个值都直接别名到 `QMetaType::Xxx`。新接口是 `metaType()` 返回完整的 `QMetaType` 对象，`typeId()` 返回 int。
+咱们看到整个 `QVariant::Type` 枚举被标了 `QT_DEPRECATED_VERSION_X_6_0("Use QMetaType::Type instead.")`，而且每个值都直接用 `QMetaType::Xxx` 做了别名。新的接口是 `metaType()` 返回完整的 `QMetaType` 对象，`typeId()` 返回的是 int。
 
-有个细节最能体现 Qt6 的态度——它故意 `delete` 掉了一个看似自然的构造函数：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:681-687`
+笔者觉得有个细节最能体现 Qt6 的态度，它故意 `delete` 掉了一个看着很自然的构造函数（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:681-687`）：
 
 ```cpp
     // QVariant::Type is marked as \obsolete, but we don't want to
@@ -297,17 +268,15 @@ bool QMetaType::convert(QMetaType fromType, const void *from, QMetaType toType, 
     // QMetaType::Type, instead, because the idea behind these
     // constructors is flawed in the first place. But we also don't
     // want QVariant(QMetaType::String) to compile and falsely be an
-    // int variant, so we delete this constructor:
+    // int variant, so delete this constructor:
     QVariant(QMetaType::Type) = delete;
 ```
 
-注释说得很明白：「按枚举值构造 variant」这个思路本身就是有缺陷的，所以干脆 `delete` 掉，免得您写 `QVariant(QMetaType::String)` 被解释成一个 int variant（`QMetaType::String` 是个整数枚举值，会隐式转成 int 匹配到 `QVariant(int)` 构造）。Qt6 的立场是：要造 `QVariant` 就老老实实给值，别给类型枚举。
+注释写得明白：按枚举值构造 variant 的思路本身就有缺陷，所以干脆 `delete` 掉，免得您写 `QVariant(QMetaType::String)` 的时候被解释成一个 int variant，因为 `QMetaType::String` 是个整数类型的枚举值，会隐式地转成 int 去匹配 `QVariant(int)` 构造。Qt6 的立场是，造 `QVariant` 就老老实实地给值，别给类型的枚举。
 
-### 3.7 两处 Qt5→Qt6 的 breaking change——isNull 和 equals
+### isNull 与 equals：Qt5 升 Qt6 的两处行为变化
 
-这是本篇最该让迁移者记住的两点。先看 `isNull`：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.cpp:2540-2547`
+这是迁移代码时最该上心的两点，咱们看 `isNull`（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.cpp:2540-2547`）：
 
 ```cpp
 bool QVariant::isNull() const
@@ -320,9 +289,7 @@ bool QVariant::isNull() const
 }
 ```
 
-Qt6 的 `isNull` 只看三个条件：`d.is_null` 标志位（构造时设的）、metaType 无效、指针类型且值为 nullptr。就这三条，没了。但 Qt5 不是这样的——文档注释把这事说得很直白：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.cpp:2534-2536`
+咱们看 Qt6 的 `isNull`，认的条件只有三个：`d.is_null` 的标志位是构造时设下的，metaType 得是无效的，或者类型是指针而值正好是 nullptr。三条之外就没有别的判断了。Qt5 可不是这样的，咱们再看文档的注释，它写得明明白白的（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.cpp:2534-2536`）：
 
 ```cpp
 \note This behavior has been changed from Qt 5, where isNull() would also
@@ -330,11 +297,9 @@ return true if the variant contained an object of a builtin type with an isNull(
 method that returned true for that object.
 ```
 
-Qt5 的时候，如果 variant 里装的是个带 `isNull()` 方法的内置类型（比如空 `QString`、空 `QDate`、空 `QTime`），`QVariant::isNull()` 会代理调那个类型的 `isNull()`，返回 true。Qt6 不再这么干——一个装了空 `QString` 的 variant，`isNull()` 返回 false（因为 `QString` 不是指针，`d.is_null` 也没设）。这是 breaking change，依赖「空字符串 variant 算 null」的老代码迁移到 Qt6 会行为变化。笔者 grep 过整个 `qvariant.cpp`，Qt6 里 `isNull()` 完全不调类型的 `isNull()` 方法，彻底切断。
+咱们回头看看 Qt5 的行为：variant 里要是装着带 `isNull()` 方法的内置类型（null 的 `QString`、空 `QDate`、空 `QTime`），`QVariant::isNull()` 会代理着调那个类型自己的 `isNull()`，返回的就是 true。Qt6 不再这么干了：装了 null `QString` 的 variant，`isNull()` 返回的是 false，因为 `QString` 其实不是指针，当时的 `d.is_null` 也没有设。这就是 breaking change（破坏性的变更），咱们有些老代码依赖“装着 null 串的 variant 也算 null”的判断，迁到 Qt6 行为就变了。笔者 grep 过整个 `qvariant.cpp`，Qt6 里的 `isNull()` 完全不调类型的 `isNull()` 方法，彻底切断了。
 
-再看 `equals`，同样的 breaking 味道：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.cpp:2405-2426`
+咱们再看 `equals`，变化的味道一样（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.cpp:2405-2426`）：
 
 ```cpp
 bool QVariant::equals(const QVariant &v) const
@@ -361,15 +326,13 @@ bool QVariant::equals(const QVariant &v) const
 }
 ```
 
-类型相同，走 `metatype.equals`（最终调 `QMetaTypeInterface::equals` 函数指针）。类型不同呢？Qt6 只给两条特殊路径：都是数值类型（`canBeNumericallyCompared`）按 C++ 类型提升规则比，都是 `QObject` 派生类指针（`qvCanConvertMetaObject`）比指向的对象。其它所有「类型不同」的情况，直接返回 false。
+咱们看类型相同的情况，走 `metatype.equals`（最终调 `QMetaTypeInterface` 的 `equals` 函数指针）。类型不同的场合，Qt6 只留了两条特殊的路：都是数值类型（`canBeNumericallyCompared`）就按 C++ 类型提升的规则比，都是 `QObject` 派生类的指针（`qvCanConvertMetaObject`）就比指向的对象。其它所有类型不同的比较就直接返回 false。
 
-但 Qt5 不是这样——Qt5 的 `==` 在类型不同时会先尝试 `convert` 把右边转成左边类型，再比。这意味着 `QVariant(1) == QVariant("1")` 这种在 Qt5 可能返回 true（字符串转数字成功），在 Qt6 直接 false（int 和 QString 不是同类，也不都是数值/QObject 指针）。这也是 breaking。还有个历史特例：两个默认构造的 `QVariant()`（类型都无效）相等，注释 `// For historical reasons: QVariant() == QVariant()`。
+Qt5 的 `==` 在类型不同的时候会尝试 `convert`，把右边转成左边的类型再去比。也就是说 `QVariant(1) == QVariant("1")` 这样的写法，Qt5 里可能返回的是 true（字符串转数字成功），本篇的基线 6.9.1 里直接返回的是 false，因为 int 和 `QString` 的类型对不上，也不都是数值或 QObject 的指针。这也算一处 breaking 的变化。笔者还在本机的 Qt 6.11.2 上编译跑了同一句，结果又回到了 true，说明比较的语义后来又动过，您升级 Qt 小版本的时候值得重测这类比较。还有个历史的特例：两个默认构造的 `QVariant()` 类型都无效，判定是相等的，注释里也写明了 `// For historical reasons: QVariant() == QVariant()`。
 
-### 3.8 拷贝——大类型 COW，小类型不 COW
+### 拷贝：大类型 COW，小类型实打实复制
 
-最后看拷贝。`QVariant` 拷贝构造走 `clonePrivate`：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.cpp:302-322`
+构造、析构、比较咱们都拆过了，最后剩的是拷贝，它把构造和引用计数捏在了一起。`QVariant` 的拷贝构造走的是 `clonePrivate`（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.cpp:302-322`）：
 
 ```cpp
 static QVariant::Private clonePrivate(const QVariant::Private &other)
@@ -394,41 +357,54 @@ static QVariant::Private clonePrivate(const QVariant::Private &other)
 }
 ```
 
-三路。第一路：`is_shared`（大类型）——`Private d = other` 已经把联合体 bitwise 拷了（包括 `shared` 指针），然后 `ref.ref()` 引用计数 +1，数据本身不动。这是 COW，拷贝只是多一次原子自增。第二路：内联小类型且 trivially copyable——`Private d = other` 那一句已经把 24 字节 bitwise 拷完了，连函数指针都不调。第三路：内联小类型但非 trivially copyable（比如内部带引用计数的 `QString`）——调 `iface->copyCtr` 真做一次 copy construct。
+咱们数下来一共三路。第一路走的是 `is_shared` 的大类型：`Private d = other` 那一句已经把联合体 bitwise 拷完了（`shared` 的指针也拷了），接着的 `ref.ref()` 调用把引用计数加一，数据本身是不动的。这就是咱们熟悉的 COW（Copy-On-Write、写时复制），拷贝只花一次原子的自增，系列里的 [04 COW 容器实战](./04-cow-container-practice-expert.md) 和 [19 COW 隐式共享](./19-cow-implicit-sharing-expert.md)，整篇拆的都是它。第二路是内联的小类型而且 trivially copyable：同样是 `Private d = other` 那一句把 24 字节 bitwise 拷完了，连函数指针都不用调了。第三路是内联的小类型但不是 trivially copyable（比如内部带引用计数的 `QString`），这时要调 `iface->copyCtr` 做一次真的 copy construct。源码里还留了一路极端的兜底：内联类型两次构建之间 relocatability 变了的话，`canUseInternalSpace` 过不了关就走堆重新分配，Qt 自己的注释都标着 highly unlikely，咱们正常碰不到它。
 
-这里有个关键认知，很多人搞错——大类型用的那个 `PrivateShared`，不是 `QSharedData`：
-
-`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:80-84`
+笔者还要点出一个很多人会搞错的认知：大类型用的 `PrivateShared` 并不是 `QSharedData`（`qt_src/qt6.9.1/qtbase/src/corelib/kernel/qvariant.h:80-91`，中间的成员函数省略）：
 
 ```cpp
-struct PrivateShared
-{
-    alignas(8) QAtomicInt ref;
-    int offset;
+    struct PrivateShared
+    {
+        ...
+        alignas(8) QAtomicInt ref;
+        int offset;
 ```
 
-`QVariant::PrivateShared`，独立的 struct，带个 `alignas(8) QAtomicInt ref` 引用计数和一个 `offset`（数据相对 ref 的偏移）。它和 Qt 容器体系里的 `QSharedData` 基类没有任何继承关系——是 `QVariant` 自己搞的一套。还有一个反直觉的点：小类型拷贝不走 COW。很多人以为「`QVariant` 既然有 ref 计数，那拷贝肯定都省」，其实只有大类型（`is_shared`）才共享，小类型每次拷贝都老老实实复制（trivially 的 memcpy、非 trivially 的 copy construct）。这是因为小类型复制本身就快（24 字节以内），搞 COW 反而增加原子操作开销，不划算。
+咱们看 `QVariant::PrivateShared`，它是个独立的 struct，带一个 `alignas(8) QAtomicInt ref` 的引用计数和一个 `offset`（数据相对 ref 的偏移）。它和 Qt 容器体系里的 `QSharedData` 基类没有任何继承的关系，是 `QVariant` 自己搞的一套。
 
-## 4. 踩坑预防
+还有一个反直觉的点：小类型的拷贝不走 COW。咱们容易以为 `QVariant` 有引用计数、拷贝肯定都省，其实只有挂了 `is_shared` 的大类型才共享，小类型每次拷贝都老老实实地复制，trivially 的走 memcpy，非 trivially 的走 copy construct。原因也是直白的：24 字节以内的复制本来就快，再套一层 COW 反而多出一次原子的操作，是不划算的。
 
-第一个坑是 Qt5→Qt6 的 `isNull` 行为变化。3.7 节咱们看过，Qt5 时空 `QString`、空 `QDate` 这些带 `isNull()` 方法的类型，装进 `QVariant` 后 `variant.isNull()` 会返回 true（代理调类型的 `isNull()`）；Qt6 彻底不调了，只看 variant 自身的 `d.is_null` 标志和指针 null。根子在 3.7 节那段源码注释明说的 breaking change。后果是迁移过来的代码——比如用 `if (variant.isNull())` 判断「这个 variant 是不是没值」的——原来对空字符串返 true，Qt6 返 false，逻辑分支全乱。解法是迁移时审一遍所有 `variant.isNull()` 调用点，判断「空内容」该改用 `variant.toString().isEmpty()` 或 `variant.value<QString>().isNull()`（直接调 QString 自己的 isNull），别指望 QVariant 帮你代理。
+## 风险与故障预防
 
-第二个坑是 Qt5→Qt6 的 `==` 不再隐式 convert。3.7 节讲过，Qt5 类型不同的两个 variant 比较会先 convert 再比，Qt6 只对数值和 QObject 指针给特殊路径，其余类型不同直接 false。根子还是那场 Qt6 重构——Qt 认为「比较时偷偷 convert」是个容易出 bug 的隐式行为，砍了。后果是 `QVariant(1) == QVariant("1")` 这种在 Qt5 可能 true 的代码，Qt6 直接 false，而且编译期不报错（运行期静默变 false），极难发现。解法是显式 convert 后再比——`a.canConvert<int>() && a.value<int>() == b.value<int>()`，把转换写明，别依赖 `==` 的隐式行为。
+头一类的风险是 Qt5 升 Qt6 后 `isNull` 的行为变化。`isNull` 一节咱们看过源码：Qt5 的时候，null 的 `QString`、空 `QDate` 这些自带 `isNull()` 方法的类型，装进 `QVariant` 后 `variant.isNull()` 会返回 true（代理调类型的 `isNull()`），Qt6 彻底不调了，只看 variant 自身的 `d.is_null` 标志和指针的 null。根子就是源码注释里明说的那场 breaking change。后果是迁移过来的代码里，咱们用 `if (variant.isNull())` 判断“这个 variant 是不是没值”的调用点，原来对装着 null 串的 variant 返回的是 true，Qt6 返回的是 false，逻辑分支全乱了。解法是迁移时审一遍所有 `variant.isNull()` 的调用点，咱们判断“空内容”的场景，就该改用 `variant.toString().isEmpty()` 这样的写法，别指望 QVariant 帮您代理。直接调 QString 自己的 isNull 也是一条路，`variant.value<QString>().isNull()` 干的就是这个，不过它只对 null 串返回 true，`QString("")` 这类空但非 null 的串是漏判的。
 
-第三个坑是误以为 `QVariant` 拷贝都走 COW。3.8 节咱们拆过，只有大类型（`is_shared`，超过 24 字节或非 relocatable）才 COW 共享，小类型每次拷贝都实打实复制。有些朋友在热点代码里大量拷贝装着 `QString`（正好 24 字节以内、relocatable）的 `QVariant`，以为「反正是 COW，拷贝 O(1)」——结果每次都触发 `copyCtr`（QString 的拷贝构造，虽然 QString 自己有 COW，但那是另一层）。根子在 3.8 节那个三路分流：小类型不进 `PrivateShared`，不调 `ref.ref()`。后果是热点拷贝比预期贵。解法是热点传 `const QVariant&` 避免拷贝，或者确认装的是大类型时才依赖 COW。
+第二类的风险是 `==` 不再隐式 convert。`equals` 一节咱们讲过，Qt5 里类型不同的两个 variant 做比较，会多走一步 convert 的转换，把右边转成左边的类型再去比，Qt6 只给数值和 QObject 指针两条特殊的路，而其余类型不同就直接 false。根子还是那场重构带来的，Qt 的想法是“比较时偷偷 convert”是个容易出 bug 的隐式行为，砍了。后果是 `QVariant(1) == QVariant("1")` 这样的代码在 Qt5 里可能返回 true，在 6.9.1 的基线下直接 false，而且编译期不报错（运行期静默变 false），是极难发现的。另外笔者在 Qt 6.11.2 上实测这句又返回 true 了，说明比较的语义后来又动过，您升级小版本的时候值得把这类比较重测一遍。解法是咱们显式 convert 后再比，把它写成 `a.canConvert<int>() && a.value<int>() == b.value<int>()` 的形式，转换摆在了明面上，也就不依赖 `==` 的隐式行为了。
 
-第四个坑是误解 SSO 的阈值。3.2 节咱们看过，内联条件是「relocatable + size≤24 + align≤8」三条同时满足。有些朋友只记了「24 字节以内」，忽略了 relocatable 和 align——装了个 16 字节但内部带指针（非 relocatable）的类型，或者 8 字节但 align 是 16 的类型，照样走堆分配，不内联。根子是 relocatable 保证 `memcpy` 安全（COW 共享前提），align 保证塞进联合体不破坏对齐。后果是以为内联了实际没内联，多了一次 malloc，在小对象密集场景有性能差异。解法是自定义类型想被 `QVariant` 高效内联，确保是 relocatable（能用 `memcpy` 拷贝、析构可空或 trivial）且对齐 ≤8。
+第三类的风险是误以为 `QVariant` 的拷贝都走 COW。拷贝一节咱们拆过，只有挂了 `is_shared` 标志的大类型（超过 24 字节或非 relocatable 的那些）才 COW 共享，小类型每次拷贝都实打实地复制。有些朋友在热点代码里大量拷贝装着 `QString` 的 QVariant（QString 正好在 24 字节以内、relocatable），以为反正走的是 COW、拷贝是 O(1) 的便宜事，结果每次都触发 `copyCtr`，也就是 QString 的拷贝构造。QString 自己有 COW 的机制，但那是另一层的共享，QVariant 这一层的复制照走。根子在拷贝一节那三路的分流：小类型不进堆上的 `PrivateShared`，也不加 `ref.ref()` 的计数。后果是热点的拷贝比预期贵。解法是热点路径传 `const QVariant&` 的引用参数来避免拷贝，或者确认装的是大类型的时候才依赖 COW。
 
-## 5. 官方文档参考链接
+第四类的风险是误解内联的阈值。存储策略一节咱们看过，条件是 relocatable 的类型、24 以内的 size、8 以内的 align 三条，缺了哪一条都不行。有些朋友只记了“24 字节以内”，漏了另外的两条：装一个 16 字节但内部带自指指针的类型（非 relocatable），或者一个 8 字节但 align 是 16 的类型，照样走堆的分配，内联就轮不到它了。咱们往根子上看，relocatable 保证 `memcpy` 的安全（也是 COW 共享的前提），align 保证了它塞进联合体后不会破坏对齐。后果是以为内联了实际没内联，多了一次 malloc，小对象密集的场景能看出性能的差异。解法是自定义类型想被 `QVariant` 高效地内联，就保证它是 relocatable 的，也就是能 `memcpy` 拷贝、析构 trivial 或可空的类型，同时把对齐控制在 8 以内的范围。
 
-[Qt 文档 · QVariant](https://doc.qt.io/qt-6/qvariant.html) -- QVariant 类参考，setValue/value/canConvert/convert
+## 练习项目
 
-[Qt 文档 · QMetaType](https://doc.qt.io/qt-6/qmetatype.html) -- QMetaType 类参考，类型注册与 construct/destroy/convert
+本篇和 [01 QObject 元对象系统](./01-qobject-meta-system-expert.md) 一样走纯源码拆解的路子，练习就走验证的路，三道题咱们都只给方向和验证的手段，完整的工程留给您自己搭。
 
-[Qt 文档 · Q_DECLARE_METATYPE](https://doc.qt.io/qt-6/qmetatype.html#Q_DECLARE_METATYPE) -- 自定义类型注册宏
+头一道题把布局的推算落地。您按位域一节的源码推一遍：位域占掉一个字长的空间，联合体占 `3 * sizeof(void *)` 的空间，64 位平台上的 `sizeof(QVariant)` 该是多少？然后写一个只打印 `sizeof(QVariant)` 和 `sizeof(QMetaType)` 的小程序跑一下，数对上了，本篇的布局就在您的机器上落了地。
+
+第二道题实测 `isNull` 的两条路。您构造一个装默认构造 `QString()` 的 QVariant，打印 `variant.isNull()` 和 `variant.value<QString>().isNull()` 的返回，咱们再对照源码想一遍，为什么一个返回 false 而另一个返回 true？这里有个容易搞错的细节，`QString("")` 装的是空字符串，但它其实不是 null，装它的 variant 两条路都返回 false，得用默认构造的 `QString()` 才分得开。您接着再装一个默认构造的 `QDate` 试一遍，老代码迁过来之后哪一句的结果会变，您的心里就有数了。
+
+第三道题验证 `==` 的混合类型比较。您打印三个式子的结果：头一个是 `QVariant(1) == QVariant(1u)` 的比较，一个是 `QVariant(1) == QVariant("1")` 的比较，还有一个是 `QVariant() == QVariant()` 的比较。第一个走的是数值提升，返回的应当是 true，第二个在 6.9.1 的语义下是 false，第三个是历史的特例也是 true。您要是在更新的 Qt 6 小版本上跑，中间那句的结果值得多看一眼，您把版本号和结果记在一起，比较语义随版本漂移的事就亲眼见着了。
+
+## 官方文档参考链接
+
+[Qt 文档 · QVariant](https://doc.qt.io/qt-6.9/qvariant.html)——官方的类参考，咱们查 setValue、value、canConvert、convert 的语义时以它为准，本篇的基线是 6.9.1，线上页面是跟着小版本滚动的。
+
+[Qt 文档 · QMetaType](https://doc.qt.io/qt-6.9/qmetatype.html)——官方的类参考，咱们查类型注册的说明时认它，查 construct、destroy、convert 的说明时也认它。
+
+[Qt 文档 · Q_DECLARE_METATYPE](https://doc.qt.io/qt-6.9/qmetatype.html#Q_DECLARE_METATYPE)——官方的宏说明，咱们查自定义类型注册的语义时以它为准。
 
 ---
 
-到这里，QVariant 这套咱们就从源码层面拆透了。笔者拆完最大的感受是，这个类的全部魔法压在「位域 + 联合体」这俩最朴素的 C++ 特性上——`packedType` 位域把 `QMetaTypeInterface*` 指针右移 2 位藏起来（靠 4 字节对齐省 bit），`Data` 联合体让小类型内联 24 字节省掉堆分配、大类型用 `PrivateShared` 挂引用计数做 COW。类型怎么构造析构，全靠 `QMetaTypeInterface` 那张函数指针虚表驱动，trivially copyable 的还能短路成 `memcpy`。而 Qt6 那场把 `QVariant` 整个塞进 `QMetaType` 的重构，不光是 API 层面（`QVariant::Type` 废弃），还动了两个核心行为——`isNull` 不再代理类型自己的 `isNull()`，`==` 类型不同不再偷偷 convert。这两个 breaking 变化，是迁移代码里最容易踩的雷。这套机制和 [01.QObject 元对象系统](./01-qobject-meta-system-expert.md) 的 `QMetaType`（同一个东西）、序列化框架、属性系统都咬在一起——后面拆 `Q_PROPERTY` 的运行期、`QDataStream` 的二进制格式时，咱们都会回头用到这一篇的结论。
+走到了这里，QVariant 咱们就从源码的层面拆完了。笔者拆完最大的感受是，这个类的全部魔法压在位域和联合体身上，用的都是最朴素的 C++ 特性：`packedType` 位域把 `QMetaTypeInterface*` 右移 2 位藏起来（靠 4 字节的对齐省 bit），`Data` 联合体让小类型内联 24 字节省掉堆的分配，大类型则靠 `PrivateShared` 的引用计数做 COW。构造和析构的事，全靠 `QMetaTypeInterface` 那串函数指针的驱动，trivially copyable 的还能短路成 `memcpy`。Qt6 那场把 `QVariant` 并进 `QMetaType` 的重构，API 层面废掉了 `QVariant::Type`，还动了两个核心的行为：`isNull` 不再代理类型自己的 `isNull()`，`==` 在类型不同的场合不再偷偷 convert。咱们迁移代码的时候，isNull 与 equals 的变化是最容易踩中的雷。
 
-如果您想把本篇的行号证据拿来一一核对，它们已按源码机制归类收在 [code-index · QVariant 类型擦除与 QMetaType](../code-index/qtbase/qvariant.md) 下，带着行号直接去 `qt_src/qt6.9.1` 翻原文就行。
+这套机制和 [01 QObject 元对象系统](./01-qobject-meta-system-expert.md) 的 `QMetaType`、序列化框架、属性系统都咬在一起：咱们在 01 里拆 `QMetaObject` 静态表时数过的 `metaTypes` 槽，装的正是这篇里的 `QMetaTypeInterface` 表的指针，属性系统和序列化往深里走的时候，用的也是这一层的东西。
+
+您要是想把本篇的行号证据拿来一一核对，它们已经按源码机制归好了类，统一收在 [code-index · QVariant 类型擦除与 QMetaType](../code-index/qtbase/qvariant.md) 的索引里，您带着行号直接去 `qt_src/qt6.9.1` 翻原文就行。

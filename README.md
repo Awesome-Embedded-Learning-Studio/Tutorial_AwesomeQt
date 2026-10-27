@@ -55,7 +55,7 @@ cd Tutorial_AwesomeQt
 入门层    ██████████  137 / 137 篇教程 · 141 个代码示例
 进阶层    ██████████  134 / 134 篇教程 · 134 个代码示例
 专家层    ██░░░░░░░░  19 / 102 篇（源码拆解 · 连载中）
-实例库    ████████░░  持续扩充 · widget / app / model / industrial（配双文档）
+实例库    ████████░░  持续扩充 · src/ 下 widget / app / model / industrial（配双文档）
 ```
 
 🚀🚀🚀 更加详细的进度：[tutorial/index.md](tutorial/index.md)
@@ -135,39 +135,39 @@ cd Tutorial_AwesomeQt
 
 ## 实例库 — 真成品，不是片段
 
-项目内置一套实例库：`widget/` 是可复用控件库（统一 `AwesomeQt::` 命名空间），`app/` 是整机应用。每件都是可独立编译的成品，配「成品导览 + 手搓手册」两套文档，落在 [tutorial/engineering/instances/](tutorial/engineering/instances/)。
+项目内置一套实例库：`src/widget/` 是可复用控件库（统一 `AwesomeQt::` 命名空间），`src/app/` 是整机应用。每件都是可独立编译的成品，配「成品导览 + 手搓手册」两套文档，落在 [tutorial/engineering/instances/](tutorial/engineering/instances/)。
 
 ### widget 通用控件
 
 | 控件 | 说明 |
 |------|------|
-| [`StatusLED`](widget/status-led/) | 状态指示灯，4 态 + 闪烁动画 |
-| [`ToggleSwitch`](widget/toggle-switch/) | 滑动开关按钮 |
-| [`CircleProgress`](widget/circle-progress/) | 环形进度条 |
-| [`SpeedMeter`](widget/speed-meter/) | 速度仪表盘（自绘） |
-| [`RangeSlider`](widget/range-slider/) | 双滑块范围选择器 |
-| [`LineChart`](widget/line-chart/) | 折线图（纯 QPainter 自绘） |
-| [`EditableTable`](widget/editable-table/) | 可编辑表格（委托校验 + 数据往返） |
-| [`CheckboxTree`](widget/checkbox-tree/) | 树形复选框（三态 + 父子联动） |
-| [`CheckboxList`](widget/checkbox-list/) | 复选框列表（全选 + 级联） |
-| [`LogViewer`](widget/log-viewer/) | 日志查看器（级别染色 + 裁旧） |
-| [`PasswordEdit`](widget/password-edit/) | 密码框（显隐 + 强度） |
-| [`IpEdit`](widget/ip-edit/) | IP 地址输入框（4 段跳焦 + 校验） |
-| [`FadeAnimation`](widget/fade-animation/) | 淡入淡出动画 |
+| [`StatusLED`](src/widget/status-led/) | 状态指示灯，4 态 + 闪烁动画 |
+| [`ToggleSwitch`](src/widget/toggle-switch/) | 滑动开关按钮 |
+| [`CircleProgress`](src/widget/circle-progress/) | 环形进度条 |
+| [`SpeedMeter`](src/widget/speed-meter/) | 速度仪表盘（自绘） |
+| [`RangeSlider`](src/widget/range-slider/) | 双滑块范围选择器 |
+| [`LineChart`](src/widget/line-chart/) | 折线图（纯 QPainter 自绘） |
+| [`EditableTable`](src/widget/editable-table/) | 可编辑表格（委托校验 + 数据往返） |
+| [`CheckboxTree`](src/widget/checkbox-tree/) | 树形复选框（三态 + 父子联动） |
+| [`CheckboxList`](src/widget/checkbox-list/) | 复选框列表（全选 + 级联） |
+| [`LogViewer`](src/widget/log-viewer/) | 日志查看器（级别染色 + 裁旧） |
+| [`PasswordEdit`](src/widget/password-edit/) | 密码框（显隐 + 强度） |
+| [`IpEdit`](src/widget/ip-edit/) | IP 地址输入框（4 段跳焦 + 校验） |
+| [`FadeAnimation`](src/widget/fade-animation/) | 淡入淡出动画 |
 
 ### app 整机成品
 
 | 应用 | 分类 | 说明 |
 |------|------|------|
-| [`image-viewer`](app/05-image-tools/image-viewer/) | 图像工具 | 图片查看器（缩放/旋转/翻页/幻灯片） |
-| [`json-editor`](app/01-dev-tools/json-editor/) | 开发工具 | JSON 编辑器（格式化/校验/树） |
-| [`sqlite-browser`](app/10-database-tools/sqlite-browser/) | 数据库 | SQLite 浏览器（表浏览 + 任意 SQL） |
-| [`serial-tool`](app/02-network-tools/serial-tool/) | 网络工具 | 串口调试助手（收发 + Hex/ASCII） |
-| [`network-tool`](app/02-network-tools/network-tool/) | 网络工具 | TCP/UDP 调试工具 |
-| [`tetris`](app/08-games/tetris/) | 游戏 | 俄罗斯方块（自绘 + 消行计分） |
-| [`cpu-memory-monitor`](app/04-system-tools/cpu-memory-monitor/) | 系统工具 | CPU/内存监控（进度条 + 历史曲线） |
+| [`image-viewer`](src/app/05-image-tools/image-viewer/) | 图像工具 | 图片查看器（缩放/旋转/翻页/幻灯片） |
+| [`json-editor`](src/app/01-dev-tools/json-editor/) | 开发工具 | JSON 编辑器（格式化/校验/树） |
+| [`sqlite-browser`](src/app/10-database-tools/sqlite-browser/) | 数据库 | SQLite 浏览器（表浏览 + 任意 SQL） |
+| [`serial-tool`](src/app/02-network-tools/serial-tool/) | 网络工具 | 串口调试助手（收发 + Hex/ASCII） |
+| [`network-tool`](src/app/02-network-tools/network-tool/) | 网络工具 | TCP/UDP 调试工具 |
+| [`tetris`](src/app/08-games/tetris/) | 游戏 | 俄罗斯方块（自绘 + 消行计分） |
+| [`cpu-memory-monitor`](src/app/04-system-tools/cpu-memory-monitor/) | 系统工具 | CPU/内存监控（进度条 + 历史曲线） |
 
-**构建方式：** widget 控件为 STATIC 库 + 独立 demo，根 [`widget/CMakeLists.txt`](widget/CMakeLists.txt) 统一配置（C++17 / AUTOMOC / find_package Qt6）；app 为整机 demo，根 [`app/CMakeLists.txt`](app/CMakeLists.txt) 统一配置。`cd widget && cmake -B build && cmake --build build` 即可构建。
+**构建方式：** widget 控件为 STATIC 库 + 独立 demo，根 [`src/widget/CMakeLists.txt`](src/widget/CMakeLists.txt) 统一配置（C++17 / AUTOMOC / find_package Qt6）；app 为整机 demo，根 [`src/app/CMakeLists.txt`](src/app/CMakeLists.txt) 统一配置。`cd src/widget && cmake -B build && cmake --build build` 即可构建。
 
 ---
 
@@ -234,7 +234,7 @@ cd Tutorial_AwesomeQt
 
 ## 许可
 
-本仓库内容分档授权：示例与实例库代码（`examples/`、`widget/`、`app/`、`model/`、`industrial/`）为 [MIT](LICENSE)；教程文档（`tutorial/`）为 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.zh-hans)；专家层引用的 Qt 源码遵循 [The Qt Company 自身许可](https://www.qt.io/licensing/)。详见 [NOTICE.md](NOTICE.md)。
+本仓库内容分档授权：示例与实例库代码（`src/` 下的 `examples/`、`widget/`、`app/`、`model/`、`industrial/`）为 [MIT](LICENSE)；教程文档（`tutorial/`）为 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.zh-hans)；专家层引用的 Qt 源码遵循 [The Qt Company 自身许可](https://www.qt.io/licensing/)。详见 [NOTICE.md](NOTICE.md)。
 
 ---
 

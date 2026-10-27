@@ -248,7 +248,7 @@ Linux 桌面环境基本没有 NFC 支持——虽然存在 pcsc-lite 等智能�
 
 ## 4. 综合示例：NFC 标签读写工具
 
-把前面学的串起来，我们写一个 NFC 标签读写工具。程序启动后开始监听 NFC 标签，检测到标签后自动读取其 NDEF 消息并显示。同时提供写入功能，可以将自定义的 URI 和文本写入空白标签。完整代码见 `examples/beginner/05-other-modules/11-qtnfc-beginner/`，下面是关键部分的讲解。
+把前面学的串起来，我们写一个 NFC 标签读写工具。程序启动后开始监听 NFC 标签，检测到标签后自动读取其 NDEF 消息并显示。同时提供写入功能，可以将自定义的 URI 和文本写入空白标签。完整代码见 `src/examples/beginner/05-other-modules/11-qtnfc-beginner/`，下面是关键部分的讲解。
 
 CMake 配置：
 
