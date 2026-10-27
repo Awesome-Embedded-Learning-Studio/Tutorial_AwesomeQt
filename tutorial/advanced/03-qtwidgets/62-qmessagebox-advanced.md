@@ -1,272 +1,105 @@
 ---
 title: "3.62 QMessageBox 进阶"
-description: "入门篇我们学会了 QMessageBox 的四种标准消息框——question、information、warning、critical——以及简单的按钮选择。进阶篇我们要深入 QMessageBox 的定制能力：标准静态函数的局限性、setDetailedText 展开详情区域的交互行为、addButton 自定义按钮和 ButtonRole 的精细控制，以及 setCheckBox 实现'不再提示'复选框模式。"
+description: "进阶篇从静态函数转进 QMessageBox 内部：按钮盒是构造时就造好的标配（qmessagebox.cpp 第 271-275 行），静态函数族全走 showNewMessageBox，内部 exec，默认按钮挑第一枚 AcceptRole（第 1727-1765 行），自定义按钮下 exec 返回值是不透明暗号（第 448-469 行），Esc 与关闭钮归 detectEscapeButton 一条链管（第 1084-1136 行），查无逃生钮 closeEvent 拒关、Windows 顺手灰掉系统菜单（第 1513-1525、1717-1722 行），informativeText 懒创建且 macOS 才换小字号（第 2677-2690 行），detailedText 恒为纯文本且详情按钮挂 ActionRole（第 2598、2632-2633 行），空文字按钮会被主题补字（第 894-904 行），setCheckBox 所有权由消息盒收走（第 1200 行），原生对话框的开关清单在 canBeNativeDialog（第 2802-2829 行），示例在 examples/advanced/03-qtwidgets/62-qmessagebox-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.62——QMessageBox 进阶
 
-## 1. 前言 / 标准消息框够用直到它不够用
+61 篇咱们把 QDialogButtonBox 的角色制读了一遍，这一篇的主角 QMessageBox，内部就带着一只那样的按钮盒，构造那天就造好了。笔者把 qmessagebox.cpp 从头读到尾，发现这个类的多数行为都能顺着按钮盒讲清楚：静态函数怎么挑默认按钮，Esc 谁来接，关闭钮什么时候点不动，全在角色表上打转。
 
-入门篇我们把 QMessageBox 的静态便捷函数过了一遍——QMessageBox::question() 问个是非、QMessageBox::information() 提个信息、QMessageBox::warning() 发个警告、QMessageBox::critical() 报个严重错误。四个函数覆盖了大部分"弹个框告诉用户点什么"的场景。说实话，如果你只是做个简单的工具软件，这些静态函数确实够用了。
+引用文件咱们交代清楚。主战场是 qmessagebox.cpp 与 qmessagebox.h（src/widgets/dialogs），61 篇读过的角色制细节本篇挂链不重讲，入门篇走过的四个静态函数基本用法也不重讲。配套示例是一只四按钮演示窗口，完整玩法放结语。
 
-但真实项目总会逼着你走出舒适区。产品经理跑过来说："错误弹框能不能加个展开的详情区域？用户反馈问题的时候我们得看到完整的错误堆栈。"或者："确认删除的弹框能不能加个'不再提示'的勾选框？"再或者："这个警告框能不能多一个'忽略并继续'的按钮？"这些都是 QMessageBox 静态函数搞不定的——它们返回的只是一个 StandardButton，你没法加复选框，没法展开详情，没法加自定义按钮。
+## 按钮盒是标配：您加的每一枚按钮最后都进同一只盒子
 
-这一篇我们要做的事情是：搞清楚标准静态函数的局限性在哪里，学会用 setDetailedText 展开详情区域，掌握 addButton 自定义按钮和 ButtonRole 的精细控制，最后把 setCheckBox 的"不再提示"模式吃透。
+咱们去看出生记录。私有类的 `init`（qmessagebox.cpp 第 258-288 行）造完主文本与图标两块标签才轮到按钮盒，new QDialogButtonBox 落在第 271 行，objectName 叫 qt_msgbox_buttonbox，按钮居中与否听样式的 SH_MessageBox_CenterButtons 提示，按钮盒的 clicked 信号，直接接到私有类的 `buttonClicked` 上（第 271-275 行）。头文件更是直接把 `qdialogbuttonbox.h` 给 include 了，出处 qmessagebox.h 第 9 行，这层关系是明写的。
 
-## 2. 环境说明
+角色制也是同一套。您调 addButton(QAbstractButton*, ButtonRole)，实现里一行强转就把按钮塞给按钮盒（qmessagebox.cpp 第 906 行），Qt 还在文件头放了两条 static_assert，要求 ButtonRole 与 StandardButton 和 QDialogButtonBox 的枚举值保持同步（第 59-71 行），编译期就管住了。所以 61 篇的角色表在 QMessageBox 里照用，差别只在消息盒替您把关闭也一并办了：任何一枚非详情按钮被点，都走 setClickedButton，发出 buttonClicked 信号，接着调 done（第 516-525 行），对话框当场关闭，包括挂 ActionRole 和 ApplyRole 的按钮，点了都收场。
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。所有内容依赖 QtWidgets 模块。QMessageBox 在某些平台（特别是 macOS）上会使用原生对话框，原生对话框的行为可能与 Qt 实现的对话框有细微差异。如果需要确保行为一致，可以设置 QMessageBox::DontUseNativeDialog 选项。示例代码在所有支持 Qt6 的桌面平台上均可编译运行。
+角色的差事咱们列一张表，出处是 `standardButtonForRole` 的映射（qmessagebox.cpp 第 911-924 行）与 `dialogCode` 的折算（第 478-487 行）。
 
-## 3. 核心概念讲解
+| 角色 | 消息盒怎么对待它 |
+|------|------|
+| AcceptRole | 空文字时主题补 Ok，点击折算成接受 |
+| RejectRole | 空文字时主题补 Cancel，点击折算成拒绝 |
+| DestructiveRole | 空文字时主题补 Discard，危险动作走这里 |
+| ActionRole | 详情按钮自己也挂这个角色，点击照样关闭对话框 |
+| YesRole 与 NoRole | 肯定与否定的回答，点击分别折算成接受与拒绝 |
+| HelpRole | 帮助入口，空文字时主题补 Help |
+| ResetRole 与 ApplyRole | 重置与应用，空文字时主题补 Reset 与 Apply |
 
-### 3.1 标准消息框的局限与自定义
+## 静态函数：一行调用的代价是别人替您挑默认按钮
 
-先来回顾一下标准静态函数的用法，然后分析它们的局限性。
+四个返回 StandardButton 的静态函数（question、information、warning、critical）全走同一个门口，showNewMessageBox（qmessagebox.cpp 第 1727-1765 行）。咱们进去看它干什么：构造一只 QMessageBox，用 findChild 把按钮盒摸出来（第 1745 行），然后拿位掩码把您要的标准按钮挨个 addButton，默认按钮没人指定时就挑第一枚 AcceptRole 的（第 1755-1760 行），最后 exec（第 1762 行），exec 返回 -1 时对外报 Cancel（第 1763 行）。
 
-```cpp
-// 静态函数——简洁但能力有限
-auto ret = QMessageBox::question(this, "确认", "确定要删除吗？",
-    QMessageBox::Yes | QMessageBox::No);
+默认参数咱们在头文件数过（qmessagebox.h 第 168-170、178-180、188-190、198-200 行），information、warning、critical 的按钮默认就是一枚 Ok，question 默认 Yes 与 No，四家的 defaultButton 实参都默认 NoButton。这里有个值得您注意的缝：question 的 Yes 挂的是 YesRole，不是 AcceptRole，所以挑默认按钮那个循环看不上它，默认位置空着。做删除确认这类破坏性操作，咱们把 defaultButton 实参显式传 No，回车落点才稳妥。模态方面，init 里调了 `setModal(true)`（qmessagebox.cpp 第 281 行），类文档也写明静态函数弹的是应用级模态（第 1781-1782 行）。
 
-if (ret == QMessageBox::Yes) {
-    doDelete();
-}
-```
+静态函数的局限入门篇就点过，进阶篇补一条实底的：它内部跑 exec，嵌套事件循环开起来，您没有异步的选法。想要 open 的异步路线就手动构造，QMessageBox 还额外给了一个字符串式便捷重载 open(QObject*, const char*)（qmessagebox.cpp 第 1646-1656 行），槽签名第一个参数带指针就连 buttonClicked，否则连 finished，关闭时自动断开（第 1649-1654 行）。顺手提一句 about 一家，它不在四函数里，返回 void，内部是 WA_DeleteOnClose 加自己的窗口图标当 pixmap，非 macOS 平台照样 exec（第 1910-1946 行）。
 
-这段代码看起来很清爽，但它有几个硬性限制。第一，按钮只能是 StandardButton 枚举中预定义的——你没法把 Yes 改成"是的，删掉它"，也没法加一个"全部删除"按钮。第二，消息文本只能是纯文本或简单的富文本，没法加交互控件（比如复选框）。第三，没有详情展开区域——如果错误信息很长，你只能让它全部显示或者全部隐藏，没法让用户自己选择是否查看详情。第四，静态函数内部会调用 exec()，也就是那个有风险的嵌套事件循环。你不能用异步模式。
+## exec 的返回值：标准按钮给枚举，自定义按钮给暗号
 
-解决方案是放弃静态函数，手动构造 QMessageBox 实例。这给了你完全的控制权——可以添加自定义按钮、设置详情文本、添加复选框、选择用 exec() 还是 open()。
+execReturnCode（qmessagebox.cpp 第 448-469 行）分两截。您用的是标准按钮，返回值就是那枚 StandardButton 的枚举值，Ok 是 0x400，Yes 是 0x4000，头文件里的值表（qmessagebox.h 第 70-102 行）就是返回值表。您用的是自定义按钮，返回值是一串暗号，Accepted 加上按钮在 customButtonList 里的序号再加一（第 463-465 行），注释写明刻意避开 QDialog::DialogCode 的取值范围。所以自定义按钮的场景里，拿 exec 的返回值跟 QDialog::Accepted 比是没意义的，Accepted 的值是 1，这串值最小从 2 起，两边永远对不上，判断点击用 clickedButton()（第 1151-1155 行），跟 addButton 存下的指针做相等比较。
 
-```cpp
-// 手动构造——完全控制
-auto* msg = new QMessageBox(this);
-msg->setIcon(QMessageBox::Warning);
-msg->setWindowTitle("连接失败");
-msg->setText("无法连接到服务器 database.example.com:5432");
-msg->setInformativeText("请检查网络连接和服务器地址。");
-// 后续可以继续添加自定义按钮、详情文本、复选框等
+clickedButton 还有两处时序您记一下。showEvent 一进门就把它清成 nullptr（第 1710 行），所以同一个实例弹第二次，上一次的点击记录不作数。再就是用户按 Esc 而整盒按钮找不出逃生钮时，clickedButton 返回的就是 nullptr，类文档在第 1138-1143 行有明文。
 
-msg->setAttribute(Qt::WA_DeleteOnClose);
-connect(msg, &QMessageBox::finished, this, [this, msg](int result) {
-    // 异步处理结果
-});
-msg->open();  // 用 open() 而不是 exec()
-```
+## Esc 与关闭钮：detectEscapeButton 一条链说了算
 
-informativeText 是一个介于主文本和按钮之间的辅助文本区域，它用比主文本小的字号显示。这在视觉上形成了一种层次：大字是核心信息，小字是补充说明。很多开发者不知道 informativeText 这个属性，把所有内容都塞到主文本里，导致弹框文字太多太密。
+每次显示前，`setVisible` 都会跑一遍 `detectEscapeButton`（qmessagebox.cpp 第 1665 行），咱们把判定链的顺序数出来（第 1084-1136 行）。您显式 setEscapeButton 过的，直接采用（第 1086-1089 行）。没设过就看有没有 Cancel，有就归它（第 1091-1094 行）。只剩一枚按钮的，那枚就是逃生钮（第 1096-1101 行）。两枚按钮里有一枚是详情按钮的，另一枚接任（第 1103-1111 行）。再往后找唯一的 RejectRole（第 1113-1124 行），然后找唯一的 NoRole（第 1126-1135 行），两类都凑出两枚候选就把结果清空（第 1116-1119 行），整条链空手而归，Esc 就成了废键。
 
-还有一个容易被忽略的属性是 textFormat()。默认情况下 QMessageBox 会尝试自动检测文本是纯文本还是富文本（Qt::AutoText）。如果你的消息文本中恰好包含 HTML 标签字符（比如用户输入的内容里有 `<b>` 之类的），它可能被误解析为富文本。如果你确定文本是纯文本，显式设为 Qt::PlainText 更安全。
+关闭钮的行为也归判定链管。`keyPressEvent` 接到 Esc，就把 `detectedEscapeButton` 点击一遍（qmessagebox.cpp 第 1568-1575 行）。closeEvent 更硬气，逃生钮压根没检出来时它直接把关闭事件 ignore 掉（第 1516-1518 行），窗口点不动。您在 Windows 上跑，`showEvent` 还会顺手把系统菜单里的关闭项灰掉（第 1717-1722 行）。逃生钮在呢，用户点关闭钮就等价于点它，`clickedButton` 与 `result` 都按它填（第 1521-1524 行）。
 
-### 3.2 setDetailedText 展开详情区域
+有种流传的说法是 setDetailedText 会把标题栏关闭钮弄灰，理由是 Qt 要强迫用户用按钮表态。笔者拿源码对过，说法不成立。详情按钮挂的是 ActionRole（第 2632-2633 行），detectEscapeButton 还专门给它开了两按钮特例（第 1103-1111 行），一枚 Ok 加一枚详情按钮的组合照样拿 Ok 当逃生钮，关闭钮照常能用。让关闭钮点不动的条件是整条链找不出逃生钮，比如您给了两枚 RejectRole 按钮，判定链就把结果清空（第 1116-1119 行）。这时候改 windowFlags 也没用，事件在 closeEvent 那一行就被拦下了（第 1517 行）。
 
-setDetailedText 是 QMessageBox 提供的一个非常有用的功能——它在消息框底部加一个"Show Details..."按钮，点击后展开一个文本区域显示详情信息。这个功能在错误报告场景中几乎是标配：主文本告诉用户出了什么错，详情区域显示完整的错误堆栈或调试信息。
+## addButton：空文字按钮会被主题补字，removeButton 只摘不删
 
-```cpp
-auto* msg = new QMessageBox(this);
-msg->setIcon(QMessageBox::Critical);
-msg->setWindowTitle("程序错误");
-msg->setText("保存文件时发生意外错误。");
-msg->setInformativeText("您可以复制以下详细信息发送给技术支持。");
-msg->setDetailedText(
-    "Exception: std::runtime_error\n"
-    "Message: File I/O error at /data/config.json\n"
-    "Location: FileSaver::save() at file_saver.cpp:142\n"
-    "Stack trace:\n"
-    "  #0 FileSaver::save() ...\n"
-    "  #1 DocumentManager::saveCurrent() ...\n"
-    "  #2 MainWindow::onSave() ..."
-);
-msg->exec();
-```
+addButton(QAbstractButton*, ButtonRole) 进门就查文字（qmessagebox.cpp 第 894-904 行）。按钮文字是空的，它就拿角色去 standardButtonForRole 查一枚对应的标准按钮，让平台主题把标准文字填上，比如空文字的 AcceptRole 按钮出来就写着 OK。主题也填不上，才 qWarning 拒收（第 900-903 行）。所以您想造一枚无字按钮走捷径，得到的是一枚挂着标准文字的按钮，表意完全反着来。
 
-这里有几个行为细节需要注意。第一，详细文本区域是一个只读的 QTextEdit，用户可以选择和复制其中的文字。这正好满足了"复制错误信息反馈给技术支持"的需求。第二，"Show Details..."按钮的文字取决于当前 locale 的翻译——在中文环境下会显示"显示详细信息"之类的翻译文本。第三，详情区域默认是折叠的，用户点击按钮后展开，按钮文字变成"Hide Details..."。
+removeButton 是只摘不删的好脾气，从按钮盒移除，顺手把 escapeButton 与 defaultButton 里对它的引用清掉，本体一直活着（qmessagebox.cpp 第 963-973 行）。setStandardButtons 换整组时也一样，新列表里不存在的旧默认钮与旧逃生钮引用会被清空（第 990-994 行），您换完按钮组，记得把默认钮与逃生钮重新指定一遍。
 
-但 setDetailedText 有一个让很多人措手不及的行为：设置了 detailedText 之后，窗口的关闭按钮（标题栏上的 X）会变成 disabled 状态。这是 Qt 的有意设计——Qt 认为设置了详情文本的消息框是"必须由用户通过按钮做出选择"的场景，不应该允许直接关闭。如果你希望保留关闭按钮的功能，需要手动处理这个限制。
+## informativeText 与 detailedText：两块按需创建的区域
+
+informativeText 是懒创建的。`setInformativeText` 传了非空字符串，才会去造 informativeLabel（qmessagebox.cpp 第 2677-2690 行），创建时就开自动换行（第 2687 行），文字格式直接跟主文本共用（第 2688 行）。它的字号并不总比主文本小，笔者翻到的小字号只在 macOS 分支里，拿 QTipLabel 的字体给贴标签式的小字（第 2683-2685 行），其他平台两块字号一样，差别只在换行。主文本那头 textFormat 默认 Qt::AutoText（第 1438 行），AutoText 下要不要换行由 Qt::mightBeRichText 说了算（第 1341-1342 行），您的纯文本里恰好含 XML 元字符，就可能被当成富文本排版，类文档在第 631-638 行给的建议，是显式调 `setTextFormat(Qt::PlainText)`。
+
+detailedText 的文字永远是纯文本，属性文档一句写明（qmessagebox.cpp 第 2598 行）。设置时同样懒创建两样东西（第 2626-2635 行）：一块 QMessageBoxDetailsText，内部是只读 QTextEdit，定高一百像素，还不抢焦点（第 108-111 行），顶上一道下陷的横线做分隔（第 104-106 行），选中复制随您，Ctrl+A 全选的快捷键也在 `keyPressEvent` 里备着（第 1583-1592 行）。一枚 DetailButton，文字是 tr 出来的 Show Details 与 Hide Details（第 158-159 行），挂 ActionRole 塞进按钮盒（第 2632-2633 行），点击时在 `buttonClicked` 里翻转详情区显隐，再重算尺寸（第 497-500 行）。
+
+addButton 会把 autoAddOkButton 标志清掉，`setDetailedText` 特意存下来再恢复（qmessagebox.cpp 第 2631-2634 行），注释里写明这是 QTBUG-39334 的修复。效果是您设完详情文本再 exec，一枚按钮都没加，显示前 setVisible 照样把 Ok 自动补上（第 1663-1664 行），盒子不会只剩一枚孤零零的详情按钮。至于整体尺寸，updateSize 最后 setFixedSize（第 418 行），宽度软上限五百像素，硬上限是屏宽减四百八与一千取小（第 357、365 行），超了就给主文本开自动换行（第 374-376 行），所以消息盒不能拖大，多长它自己算。
+
+## setCheckBox：所有权消息盒收走，您别再自己管
+
+文档写得直白，`The message box takes ownership of the checkbox`（qmessagebox.cpp 第 1200 行），这接口 Qt 5.2 就有了，接管语义一直没变。实现里换复选框时旧的藏起来，从布局摘出，父是消息盒才 deleteLater（第 1213-1220 行），新的进网格，摆到按钮盒上方（setupLayout 第 313-319 行）。复选框的生命周期不必咱们自己管，那样叮嘱的旧说法源码不支持，是把别的控件的经验搬过来了。“不再提示”的骨架咱们伪代码给一段。
 
 ```cpp
-// 恢复关闭按钮功能
-msg->setDetailedText("错误详情...");
-// 在 showEvent 之后，窗口标志可能需要调整
-msg->setWindowFlags(msg->windowFlags() | Qt::WindowCloseButtonHint);
+// 伪代码：勾上不再提示并确认后，下次直接执行默认动作
+auto* box = new QMessageBox(this);
+auto* cb = new QCheckBox(tr("不再提示"), box);   // 挂不挂父都行，setCheckBox 后归消息盒
+box->setCheckBox(cb);
+box->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+box->exec();
+if (box->clickedButton() == box->button(QMessageBox::Yes) && cb->isChecked())
+    saveNoConfirmPref();                          // 偏好写进 QSettings，下次跳过弹框
 ```
 
-不过这个做法在不同平台上的效果不一样。在 Windows 上它可以恢复关闭按钮，但在某些 Linux 窗口管理器上可能无效。更稳妥的做法是确保你的消息框至少有一个 RejectRole 的按钮（比如 Cancel 或 Close），让用户有办法关闭它。
+## 原生对话框：这条路 Qt 6 还留着，开关比您想的多
 
-另外一个细节是：当详情区域展开时，QMessageBox 的大小会改变。如果 QMessageBox 的父窗口也在同时更新布局（比如 resize 事件触发了什么），可能会产生一些闪烁。在大多数场景下这不是问题，但如果你的消息框嵌套在复杂的 UI 中，值得留意一下。
+canBeNativeDialog（qmessagebox.cpp 第 2802-2829 行）决定走不走原生，咱们把它的否决清单数一遍。全局属性 AA_DontUseNativeDialogs，控件属性 WA_DontShowOnScreen，样式表在场，以及 Option::DontUseNativeDialog（第 2809-2813 行），任一条命中就不走原生。QMessageBox 的子类直接被排除，它拿类名比对识别子类（第 2815-2816 行）。带菜单的按钮也被排除（第 2820-2827 行）。setOption 这对接口是 Qt 6.6 才加的（第 1244-1247 行），所以咱们想所见即所得，老项目还可以用样式表或属性开关间接达成。
 
-### 3.3 自定义按钮和按钮角色
+真走原生时，标题、主文本一块，informativeText、detailedText 也一块，`helperPrepareShow` 全都转发过去（qmessagebox.cpp 第 2832-2839 行），被您改过文字的标准按钮，会降级成自定义按钮送过去（第 2855-2864 行）。点击回来由 helperClicked 映射到真实按钮再补一次 click（第 534-543 行），注释写明这是为了让外面的行为不管哪条路都一致。不过 button() 的文档提醒在案，您改它返回的那枚按钮的属性，原生实现不一定反映（第 1021-1025 行），深度定制时干脆把原生路径关掉最省心。
 
-QMessageBox 继承自 QDialog，所以它也有自己的按钮管理系统。和 QDialogButtonBox 不同，QMessageBox 的按钮管理是通过 addButton 和 removeButton 方法直接操作的。每个按钮都有一个 QMessageBox::ButtonRole 来标识它的语义。
+## 官方文档参考
 
-```cpp
-auto* msg = new QMessageBox(this);
-msg->setIcon(QMessageBox::Warning);
-msg->setWindowTitle("未保存的更改");
-msg->setText("文档有未保存的更改，关闭前是否保存？");
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 6.9.1 源码核对过。
 
-auto* saveBtn = msg->addButton("保存", QMessageBox::AcceptRole);
-auto* discardBtn = msg->addButton("放弃更改", QMessageBox::DestructiveRole);
-auto* cancelBtn = msg->addButton("取消", QMessageBox::RejectRole);
+[Qt 文档 · QMessageBox](https://doc.qt.io/qt-6/qmessagebox.html) -- 消息盒类，静态函数族与属性 API 的定义处
 
-msg->exec();
+[Qt 文档 · QDialogButtonBox](https://doc.qt.io/qt-6/qdialogbuttonbox.html) -- 61 篇的主角，角色制与标准按钮的老家
 
-if (msg->clickedButton() == saveBtn) {
-    saveDocument();
-    closeDocument();
-} else if (msg->clickedButton() == discardBtn) {
-    closeDocument();
-} else {
-    // 取消——什么都不做
-}
-```
+[Qt 文档 · QDialog](https://doc.qt.io/qt-6/qdialog.html) -- exec 与 open 的模态语义，消息盒的父类
 
-这段代码展示了 QMessageBox 自定义按钮的核心用法。addButton 的返回值是一个 QPushButton 指针（实际上是 QPushButton*，声明为 QAbstractButton*），你需要在 exec() 返回后用 clickedButton() 获取被点击的按钮并和你的按钮指针做比较。clickedButton() 返回的是用户实际点击的按钮指针，这个指针和 addButton 返回的指针是同一个对象——所以用 `==` 比较就行了。
-
-ButtonRole 的选择会影响按钮的排列位置和视觉效果。AcceptRole 的按钮在某些平台上会有特殊的高亮（比如蓝色背景）；DestructiveRole 的按钮可能在某些平台上显示为红色文字，暗示这是一个不可逆的危险操作；RejectRole 的按钮通常位于 AcceptRole 按钮的对面。这些视觉差异由平台 style 控制，你在代码里不需要管。
-
-还有一个 addButton 的重载版本：`addButton(const QString& text, QMessageBox::ButtonRole role)`。它和上面展示的用法一样，只是不需要你提前创建 QPushButton。如果你想对按钮做更多定制（比如设图标或 tooltip），可以用另一个重载版本 `addButton(QAbstractButton* button, QMessageBox::ButtonRole role)` 来传入你自己创建的按钮控件。
-
-```cpp
-// 传入自己创建的按钮
-auto* customBtn = new QPushButton("自定义按钮");
-customBtn->setIcon(QIcon::fromTheme("document-save"));
-customBtn->setToolTip("保存并继续编辑");
-msg->addButton(customBtn, QMessageBox::ActionRole);
-
-// 也可以使用标准按钮
-msg->addButton(QMessageBox::Save);
-msg->addButton(QMessageBox::Discard);
-msg->addButton(QMessageBox::Cancel);
-```
-
-注意 QMessageBox 的 ButtonRole 和 QDialogButtonBox 的 ButtonRole 是两个独立的枚举——它们的值和语义基本一致（都有 AcceptRole、RejectRole、DestructiveRole、ActionRole、HelpRole 等），但它们属于不同的类。在 QMessageBox 中用 QMessageBox::AcceptRole，在 QDialogButtonBox 中用 QDialogButtonBox::AcceptRole，不要搞混了。
-
-### 3.4 setCheckBox 添加复选框
-
-QMessageBox::setCheckBox 是 Qt 5.6 引入的一个非常实用的功能——它在消息框的底部（按钮之上）添加一个 QCheckBox。最常见的用途是"不再提示"或"记住我的选择"模式。
-
-```cpp
-auto* msg = new QMessageBox(this);
-msg->setIcon(QMessageBox::Question);
-msg->setWindowTitle("确认删除");
-msg->setText("确定要删除选中的 5 个文件吗？");
-
-auto* checkbox = new QCheckBox("不再询问，直接删除", msg);
-msg->setCheckBox(checkbox);
-
-msg->addButton(QMessageBox::Yes);
-msg->addButton(QMessageBox::No);
-
-msg->exec();
-
-if (msg->clickedButton() == msg->button(QMessageBox::Yes)) {
-    if (checkbox->isChecked()) {
-        // 用户勾选了"不再询问"——保存这个偏好
-        QSettings settings;
-        settings.setValue("delete_no_confirm", true);
-    }
-    deleteFiles();
-}
-```
-
-setCheckBox 接受一个 QCheckBox 指针。这个 QCheckBox 的父对象会被自动设为 QMessageBox 内部的某个控件——但你在创建时传不传 parent 都行，因为 setCheckBox 内部会处理。QMessageBox 不接管这个 QCheckBox 的所有权——如果你是 new 出来的并且没有给它设 parent，你需要自己确保它的生命周期至少持续到 QMessageBox 关闭。最安全的做法是在创建 QCheckBox 时把 QMessageBox 作为 parent 传进去，或者直接 `new QCheckBox(msg)`。
-
-"不再提示"模式的完整实现需要配合 QSettings。当用户勾选了复选框并做出选择后，你把选择结果保存到 QSettings；下次执行相同操作前，先检查 QSettings——如果用户之前选择了"不再提示"，就直接执行默认操作，不弹框。
-
-```cpp
-bool shouldConfirm() {
-    QSettings settings;
-    return !settings.value("delete_no_confirm", false).toBool();
-}
-
-void onDeleteClicked() {
-    if (!shouldConfirm()) {
-        deleteFiles();
-        return;
-    }
-
-    auto* msg = new QMessageBox(this);
-    msg->setIcon(QMessageBox::Question);
-    msg->setText("确定要删除选中的文件吗？");
-
-    auto* checkbox = new QCheckBox("不再询问", msg);
-    msg->setCheckBox(checkbox);
-
-    msg->addButton(QMessageBox::Yes);
-    msg->addButton(QMessageBox::No);
-
-    connect(msg, &QMessageBox::finished, this, [this, msg, checkbox](int) {
-        if (msg->clickedButton() == msg->button(QMessageBox::Yes)) {
-            if (checkbox->isChecked()) {
-                QSettings settings;
-                settings.setValue("delete_no_confirm", true);
-            }
-            deleteFiles();
-        }
-        msg->deleteLater();
-    });
-
-    msg->open();  // 异步模式
-}
-```
-
-这里有一个需要注意的时序问题：在 finished 信号的槽函数中，checkbox 和 msg 都还有效（因为 WA_DeleteOnClose 还没处理），所以你可以安全地读取 checkbox 的状态。但如果你用了 WA_DeleteOnClose 而不是手动 deleteLater，在一些边界情况下可能会有问题——因为 deleteLater 是在当前事件循环迭代结束时调度的，而 finished 信号是在 accept/reject 过程中同步触发的。我们的做法是在 finished 的槽函数中手动 deleteLater，这样确保信号处理完毕后才做清理。
-
-现在有一道调试题给大家。下面这段代码中，用户勾选了"不再提示"并点击了 Yes，但下次执行操作时弹框还是弹出来了。为什么？
-
-```cpp
-auto* msg = new QMessageBox(this);
-msg->setText("确定删除？");
-auto* cb = new QCheckBox("不再提示", msg);
-msg->setCheckBox(cb);
-msg->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
-
-if (msg->exec() == QMessageBox::Yes) {
-    if (cb->isChecked()) {
-        QSettings settings;
-        settings.setValue("skip_confirm", "true");  // 保存为字符串
-    }
-}
-
-// 别处检查时：
-QSettings settings;
-if (settings.value("skip_confirm", false).toBool()) {  // 读作 bool
-    // 不会进入这里！
-}
-```
-
-问题出在类型不匹配。保存时用了字符串 `"true"`，读取时用了 `toBool()`。QVariant 中字符串 "true" 转换为 bool 时可能不是 true（取决于 QVariant 的转换规则，非空字符串在 toBool() 中通常返回 true，但 `"true"` 这个用法不够可靠）。解决方案是统一用 `settings.setValue("skip_confirm", true)` 保存 bool 值，这样读取时 `toBool()` 就能正确工作。
-
-## 4. 踩坑预防
-
-第一个坑是 setDetailedText 导致窗口关闭按钮被禁用。设置了 detailedText 后，QMessageBox 会把窗口的关闭按钮设为不可用，强制用户通过对话框中的按钮做出选择。这是 Qt 的有意设计，但在某些场景下会困扰用户——比如详情区域展开后用户想直接关闭窗口发现关不了。解决方案是确保消息框至少有一个 RejectRole 的按钮（Cancel 或 Close），或者通过调整 windowFlags 恢复关闭按钮。
-
-第二个坑是原生对话框行为差异。在 macOS 上，QMessageBox 默认使用系统的原生对话框（NSAlert）。原生对话框对自定义按钮、复选框和详情文本的支持有限或者根本不支持。如果你的代码依赖了这些自定义功能，在 macOS 上可能不会按预期工作。解决方案是设置 `msg->setAttribute(Qt::WA_DontShowOnScreen)` 或者用 `msg->setOption(QMessageBox::DontUseNativeDialog)` 来强制使用 Qt 自己的对话框实现。注意 DontUseNativeDialog 是 QMessageBox::Option 枚举值，不是 QWidget 的属性。
-
-第三个坑是 clickedButton() 在静态函数返回 StandardButton 后的混淆。静态函数（如 QMessageBox::question）返回的是 QMessageBox::StandardButton 枚举值，而手动构造的 QMessageBox 用 clickedButton() 返回的是 QAbstractButton 指针。如果你混用这两种模式——比如用静态函数的返回值和 clickedButton() 的返回值比较——编译能过但逻辑是错的，因为枚举值和指针永远不相等。解决方案是严格区分两种使用模式，不要混用。
-
-第四个坑是 setCheckBox 的 QCheckBox 生命周期。setCheckBox 不会接管 QCheckBox 的所有权。如果你在一个临时作用域中创建了 QCheckBox 并传给 setCheckBox，当作用域结束后 QCheckBox 被 delete 了，QMessageBox 中就出现了一个空白的复选框区域甚至崩溃。解决方案是创建 QCheckBox 时指定 QMessageBox 作为 parent，或者确保 QCheckBox 的生命周期覆盖整个 QMessageBox 的显示期间。
-
-## 5. 练习项目
-
-练习项目：可配置的错误报告对话框。我们要做一个模拟错误报告系统的项目，把本篇的四个知识点全部串起来。
-
-我们要实现的功能是：主窗口有一个按钮"模拟操作"，点击后随机触发三种错误（网络超时、文件读取失败、权限不足）之一。错误弹框使用手动构造的 QMessageBox：主文本说明错误类型，informativeText 给出简要建议，detailedText 显示模拟的错误堆栈信息（自己编造的字符串即可）。弹框包含三个自定义按钮："重试"（AcceptRole）、"跳过"（ActionRole）、"中止"（RejectRole）。底部有一个 QCheckBox"以后自动重试，不再提示"。当用户勾选复选框并点击"重试"后，将偏好保存到 QSettings；下次触发相同错误时先检查 QSettings，如果用户选择了自动重试就跳过弹框直接执行重试逻辑。完成标准是三种错误类型的弹框信息各不相同，三个按钮行为正确，复选框偏好在程序重启后仍然生效，代码结构清晰。
-
-提示几个关键点：用 QSettings 保存偏好时 key 要区分不同的错误类型（比如 "auto_retry_network" 和 "auto_retry_permission"），不要用一个 key 覆盖所有场景；detailedText 可以用换行符 `\n` 格式化多行信息；重试按钮是 AcceptRole 所以会触发 accepted 信号，但你需要用 clickedButton() 来判断具体点的是哪个按钮。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QMessageBox](https://doc.qt.io/qt-6/qmessagebox.html) -- QMessageBox 类参考，ButtonRole 枚举、StandardButton 枚举和 setDetailedText/setCheckBox API
-
-[Qt 文档 · QDialog](https://doc.qt.io/qt-6/qdialog.html) -- QDialog 基类参考，exec/open 和结果处理
-
-[Qt 文档 · QCheckBox](https://doc.qt.io/qt-6/qcheckbox.html) -- QCheckBox 类参考，复选框状态管理
-
-[Qt 文档 · QSettings](https://doc.qt.io/qt-6/qsettings.html) -- QSettings 类参考，持久化用户偏好
-
-[Qt 文档 · QAbstractButton](https://doc.qt.io/qt-6/qabstractbutton.html) -- QAbstractButton 基类参考，clickedButton() 返回类型的基类
+[Qt 文档 · QCheckBox](https://doc.qt.io/qt-6/qcheckbox.html) -- 复选框状态读取，不再提示模式的搭档
 
 ---
 
-到这里 QMessageBox 的自定义能力就拆完了。标准静态函数适合简单场景，手动构造让你获得完全的控制权——setDetailedText 给错误报告提供了展开详情的能力，addButton 自定义按钮让你表达业务特定的选择，setCheckBox 让用户能够"记住选择"避免重复弹框打扰。下一篇我们来看 QInputDialog 的进阶用法——自定义验证器与输入范围控制。
+对话框一家走到第三站，下一站 [3.63 QInputDialog 进阶](./63-qinputdialog-advanced.md)，它的 getText、getInt、getDouble、getItem 一组静态函数与本篇同款路子，范围控制与输入验证在那边等咱们。
+
+想动手的您把示例跑起来（examples/advanced/03-qtwidgets/62-qmessagebox-advanced/，可执行文件 62-qmessagebox-advanced）。点 Information，图标是一枚蓝底白字的 i，setIconPixmap 亲手画的（main_window.cpp 第 76 行），标准图标被它顶掉。点 Warning，按钮区多出一枚 Show Details 按钮，示例没装翻译，按钮文字就是英文原文，展开后详情区定高一百像素，文字可选中复制，Ctrl+A 全选也行。点 Critical，三枚自定义按钮点谁日志记谁（第 147-158 行），咱们再按一次 Esc 试试，Quit Application 会接下这次退出，因为整盒按钮里只有它一枚 RejectRole，判定链挑了它。点 Question，回车与 Esc 都落在 No 上，示例把默认钮设成 No（第 181 行），逃生钮也是判定链挑中的那枚 No，破坏性确认的两道保险它都上齐了。
+
+完成标准照旧。静态函数挑默认按钮挑的是哪个角色，您说得出。自定义按钮下 exec 的返回值为什么不能跟 QDialog::Accepted 比，您讲得明。关闭钮什么时候点不动，链上哪一步拦的，您数得清。setCheckBox 的所有权归谁，您答得上。

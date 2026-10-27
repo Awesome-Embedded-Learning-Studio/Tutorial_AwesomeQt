@@ -20,51 +20,41 @@
 #include <QTreeWidgetItem>
 
 MainWindow::MainWindow(QWidget* parent)
-    : QMainWindow(parent)
-    , m_fileTreeDock(nullptr)
-    , m_propertiesDock(nullptr)
-    , m_outputDock(nullptr)
-    , m_fileTree(nullptr)
-    , m_propertiesTable(nullptr)
-    , m_outputLog(nullptr)
-{
+    : QMainWindow(parent), m_fileTreeDock(nullptr), m_propertiesDock(nullptr),
+      m_outputDock(nullptr), m_fileTree(nullptr), m_propertiesTable(nullptr), m_outputLog(nullptr) {
     setWindowTitle(tr("QDockWidget Layout Persistence Demo"));
     resize(1000, 700);
 
     // 中央控件：简单的占位文本编辑器
     auto* centralEdit = new QTextEdit(this);
-    centralEdit->setPlaceholderText(
-        tr("This is the central editor area.\n"
-           "Drag dock panels around to rearrange the layout.\n"
-           "Close and reopen the app to see layout restoration."));
+    centralEdit->setPlaceholderText(tr("This is the central editor area.\n"
+                                       "Drag dock panels around to rearrange the layout.\n"
+                                       "Close and reopen the app to see layout restoration."));
     setCentralWidget(centralEdit);
 
     setupDockWidgets();
     setupMenus();
 
     // 尝试恢复上次保存的布局，若无保存数据则使用默认排列
-    if (!restoreLayout())
-    {
+    if (!restoreLayout()) {
         resetLayout();
     }
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     // 析构时也保存一次，确保布局始终被持久化
     saveLayout();
 }
 
-void MainWindow::closeEvent(QCloseEvent* event)
-{
+void MainWindow::closeEvent(QCloseEvent* event) {
     saveLayout();
     event->accept();
 }
 
-void MainWindow::setupDockWidgets()
-{
+void MainWindow::setupDockWidgets() {
     // --- 文件树面板 ---
     m_fileTreeDock = new QDockWidget(tr("File Tree"), this);
+    m_fileTreeDock->setObjectName("fileTreeDock"); // saveState 靠 objectName 识别部件
     m_fileTree = new QTreeWidget(m_fileTreeDock);
     m_fileTree->setHeaderLabels({tr("Name"), tr("Size")});
 
@@ -80,6 +70,7 @@ void MainWindow::setupDockWidgets()
 
     // --- 属性表面板 ---
     m_propertiesDock = new QDockWidget(tr("Properties"), this);
+    m_propertiesDock->setObjectName("propertiesDock");
     m_propertiesTable = new QTableWidget(4, 2, m_propertiesDock);
     m_propertiesTable->setHorizontalHeaderLabels({tr("Property"), tr("Value")});
     m_propertiesTable->horizontalHeader()->setStretchLastSection(true);
@@ -87,8 +78,7 @@ void MainWindow::setupDockWidgets()
     // 填充示例属性数据
     QStringList properties = {"Width", "Height", "Background", "Opacity"};
     QStringList values = {"800", "600", "#FFFFFF", "1.0"};
-    for (int i = 0; i < properties.size(); ++i)
-    {
+    for (int i = 0; i < properties.size(); ++i) {
         m_propertiesTable->setItem(i, 0, new QTableWidgetItem(properties[i]));
         m_propertiesTable->setItem(i, 1, new QTableWidgetItem(values[i]));
     }
@@ -96,29 +86,26 @@ void MainWindow::setupDockWidgets()
 
     // --- 输出日志面板 ---
     m_outputDock = new QDockWidget(tr("Output"), this);
+    m_outputDock->setObjectName("outputDock");
     m_outputLog = new QTextEdit(m_outputDock);
     m_outputLog->setReadOnly(true);
-    m_outputLog->setPlainText(
-        tr("Build started...\n"
-           "Compiling main.cpp...\n"
-           "Compiling widget.cpp...\n"
-           "Linking...\n"
-           "Build finished successfully."));
+    m_outputLog->setPlainText(tr("Build started...\n"
+                                 "Compiling main.cpp...\n"
+                                 "Compiling widget.cpp...\n"
+                                 "Linking...\n"
+                                 "Build finished successfully."));
     m_outputDock->setWidget(m_outputLog);
 
     // 允许停靠到任意区域，支持嵌套（tab 化）
-    for (auto* dock : {m_fileTreeDock, m_propertiesDock, m_outputDock})
-    {
+    for (auto* dock : {m_fileTreeDock, m_propertiesDock, m_outputDock}) {
         dock->setAllowedAreas(Qt::AllDockWidgetAreas);
-        dock->setFeatures(QDockWidget::DockWidgetMovable
-                          | QDockWidget::DockWidgetFloatable
-                          | QDockWidget::DockWidgetClosable);
+        dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable |
+                          QDockWidget::DockWidgetClosable);
         addDockWidget(Qt::LeftDockWidgetArea, dock);
     }
 }
 
-void MainWindow::setupMenus()
-{
+void MainWindow::setupMenus() {
     auto* viewMenu = menuBar()->addMenu(tr("&View"));
 
     // 切换各面板可见性的动作
@@ -132,8 +119,7 @@ void MainWindow::setupMenus()
     connect(resetAction, &QAction::triggered, this, &MainWindow::resetLayout);
 }
 
-void MainWindow::saveLayout()
-{
+void MainWindow::saveLayout() {
     // @note 组织名和应用名用于构建 QSettings 的存储路径，
     //       不同平台会自动选择合适的后端（注册表/INI/defaults）。
     QSettings settings("AwesomeQt", "DockWidgetDemo");
@@ -141,18 +127,15 @@ void MainWindow::saveLayout()
     // saveGeometry 保存窗口位置和大小
     settings.setValue("geometry", saveGeometry());
 
-    // saveState 保存所有 QDockWidget 的停靠位置、大小、可见性和 tab 顺序
-    // @note 该方法只保存 QMainWindow 直接管理的 dock 和 toolbar，
-    //       不包括手动管理的浮动窗口。
+    // saveState 保存所有 QDockWidget 的停靠位置、大小、可见性和 tab 顺序，
+    // 浮动的停靠部件也在管辖内；窗口自身几何走上面的 saveGeometry。
     settings.setValue("windowState", saveState());
 }
 
-bool MainWindow::restoreLayout()
-{
+bool MainWindow::restoreLayout() {
     QSettings settings("AwesomeQt", "DockWidgetDemo");
 
-    if (!settings.contains("geometry"))
-    {
+    if (!settings.contains("windowState")) {
         return false;
     }
 
@@ -167,8 +150,7 @@ bool MainWindow::restoreLayout()
     return true;
 }
 
-void MainWindow::resetLayout()
-{
+void MainWindow::resetLayout() {
     // 先把所有面板设为可见，否则无法调整位置
     m_fileTreeDock->show();
     m_propertiesDock->show();

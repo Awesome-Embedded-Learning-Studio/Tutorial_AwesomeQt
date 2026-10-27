@@ -1,226 +1,161 @@
 ---
 title: "3.61 QDialogButtonBox 进阶"
-description: "入门篇我们学会了 QDialogButtonBox 的基本创建和标准按钮组合。进阶篇我们要深入 QDialogButtonBox 的按钮角色系统——StandardButton 的布局方向跨平台差异、自定义按钮的 ButtonRole 分配、按钮 enabled 状态的动态验证驱动，以及 clicked 信号配合 buttonRole 的分角色处理模式。"
+description: "进阶篇接住 60 篇交棒看按钮盒本体：标准按钮的角色映射定在 QPlatformDialogHelper::buttonRole（qplatformdialoghelper.cpp 第 946-987 行），Retry 与 Ignore 都算确认类落 AcceptRole，Abort 算拒绝类，Discard 独占 DestructiveRole，排列顺序由样式提示 SH_DialogButtonLayout 选平台队列（qdialogbuttonbox.cpp 第 141 行），Win 与 Kde 两副队列（qplatformdialoghelper.cpp 第 50-70 行），Mac 缺模态角色时切 modeless 排法（qdialogbuttonbox.cpp 第 195-218 行），点击时 clicked 打头，便利信号按角色补发 accepted 与 rejected，YesRole 也补 accepted（第 872-903 行），Action、Apply、Reset、Destructive 四类只有 clicked，removeButton 只摘不删（第 716-720 行），clear 才整排删（第 644-658 行），藏起来的按钮角色记在 hiddenButtons（第 914-945 行），显示时第一只 AcceptRole 按钮自动设为默认（第 998-1044 行），centerButtons 默认 false（第 118 行），示例在 examples/advanced/03-qtwidgets/61-qdialogbuttonbox-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.61——QDialogButtonBox 进阶
 
-## 1. 前言 / 为什么按钮顺序总是在不同平台上打架
+60 篇收尾时留了一句话，按钮盒不会替咱们接线，本篇就顺着这句话把 QDialogButtonBox 本体读完。咱们关心三件事，一排按钮的左右顺序谁说了算，点下去的信号从哪发出来，默认按钮怎么悄悄上位。笔者的读法照旧，把 Qt 6.9.1 的 QDialogButtonBox 源码，也就是 qdialogbuttonbox.cpp，共 1077 行，从头读到尾，再摸到 QtGui 一侧的角色映射表。
 
-入门篇我们把 QDialogButtonBox 的基本用法过了一遍——用 StandardButton 标志组合创建标准按钮、连接 accepted/rejected 信号、把按钮盒放进对话框。说实话，如果你只写 Linux 上的 Qt 应用，入门篇的内容可能就够用了。但一旦你的应用需要跨平台——特别是跑到 macOS 或者 KDE/GNOME 环境下——你就会发现一个让强迫症抓狂的问题：同样的代码，Ok 和 Cancel 按钮的左右顺序居然不一样。在 Windows 上 Ok 在左边 Cancel 在右边，到了 macOS 上 Ok 跑到了右边 Cancel 跑到了左边。这不是 bug，这是各平台的人机交互规范不同，而 QDialogButtonBox 会根据当前平台自动调整按钮顺序。
+引用文件咱们交代清楚。主战场是 qdialogbuttonbox.cpp 与 qdialogbuttonbox.h（src/widgets/widgets），私有结构下探到 qdialogbuttonbox_p.h。标准按钮到角色的映射表不在本文件里，它住在 QtGui 一侧的 QPlatformDialogHelper 源码里，文件名 qplatformdialoghelper.cpp。配套示例是一只设置对话框，Ok 与 Cancel 两只标准按钮加 Help 与 Apply 两只自定义按钮，完整玩法放结语。
 
-但问题不只于此。当你在标准按钮之外加了自定义按钮——比如一个"重置"按钮、一个"帮助"按钮——这些按钮应该排在哪里？它们的点击行为该怎么处理？Apply 按钮不会自动触发 accept 也不触发 reject，你的代码怎么知道用户点了 Apply？这些问题都需要你理解 QDialogButtonBox 的 ButtonRole 机制才能正确处理。
+## 角色表是按钮盒的户口，标准按钮只是快捷方式
 
-这一篇我们要做的事情是：搞清楚 StandardButton 组合和布局方向的关系，学会自定义按钮和 ButtonRole 的配合，掌握按钮 enabled 状态的动态验证驱动，最后把 clicked 信号的分角色处理模式吃透。
+咱们从户口数起。ButtonRole 在 qdialogbuttonbox.h 第 27-41 行，一共十个值。第 28 行有条注释，要求它与 QMessageBox 的同名枚举，以及 QPlatformDialogHelper 的同名枚举，保持同步。每个角色点击后拿到什么信号，咱们整理成表，判定出处是点击分发函数的 switch，qdialogbuttonbox.cpp 第 888-901 行。
 
-## 2. 环境说明
+| 角色 | 点击后的便利信号 | 语义 |
+|------|------|------|
+| InvalidRole（-1） | 无 | 查不到角色时的返回值 |
+| AcceptRole | accepted | 确认并收下结果 |
+| RejectRole | rejected | 拒绝并放弃结果 |
+| DestructiveRole | 无，只有 clicked | 破坏性操作，如放弃更改 |
+| ActionRole | 无，只有 clicked | 不改变对话框状态的业务动作 |
+| HelpRole | helpRequested | 请求帮助 |
+| YesRole | accepted | 肯定回答 |
+| NoRole | rejected | 否定回答 |
+| ResetRole | 无，只有 clicked | 重置表单到初始值 |
+| ApplyRole | 无，只有 clicked | 应用当前设置但不关窗 |
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。所有内容依赖 QtWidgets 模块。按钮布局方向的行为在不同平台（Windows/macOS/KDE/GNOME）上有差异，示例代码在所有平台上均可编译运行，但按钮的实际排列顺序取决于运行时平台。
+标准按钮是角色表的快捷方式。十八个值定义在 qdialogbuttonbox.h 第 43-69 行，每个值落到哪个角色，由 QtGui 一侧的 switch 决定，函数名 QPlatformDialogHelper::buttonRole，出处 qplatformdialoghelper.cpp 第 946-987 行。咱们逐行核对后按角色归堆列出。
 
-## 3. 核心概念讲解
+| 标准按钮 | 值 | 所属角色 |
+|------|------|------|
+| Ok | 0x00000400 | AcceptRole |
+| Save | 0x00000800 | AcceptRole |
+| SaveAll | 0x00001000 | AcceptRole |
+| Open | 0x00002000 | AcceptRole |
+| Retry | 0x00080000 | AcceptRole |
+| Ignore | 0x00100000 | AcceptRole |
+| Yes | 0x00004000 | YesRole |
+| YesToAll | 0x00008000 | YesRole |
+| No | 0x00010000 | NoRole |
+| NoToAll | 0x00020000 | NoRole |
+| Cancel | 0x00400000 | RejectRole |
+| Close | 0x00200000 | RejectRole |
+| Abort | 0x00040000 | RejectRole |
+| Discard | 0x00800000 | DestructiveRole |
+| Help | 0x01000000 | HelpRole |
+| Apply | 0x02000000 | ApplyRole |
+| Reset | 0x04000000 | ResetRole |
+| RestoreDefaults | 0x08000000 | ResetRole |
 
-### 3.1 StandardButton 组合与布局方向
+表里有两处反直觉，咱们停下多看一眼。Retry 与 Ignore 是确认类，和 Ok 同住 AcceptRole，出处 qplatformdialoghelper.cpp 第 949-955 行。Abort 是拒绝类，和 Cancel 同住 RejectRole，出处第 957-960 行。您给错误处理对话框配一只 Retry，用户点下去拿到的是 accepted，不存在专用的重试信号，别在信号列表里找。
 
-QDialogButtonBox 的 StandardButton 枚举定义了一组预制的标准按钮，每个标准按钮都自带一个预设的 ButtonRole——比如 Ok 的 role 是 AcceptRole，Cancel 的 role 是 RejectRole，Help 的 role 是 HelpRole，Reset 的 role 是 ResetRole。当你用 `QDialogButtonBox(StandardButtons buttons, Qt::Orientation orientation, QWidget* parent)` 构造时，QDialogButtonBox 会根据每个标准按钮的预设 role 对它们进行分组排列。
+标准按钮的文案也不是写死的字符串。createButton 造按钮时，qdialogbuttonbox.cpp 第 306-389 行，文字取自平台主题的 standardButtonText，第 371 行，图标看样式开关 SH_DialogButtonBox_ButtonsHaveIcons，第 373-374 行。连快捷键，都向平台主题要一份 standardButtonShortcut，出处第 384-386 行。所以同一只 Ok 在中文环境跑出来就是中文文案，语言切换事件到来时 retranslateStrings 挨个重取，出处第 427-434 行，触发点在 event 的 LanguageChange 分支，第 1065-1067 行。构造函数有四个，咱们数过，qdialogbuttonbox.h 第 83-87 行，带 StandardButtons 的重载最终都汇到 createStandardButtons，按位从 FirstButton 扫到 LastButton 逐个造，出处 qdialogbuttonbox.cpp 第 417-425 行。
 
-排列的核心逻辑是按 role 分成几个区域。从左到右（水平布局时）或者从上到下（垂直布局时），大致的排列顺序是：HelpRole 和 ResetRole 在一侧，AcceptRole、RejectRole、DestructiveRole 在另一侧。哪一侧是哪一侧取决于当前平台的对话框按钮布局规范。Qt 通过 QStyle::SH_DialogButtonLayout 这个 style hint 来决定采用哪种布局——WinLayout、MacLayout、KdeLayout 还是 GnomeLayout。
+## 顺序是平台说了算，角色只管排队
 
-```cpp
-// 构造时指定按钮组合和方向
-auto* buttons = new QDialogButtonBox(
-    QDialogButtonBox::Ok
-    | QDialogButtonBox::Cancel
-    | QDialogButtonBox::Help
-    | QDialogButtonBox::Reset,
-    Qt::Horizontal,  // 水平排列
-    this
-);
-
-// Help 和 Reset 在左侧（Windows 布局）或右侧（macOS 布局）
-// Ok 和 Cancel 在右侧（Windows 布局）或左侧（macOS 布局）
-// 具体排列由 QStyle::SH_DialogButtonLayout 决定
-```
-
-这里有一个非常实用的知识点：你可以通过 setCenterButtons(bool) 来控制 AcceptRole 和 RejectRole 的按钮是否居中显示。这个设置在某些平台上是默认行为（比如 macOS），在其他平台上不是。如果你的设计师对按钮位置有严格要求，你可以手动控制。
-
-另外一个容易忽略的点是 Qt::Vertical 方向。大多数对话框用水平按钮盒，但如果你用 QVBoxLayout 做对话框主体布局，按钮盒在底部，用垂直方向也是可以的。垂直排列时按钮从上到下排列，role 的分组逻辑和水平一样，只是方向旋转了 90 度。这在某些特殊对话框（比如向导对话框的侧边按钮）中会用得到。
-
-### 3.2 addButton 自定义按钮与 buttonRole
-
-标准按钮覆盖了大部分常见场景，但总有一些时候你需要自定义按钮文本——比如"保存并继续"、"放弃更改"、"导出为 PDF"这种业务相关的按钮。这时候就用 addButton() 的自定义版本。
-
-addButton 有几个重载，最灵活的是 `addButton(const QString& text, ButtonRole role)`。这个版本会创建一个新的 QPushButton，设置指定的文本和角色，然后添加到按钮盒中。返回值是这个新创建的 QPushButton 指针，你可以对它做进一步设置——比如设图标、设 tooltip、连信号等。
-
-```cpp
-auto* box = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-// 添加自定义按钮，指定角色
-auto* exportBtn = box->addButton("导出为 PDF", QDialogButtonBox::ActionRole);
-exportBtn->setIcon(QIcon::fromTheme("document-export"));
-
-auto* resetBtn = box->addButton("重置", QDialogButtonBox::ResetRole);
-
-auto* helpBtn = box->addButton("帮助", QDialogButtonBox::HelpRole);
-
-// DestructiveRole 用于危险操作，某些平台会特殊绘制（比如红色文字）
-auto* discardBtn = box->addButton("放弃更改", QDialogButtonBox::DestructiveRole);
-```
-
-ButtonRole 的选择非常重要，它直接影响按钮的排列位置和信号行为。我们来梳理一下所有 role 的语义：
-
-AcceptRole 的按钮点击时会自动触发 QDialogButtonBox 的 accepted() 信号，进而触发 QDialog 的 accept()。Ok、Save、Open 等标准按钮都是这个 role。RejectRole 的按钮点击时触发 rejected() 信号和 QDialog 的 reject()。Cancel、Close 就是这个 role。DestructiveRole 也会触发 rejected() 信号——这很合理，因为"放弃更改"本质上也是一种拒绝操作。但它在视觉上可能会被平台样式区别对待，比如 macOS 上的 Discard 按钮可能会用红色文字。
-
-ActionRole 和 ResetRole 比较特殊——它们既不触发 accepted() 也不触发 rejected()。点击这些按钮不会自动关闭对话框。ActionRole 适合放"应用"、"导出"这种不需要关闭对话框的操作；ResetRole 适合放"恢复默认"、"重置表单"这种恢复性操作。HelpRole 同样不会触发 accept/reject，它用于"帮助"按钮。
-
-还有一个 ApplyRole，它和 ActionRole 很像但语义上更侧重"应用当前设置"。在标准按钮中 Apply 就是 ApplyRole。某些平台样式可能会对 ApplyRole 的按钮做特殊处理（比如在 Ok 按钮旁边显示）。ApplyRole 的按钮点击时会触发 QDialogButtonBox 的 accepted() 信号——等等，这不对。实际上 ApplyRole 不触发 accepted 也不触发 rejected。你需要通过 clicked 信号来处理它。
-
-### 3.3 按钮的 enabled/disabled 动态控制
-
-在实际项目中，对话框的按钮往往不是一开始就全部可用的。最典型的场景是：Ok 按钮在用户填写了所有必填字段之前应该是 disabled 状态。这就需要根据表单的验证状态来动态控制按钮的 enabled 属性。
+同一份代码，Ok 在 Windows 上站在 Cancel 左边，到 macOS 上就站到右边，这不是谁的失误。按钮盒初始化布局时，向样式要一个 SH_DialogButtonLayout，initLayout 里，qdialogbuttonbox.cpp 第 141 行。拿到的是五选一，WinLayout、MacLayout、KdeLayout、GnomeLayout、AndroidLayout，枚举在 qdialogbuttonbox.h 第 74-81 行。真正用来排队的角色顺序数组住在 QtGui 一侧，qplatformdialoghelper.cpp 第 50-85 行的 buttonRoleLayouts。咱们把水平方向的两副队列原文摆出来对比。
 
 ```cpp
-// 验证驱动的按钮状态控制
-class FormDialog : public QDialog {
-public:
-    FormDialog(QWidget* parent = nullptr) : QDialog(parent) {
-        // ... 构建 UI ...
-        m_nameEdit = new QLineEdit;
-        m_emailEdit = new QLineEdit;
+// WinLayout（qplatformdialoghelper.cpp 第 55-58 行，摘录）
+{ QPlatformDialogHelper::ResetRole, QPlatformDialogHelper::Stretch, QPlatformDialogHelper::YesRole, QPlatformDialogHelper::AcceptRole,
+  QPlatformDialogHelper::AlternateRole, QPlatformDialogHelper::DestructiveRole, QPlatformDialogHelper::NoRole,
+  QPlatformDialogHelper::ActionRole, QPlatformDialogHelper::RejectRole, QPlatformDialogHelper::ApplyRole,
+  QPlatformDialogHelper::HelpRole, QPlatformDialogHelper::EOL, QPlatformDialogHelper::EOL, QPlatformDialogHelper::EOL },
 
-        m_buttonBox = new QDialogButtonBox(
-            QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-
-        // 获取 Ok 按钮，初始设为 disabled
-        m_okBtn = m_buttonBox->button(QDialogButtonBox::Ok);
-        m_okBtn->setEnabled(false);
-
-        // 连接输入变化信号到验证函数
-        connect(m_nameEdit, &QLineEdit::textChanged,
-                this, &FormDialog::validateForm);
-        connect(m_emailEdit, &QLineEdit::textChanged,
-                this, &FormDialog::validateForm);
-    }
-
-private:
-    void validateForm() {
-        bool valid = !m_nameEdit->text().trimmed().isEmpty()
-                  && m_emailEdit->text().contains('@');
-        m_okBtn->setEnabled(valid);
-    }
-
-    QLineEdit* m_nameEdit;
-    QLineEdit* m_emailEdit;
-    QDialogButtonBox* m_buttonBox;
-    QPushButton* m_okBtn;
-};
+// KdeLayout（qplatformdialoghelper.cpp 第 68-70 行，摘录）
+{ QPlatformDialogHelper::HelpRole, QPlatformDialogHelper::ResetRole, QPlatformDialogHelper::Stretch, QPlatformDialogHelper::YesRole,
+  QPlatformDialogHelper::NoRole, QPlatformDialogHelper::ActionRole, QPlatformDialogHelper::AcceptRole, QPlatformDialogHelper::AlternateRole,
+  QPlatformDialogHelper::ApplyRole, QPlatformDialogHelper::DestructiveRole, QPlatformDialogHelper::RejectRole, QPlatformDialogHelper::EOL },
 ```
 
-这里有一个要注意的地方：`button(QDialogButtonBox::Ok)` 返回的是标准按钮的指针。这个函数只能用于 StandardButton 枚举中定义的按钮——如果你用 addButton 添加了自定义按钮，需要自己保存返回的指针。对于自定义按钮的 enabled 控制，道理是一样的：在验证函数中检查条件，然后setEnabled。
+Win 队列把 Reset 打头，Accept 后面紧跟着 Alternate，Help 压尾。Kde 队列正相反，Help 与 Reset 站最左，中间一道 Stretch 弹簧，后面的角色从 Yes 到 Reject 依次向右排开，完整名单在上面的代码块里。样式提示返回 UnknownLayout 时，兜底逻辑按编译目标选队列，Unix 落 KdeLayout，出处 qplatformdialoghelper.cpp 第 991-1000 行，咱们在 Linux 桌面看到的按钮位置走的就是它。您若拿着 Windows 风格的设计稿验收 Linux 成品，Help 的位置就对不上，代码没写错，队列本来就有两副。
 
-还有一种更优雅的做法：把验证逻辑抽成一个单独的方法，每当任何可能影响验证结果的变化发生时都调一次这个方法。这样可以避免在多个 connect 中重复验证逻辑。
+layoutButtons 负责照队列逐格摆按钮，出处 qdialogbuttonbox.cpp 第 187-304 行。咱们摆的过程中有三处细节值得停一下。
+
+AcceptRole 格位只摆头一只，第二只起进 AlternateRole 格，出处第 234-245 行。您把 Ok 与 Save 放进同一个按钮盒，两只都是 AcceptRole，排队时 Ok 进正槽，Save 落在 Alternate 的位置。Win 队列里 Accept 与 Alternate 两格相邻，正是为 Ok 加 Save 的搭配准备的。
+
+AcceptRole 一只都没有时，格位空着直接跳过，出处第 234-236 行的 isEmpty 检查。咱们只配 Help 与 Cancel 时，版面不会留出空位。
+
+MacLayout 还有个变档，咱们接着看。layoutButtons 开头检查 Accept、Reject、Destructive、Yes、No 五类模态角色是否全部缺席，全不在场时队列临时换成第 4 号，也就是 Mac 的 modeless 排法，出处第 195-218 行，tmpPolicy 赋值 4。同一副 Mac 队列还自带间距常量，36 减 8，防止 Discard 这类破坏性按钮贴上邻居，出处第 190、246-271 行。
+
+设计上咱们把角色给对就行，顺序交给平台。真要全平台统一顺序，SH_DialogButtonLayout 是从 style() 取的样式提示，第 141 行，自定义样式重写它就能换队列。笔者没在生产环境验证过，只告诉您机制存在，不敢替您下断言。
+
+## 点击分发：clicked 打头，便利信号按角色补发
+
+点击分发的源码，咱们直接摆出来。函数名 handleButtonClicked，出处 qdialogbuttonbox.cpp 第 872-903 行。
 
 ```cpp
-// 统一验证入口
-void FormDialog::onFormChanged() {
-    bool canApply = !m_nameEdit->text().trimmed().isEmpty();
-    bool canOk = canApply && m_emailEdit->text().contains('@');
+// 点击分发（qdialogbuttonbox.cpp 第 880-891 行，摘录）
+const QDialogButtonBox::ButtonRole buttonRole = q->buttonRole(button);
+QPointer<QDialogButtonBox> guard(q);
 
-    m_applyBtn->setEnabled(canApply);
-    m_okBtn->setEnabled(canOk);
-}
+emit q->clicked(button);
+
+if (!guard)
+    return;
+
+switch (QPlatformDialogHelper::ButtonRole(buttonRole)) {
+case QPlatformDialogHelper::AcceptRole:
+case QPlatformDialogHelper::YesRole:
+    emit q->accepted();
+    break;
 ```
 
-这种方式的好处是集中管理所有按钮的状态——当你有多个按钮各自有不同的验证条件时，一个统一的验证入口比散落各处的 setEnabled 调用要好维护得多。
+clicked 打头发出，便利信号随后按角色补发。YesRole 与 AcceptRole 一起走 accepted，出处第 888-892 行，NoRole 与 RejectRole 一起走 rejected，第 893-896 行，HelpRole 走 helpRequested，第 897-898 行。switch 的 default 分支什么都不补，出处第 900-901 行。所以 DestructiveRole、ActionRole、ApplyRole、ResetRole 四类按钮点下去只有 clicked 一个信号，您想接住 Apply 就必须连 clicked，再拿 buttonRole 或 standardButton 分辨，看被点的到底是哪一只。
 
-### 3.4 clicked(QAbstractButton*) 信号与 buttonRole 判断
+有一段注释咱们别滑过去，第 876-879 行。角色必须在发 clicked 前取好，因为 clicked 的槽里可能把按钮删掉或者挪走角色，等补发便利信号时就查不着了。中间的 QPointer 守卫同理，第 881-885 行，槽里若把按钮盒整个销毁，后面的补发直接取消。
 
-前面说了 ActionRole、ResetRole、HelpRole 的按钮不触发 accepted/rejected 信号。那我们怎么处理这些按钮的点击事件呢？答案是用 clicked(QAbstractButton*) 信号。
+60 篇留下一句判断，说按钮盒不替任何人接线，咱们在这里把证据补齐。按钮盒不会调用 QDialog 的 accept 或 reject，它只发自己的三个便利信号，对话框那头的接线要您自己连。配套示例里点 Ok 能关窗，走的是示例在 clicked 槽的 AcceptRole 分支里自己调用的 accept()，没有按钮盒代劳。想少写代码，您拿 connect 把 accepted 接到 QDialog::accept，两行完事，但接线这步仍归您写。
 
-clicked 信号会在按钮盒中的任何按钮被点击时触发，参数是被点击的 QAbstractButton 指针。你可以用 buttonRole() 方法查询这个按钮的 role，然后根据 role 做不同的处理。
+buttonRole 的实现朴素，第 698-709 行，挨个角色队列扫过去，扫到就返回，藏起来的按钮去 hiddenButtons 备份表里查。咱们接着就讲藏起来是怎么回事。
+
+## addButton 与 removeButton：接手、换队、只摘不删
+
+addButton 有三个重载，各管一摊，出处 qdialogbuttonbox.h 第 93-95 行。文字版 addButton(text, role) 造一只新 QPushButton 归按钮盒所有，指针还给您，图标与提示随您设置，出处 qdialogbuttonbox.cpp 第 790-802 行。指针版 addButton(button, role) 接手现成按钮，进门做一次 removeButton 再重新入队，同一只按钮想换角色不必拆盒重装，出处第 771-781 行。角色值越界时，文字版与指针版都会 qWarning 然后拒收，出处第 774-777、793-796 行。
+
+标准按钮版 addButton(StandardButton) 直通 createButton，出处第 808-813 行，这里没有查重。构造时已带 Ok，再调一次 addButton(Ok)，盒里就有两只文案相同的按钮，都进 AcceptRole 队列，点哪只都发 accepted。您想改 Ok 的文案，正确姿势是拿 button(Ok) 取出现成按钮，再 setText，出处第 849-858 行。button() 取不到时返回 `nullptr`，对没造过的按钮直接 setEnabled 就是空指针崩溃，您判空的一步省不得。传 NoButton 也走 `nullptr` 返回，出处 createButton 第 367-369 行。
+
+removeButton 与 clear 一个只摘不删，一个整排删。removeButton 手动移除，按钮不删，setParent(nullptr) 加断开信号，按钮交还给您自己管，出处第 712、733-750 行。clear 才整排 delete，出处第 644-658 行。还有第三种退出方式是隐藏，构造函数装了一只事件过滤器，第 119-135 行，按钮收到 HideToParent 时退出角色队列，角色记进 hiddenButtons，ShowToParent 时按记录回队，出处第 923-938 行。所以 setVisible(false) 只让按钮离队待命，buttonRole 照样答得出它的角色，出处第 708 行。
+
+## 默认按钮：头一只 AcceptRole 自动上位
+
+类文档写明了规则，qdialogbuttonbox.cpp 第 108-113 行。您没设默认按钮时，按钮盒显示时会把头一只 AcceptRole 按钮设为默认，这么做是为了跨平台保住同一个默认身份。实现在 ensureFirstAcceptIsDefault，出处第 998-1044 行。咱们找到两个触发点，一个是按钮盒自己的 Show 事件，第 1061-1063 行，另一个是藏起来的 AcceptRole 按钮重新显示，出处第 936-938 行。
+
+它动手前还查一遍在场名单。从按钮盒向上找到最近的 QDialog，出处第 1011-1016 行，再遍历整个对话框的 QPushButton，发现已有别的按钮被设了 default，就让位不抢，出处第 1021-1027 行。您想让 Cancel 当默认，您自己动手调它的 setDefault(true)，上位逻辑会让路。设置只有一行。
 
 ```cpp
-auto* box = new QDialogButtonBox(
-    QDialogButtonBox::Ok
-    | QDialogButtonBox::Cancel
-    | QDialogButtonBox::Apply
-    | QDialogButtonBox::Reset
-    | QDialogButtonBox::Help);
-
-auto* customExportBtn = box->addButton("导出", QDialogButtonBox::ActionRole);
-
-connect(box, &QDialogButtonBox::clicked, this,
-    [this, box](QAbstractButton* btn) {
-        switch (box->buttonRole(btn)) {
-        case QDialogButtonBox::AcceptRole:
-            // Ok 按钮点击，但 accept 已经被自动触发了
-            // 这里不需要处理，除非你想在 accept 前做额外操作
-            break;
-        case QDialogButtonBox::RejectRole:
-            // Cancel 按钮点击，reject 已自动触发
-            break;
-        case QDialogButtonBox::ApplyRole:
-            applySettings();  // 应用但不关闭
-            break;
-        case QDialogButtonBox::ResetRole:
-            resetToDefaults();  // 重置表单
-            break;
-        case QDialogButtonBox::HelpRole:
-            showHelp();  // 显示帮助
-            break;
-        case QDialogButtonBox::ActionRole:
-            if (btn == customExportBtn) {
-                exportData();  // 自定义操作
-            }
-            break;
-        default:
-            break;
-        }
-    });
+// 头一只 AcceptRole 按钮设为默认（qdialogbuttonbox.cpp 第 1029 行，摘录）
+firstAcceptButton->setDefault(true);
 ```
 
-这里有一个时序问题需要注意：clicked 信号的触发顺序和 accepted/rejected 信号是交织的。具体来说，当用户点击 Ok 按钮时，执行顺序是：QPushButton 的 clicked 信号触发 -> QDialogButtonBox 的 clicked 信号触发 -> QDialogButtonBox 的 accepted() 信号触发 -> QDialog 的 accept() 被调用。这意味着在 clicked 的槽函数中，对话框还没关闭，你可以安全地访问对话框的所有控件。但如果你在 clicked 槽中调了 accept() 或 reject()，由于 Qt 的信号槽实现，这不会导致无限递归——因为 QDialog::accept() 内部会标记对话框为关闭状态，后续的事件处理会跳过已经关闭的对话框。
+后面第 1031-1043 行的注释解释了一段焦点公案。对话框里的 QPushButton 默认 autoDefault 为真，焦点一进按钮盒就会被头一只按钮抢走默认身份，源码的对策是连 setFocus 一起安排。咱们读这段注释能带走的是，autoDefault 抢焦点是真的，遇到焦点莫名跳到按钮上的现象，到这里找答案。排版收尾还有一条链子，layoutButtons 按版面顺序挨个 setTabOrder，并把默认按钮设为按钮盒的焦点代理，出处第 285-299 行。
 
-另外一个实战技巧：如果你有多个自定义 ActionRole 按钮，用 buttonRole 只能区分到 role 级别，不能区分具体是哪个按钮。这时候你需要在 clicked 槽中比较按钮指针——要么用 addButton 返回的指针做 `==` 比较，要么用 qobject_cast 到 QPushButton 后比较 text()。比较指针是最可靠的方式。
+## 方向、居中与换装
 
-现在有一道调试题给大家。下面这段代码中，点击 Apply 按钮后对话框意外关闭了，为什么？
+setOrientation 传同方向直接返回，换方向才 resetLayout 重建布局对象，QHBoxLayout 与 QVBoxLayout 就地互换，出处第 629-637 行，initLayout 第 142-150 行。垂直按钮盒咱们平时少用，向导侧栏这类场景才出场，排队逻辑不变，数组换垂直那副，qplatformdialoghelper.cpp 第 88 行起。
 
-```cpp
-auto* box = new QDialogButtonBox(QDialogButtonBox::Apply | QDialogButtonBox::Cancel);
-connect(box, &QDialogButtonBox::accepted, dialog, &QDialog::accept);
-connect(box, &QDialogButtonBox::rejected, dialog, &QDialog::reject);
-dialog->exec();
-```
+居中开关咱们翻过来看。centerButtons 默认 false，构造函数里 center(false)，第 118 行，文档第 949-952 行说消息框才常居中。开了之后版面首尾各加一道 stretch，出处第 220-221、302-303 行，setCenterButtons 值没变不动作，变了就重排，出处第 957-964 行。
 
-问题出在 ApplyRole 的按钮点击时也会触发 accepted 信号吗？不，ApplyRole 不触发 accepted。那为什么对话框关闭了？答案是：这段代码实际上是没问题的——Apply 按钮不会关闭对话框。如果你遇到了 Apply 按钮导致关闭的情况，检查一下是不是把 ApplyRole 错写成了 AcceptRole，或者对话框的 reject 槽被其他信号触发了。
+setStandardButtons 是推倒重来，旧的整排销毁，新的从头造，出处第 823-832 行。运行时换按钮组前，您手里存的旧 button(Ok) 指针全部作废，要重新取。样式变化走 changeEvent 的 StyleChange 分支，新样式传播给每只标准按钮并重排，出处第 973-991 行。
 
-## 4. 踩坑预防
+## 官方文档参考
 
-第一个坑是混淆了 ApplyRole 和 ActionRole 的信号行为。这两个 role 在视觉上很相似（都是不关闭对话框的操作按钮），但在 Qt 的实现中它们的行为完全一样——都不触发 accepted 也不触发 rejected。有些开发者以为 ActionRole 会触发某个专门的信号，但实际上它只触发 clicked(QAbstractButton*)。解决方案是：对于所有非 Accept/Reject/Destructive role 的按钮，统一用 clicked 信号 + buttonRole 判断来处理。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 6.9.1 源码核对过。
 
-第二个坑是 button() 返回 nullptr。当你用 `box->button(QDialogButtonBox::Ok)` 查找一个标准按钮时，如果这个按钮没有被添加到按钮盒中（比如你构造时没包含 Ok），函数返回 nullptr。如果你没有做 nullptr 检查就直接调用 setEnabled 之类的方法，你会收获一个崩溃。解决方案是在构造按钮盒时就确定你需要哪些按钮，或者每次调用 button() 后都检查返回值。
+[Qt 文档 · QDialogButtonBox](https://doc.qt.io/qt-6/qdialogbuttonbox.html) -- 按钮盒类，StandardButton 与 ButtonRole 的定义处
 
-第三个坑是 addButton 创建了重复的标准按钮。比如你构造按钮盒时已经包含了 QDialogButtonBox::Ok，然后又调了 `addButton("确定", QDialogButtonBox::AcceptRole)`。这会导致按钮盒中出现两个 AcceptRole 的按钮。视觉上很奇怪，行为上更混乱——两个按钮都会触发 accepted 信号。解决方案是：如果你需要自定义按钮文本，不要用 addButton，而是用 button(QDialogButtonBox::Ok) 获取已有的按钮然后 setText 修改文本。
+[Qt 文档 · QDialog](https://doc.qt.io/qt-6/qdialog.html) -- accept 与 reject，60 篇的主战场
 
-第四个坑是跨平台按钮顺序不符合设计稿。设计师给你的设计稿是 Windows 风格的（Ok 在左 Cancel 在右），但你的应用在 macOS 上运行时按钮顺序反了。解决方案是不要硬编码按钮顺序的假设，让 QDialogButtonBox 的自动布局处理这件事。如果设计师坚持所有平台都一样，你可以通过 QStyle hints 或自定义 style 来强制一种布局，但这是一条不太推荐的路。
+[Qt 文档 · QStyle](https://doc.qt.io/qt-6/qstyle.html) -- SH_DialogButtonLayout 等样式提示的查询入口
 
-## 5. 练习项目
-
-练习项目：多角色按钮盒对话框。我们要做一个包含完整按钮角色处理的对话框，重点练手 clicked 信号和 buttonRole 的配合。
-
-我们要实现的功能是：创建一个设置对话框，包含 QLineEdit（配置名称）、QSpinBox（端口号）、QCheckBox（是否启用日志）三个输入控件，以及一个包含 Ok、Cancel、Apply、Reset、Help 五个按钮的 QDialogButtonBox。Ok 关闭对话框并应用设置，Cancel 关闭对话框不应用，Apply 应用设置但不关闭（需要用 clicked 信号 + buttonRole 判断），Reset 把三个输入控件恢复到默认值，Help 打开一个 QMessageBox 显示帮助文本。Ok 和 Apply 按钮的 enabled 状态由表单验证驱动——配置名称不能为空时 Ok 和 Apply 都 disabled，名称有效后两者才 enabled。完成标准是五个按钮行为各不相同且全部正确，验证逻辑集中在一个函数中，代码结构清晰。
-
-提示几个关键点：Ok 和 Cancel 的信号由 QDialogButtonBox 自动处理，不需要手动 connect；Apply、Reset、Help 需要用 clicked 信号配合 switch(buttonRole) 来分发；Reset 恢复默认值时也会触发 textChanged/spinBox 信号，从而自动调用验证函数更新按钮状态，这是一个很好的一致性保证。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QDialogButtonBox](https://doc.qt.io/qt-6/qdialogbuttonbox.html) -- QDialogButtonBox 类参考，StandardButton 枚举、ButtonRole 枚举和信号机制
-
-[Qt 文档 · QDialog](https://doc.qt.io/qt-6/qdialog.html) -- QDialog 类参考，accept/reject 虚函数和模态行为
-
-[Qt 文档 · QPushButton](https://doc.qt.io/qt-6/qpushbutton.html) -- QPushButton 类参考，autoDefault 和 default 按钮行为
-
-[Qt 文档 · QStyle](https://doc.qt.io/qt-6/qstyle.html) -- QStyle 类参考，SH_DialogButtonLayout 等按钮布局 style hint
+[Qt 文档 · QMessageBox](https://doc.qt.io/qt-6/qmessagebox.html) -- 消息框类，下一站的主角
 
 ---
 
-到这里 QDialogButtonBox 的按钮角色系统就拆完了。StandardButton 让你快速创建标准按钮，addButton 让你添加业务相关的自定义按钮，ButtonRole 决定了按钮的排列位置和信号行为，clicked 信号配合 buttonRole 是处理非标准按钮的通用模式。动态 enabled 控制让你的对话框在表单验证上更加稳健。下一篇我们来看 QMessageBox 的进阶用法——自定义按钮角色、详情展开区域和复选框集成。
+对话框三件套还差消息框，下一站 [3.62 QMessageBox 进阶](./62-qmessagebox-advanced.md)。它家的自定义按钮用的还是这套 ButtonRole，qdialogbuttonbox.h 第 28 行的同步注释就是两边关系的凭证，那边咱们看消息框把这套角色用出什么花样。
+
+想动手的您把示例跑起来，examples/advanced/03-qtwidgets/61-qdialogbuttonbox-advanced/，可执行文件 61-qdialogbuttonbox-advanced。点 Help 弹一只说明框，对话框不关，点 Apply 底部状态行变蓝提示 Applied，窗也不关，点 Ok 状态行变绿随即关窗。再做两个实验。把 settings_dialog.cpp 里 `addButton(tr("&Help"), HelpRole)` 的角色改成 ActionRole 重编，按钮位置基本不动，Windows 队列下也只是从最右挪进中段，点它说明框不弹了，状态行提示 Unknown button role，因为示例的 switch 里，ActionRole 落进了 default 分支。再把 connect clicked 那句注释掉重编，四只按钮点下去全无反应，便利信号之外没有别的通道，接线要您自己动手。
+
+完成标准照旧。Retry 按钮点下去发哪个信号，您答得出。DestructiveRole 点下去有没有便利信号，您说得出没有。removeButton 与 clear 对按钮分别做了什么，您分得清。头一只 AcceptRole 按钮凭什么当默认，您讲得明。

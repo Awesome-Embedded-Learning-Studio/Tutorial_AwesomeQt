@@ -1,175 +1,101 @@
 ---
 title: "3.33 QDial 进阶"
-description: "入门篇我们用 QDial 做了一个仪表盘面板，掌握了 setWrapping 控制旋转边界、setNotchesVisible 显示刻度、valueChanged 信号驱动 QLabel 实时反馈的基本模式。"
+description: "入门篇用 QDial 做了仪表盘面板，进阶篇对着 6.9.1 源码把圆形表盘的机制认清，wrapping 覆写了钳位函数 bound 用 maximum 减 minimum 的差做模数回绕，模数比值域少一个 1，键盘与滚轮从 max 加一步落在 min+1 跳过 min，而鼠标把整圈 360 度铺满这 max 减 min 个单位，扫过正下方时值从 max 连续跨到 min，非 wrapping 的有效角度从 240 度（7 点钟）顺时针经 12 点钟到负 60 度（5 点钟）共 300 度，底部 60 度的点击被钳到最近端，invertedAppearance 在鼠标映射与绘制两侧都生效，鼠标交互没有命中检查，点在方形区域圆外的角落也会跳值，notchSize 以值为单位且必为 singleStep 的整数倍，模型里的整弧长只有真实刻度圆周的一半再叠加整数除法截断，实际槽间距普遍疏于 notchTarget，刻度线由 style 侧的 calcLines 绘制且长刻度按 pageStep 对齐，singleStep 设 0 会连刻度一起消失，键盘左右上下单步、PageUp 与 PageDown 翻页、Home 与 End 到端点，滚轮步数封顶一页，全走同一道 bound，sizeHint 是 100 乘 100 的常数不经 style，配套示例在 examples/advanced/03-qtwidgets/33-qdial-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.33——QDial 进阶
 
-## 1. 前言 / 圆形控件的数学比看起来复杂
+[3.32 QScrollBar 进阶](./32-qscrollbar-advanced.md) 收尾把家族最后一站留给咱们。QDial 把线性的值轴弯成一个圆，滑条与滚动条那套 range、tracking、步进原样继承，重做的活集中在钳位与角度映射上。钳位这头藏着一个模数少 1 的回绕，映射那头藏着一段被钳住的底部空档，咱们对着源码逐个认清，刻度与鼠标交互顺路收掉。
 
-入门篇我们用 QDial 做了一个仪表盘面板，掌握了 setWrapping / setNotchesVisible / valueChanged 的基本模式。但 QDial 作为 QAbstractSlider 家族里唯一一个圆形交互区域的控件，背后涉及的数学比 QSlider 复杂得多：角度到数值的映射在 wrapping 模式下不是线性关系，notch 间距由内部取整逻辑决定，鼠标坐标转换在边界条件下容易出错。今天我们就把角度映射数学、刻度绘制原理、以及如何用 QDial 模拟旋转编码器这三件事拆清楚。
+默认值照 32 篇的样子记下。不带参数构造出来，wrapping 关，出处 qdial.cpp 第 32 行，notchTarget 3.7 像素，出处第 35 行，刻度默认不显示，焦点策略 WheelFocus，出处第 52-53 行。范围与步长继承基类，0 到 99，singleStep 1，pageStep 10，invertedControls 保持 false，出处 qabstractslider.cpp 第 178-183 行。正文行号都带出处。Qt 内部实现主要指 qdial.cpp，键盘与滚轮那段在 qabstractslider.cpp，绘制与刻度落在 qcommonstyle.cpp、qfusionstyle.cpp 与 qstylehelper.cpp。笔者把这几个文件对着源稿断言逐条过了一遍，角度数字与刻度计算偏得最远，正文按源码改准。
 
-## 2. 环境说明
+## wrapping 换掉的是钳位函数，模数比值域少一个 1
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。QDial 属于 QtWidgets 模块，涉及自定义绘制需要 QPainter 基础，涉及角度计算需要 <cmath> 中的三角函数。所有内容在 Qt 6.9.1 上验证通过。
-
-## 3. 核心概念讲解
-
-### 3.1 角度到数值的映射——非 wrapping 和 wrapping 模式的数学差异
-
-QDial 的核心是把鼠标在圆形区域上的位置转换成整数值。这个转换在 wrapping 和非 wrapping 模式下的数学完全不同。
-
-非 wrapping 模式下，QDial 的有效角度范围不是完整 360 度。Qt 内部定义了约 225 度到 -45 度（7 点钟到 5 点钟位置，约 270 度有效范围），底部约 90 度是"死角"。数值映射在这个 270 度范围内做线性插值。
+QAbstractSliderPrivate 的 bound 是夹逼，出界的值被 qMax 与 qMin 压回端点，出处 qabstractslider_p.h 第 88 行。QDialPrivate 把这个虚函数覆写了，出处 qdial.cpp 第 56-70 行，咱们跟着它走：进函数头一件事是查范围，在范围内就直接返回，出处第 58-59 行，minimum 等于 maximum 时返回 minimum，出处第 61-62 行，出界才轮到取模回绕：
 
 ```cpp
-// 简化版非 wrapping 映射（非 Qt 源码）
-// angle: 0 = 3点钟方向, 90 = 12点钟, 180 = 9点钟, 270 = 6点钟
-// QDial 的有效范围: 从 225 度逆时针到 315 度（即 -45 度）
-// 也就是 225 -> 180 -> 90 -> 0 -> 315, 顺时针增大
-double angleToValue(double angle, int min_val, int max_val)
-{
-    // 归一化角度到 [0, 360)
-    angle = fmod(angle + 360.0, 360.0);
-
-    // QDial 内部角度范围（约 270 度的有效区间）
-    constexpr double kStartAngle = 225.0;  // min 所在角度
-    constexpr double kEndAngle = 315.0;    // max 所在角度（-45 归一化）
-    constexpr double kSpan = 270.0;        // 有效角度范围
-
-    // 计算从起始角度到当前角度的逆时针偏移
-    double offset = fmod(kStartAngle - angle + 360.0, 360.0);
-    if (offset > kSpan) {
-        // 落在死角区域，clamp 到最近端
-        offset = (offset - kSpan < 180.0) ? kSpan : 0.0;
-    }
-
-    double ratio = offset / kSpan;
-    return min_val + ratio * (max_val - min_val);
-}
+// qdial.cpp 第 63-66 行
+val = minimum + ((val - minimum) % (maximum - minimum));
+if (val < minimum)
+    val += maximum - minimum;
+return val;
 ```
 
-wrapping 模式下，有效范围扩展到完整的 360 度，底部没有死角。指针可以在 0 和 max 之间无缝穿越——当值达到 max 后继续顺时针拖拽，值直接回到 min，反之亦然。这种模式下角度到数值的映射是真正的"环形映射"，没有边界钳位，只有在穿越点（max 和 min 相邻的位置）会有一个离散的跳变。
+wrapping 关着时这个覆写不接管，走基类夹逼，出处第 67-69 行。模数用的是 maximum 减 minimum，值域里却站着比它多一个的值。您从 max 出发按一次右方向键，Key_Right 会被翻译成 SliderSingleStepAdd，出处 qabstractslider.cpp 第 842 行，triggerAction 再调 setSliderPosition，出处第 586 行，setSliderPosition 进门就过 bound，出处第 460 行，max 加一个 singleStep 落在 min+1，min 被整个跳过去。范围 0 到 359 的表盘，359 上按右，值到 1。反方向对称，0 上减一步，负 1 对 359 取模在 C++ 里仍是负 1，补一圈到 358，max 也被跳过。滚轮同走这道 bound，出处第 718 行，从 359 向上滚一格走三步，值直接落在 3。
 
-这里有一个非常容易踩的坑：wrapping 模式下，range 为 (0, 359) 时，值从 359 跳到 0 是瞬间完成的。视觉上 359 和 0 在圆环上相邻所以看起来连续，但数值上是一个 359 的跳变。如果你的代码在 valueChanged 里做差值计算来判断旋转方向，这个跳变会让差值从 +1 突然变成 -359。
+鼠标路径跟键盘不一样，咱们看 valueFromPoint 怎么铺角度：整圈 360 度分给 max 减 min 个单位，出处 qdial.cpp 第 128 行。绘制侧 calcArrow 给出的几何相同，max 和 min 都落在正下方那一点，出处 qcommonstyle.cpp 第 3212-3214 行，右侧一点点是 max，左侧一点点是 min。您扫着指针过正下方，值从 359 连续跨到 0，min 摸得到。同一只 wrapping 表盘，鼠标能停在 0，键盘却停不到，来路就在模数上。Home 与 End 例外，它们直接给端点值，出处 qabstractslider.cpp 第 877-882 行。setWrapping 本身只翻转标志位再重画，不重新钳当前值，出处 qdial.cpp 第 303-310 行。
 
-### 3.2 刻度系统——notchSize 和 notchTarget 的计算逻辑
+## 非 wrapping 只有 300 度，底部 60 度的点击被钳到最近端
 
-QDial 的刻度系统由 notchTarget、notchSize 和 notchesVisible 三个参数协同工作。notchesVisible 是开关，notchTarget 是你通过 setNotchTarget(double) 设置的"目标刻度间距"（单位像素，默认 3.7），notchSize 是实际的刻度间距。关键在于 notchTarget 只是目标值——QDial 的刻度位置必须对应整数值，如果 notchTarget 的角度间距落在两个整数值之间，notchSize 会被取整调整。计算逻辑大致是：先用旋钮周长除以 range 得到每单位像素数，再用 notchTarget 除以这个值得到每刻度对应的单位数，取整后再乘回像素。
+角度映射的核心就两行，咱们盯着变量 a 看它的来路：
 
 ```cpp
-// 简化版 notchSize 计算
-int notch_size = qMax(1, qRound(
-    target * range / dial_circumference));
-double actual_notch = notch_size * dial_circumference / range;
+// qdial.cpp 第 127-130 行
+if (wrapping)
+    v = int(0.5 + minv + r * (Q_PI * 3 / 2 - a) / (2 * Q_PI));
+else
+    v = int(0.5 + minv + r * (Q_PI * 4 / 3 - a) / (Q_PI * 10 / 6));
 ```
 
-这意味着 setNotchTarget 设置的值只是一个"建议"，实际刻度间距会根据 range 和旋钮尺寸做取整调整。实际的刻度绘制数量是 `range / notchSize()`，如果这个数字超过 100，刻度线会密集到变成锯齿状圆环。这时候你应该增大 singleStep 来减少刻度数量，或者关掉 notchesVisible 用 QLabel 展示精确数值。
+您拿鼠标点对中心做 atan2 得到 a，出处第 111 行，中心就是 width 除 2、height 除 2，出处第 109-110 行。小于负 90 度的角度加一整圈，归进 [−90°, 270°)，出处第 113-114 行。minimum 为负时区间整体抬到 0，算完再压回，出处第 119-123 行，末行处理 invertedAppearance 的翻转，出处第 135 行。
 
-### 3.3 用 QDial 模拟旋转编码器
+wrapping 那行把 360 度全铺上，非 wrapping 那行给的是 240 度起点、300 度跨度，min 站在 240 度，也就是 7 点钟，max 站在负 60 度，5 点钟，值从 7 点钟顺时针经 12 点钟走到 5 点钟。源稿写的 225 度到负 45 度、270 度范围、90 度死角都不对，公式里 4π/3 是 240 度，10π/6 是 300 度，底部空出来的只有 60 度。咱们再到绘制侧对一遍几何，calcArrow 在位置为 min 时算出 4π/3，为 max 时算出负 π/3，出处 qcommonstyle.cpp 第 3215-3217 行，刻度线的角度同款，出处 qstylehelper.cpp 第 219 行。min 与 max 相等时，箭头固定指 12 点钟，出处第 3210-3211 行。
 
-旋转编码器（rotary encoder）是工业控制和音频设备中常见的无限旋转旋钮，每旋转一格产生一个增量或减量信号。QDial 的 wrapping 模式天然适合模拟这种行为，关键在于正确处理 0 和 max 之间的穿越点。
+底部 60 度那一段，点击并不失效。公式照样算出一个 v，右侧那半边算出的 v 超过 max，左侧低于 min，然后进基类的夹逼，出处 qabstractslider_p.h 第 88 行，分别压到 max 与 min。源稿把它当不可点的死角，实际的语义是钳到最近端，您点在 5 点钟下方，指针贴住 max 不动。
+
+## 没有命中检查，方形区域每个像素都活着
+
+mousePressEvent 门口只查三样，空范围、按的不是左键、发生时还按着别的键，出处 qdial.cpp 第 242-247 行。检查过了，直接 setSliderPosition(valueFromPoint(点击点))，第 249 行，连半径都不看。您点在方形区域的角落，离画的圆老远，atan2 照样算出一个角度，指针跳过去。源码注释把这事写明白了，第 250-253 行写着本该像 QSlider 那样做命中测试，只是 QDial 没有子控件可测。所以哪段区域点不动，答案是一个例外都没有，整个方形区域全热。move 与 release 同款直跳，出处第 280-291、262-273 行，release 用 setValue 定案，再把 sliderDown 抬起来，出处第 271-272 行。move 里包了一层 doNotEmit 开关，出处第 288、290 行，笔者翻遍 widgets 目录没有读到它的人，只有 qdial.cpp 这几处碰它，是个没人消费的旧开关。
+
+子类化时算角度的中心顾虑，咱们可以放下。valueFromPoint 用的是 width/2、height/2，出处第 109-110 行，画刻度的 calcLines 用 width/2 加 0.5，出处 qstylehelper.cpp 第 202-203 行，画箭头的 calcArrow 用 width/2，再加 rect.left()，出处 qcommonstyle.cpp 第 3219-3220 行，三处同一个圆心。盘面本来就往里收 r/6 给刻度留位，common 与 Fusion 两侧都无条件这么做，出处 qcommonstyle.cpp 第 3709-3713 行，notchesVisible 只管刻度线画不画，刻度线画到外缘半径 r，出处 qstylehelper.cpp 第 223-229 行，圆心不动。源稿“开启刻度后中心点偏移”的说法按源码不成立。
+
+## notchSize 数的是值，QDial 算个数，style 画线
+
+绘制这分工，QDial 一笔不画，paintEvent 整体交给 CC_Dial，出处 qdial.cpp 第 227-233 行，刻度线由 style 侧的 QStyleHelper::calcLines 生成，common 直接画，出处 qcommonstyle.cpp 第 3717-3720 行，Fusion 委托 QStyleHelper::drawDial，出处 qfusionstyle.cpp 第 2723-2726 行与 qstylehelper.cpp 第 253-260 行。QDial 自己算的是 notchSize，单位是值，咱们记下它必为 singleStep 的正整数倍，属性注释在 qdial.cpp 第 336-344 行。链条在 notchSize() 里：
 
 ```cpp
-class RotaryEncoder : public QWidget
-{
-    Q_OBJECT
-public:
-    RotaryEncoder(QWidget *parent = nullptr)
-        : QWidget(parent), m_lastValue(0), m_accumulated(0)
-    {
-        m_dial = new QDial(this);
-        m_dial->setRange(0, 359);
-        m_dial->setWrapping(true);
-        m_dial->setNotchesVisible(false);
-
-        connect(m_dial, &QDial::valueChanged,
-                this, &RotaryEncoder::handleRotation);
-    }
-
-    int accumulated() const { return m_accumulated; }
-
-private:
-    void handleRotation(int new_val)
-    {
-        int old_val = m_lastValue;
-        int delta = new_val - old_val;
-
-        // 处理穿越点的方向修正
-        if (delta > 180) {
-            delta -= 360;  // 实际是逆时针（减小方向）
-        } else if (delta < -180) {
-            delta += 360;  // 实际是顺时针（增大方向）
-        }
-
-        m_accumulated += delta;
-        m_lastValue = new_val;
-
-        emit rotationChanged(delta, m_accumulated);
-    }
-
-    QDial *m_dial;
-    int m_lastValue;
-    int m_accumulated;
-
-signals:
-    void rotationChanged(int delta, int total);
-};
+// qdial.cpp 第 352-359 行
+int l = qRound(r * (d->wrapping ? 6.0 : 5.0) * Q_PI / 6.0);
+if (d->maximum > d->minimum + d->pageStep)
+    l = qRound(l * d->pageStep / double(d->maximum - d->minimum));
+l = qMax(l * d->singleStep / (d->pageStep ? d->pageStep : 1), 1);
+l = qMax(qRound(d->target / l), 1);
 ```
 
-这段代码的核心是穿越点修正逻辑。当 new_val 从 359 跳到 0 时，原始差值 delta = -359，但用户实际只顺时针转了一小格，真正的 delta 应该是 +1。`delta < -180` 捕获了这种情况，修正为 -359 + 360 = +1。m_accumulated 累计所有增量，不受 range 限制，可以无限增大或减小。
+整弧长按 wrapping 与否取 πr 或 5πr/6，折成每 pageStep 的弧长，再折成每 singleStep 的弧长，数一数 notchTarget 里装得下几个单步弧长，第 361 行返回 singleStep 乘上这个数。您回头看官方注释，它说尽量画“好看”的刻度数、画不下就隔行跳，出处 qdial.cpp 第 171-175 行，落到代码就是 notchSize() 里那段倍数链。
 
-现在有一道调试题给大家。如果你把上面的 QDial 的 range 设为 (0, 99) 而不是 (0, 359)，穿越点修正还能正确工作吗？
+notchTarget 是像素目标，实际槽间距普遍疏于它。模型的整弧长只有真实刻度圆周的一半，刻度线画在半径 r 的外缘，出处 qstylehelper.cpp 第 223-229 行，wrapping 的真圆周是 2πr、非 wrapping 的真弧长是 5πr/3，模型给的却是 πr 与 5πr/6，出处 qdial.cpp 第 352 行，第 357 行的整数除法还会把单步弧长截短，两个方向都把槽间距往外推。咱们拿示例参数代一遍，旋钮 180 像素，r 是 90，范围 0 到 99，target 10，链条算出 notchSize 5，真实弧上每单位合 5πr/3 除以 99，约 4.76 像素，槽间距约 23.8 像素，是 target 的两倍多。您要精确槽距，调 target 只能粗调，细活得 QProxyStyle 或自己画。
 
-答案是修正逻辑的阈值需要跟着 range 变。代码里的 180 是 range (0, 359) 对应 360 度的一半。如果 range 变成 (0, 99)，阈值应该是 50。通用阈值是 `(max - min + 1) / 2`。不更新阈值会导致穿越点方向判断错误。
+刻度线本身还有一层规则，咱们接着看。calcLines 里，i 为 0，或者 tickInterval 乘 i 对 pageStep 取余为零，这些位置画长刻度，其余短一半，出处 qstylehelper.cpp 第 216、222 行。刻度数量按 (max + ns − 1 − min)/ns 向上取整，出处第 207 行，范围超过 1000 时只按 min 到 min+1000 的一段布点，出处第 210-213 行。
 
-### 3.4 鼠标事件坐标在圆形控件上的陷阱
+tickInterval 由 initStyleOption 填成 notchSize()，出处 qdial.cpp 第 103 行，这里藏着一条连锁，singleStep 设 0 会让 notchSize 返回 0，出处第 361 行，calcLines 见 tickInterval 为 0 直接返回空，出处 qstylehelper.cpp 第 205-206 行，键盘与滚轮的步进本来也全废了，表盘上连刻度一起消失。initStyleOption 还有个反直觉的填法，notchesVisible 关着时 tickPosition 填 TicksAbove，开着反而填 NoTicks，出处 qdial.cpp 第 97-102 行，传话靠 subControls 里的 SC_DialTickmarks，出处第 97-98 行，您读 dial 的 option 时，别照 tickPosition 的字面意思走。
 
-QDial 把鼠标位置转换成角度的内部实现其实挺粗糙的——它取鼠标位置相对于旋钮中心的 atan2 来计算角度。这里有几个容易出错的边界条件。
+## 键盘滚轮全走基类同一条路，表盘上照样回绕
 
-首先是旋钮中心点的计算。QDial::paintEvent 中使用的中心点不是 widget 的 rect().center()，而是一个考虑了 notch 区域偏移后的中心点。如果你子类化 QDial 重写鼠标事件，用 rect().center() 作为中心来算角度，在 notchesVisible 为 true 时计算结果会和 QDial 内部的映射不一致。你应该用 QStyleOptionSlider 配合 QStyle::subControlRect 来获取旋钮的实际中心。
+键盘的动作表全在基类，咱们对着按键念：左右上下给 singleStep，PageUp 与 PageDown 给 pageStep，Home 与 End 给端点，出处 qabstractslider.cpp 第 785-889 行，Home 在第 877-879 行，End 在第 880-882 行。QDial 的类注释把同一张表复述了一遍，出处 qdial.cpp 第 180-187 行。这些动作都经 setSliderPosition 过 bound，出处 qabstractslider.cpp 第 460 行，wrapping 表盘上您按住方向键能一圈圈转。滚轮同路，步数按 wheelScrollLines 乘 singleStep 算，单次封顶一页，出处第 698 行，类注释给的简写是取它与 pageStep 里较小的那个，出处 qdial.cpp 第 189-193 行。
 
-```cpp
-QPoint dialCenter(const QDial *dial)
-{
-    QStyleOptionSlider opt;
-    dial->initStyleOption(&opt);
-    // SC_SliderGroove 在 QDial 中代表整个旋钮的绘制区域
-    QRect groove = dial->style()->subControlRect(
-        QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove, dial);
-    return groove.center();
-}
-```
+尺寸这块 QDial 很省事，sizeHint 与 minimumSizeHint 都是常数，100 乘 100 与 50 乘 50，出处 qdial.cpp 第 416-419、425-428 行，不问 style 要任何量。这与 32 篇滚动条找 style 要 extent 的路子不同，您布局时给个方形就行，拖成矩形它也只认短边画圆，出处 qcommonstyle.cpp 第 3709 行，多出来的部分是空白。
 
-其次，QDial 不像 QSlider 那样有完整的 invertedAppearance 支持。如果你需要反转旋转方向，最简单的做法是在 valueChanged 的槽函数里做值映射，而不是试图设置反转属性。
+## 官方文档参考
 
-还有一个实战问题：QDial 在小尺寸下（比如 40x40 像素）每度的像素间距极小，鼠标微抖就对应好几个数值跳变。如果需要精确交互，可以在 mouseMoveEvent 中对角度做平滑处理。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，QDial 在 QtWidgets，链接 Qt6::Widgets 即可。
 
-## 4. 踩坑预防
+[Qt 文档 · QDial](https://doc.qt.io/qt-6/qdial.html) -- 旋钮控件，wrapping、notchTarget、notchSize 属性定义
 
-第一个坑是 wrapping 为 true 且 range 为 (0, 359) 时，value 从 359 变到 0 是瞬间跳变。后果是在 valueChanged 里做差值计算（判断旋转方向、计算旋转速度）会得到完全错误的方向。解决方案是用 `(max - min + 1) / 2` 作为阈值做穿越点修正。
+[Qt 文档 · QAbstractSlider](https://doc.qt.io/qt-6/qabstractslider.html) -- 抽象基类，range、两档步长与 triggerAction
 
-第二个坑是 setNotchTarget 设置的值不一定被尊重。notchTarget 只是建议值，notchSize 会根据 range 和旋钮尺寸做取整调整。你期望刻度间距 10px，实际可能是 15px 或 5px。需要精确控制刻度间距时，自己在 paintEvent 或 QProxyStyle 中画刻度线。
+[Qt 文档 · QStyle](https://doc.qt.io/qt-6/qstyle.html) -- CC_Dial 与 SC_DialTickmarks 的子控件体系
 
-第三个坑是 notchesVisible 开启时鼠标坐标的中心点偏移。QDial 开启刻度后内部绘制区域的圆心会偏移（给刻度线留空间），用 rect().center() 算角度会导致拖拽时指针总是差一点。解决方案是用 QStyle::subControlRect 获取真正的旋钮中心。
+[Qt 文档 · QStyleOptionSlider](https://doc.qt.io/qt-6/qstyleoptionslider.html) -- notchTarget 与 dialWrapping 的传递载体
 
-## 5. 练习项目
-
-练习项目：模拟旋转编码器面板。我们要实现一个音频设备风格的旋钮控件，模拟真实旋转编码器的无限旋转行为。
-
-完成标准是：中央是一个 QDial（wrapping 模式，range 0-359），旋钮周围用自定义绘制画 36 根等间距刻度线（每 10 度一根，每 90 度有一根加粗的长刻度线），旋钮下方有一个 QLabel 显示累计旋转格数（可正可负，无上下限），旋钮右侧有一个 QLCDNumber 显示当前"参数值"（范围 -12.0 到 +12.0 dB，每旋转一格变化 0.1 dB），穿越点修正必须正确（从 359 转到 0 时参数值增加 0.1 而不是跳变）。
-
-提示几个关键点：用子类化 QDial 或者 QProxyStyle 来画自定义刻度线，QDial 自带的 notchesVisible 不够灵活；刻度线的角度计算用 `i * 10.0 * M_PI / 180.0`（弧度），用 QPainter::translate + QPainter::rotate 来定位每根线；累计旋转格数用穿越点修正后的增量累加；参数值的范围限制在 -12.0 到 +12.0 之间做 clamp。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QDial](https://doc.qt.io/qt-6/qdial.html) -- 旋钮控件，包含 wrapping / notchesVisible / notchTarget 相关接口
-
-[Qt 文档 · QAbstractSlider](https://doc.qt.io/qt-6/qabstractslider.html) -- 抽象滑动条基类，valueChanged / sliderMoved / sliderReleased 定义在此
-
-[Qt 文档 · QStyleOptionSlider](https://doc.qt.io/qt-6/qstyleoptionslider.html) -- Slider/Dial 的 style option，用于获取旋钮几何信息
-
-[Qt 文档 · QProxyStyle](https://doc.qt.io/qt-6/qproxystyle.html) -- 代理样式类，用于扩展默认 style 的刻度绘制
+[Qt 文档 · QProxyStyle](https://doc.qt.io/qt-6/qproxystyle.html) -- 样式代理，改刻度画法的入口
 
 ---
 
-到这里，QDial 的进阶内容就过了。角度到数值的映射在 wrapping 模式下变成了环形数学，穿越点的方向修正如果做不对，旋转编码器的方向判断就会出错。notchTarget 只是一个建议值，QDial 内部会根据 range 做取整调整，如果你需要精确控制刻度间距就得自己画。旋转编码器的模拟需要正确处理 359 到 0 的跳变，用 `(max - min + 1) / 2` 作为阈值是通用的修正方法。圆形控件上的鼠标坐标在 notchesVisible 开启时中心点会偏移，必须用 QStyle::subControlRect 获取真正的旋钮中心。把这些机制搞清楚后，QDial 就不再是一个"拧一拧就行"的简单控件——你可以用它做出专业级的旋钮交互。
+QAbstractSlider 家族到这儿收完，下一程咱们离开滑动条家族去显示控件，QLabel 那篇讲 setTextFormat 的解析模式、setBuddy 的快捷键注册与文本交互权限，入口在 [3.34 QLabel 进阶](./34-qlabel-advanced.md)。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/33-qdial-advanced/，可执行文件 33-qdial-advanced）。窗口左边一只 180 像素的旋钮，范围 0 到 99，notchTarget 10，出处 nonlinear_dial.cpp 第 43-48 行，右边面板报内部线性值、对数输出与累计旋转增量。对数映射在 linearToLog，把 0 到 99 映成 1 到 1000，公式是 10 的 dialValue 除 99 乘 3 次方，出处第 120-131 行，音量旋钮低段精细高段粗，靠的就是对数曲线。穿越点修正在 handleValueChanged，阈值取 (max − min + 1)/2，这里就是 50，出处第 150-160 行，wrapping 开着时值从 99 跨到 0，差值负 99 被修成加 1，累计增量不乱跳。面板上的按钮切换 wrapping，出处第 170-186 行，切换后累计值清零，出处第 184-185 行。
+
+实验补两步。您开着 wrapping 把旋钮拧到 99，按一下右方向键，面板的内部线性值显示 1，min 被模数跳了过去，来路在 qdial.cpp 第 63-66 行。再点旋钮方框左下角的空白，圆外老远的位置，指针照样跳，那是没有命中检查的直跳，出处第 249 行。
+
+完成标准照旧。非 wrapping 的有效角度与底部空档各多少度、公式在哪两行，您报得出。wrapping 下键盘跨过 max 落在哪、鼠标扫过正下方落在哪，您分得开。实际槽间距疏于 notchTarget 的来路在源码哪几行，您指得出来。

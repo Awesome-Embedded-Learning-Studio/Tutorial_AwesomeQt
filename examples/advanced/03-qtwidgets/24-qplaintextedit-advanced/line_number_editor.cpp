@@ -13,18 +13,14 @@
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-LineNumberEditor::LineNumberEditor(QWidget* parent)
-    : QPlainTextEdit(parent)
-{
+LineNumberEditor::LineNumberEditor(QWidget* parent) : QPlainTextEdit(parent) {
     m_sidebar = new LineNumberSidebar(this);
 
     // blockCountChanged：行数变化时更新行号区域宽度
-    connect(this, &QPlainTextEdit::blockCountChanged,
-            this, &LineNumberEditor::onBlockCountChanged);
+    connect(this, &QPlainTextEdit::blockCountChanged, this, &LineNumberEditor::onBlockCountChanged);
 
     // updateRequest：编辑器内容滚动或重绘时同步更新行号
-    connect(this, &QPlainTextEdit::updateRequest,
-            this, &LineNumberEditor::onUpdateRequest);
+    connect(this, &QPlainTextEdit::updateRequest, this, &LineNumberEditor::onUpdateRequest);
 
     // 初始化行号区域宽度和视口边距
     updateSidebarWidth();
@@ -34,28 +30,24 @@ LineNumberEditor::LineNumberEditor(QWidget* parent)
 // 保护方法
 // ─────────────────────────────────────────────────────────────────────────────
 
-void LineNumberEditor::resizeEvent(QResizeEvent* event)
-{
+void LineNumberEditor::resizeEvent(QResizeEvent* event) {
     QPlainTextEdit::resizeEvent(event);
 
     // 编辑器大小变化时重新定位行号侧边栏
     const QRect cr = contentsRect();
-    m_sidebar->setGeometry(cr.left(), cr.top(),
-                           m_sidebar->calculateWidth(), cr.height());
+    m_sidebar->setGeometry(cr.left(), cr.top(), m_sidebar->calculateWidth(), cr.height());
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 私有槽
 // ─────────────────────────────────────────────────────────────────────────────
 
-void LineNumberEditor::onBlockCountChanged(int newCount)
-{
+void LineNumberEditor::onBlockCountChanged(int newCount) {
     Q_UNUSED(newCount)
     updateSidebarWidth();
 }
 
-void LineNumberEditor::onUpdateRequest(const QRect& rect, int dy)
-{
+void LineNumberEditor::onUpdateRequest(const QRect& rect, int dy) {
     if (dy != 0) {
         // 垂直滚动：行号区域整体平移 dy 像素
         m_sidebar->scroll(0, dy);
@@ -64,7 +56,7 @@ void LineNumberEditor::onUpdateRequest(const QRect& rect, int dy)
         m_sidebar->update(0, rect.y(), m_sidebar->width(), rect.height());
     }
 
-    // rect 包含编辑器完整宽度时，需要重绘整个行号区域
+    // rect 包含编辑器完整宽度时，重新计算行号区域宽度
     if (rect.contains(viewport()->rect())) {
         updateSidebarWidth();
     }
@@ -74,8 +66,7 @@ void LineNumberEditor::onUpdateRequest(const QRect& rect, int dy)
 // 私有方法
 // ─────────────────────────────────────────────────────────────────────────────
 
-void LineNumberEditor::updateSidebarWidth()
-{
+void LineNumberEditor::updateSidebarWidth() {
     // 通过 setViewportMargins 给行号区域留出左侧空间
     setViewportMargins(m_sidebar->calculateWidth(), 0, 0, 0);
 }

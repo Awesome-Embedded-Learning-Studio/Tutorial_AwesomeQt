@@ -18,15 +18,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 NonlinearDial::NonlinearDial(QWidget* parent)
-    : QWidget(parent)
-    , m_dial(nullptr)
-    , m_rawValueLabel(nullptr)
-    , m_logValueLabel(nullptr)
-    , m_wrappingInfoLabel(nullptr)
-    , m_notchInfoLabel(nullptr)
-    , m_lastRawValue(0)
-    , m_accumulatedDelta(0)
-{
+    : QWidget(parent), m_dial(nullptr), m_rawValueLabel(nullptr), m_logValueLabel(nullptr),
+      m_wrappingInfoLabel(nullptr), m_notchInfoLabel(nullptr), m_lastRawValue(0),
+      m_accumulatedDelta(0) {
     setupUI();
 }
 
@@ -34,8 +28,7 @@ NonlinearDial::NonlinearDial(QWidget* parent)
 // 界面搭建
 // ─────────────────────────────────────────────────────────────────────────────
 
-void NonlinearDial::setupUI()
-{
+void NonlinearDial::setupUI() {
     auto* mainLayout = new QVBoxLayout(this);
 
     // ── 旋钮区域 ──
@@ -64,13 +57,13 @@ void NonlinearDial::setupUI()
     accLabel->setObjectName(QStringLiteral("accLabel"));
 
     // Wrapping 模式说明
-    m_wrappingInfoLabel = new QLabel(
-        QStringLiteral("Wrapping: OFF\n有效角度范围约 270 度，底部有死角"));
+    m_wrappingInfoLabel = new QLabel(QStringLiteral(
+        "Wrapping: OFF\n有效角度 300 度（240 度到 -60 度），底部 60 度空档（点击钳到最近端）"));
 
     // 刻度系统信息
     // notchCount 实际值 = range / notchSize，notchSize 不一定等于 notchTarget
-    m_notchInfoLabel = new QLabel(
-        QStringLiteral("notchTarget: 10.0 (建议值)\n实际刻度数由 QDial 内部取整决定"));
+    m_notchInfoLabel =
+        new QLabel(QStringLiteral("notchTarget: 10.0 (建议值)\n实际刻度数由 QDial 内部取整决定"));
 
     // 切换 wrapping 按钮
     auto* wrapBtn = new QPushButton(QStringLiteral("切换 Wrapping 模式"));
@@ -101,9 +94,9 @@ void NonlinearDial::setupUI()
     // 需要找到 accLabel 来更新它——通过 objectName 查找
     auto* accLabelPtr = findChild<QLabel*>(QStringLiteral("accLabel"));
     if (accLabelPtr) {
-        connect(m_dial, &QDial::valueChanged, this,
-                [this, accLabelPtr]()
-                { accLabelPtr->setText(QString::number(m_accumulatedDelta)); });
+        connect(m_dial, &QDial::valueChanged, this, [this, accLabelPtr]() {
+            accLabelPtr->setText(QString::number(m_accumulatedDelta));
+        });
     }
 
     // 初始更新
@@ -117,8 +110,7 @@ void NonlinearDial::setupUI()
 // 对数映射
 // ─────────────────────────────────────────────────────────────────────────────
 
-int NonlinearDial::linearToLog(int dialValue)
-{
+int NonlinearDial::linearToLog(int dialValue) {
     // dialValue: 0~99 -> 输出: 1~1000
     // 公式: output = 10^(dialValue / 99 * 3)
     // dialValue=0  -> 10^0   = 1
@@ -134,8 +126,7 @@ int NonlinearDial::linearToLog(int dialValue)
 // 值变化处理——更新显示和穿越点修正
 // ─────────────────────────────────────────────────────────────────────────────
 
-void NonlinearDial::handleValueChanged(int newValue)
-{
+void NonlinearDial::handleValueChanged(int newValue) {
     // 更新内部线性值显示
     m_rawValueLabel->setText(QString::number(newValue));
 
@@ -167,8 +158,7 @@ void NonlinearDial::handleValueChanged(int newValue)
 // 切换 Wrapping 模式
 // ─────────────────────────────────────────────────────────────────────────────
 
-void NonlinearDial::toggleWrapping()
-{
+void NonlinearDial::toggleWrapping() {
     bool wrapping = !m_dial->wrapping();
     m_dial->setWrapping(wrapping);
 
@@ -176,8 +166,8 @@ void NonlinearDial::toggleWrapping()
         m_wrappingInfoLabel->setText(
             QStringLiteral("Wrapping: ON\n有效角度 360 度，指针可在 0 和 max 间穿越"));
     } else {
-        m_wrappingInfoLabel->setText(
-            QStringLiteral("Wrapping: OFF\n有效角度范围约 270 度，底部有死角"));
+        m_wrappingInfoLabel->setText(QStringLiteral(
+            "Wrapping: OFF\n有效角度 300 度（240 度到 -60 度），底部 60 度空档（点击钳到最近端）"));
     }
 
     // 切换模式后重置累计值，避免旧状态的增量干扰

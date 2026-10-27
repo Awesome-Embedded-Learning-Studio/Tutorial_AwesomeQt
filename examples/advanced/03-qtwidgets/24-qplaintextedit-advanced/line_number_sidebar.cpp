@@ -3,8 +3,8 @@
 ///
 /// 对应教程：进阶层 03-QtWidgets/24-QPlainTextEdit 进阶。
 
-#include "line_number_editor.h"
 #include "line_number_sidebar.h"
+#include "line_number_editor.h"
 
 #include <QFontMetrics>
 #include <QPaintEvent>
@@ -15,10 +15,7 @@
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-LineNumberSidebar::LineNumberSidebar(LineNumberEditor* editor)
-    : QWidget(editor)
-    , m_editor(editor)
-{
+LineNumberSidebar::LineNumberSidebar(LineNumberEditor* editor) : QWidget(editor), m_editor(editor) {
     // 行号区域不接收鼠标事件，让事件穿透到编辑器
     setAttribute(Qt::WA_TransparentForMouseEvents);
 }
@@ -27,8 +24,7 @@ LineNumberSidebar::LineNumberSidebar(LineNumberEditor* editor)
 // 公有方法
 // ─────────────────────────────────────────────────────────────────────────────
 
-int LineNumberSidebar::calculateWidth() const
-{
+int LineNumberSidebar::calculateWidth() const {
     // 根据 blockCount 的位数计算宽度，至少显示一位数
     const int digits = qMax(1, QString::number(m_editor->blockCount()).size());
 
@@ -37,8 +33,7 @@ int LineNumberSidebar::calculateWidth() const
     return charWidth * digits + 8;
 }
 
-LineNumberEditor* LineNumberSidebar::editor() const
-{
+LineNumberEditor* LineNumberSidebar::editor() const {
     return m_editor;
 }
 
@@ -46,8 +41,7 @@ LineNumberEditor* LineNumberSidebar::editor() const
 // paintEvent
 // ─────────────────────────────────────────────────────────────────────────────
 
-void LineNumberSidebar::paintEvent(QPaintEvent* event)
-{
+void LineNumberSidebar::paintEvent(QPaintEvent* event) {
     QPainter painter(this);
 
     // 行号区域背景色
@@ -57,9 +51,8 @@ void LineNumberSidebar::paintEvent(QPaintEvent* event)
     QTextBlock block = m_editor->firstVisibleBlock();
     int blockNumber = block.blockNumber();
 
-    // blockBoundingRect 返回文档坐标系，需要减去 contentOffset 转为视口坐标
-    qreal blockTop = m_editor->blockBoundingRect(block).top()
-                     - m_editor->contentOffset().y();
+    // blockBoundingRect 给 block 自身坐标系（首块 top 恒为 0），减 contentOffset 得视口坐标
+    qreal blockTop = m_editor->blockBoundingRect(block).top() - m_editor->contentOffset().y();
     qreal blockHeight = m_editor->blockBoundingRect(block).height();
 
     painter.setPen(QColor(120, 120, 120));
@@ -80,8 +73,8 @@ void LineNumberSidebar::paintEvent(QPaintEvent* event)
             const QString number = QString::number(blockNumber + 1);
 
             // 右对齐、垂直居中绘制行号
-            painter.drawText(0, top, width() - 4, height,
-                             Qt::AlignRight | Qt::AlignVCenter, number);
+            painter.drawText(0, top, width() - 4, height, Qt::AlignRight | Qt::AlignVCenter,
+                             number);
         }
 
         // 移动到下一个 block

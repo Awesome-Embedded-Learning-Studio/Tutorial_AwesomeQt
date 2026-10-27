@@ -2,7 +2,7 @@
 /// @brief   带动态单位的整数微调框——通过重写 textFromValue/valueFromText 实现。
 ///
 /// 演示 QSpinBox 定制化的核心模式：
-/// - textFromValue()：根据值大小自动选择合适的单位（px / kb / MB / GB）并格式化
+/// - textFromValue()：根据值大小自动选择合适的单位（B / KB / MB）并格式化
 /// - valueFromText()：反向解析带单位的文本，支持多种单位格式
 /// - 不使用 prefix/suffix，所有格式化逻辑集中在虚函数中
 ///
@@ -22,16 +22,15 @@
 /// 用户也可以手动输入 "500 KB" 或 "2.5 MB" 这样的文本，
 /// valueFromText 会正确解析回字节数。
 /// 设计原则：textFromValue 和 valueFromText 互为逆运算。
-class UnitSpinBox : public QSpinBox
-{
+class UnitSpinBox : public QSpinBox {
     Q_OBJECT
 
-public:
+  public:
     /// @brief 构造函数。
     /// @param[in] parent 父控件指针。
     explicit UnitSpinBox(QWidget* parent = nullptr);
 
-protected:
+  protected:
     // ── QSpinBox 虚函数重写 ──
 
     /// @brief 将内部字节数值转换为带单位的显示文本。

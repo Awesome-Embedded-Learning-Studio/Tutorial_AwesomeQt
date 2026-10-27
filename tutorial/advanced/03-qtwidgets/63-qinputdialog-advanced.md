@@ -1,189 +1,86 @@
 ---
 title: "3.63 QInputDialog 进阶"
-description: "入门篇我们用 QInputDialog 的静态函数弹出了文本、整数、浮点数和列表选择四种输入对话框，一行 getText/getInt/getDouble/getItem 就搞定了。"
+description: "进阶篇拆 QInputDialog 的静态函数族。五只静态函数取消时返回值各有脾气（getText 回空 QString 第 1152-1156 行，getInt 回初值第 1245-1249 行），getItem 的 editable 默认是 true（qinputdialog.h 第 135 行），内部五只输入控件懒创建、setInputWidget 换位（第 174-183 行与第 320-359 行），数字模式 Enter 被拦、OK 键跟随合法性变灰（第 86-93 行与第 316 行），setValue 一律被 bound() 夹紧所以值在范围前设置会丢初值（qabstractspinbox.cpp 第 1760 行），setTextValue 顺手把模式切回 TextInput（第 661 行），UseListViewForComboBoxItems 只对不可编辑下拉生效（第 366 行），open() 按槽签名自动挑信号（第 46-56 行），示例在 examples/advanced/03-qtwidgets/63-qinputdialog-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.63——QInputDialog 进阶
 
-## 1. 前言 / 当静态函数不够用的时候
+62 篇咱们读过消息框的静态便捷函数族，QMessageBox::question 一行问个是非。输入对话框把同一套思路推到头，“问一句拿一个值”打包成了五只静态函数，排在头文件里（qinputdialog.h 第 125-146 行），getText 管文本，getInt、getDouble 管数字，getItem 管选择，getMultiLineText 管多行，连返回类型都替您分好了。本篇咱们把每只静态函数进门之后对话框内部做的事看个遍，再把笔者在 Qt 6.9.1 的 QInputDialog 源码（qinputdialog.cpp）里核出的几处与直觉相反的行为摆开。
 
-入门篇我们用 QInputDialog 的静态函数弹出了文本、整数、浮点数和列表选择四种输入对话框，一行 getText / getInt / getDouble / getItem 就搞定了。说实话如果你的需求就是"弹个框让用户输个名字"或者"选一个预定义选项"，静态函数完全够用。但真实项目里很快就会碰到这些场景：输入框需要正则校验，浮点数需要精确的范围和步长控制，下拉列表的数据源是动态模型而不是静态 QStringList，getItem 需要允许用户自己输入不在列表中的值。这些需求全都不是静态函数能搞定的。
+引用文件咱们交代清楚。主战场是 qinputdialog.cpp 与 qinputdialog.h（src/widgets/dialogs），数字输入那头的夹紧算法下探到 qspinbox.cpp 与 qabstractspinbox.cpp（src/widgets/widgets）。配套示例是四只按钮各开一种输入模式的演示窗口，完整玩法放结语。
 
-这篇进阶篇的核心内容是四个方面：四种输入模式的内部实现机制差异、范围控制的 API 细节、与 QValidator 集成做输入验证、以及 getItem 的可编辑模式与自定义数据源。搞清楚这些之后，QInputDialog 就不再是一个只能调静态函数的"傻瓜对话框"了。
+## 五只静态函数取消时回什么，各有各的脾气
 
-## 2. 环境说明
+有一件最容易想当然的事，咱们当场定下来。用户点了 Cancel，函数返回什么？答案不统一。getText 与 getMultiLineText 回一个空 QString，出处第 1152-1156 行。getInt 回初值，也就是调用方传进来的默认数，出处第 1245-1249 行。getDouble 同款回初值（第 1294-1298 行），getItem 回打开时选中的条目（第 1350 行）。这就带来一个共同点，用户取消与用户原样确认初值，回的东西一模一样，所以判断到底确认没有，ok 指针是唯一靠得住的凭据。另有一处小分寸，getItem 的 current 传越界了，items.value(current) 回空串（第 1334 行），对话框还能正常开，只是默认什么都不选。
 
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。QInputDialog 属于 QtWidgets 模块，QValidator 及其子类属于 QtGui 模块，链接 Qt6::Widgets 即可。所有行为在 Qt 6.9.1 上验证通过。
+五只函数的骨架一模一样。咱们看 getText 的实现（第 1138-1157 行），QAutoPointer 抱着一只新构造的 QInputDialog，设好标题、标签与默认值，exec 跑一圈按返回码回值，对话框随后自动销毁。静态函数没有藏魔法，它做的事您手动构造全做得出来，还能做得更细。
 
-## 3. 核心概念讲解
+签名咱们逐个参数过一遍，有两处值得停。getDouble 的 decimals 默认值是 1，出处 qinputdialog.h 第 145 行。您要输两位小数，比如 3.14，decimals 得显式传成 2，默认只给到一位。更别扭的是 step，它挤在参数表末尾、排在 flags 后面（第 146 行），想给 getDouble 调步长，中间的 ok 与 flags 得一齐显式给出，参数摆在这个位置是历史演进留下的。getItem 那边，editable 的默认值是 true（第 135 行）。笔者手头的旧笔记就把它记成了 false，核对头文件才改过来。您要的效果是只能从列表里选，false 必须自己传。getText 的签名里另带了 echo 模式（第 126 行），拿密码的场景一行就够。
 
-### 3.1 四种输入模式的内部实现差异
+## setInputMode：五只输入控件按需创建，换模式只是一次布局换位
 
-QInputDialog 支持四种输入模式，通过 setInputMode 设置：TextInput、IntInput、DoubleInput 以及没有独立枚举值的列表选择模式（通过 setComboBoxItems 触发）。虽然静态函数把这四种模式封装得干净利落，但它们内部使用的控件是完全不同的。
+InputMode 枚举只有三个值，TextInput、IntInput、DoubleInput，出处 qinputdialog.h 第 51-54 行。那列表选择算什么模式？咱们看私有实现的判据，useComboBoxOrListView() 只问一句，combo 里有没有条目，出处 qinputdialog.cpp 第 169 行。您调 setComboBoxItems 塞进条目，chooseRightTextInputWidget 就把输入件换成下拉框或列表（第 744-745 行），inputMode() 报回来的仍是 TextInput。列表选择没有独立枚举，它是 TextInput 模式的一个分支。
 
-TextInput 模式内部是一个 QLineEdit，你拿到的是字符串。IntInput 模式内部换成了 QSpinBox，自带上下箭头、步长控制和范围限制。DoubleInput 模式用的是 QDoubleSpinBox，同理但支持浮点精度。列表选择模式内部是 QComboBox（或 QListView，取决于是否设置了 UseListViewForComboBoxItems 选项）。
+私有类里的输入控件咱们挨个数，lineEdit、plainTextEdit、intSpinBox、doubleSpinBox、comboBox，外加一只 listView（第 174-183 行），出生时全是 nullptr（第 190-194 行），您用到哪只，内部才造哪只。布局在 ensureLayout 里搭起来（第 196-226 行），标签默认文案 “Enter a value:”（第 209 行），按钮排是 Ok 加 Cancel 的 QDialogButtonBox（第 215 行），输入件的位置默认由 lineEdit 占着（第 203-206 行）。
 
-```cpp
-auto *dlg = new QInputDialog(parent);
-dlg->setInputMode(QInputDialog::TextInput);
-dlg->setWindowTitle("请输入设备名称");
-dlg->setTextValue("default_device");
-// 相当于 getText，但我们可以继续微调
-```
+换模式的事，咱们跟 setInputWidget 走一遍（第 320-359 行）。布局里旧的输入件摘下来藏好，新的插进同一格亮出来，textValue 同步过去。您调 setInputMode(IntInput)（第 509-537 行），出现的是带校验的子类 QInputDialogSpinBox（第 66 行），QDoubleSpinBox 那边同样有子类接上，出处第 101 行。子类多做了什么，正是下一节的主角。
 
-为什么知道内部用什么控件很重要？因为每种控件的可配置项不同。QSpinBox 有 setSuffix / setPrefix 做单位提示，QDoubleSpinBox 有 setDecimals 控制小数位数。但静态函数 getInt / getDouble 暴露的参数有限——getInt 只能传 min/max/step，getDouble 只能传 min/max/decimals。如果你需要前缀后缀，必须手动构造 QInputDialog 实例，通过属性系统访问内部的 spinbox。
+## 数字模式：Enter 会被拦下，OK 键跟着合法性变灰
 
-```cpp
-// getInt 不支持前缀，手动构造可以做到
-dlg->setInputMode(QInputDialog::IntInput);
-dlg->setIntRange(1, 65535);
-dlg->setIntValue(8080);
-// 通过 findChild 拿到内部 QSpinBox
-auto *spin = dlg->findChild<QSpinBox*>();
-if (spin) {
-    spin->setSuffix(" port");
-}
-```
+QInputDialogSpinBox 给 QSpinBox 补了一层校验逻辑，类注释把意图写在了明处（第 60-65 行）。咱们看 keyPressEvent（第 86-93 行），用户按 Return 或 Enter 时，若当前输入不合法，事件不再往下传，一句 `setProperty("value", property("value"))` 把显示值拉回上一个合法值。您在整数框里手输越界数字再敲回车，看到数字被顶回去，就是这一句在干活。
 
-这种方式有点 hacky，findChild 依赖 Qt 的对象树命名，在跨版本时可能有风险。但对于"给数字输入加个单位"这种需求，确实是最快的办法。如果觉得不踏实，直接继承 QDialog 自己搭 spinbox 更稳。
+第二个机关管 OK 键。子类把 textChanged(bool) 信号连到按钮排的 OK 上（第 312-318 行），输入不合法 OK 当场变灰，合法了再亮回来。您留意这套联动只接在两只 spinbox 上，lineEdit 没份，所以文本模式里 OK 永远亮着，合法性得您自己用 validator 或事后校验把关。
 
-### 3.2 范围控制的 API 细节
+确认那一下还有一层讲究。done(int result)（第 1086-1110 行）里，三种带 Selected 后缀的信号只在 result 非零时发出，用户确认了才发，取消不发。Changed 与 Selected 两族信号的分工在这儿划清，咱们做非模态用法时，收尾靠 Selected 最稳。
 
-IntInput 模式用 setIntMinimum / setIntMaximum / setIntStep 控制范围和步长，DoubleInput 模式用 setDoubleMinimum / setDoubleMaximum / setDoubleDecimals 控制范围和精度。范围设置的 API 本身很简单，但有两个细节容易忽略。
+## 范围与精度：setValue 一律被夹紧，小心的是调用顺序
 
-第一个细节是 setDoubleDecimals 的行为。这个方法设置的是显示精度，不是输入精度。如果 decimals 设为 2，用户在输入框中输入 "3.14159"，spinbox 会立刻把显示值截断为 "3.14"，内部的 value() 返回也是 3.14。如果你需要更高精度，必须设更大的 decimals 值。静态函数 getDouble 的 decimals 参数默认值是 1，很多开发者不注意这个参数，结果拿到的浮点数精度只有一位小数。
+有一种流传的说法，程序里 setIntValue 塞一个越界值，对话框会原样显示。笔者拿源码核了一遍，不成立。setIntValue 转给 QSpinBox 的 setValue，出处 qinputdialog.cpp 第 768-773 行。干活的一句在 QAbstractSpinBoxPrivate::setValue 里，头一句就是 value = bound(val)，咱们在 qabstractspinbox.cpp 第 1755-1761 行核对过，越界值在入口被夹到范围内。
 
-```cpp
-// 静态函数 getDouble 默认只有一位小数精度
-bool ok = false;
-double val = QInputDialog::getDouble(
-    parent, "半径", "请输入半径:", 1.0, 0.0, 100.0, 4, &ok);
-//                                                    ^ 注意第四个参数后面才是 decimals
-```
+顺序误判在另一处。QSpinBox 出生范围是 0 到 99（qspinbox.cpp 第 1023-1027 行），您手动构造时把 setIntValue(8080) 排在 setIntRange(1024, 65535) 前面，8080 在前一步就被夹成 99，范围后放宽也回不来，面板上显示的是 99。getInt 内部把顺序做对了，范围在前、值在后（qinputdialog.cpp 第 1238-1239 行），代价是您给静态函数传的初值越了界，会被悄悄夹到边界，函数不给任何提示。
 
-第二个细节是范围验证的时机。setIntRange 和 setDoubleMinimum/Maximum 只在用户通过 spinbox 的上下箭头或手动输入后离开焦点时生效。如果你通过 setIntValue 或 setDoubleValue 程序化设置了一个超出范围的值，QInputDialog 不会自动裁剪——它会原封不动地显示。你必须自己确保设置的初始值在范围内。
+精度那头，setDoubleDecimals 直通 QDoubleSpinBox 的 setDecimals，出处第 960-965 行。decimals 是显示与取值共用的精度，设 2 的话 value() 回的就是四舍五入到两位的数，qspinbox.cpp 第 573 行的文档注释拿 setValue(2.555) 举例，回 2.56。您要收更高精度的值，decimals 得开大，没有显示两位、内部存全精度这回事。
 
-### 3.3 与 QValidator 集成做输入验证
+属性函数还有个顺手的小动作容易绊人。setTextValue 进门头一件事就是 setInputMode(TextInput)，出处第 657-671 行，setIntValue 与 setDoubleValue 也各自切回自己的模式，出处第 771、879 行。您前一句 setIntValue(8080)，后一句 setTextValue 给文本，模式已经被切回 TextInput，整数面板根本没上过场。咱们排代码时把模式类调用放在最前面，这些小动作就影响不到结果。
 
-TextInput 模式下的 QLineEdit 支持设置 QValidator。这是静态函数 getText 完全没有暴露的能力。最常见的用法是给文本输入框加正则校验，限制用户只能输入合法的格式。
+## TextInput 的定制：validator 走 findChild，看清它摸到的是谁
 
-```cpp
-auto *dlg = new QInputDialog(parent);
-dlg->setInputMode(QInputDialog::TextInput);
-dlg->setWindowTitle("请输入 IP 地址");
+静态 getText 暴露的参数里有 echo 模式与输入法提示，没有 validator 的位置。想要正则校验，您得手动构造，再自己摸到内部的 QLineEdit。示例走的正是同一条路（examples/advanced/03-qtwidgets/63-qinputdialog-advanced/，input_dialog_demo.cpp 的 openTextDialog），设好模式与默认值之后，findChild<QLineEdit*>() 把验证器挂上去。
 
-// 只允许合法 IPv4 格式
-auto *validator = new QRegularExpressionValidator(
-    QRegularExpression(
-        R"((\d{1,3}\.){3}\d{1,3})"), dlg);
-dlg->setTextValue("192.168.1.1");
+findChild 的一步您得知道它在摸谁。ensureLayout 保证对话框自家的 lineEdit 总是最早出生（第 203-206 行），所以哪怕当前是别的模式在场，findChild<QLineEdit*>() 摸到的也是藏起来的自家 lineEdit，验证器设上去不起作用。纯文本模式下没这个问题，但拿 findChild 摸内部控件，Qt 没给跨版本承诺，笔者的底线是能用属性接口就不摸内部，前缀后缀这类需求，直接继承 QDialog 自己搭面板更踏实。
 
-// 通过 findChild 拿到内部 QLineEdit 设置 validator
-auto *lineEdit = dlg->findChild<QLineEdit*>();
-if (lineEdit) {
-    lineEdit->setValidator(validator);
-}
-```
+多行文本咱们顺带收进来。UsePlainTextEditForTextInput 选项，出处 qinputdialog.h 第 46 行，把输入件换成 QPlainTextEdit，getMultiLineText 的实现靠的就是设它，出处 qinputdialog.cpp 第 1190-1191 行，没有为多行单开模式。选项集里另有一只 NoButtons，文档注明可以拿来做“活对话框”（第 582 行），按钮排藏起来，值一变就发 Changed 信号，配后文的 open 正好成套。
 
-QRegularExpressionValidator 有三种验证状态：Acceptable（完全匹配）、Intermediate（部分匹配，可能继续输入后合法）、Invalid（不合法）。lineEdit 在输入时实时校验，Invalid 状态的字符直接不会被输入。但 Intermediate 状态是允许的——用户输入 "192." 的时候，整个串还没匹配完，但它是合法的中间态，不能拦住。
+## getItem：可编辑下拉与列表视图，谁上场由一处分支决定
 
-如果你需要的验证逻辑比正则更复杂（比如 IP 地址每段不能超过 255），可以继承 QValidator 自己实现 validate() 方法。validate() 的返回值就是上面三种状态之一，加上一个可以修改输入串的 int& pos 参数。
+下拉与列表共用一份数据。咱们看 ensureListView，造列表时直接 setModel(comboBox->model())，出处第 282 行，单选、禁编辑（第 280-281 行）。您不选任何条目，OK 是灰的（第 356-357 行），选中一行后，currentRowChanged 把 OK 点亮，出处第 438-443 行。
 
-```cpp
-class IpAddressValidator : public QValidator
-{
-public:
-    State validate(QString &input, int &pos) const override
-    {
-        // 空串或部分输入允许继续
-        if (input.isEmpty()) return Intermediate;
+谁上场，chooseRightTextInputWidget 里一个分支说了算，出处第 361-387 行。第 366 行的条件咱们原样看，UseListViewForComboBoxItems 开着且下拉框不可编辑，才轮到列表上场，否则一律下拉框。两样同时设置时，赢的是可编辑下拉框，被跳过的是列表视图。文档把行为写明白了，枚举说明原文就是 “rather than a non-editable QComboBox”（第 583-584 行），列表视图天生只服务不可编辑的场景。
 
-        QStringList parts = input.split('.');
-        if (parts.size() > 4) return Invalid;
+可编辑模式还带出返回值上的一处细节。setComboBoxText 找不到列表里的对应项时，只有可编辑才 setEditText（第 389-397 行），用户敲进来的自定义文本原样进了 textValue。您拿返回值去 indexOf 查索引，列表外的值查回来是 -1，后续拿 -1 当索引用就出事了。咱们老实用字符串本身，或者查到 -1 就单走一条自定义分支。
 
-        for (const auto &part : parts) {
-            if (part.isEmpty()) return Intermediate;
-            bool ok = false;
-            int val = part.toInt(&ok);
-            if (!ok || val < 0 || val > 255) return Invalid;
-        }
-        return (parts.size() == 4) ? Acceptable : Intermediate;
-    }
-};
-```
+## open()：按槽函数签名自动挑信号，关窗自动断连
 
-这种自定义 validator 的好处是验证逻辑完全由你控制。缺点是 validate() 被高频调用（每次按键都触发），内部不能做重量级操作。另外 setInputMethodHints 可以配合虚拟键盘场景使用——比如 Qt::ImhFormattedNumbersOnly 提示移动端虚拟键盘只显示数字和小数点。
+静态函数用 exec 堵着等结果，QInputDialog 另备了一条非模态的路。open(receiver, member)（第 1028-1035 行）连接前要拿 signalForMember 挑信号（第 46-56 行），槽的第一个参数是 QString 就接 textValueSelected，是 int 接 intValueSelected，是 double 接 doubleValueSelected，没有参数就接 accepted。对话框关闭时，done 会自动拆掉连接（第 1104-1109 行）。咱们做工具栏上点一下弹窗改一个值的交互，挑信号与断连两件手工活，全都省了。
 
-### 3.4 getItem 的可编辑模式与自定义数据源
+## 官方文档参考
 
-getItem 的可编辑模式是一个容易被忽略的功能。静态函数 getItem 的第五个参数 editable 默认是 false，设为 true 后 QComboBox 变成可编辑的——用户既可以从下拉列表选择，也可以自己输入不在列表中的值。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 6.9.1 源码核对过。
 
-```cpp
-QStringList presets = {"192.168.1.1", "10.0.0.1", "localhost"};
-bool ok = false;
-QString choice = QInputDialog::getItem(
-    parent, "服务器地址", "选择或输入服务器地址:",
-    presets, 0, true, &ok);
-```
+[Qt 文档 · QInputDialog](https://doc.qt.io/qt-6/qinputdialog.html) -- 输入对话框类，五只静态函数与属性接口的定义处
 
-用户输入的自定义值会原样返回。这就带来一个问题：如果允许自由输入，返回值可能不在预定义列表中，调用方必须做额外的验证。配合前面讲的 QValidator 就很自然了——给 QComboBox 的 lineEdit() 设置 validator，用户自定义输入时自动校验。
+[Qt 文档 · QValidator](https://doc.qt.io/qt-6/qvalidator.html) -- 输入校验基类，三种校验状态的定义
 
-另一个进阶用法是 UseListViewForComboBoxItems 选项。默认情况下 getItem 内部用 QComboBox 展示列表，如果列表项很多（比如几十个），QComboBox 的下拉体验不好。设置这个选项后内部换用 QListView，支持滚动条和更好的视觉效果。
+[Qt 文档 · QRegularExpressionValidator](https://doc.qt.io/qt-6/qregularexpressionvalidator.html) -- 正则校验器，示例文本面板用的验证器
 
-```cpp
-dlg->setOption(QInputDialog::UseListViewForComboBoxItems, true);
-```
+[Qt 文档 · QSpinBox](https://doc.qt.io/qt-6/qspinbox.html) -- 整数输入框，范围与步长接口
 
-但要注意，UseListViewForComboBoxItems 和 editable 是互斥的——QListView 不支持直接编辑。如果你同时设置了可编辑模式和列表视图模式，可编辑会被忽略。这个限制在 Qt 文档中没有明确说明，但翻源码可以看到 QInputDialog 在设置 comboItems 时会根据选项决定用 QComboBox 还是 QListView，后者根本没有 lineEdit 可言。
-
-现在有一道调试题给大家。看下面这段代码：
-
-```cpp
-QStringList items = {"Red", "Green", "Blue"};
-bool ok = false;
-QString color = QInputDialog::getItem(
-    nullptr, "选择颜色", "颜色:", items, 0, true, &ok);
-if (ok) {
-    int index = items.indexOf(color);
-    // index 可能是 -1
-    applyColorByIndex(index);
-}
-```
-
-问题出在哪里？用户在可编辑模式下输入了 "Purple"，items.indexOf("Purple") 返回 -1，applyColorByIndex(-1) 大概率会出问题。正确的做法是检查 indexOf 的返回值，或者直接使用 color 字符串本身而不是索引。
-
-## 4. 踩坑预防
-
-第一个坑是 getDouble 的默认小数精度只有一位。getDouble 的函数签名是 getDouble(parent, title, label, value, min, max, decimals, ok)，其中 decimals 参数容易被忽略——它排在 value/min/max 后面，很多开发者只传了前几个参数就以为够了。后果是用户输入 3.14 拿到的却是 3.1。解决方案是显式传 decimals 参数，根据业务需求设置足够的精度。
-
-第二个坑是 setIntValue / setDoubleValue 设置了超出范围的初始值。setIntRange 和 setDoubleMinimum/Maximum 只约束用户输入，不约束程序化设置的值。如果你先设了范围 0-100，再 setIntValue(200)，对话框打开后显示 200，用户不修改直接点确定，拿到的就是 200。解决方案是设置初始值前自己 clamp 到范围内，或者确保 set*Value 在 set*Range 之后调用并检查值是否被裁剪。
-
-第三个坑是可编辑 getItem 返回了列表外的自定义值但调用方按索引处理。前面调试题已经分析过了。后果是 indexOf 返回 -1，后续逻辑以 -1 作为索引访问数组或模型会导致越界或未定义行为。解决方案是调用方直接使用返回的字符串值，或者对 indexOf 返回值做 -1 检查后走"自定义值"的分支逻辑。
-
-第四个坑是 UseListViewForComboBoxItems 和 editable 同时设置。QListView 不支持编辑，所以可编辑模式被静默忽略——用户只能选择不能输入，但你的代码预期用户可能输入自定义值。后果是验证逻辑把合法的自定义输入当作异常处理。解决方案是明确二选一：需要编辑就用 QComboBox 模式，需要更好的长列表展示就用 QListView 模式但不指望编辑。
-
-## 5. 练习项目
-
-练习项目：网络配置输入面板。我们用 QInputDialog 构建一个多字段的网络设备配置工具，不是一个对话框搞定所有输入，而是每种输入用最适合的模式。
-
-完成标准是：IP 地址输入使用 TextInput 模式加自定义 QRegularExpressionValidator 校验 IPv4 格式。端口号输入使用 IntInput 模式，范围 1-65535，初始值 8080，suffix 显示 " port"。超时时间使用 DoubleInput 模式，范围 0.1-300.0 秒，decimals 为 1，suffix 显示 " sec"。协议选择使用 getItem 可编辑模式，预定义 "TCP"、"UDP"、"MQTT"，但允许输入自定义协议名。所有输入结果汇总到一个配置结构体中，任何输入不合法时整个配置不被应用。
-
-提示几个关键点：每种输入单独弹一个 QInputDialog 实例，不要试图在一个对话框里塞所有字段；IP 校验用正则 validator 比手动 split 验证更简洁；可编辑 getItem 返回值必须检查是否在预定义列表中；最后汇总时统一做一次完整性校验。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QInputDialog](https://doc.qt.io/qt-6/qinputdialog.html) -- 输入对话框类，四种模式的静态函数与属性接口
-
-[Qt 文档 · QValidator](https://doc.qt.io/qt-6/qvalidator.html) -- 输入校验基类，validate/fixup 三种状态定义
-
-[Qt 文档 · QRegularExpressionValidator](https://doc.qt.io/qt-6/qregularexpressionvalidator.html) -- 正则校验器，Acceptable/Intermediate/Invalid 状态判定
-
-[Qt 文档 · QSpinBox](https://doc.qt.io/qt-6/qspinbox.html) -- 整数输入框，suffix/prefix/range/step 接口
-
-[Qt 文档 · QDoubleSpinBox](https://doc.qt.io/qt-6/qdoublespinbox.html) -- 浮点数输入框，decimals 精度控制
-
-[Qt 文档 · QComboBox](https://doc.qt.io/qt-6/qcombobox.html) -- 下拉选择框，editable 模式与 lineEdit 访问
+[Qt 文档 · QDoubleSpinBox](https://doc.qt.io/qt-6/qdoublespinbox.html) -- 浮点输入框，decimals 精度语义
 
 ---
 
-到这里，QInputDialog 的进阶用法就过了一遍。四种输入模式内部使用不同的控件，搞清楚这一点就知道哪些配置是静态函数够不到的。范围控制看似简单，但默认精度和初始值裁剪这两个细节真的坑了不少人。QValidator 集成是 TextInput 模式的杀手级能力——正则校验、自定义校验，静态函数完全暴露不出来。getItem 的可编辑模式很方便，但别忘了对返回值做列表外检查。掌握了这些，QInputDialog 就从一个简单的"弹框拿值"工具变成了真正可定制的输入组件。
+标准对话框的取值部分到这里收队，下一站 [3.64 QColorDialog 进阶](./64-qcolordialog-advanced.md)，从取值转入取色，静态函数族与自定义选项在那边等咱们。
+
+想动手的您把示例跑起来（examples/advanced/03-qtwidgets/63-qinputdialog-advanced/，可执行文件 63-qinputdialog-advanced）。第一只按钮开邮箱面板，咱们试着敲一个空格，输入框根本不收，验证器把非法字符拦在按键这一层，把地址删到只剩半截再点 OK，半截照样进了结果标签，文本模式没有 OK 联动。第二只按钮是静态 getInt 的端口面板，范围 1024 到 65535，手输 80，OK 当场变灰，敲回车数字被顶回上一个合法值。第三只是对象式构造的浮点面板，范围 -273.15 到 1000，精度两位，输 -300 敲回车，看着它被顶回 36.5。第四只列表面板给 getItem 传了 false，您想打字也打不进去，只能从五个模块里选，把 false 改成 true 重编，自定义模块名敲得进去，indexOf 查不到的细节当场能试。再动一处代码，把 openTextDialog 里的 setInputMode 那行注释掉，面板一模一样，因为 setTextValue 进门就替您把模式切好了。
+
+完成标准照旧。五只静态函数取消时各回什么，您说得出。getInt 内部范围在前还是值在前，顺序反了会怎样，您讲得明。数字模式下 OK 键的亮灰由哪根连接决定，您数得清。可编辑与列表视图同时设置时谁上场，判定条件在哪一行，您答得上。

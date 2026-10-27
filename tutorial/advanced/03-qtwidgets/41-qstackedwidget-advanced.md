@@ -1,203 +1,120 @@
 ---
 title: "3.41 QStackedWidget 进阶"
-description: "入门篇我们用 QStackedWidget 配合 QComboBox 和 QListWidget 搭了导航切换界面，掌握了 addWidget/setCurrentIndex/currentChanged 信号的基本用法，也搞清了它和 QTabWidget 的核心区别——没有导航头，一切导航逻辑你自己说了算。"
+description: "入门篇用 QStackedWidget 配 QComboBox 和 QListWidget 搭过导航界面，进阶篇回到页面容器那半边对着 6.9.1 读实现，QStackedWidget 继承 QFrame 且本体只是 QStackedLayout 的转发壳、三个信号靠构造里 connect 转发、setCurrentWidget 验明在册才放行而 setCurrentIndex 越界静默返回、切换全程包在 setUpdatesEnabled 里中间态不绘制所以本身不闪、缺的只是几何插值、焦点按三级规则移交、insertWidget 抬索引不发 currentChanged、removeWidget 走 delete takeAt 删的是包装条目页面本体无恙、删当前页按保位补前一位、widgetRemoved 带删除前索引、所有权留在堆叠件上复用要 re-parent、StackingMode 默认 StackOne、StackAll 全员可见当前页仅 raise、切回 StackOne 时 currentIndex 为 0 可见性整理被整个跳过、sizeHint 取全体页最大值窗口不为切页跳动、加滑动动画要遮蔽非 virtual 的 setCurrentIndex 且演完直调基类对齐状态，配套示例在 examples/advanced/03-qtwidgets/41-qstackedwidget-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.41——QStackedWidget 进阶
 
-## 1. 前言 / 当页面切换不再"闪烁"
+[3.40 QTabBar 进阶](./40-qtabbar-advanced.md) 收尾时咱们约好回到页面容器那半边，看堆叠页与标签栏怎么在各写各的代码里保持同构。QStackedWidget 在 39 里当过配角，qt_tabwidget_stackedwidget 这个对象名咱们照过面，QTabWidget 删标签，靠的也是堆叠件的 widgetRemoved 回流驱动。本篇把它扶正单独读，您会看到两边的机制处处对得上，删除当前页后的补位规则，与 QTabBar 的 SelectRightTab 同一套保位语义。源稿的重心放在切换动画上，容器本身的机制几乎空白，本篇按 6.9.1 源码重排，动画收进末节单独交代。
 
-入门篇我们用 QStackedWidget 配合 QComboBox 和 QListWidget 搭了导航切换界面，掌握了 addWidget / setCurrentIndex / currentChanged 信号的基本用法，也搞清了它和 QTabWidget 的核心区别——没有导航头，一切导航逻辑你自己说了算。入门篇最后留了一个伏笔：QStackedWidget 切换页面时是直接 show/hide，没有任何过渡效果——旧页面瞬间消失、新页面瞬间出现，视觉上就是一帧闪切。对于一个系统设置界面来说这倒没什么，但如果你在做移动端风格的导航、向导式引导流程、或者任何需要"流畅感"的 UI，这种硬切就很难接受了。
+本篇引用以 qstackedlayout.cpp 为主，壳侧补 qstackedwidget.cpp 与 qstackedwidget.h，删除路径补 qlayout.cpp，继承链补 qframe.cpp。配套示例的完整玩法咱们放在结语，正文引用文件名加行号。
 
-今天我们解决的核心问题就是：给 QStackedWidget 加上滑动切换动画。围绕这个目标，我们会拆解几个关键技术点——QPropertyAnimation 控制 pos 和 geometry 实现平移滑入滑出、QGraphicsOpacityEffect 实现淡入淡出的组合动画、动画期间如何冻结用户交互防止状态混乱，以及 QStackedWidget 的 sizeHint 在动画过程中如何配合窗口大小变化。
+## 壳与芯：QStackedWidget 的每一行都在转发
 
-## 2. 环境说明
+继承链的头一行写在 qstackedwidget.h 第 16 行，QStackedWidget 继承 QFrame。它是 QFrame 后代这件事平时看不出来，默认 frameStyle 是 NoFrame 加 Plain，出处（qframe.cpp 第 20 行），边框一个像素都不画，但 setFrameShape、setLineWidth 和 QSS 的边框位都随时可用，[3.45 QFrame 进阶](./45-qframe-advanced.md) 咱们专门读它，这里挂链不展开。私有数据也顺着继承链走，QStackedWidgetPrivate 继承 QFramePrivate，成员只有一个布局指针，出处（qstackedwidget.cpp 第 12-18 行）。
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。涉及的类分布在 QtWidgets（QStackedWidget、QPropertyAnimation、QGraphicsOpacityEffect、QParallelAnimationGroup）和 QtCore（QEasingCurve、QAbstractAnimation）模块中，链接 Qt6::Widgets 即可。动画相关代码在所有桌面平台上行为一致。
+构造体里拢共几句话（qstackedwidget.cpp 第 108-118 行）：new 一个 QStackedLayout 装进自己，随后三句 connect，把布局的 currentChanged、widgetRemoved、widgetAdded 逐一转发过来，信号名一个不改。此后 addWidget、insertWidget、removeWidget、count 全是一行委托，机制本体都在布局那边。读它的法子是把壳当目录、把 QStackedLayout 当正文，咱们下面直接进正文。widgetAdded 是 6.9 新增的信号（第 92-100 行），页面动态增删的同步逻辑从此不必拿 indexOf 轮询。
 
-## 3. 核心概念讲解
+## 两扇门进同一间客厅：setCurrentWidget 验明在册，setCurrentIndex 静默返回
 
-### 3.1 用 QPropertyAnimation 实现页面滑动
+切换有两个入口。setCurrentWidget 在壳这边有独立守卫，indexOf 返回 -1 就发一句 qWarning 直接返回，警告原文是 “not contained in stack”，出处（qstackedwidget.cpp 第 220-228 行）。setCurrentIndex 没有这等待遇，越界索引走到布局里被 widget(index) 的 nullptr 挡回来，函数静默返回，一个字都不吭（qstackedlayout.cpp 第 277-280 行）。您调试时切页没反应，头一件事就是核对索引合法性。两扇门在 QStackedLayout::setCurrentIndex 汇合，setCurrentWidget 进来时，经布局的同名函数把指针换成索引，再进同一扇正门（第 349-357 行）。
 
-QStackedWidget 的 setCurrentIndex 做的事情非常简单粗暴——旧页面 hide()，新页面 show()，完事。要实现滑动效果，我们需要自己控制这个过程：在切换时不直接调 setCurrentIndex，而是手动把新页面放在视口外，然后用 QPropertyAnimation 把新页面滑进来、旧页面滑出去。
+正门里的切换比源稿写的“旧页 hide、新页 show，完事”厚实得多。函数开头取 prev 与 next，next 为空或者就是 prev，直接返回，切到当前页不重发信号（第 277-280 行）。切换全程包在父件的 setUpdatesEnabled(false) 与 true 之间，出处（第 282-288、329-330 行），中间态不进绘制，源稿说的一帧闪切并不存在，切页本身不闪，缺的只是几何插值，那是动画的活儿，末节咱们自己补。
 
-实现滑动切换的思路是这样的：假设我们要从左往右切换（新页面从右侧滑入），先把新页面 geometry 的 x 坐标设为 QStackedWidget 的宽度（即视口右边缘之外），然后启动一个 QPropertyAnimation 将新页面的 pos 从 (width, 0) 动画到 (0, 0)，同时把旧页面从 (0, 0) 动画到 (-width, 0)。两个动画用 QParallelAnimationGroup 同步执行，结束时调用 setCurrentIndex 确保状态一致。
+骨架咱们摘出来对着看。
 
 ```cpp
-class SlidingStackedWidget : public QStackedWidget
-{
-    Q_OBJECT
+// 切换的骨架（qstackedlayout.cpp 第 293-301 行）：
+if (prev) {
+    prev->clearFocus();
+    if (d->stackingMode == StackOne)
+        prev->hide();
+}
+d->index = index;
+next->raise();
+next->show();
+```
 
-public:
-    enum class SlideDirection {
-        kLeftToRight,
-        kRightToLeft,
-        kTopToBottom,
-        kBottomToTop
-    };
+顺序咱们逐行念下来：旧页让出焦点，StackOne 模式下才 hide，d->index 落位，新页 raise 再 show。hide 看模式，raise 不看，raise 这一步在 StackAll 模式里有特殊含义，下节展开。
 
-    void slideToIndex(int index,
-                      SlideDirection direction = SlideDirection::kLeftToRight)
-    {
-        if (index < 0 || index >= count() || index == currentIndex()) {
-            return;
-        }
+焦点移交这段笔者停了半拍，它比想象中讲究。切换前记下窗口的焦点件，焦点原本落在旧页上的话，切完替它安排新家：头一个候选是新页的 focusWidget()（第 309-310 行），找不到就沿焦点链扫一圈，挑第一个能 Tab、可见、可用的件（第 313-318 行），再兜底给新页本体（第 323-324 行）。您做表单类页面，切页后焦点跟不跟手全看这一段。currentChanged 在末尾才发，参数是新索引（第 331 行）。
 
-        QWidget *current = currentWidget();
-        QWidget *next = widget(index);
+## 增删页：索引怎么挪，删掉的页面归谁
 
-        // 先把新页面放到视口外面
-        QPoint offset = calculateOffset(direction);
-        next->setGeometry(current->geometry().translated(offset));
-        next->show();
-        next->raise();
+addWidget 是 insertWidget 的别名，转手传列表长度（qstackedlayout.cpp 第 179-183 行）。insertWidget 的规则在第 199-220 行：索引越界按追加算，负数同样处理（第 203-205 行）。堆叠还是空的时候，新页直接走 setCurrentIndex 上位，出处（第 209-210 行）。已有当前页时，插进的位置不晚于当前索引，d->index 就抬一格，当前件不换人（第 212-213 行）。您靠 currentChanged 同步导航控件的话，插入页面不会打扰它，信号认部件换人，索引挪动不入它的眼。StackOne 下新页被 hide，一律 lower 垫底（第 214-216 行），末尾发 widgetAdded（第 218 行）。
 
-        // 旧页面滑出，新页面滑入
-        auto *group = new QParallelAnimationGroup(this);
+删除的路径多绕一站。QStackedWidget::removeWidget 委托给 QLayout::removeWidget，后者沿 itemAt 找到包装条目，delete takeAt(i)（qlayout.cpp 第 1297-1312 行），删掉的是 QWidgetItem 包装，页面本体无恙。后继规则在 takeAt 里（qstackedlayout.cpp 第 243-264 行），与 QTabBar 删当前标签的保位语义同构：删的不是当前页、位置又在当前索引之前，d->index 减一格，不发信号（第 257-259 行）。删的正是当前页，d->index 归 -1，列表还有人就让同位置的新面孔经 setCurrentIndex 补位，删的是末位则取前一位（第 249-253 行），删空了直接发 currentChanged(-1)，出处（第 254-256 行）。hide 之前还有个细节值得咱们多看一眼，删除发生在部件析构里时，hide 会被跳过，qt_wasDeleted 拿私有标志挡了一下（第 234-237、261 行），析构中的对象经不起再碰显示状态。
 
-        auto *anim_out = new QPropertyAnimation(current, "pos");
-        anim_out->setDuration(300);
-        anim_out->setStartValue(current->pos());
-        anim_out->setEndValue(current->pos() - offset);
-        anim_out->setEasingCurve(QEasingCurve::OutCubic);
-        group->addAnimation(anim_out);
+widgetRemoved 带着删除前的索引发出（第 260 行），咱们自己写的槽函数拿到的也是这个语义，39 篇 QTabWidget 删标签全靠它回流驱动。
 
-        auto *anim_in = new QPropertyAnimation(next, "pos");
-        anim_in->setDuration(300);
-        anim_in->setStartValue(current->pos() + offset);
-        anim_in->setEndValue(current->pos());
-        anim_in->setEasingCurve(QEasingCurve::OutCubic);
-        group->addAnimation(anim_in);
+所有权笔者单独核对过注释，removeWidget 不删除页面，父对象与父件都还是 QStackedWidget，想复用就自己 re-parent（qstackedwidget.cpp 第 163-177 行）。被删的页面几何停在旧位置、处于隐藏态，放着不管，它就以隐形孩子的身份留在堆叠件里，堆叠件析构时一并带走。想收回手动管理，removeWidget 之后补一句 setParent(nullptr)，这一步省不得。
 
-        connect(group, &QParallelAnimationGroup::finished, this,
-                [this, next, index]() {
-            setCurrentWidget(next);
-            // 重置所有页面的位置
-            for (int i = 0; i < count(); ++i) {
-                widget(i)->move(0, 0);
-            }
-            sender()->deleteLater();
+## StackingMode：StackOne 只亮一页，StackAll 全员可见当前页压顶
+
+咱们从默认值记起，私有构造把 stackingMode 初始化成 StackOne，出处（qstackedlayout.cpp 第 21 行），只亮当前页是常态。StackAll 反过来，全部页面可见，当前页只是被 raise 压到顶（枚举文档第 516-521 行），属性注释给的场景是图形编辑器的叠层绘制，半透明画布盖在内容上（第 524-533 行）。布局的 setGeometry 按模式分叉（第 452-467 行）：StackOne 只把矩形给当前页，StackAll 给所有页同一个矩形。咱们顺带记一笔，insertWidget 的 hide 只在 StackOne 下执行（第 214-216 行），StackAll 里新页插进来不藏，直接以 lower 的姿态垫在底下候场。这也埋下动画一节的伏笔，隐藏页的几何是陈旧的，轮到您把它切上场才被摆正。
+
+切换模式的代码笔者读了两遍才敢信。切到 StackAll 时，当前页的几何被复制给全部页面再统一 setVisible(true)，叠层整整齐齐（第 559-569 行）。切回 StackOne 的分支请您看摘录。
+
+```cpp
+// 切回 StackOne 的分支（qstackedlayout.cpp 第 553-558 行）：
+case StackOne:
+    if (const int idx = currentIndex())
+        for (int i = 0; i < n; ++i)
+            if (QWidget *widget = d->list.at(i)->widget())
+                widget->setVisible(i == idx);
+    break;
+```
+
+条件拿 currentIndex() 的返回值直接当布尔值，当前页恰好是 0 号时整个整理循环被跳过，所有页面留在可见状态。您拿 6.9.1 做实验，从 StackAll 切回 StackOne 会看到几页内容叠在一起晾着，可见性的整理得自己补一句循环。另外 QStackedWidget 没把 stackingMode 暴露成属性，头文件里查无此名（qstackedwidget.h），要调 setStackingMode 得从 layout() 取出布局再 static_cast<QStackedLayout*> 转过去，壳转发了一切，唯独漏了这一项。
+
+## sizeHint 取全体页的最大值，窗口不为切页跳动
+
+sizeHint 从 (0,0) 起步，逐页 expandedTo 取最大（qstackedlayout.cpp 第 416-432 行），某页某轴的 sizePolicy 是 Ignored，那一维按 0 计（第 425-428 行）。minimumSize 同理，取全页最大的 qSmartMinSize，出处（第 437-447 行）。后果您一用就能感到：切到小页面窗口不缩，布局谈判的底牌是最大那页，导航类界面不会切一次页跳一次尺寸。
+
+heightForWidth 有段源码注释值得念给您，它跳过 QLayoutItem，直接问 widget 本体，注释写明原因是 QWidgetItem::heightForWidth 对隐藏件会返回 -1，出处（第 493-505 行）。隐藏页照样参与高度计算，只是问法不同。反过来这也是约束，几页尺寸悬殊时堆叠件常驻最大页的地盘，想按当前页收缩，只能监听 currentChanged 自己重设尺寸策略，示例没做这一步，您扩展时可以补。
+
+## 滑动动画：遮蔽非 virtual 的 setCurrentIndex，演完回基类对齐
+
+给切换加动画，源稿的方向是对的，机制上有一处硬约束必须交代。setCurrentIndex 没有 virtual 修饰，就是普通槽（qstackedwidget.h 第 37-39 行），子类的同名函数只能算遮蔽，经基类指针或引用调用会绕过动画直达基类实现。您翻示例的类注释，这层后果写得很清楚，出处（slide_stacked_widget.h 第 32-36 行），注释同样写明 setCurrentWidget 没被遮蔽，直达基类实现，直接切不播动画，出处（文件头的类注释第 20-21 行）。
+
+动画流程咱们照示例走。入口三道守卫，非法索引、同页请求、动画进行中一律返回，出处（slide_stacked_widget.cpp 第 22-29 行）。新页被 move 到视口外，show 加 raise 让它站上桌面（第 61-64 行）。两个 QPropertyAnimation 只动 pos 属性，旧页滑出、新页滑进，包在 QParallelAnimationGroup 里同步，出处（第 73-86 行）。收尾在 finished 回调里，咱们把摘录放在下面。
+
+```cpp
+// finished 收尾（slide_stacked_widget.cpp 第 89-98 行）：
+connect(group, &QParallelAnimationGroup::finished, this,
+        [this, toIndex, group]() {
+            // QStackedWidget::setCurrentIndex (non-virtual call via scope resolution)
+            // to update internal state without re-triggering our override
+            QStackedWidget::setCurrentIndex(toIndex);
+            m_animating = false;
+            group->deleteLater();
         });
-
-        group->start();
-    }
-
-private:
-    QPoint calculateOffset(SlideDirection dir) const
-    {
-        int w = width();
-        int h = height();
-        switch (dir) {
-        case SlideDirection::kLeftToRight:
-            return {w, 0};
-        case SlideDirection::kRightToLeft:
-            return {-w, 0};
-        case SlideDirection::kTopToBottom:
-            return {0, h};
-        case SlideDirection::kBottomToTop:
-            return {0, -h};
-        }
-        return {w, 0};
-    }
-};
 ```
 
-这里有几个关键细节值得注意。第一，新页面的 geometry 初始位置必须在调用 show() 之前设好，否则用户会看到新页面先在 (0, 0) 闪一下再跳到偏移位置——那一帧闪烁非常刺眼。第二，动画结束后必须调用 setCurrentWidget 或 setCurrentIndex 把 QStackedWidget 的内部状态同步过来，否则下次调用 currentIndex() 返回的还是旧页面的索引。第三，动画结束后要把所有页面的 pos 重置为 (0, 0)，因为 QStackedWidget 正常工作时所有页面的位置都是 (0, 0)，如果你不重置，下次手动调 setCurrentIndex 就会出现页面位置偏移的问题。
+作用域解析直调基类的 setCurrentIndex，直调这一步不能省。动画期间咱们手动摆弄几何，堆叠件的 d->index 还是旧值，currentIndex() 会说谎，导航按钮的边界判断、currentChanged 的订阅者全跟着错。回到基类实现正好把状态收干净，raise 加 show 新页，hide 旧页，再发信号，一套齐全。
 
-QEasingCurve 的选择直接决定了动画的体感。OutCubic 是最常用的——开始快、结束慢，给人一种"稳稳停下"的感觉。InOutCubic 更适合循环播放的动画。Linear 几乎不用，因为它看起来机械、没有物理感。你可以用 QEasingCurve::Type 枚举里提供的几十种曲线做实验，但实际项目中 90% 的场景用 OutCubic 或 OutQuad 就够了。
+交互冻结用 m_animating 一个布尔就够，动画进行中新的切换请求直接丢弃，您舍不得丢就再记一个待办索引，finished 里看到就接着切。给整个堆叠件 setEnabled(false) 也是一路，控件变灰，用户知道系统在忙，代价是导航件在动画期间也点不动。
 
-### 3.2 淡入淡出 + 缩放的组合过渡效果
+还有一个时段性风险，机制依据在 setGeometry 那段。动画进行中窗口被拖宽，布局重新分派矩形，StackOne 只认当前页（第 452-459 行），滑到半路的旧页被一把拽回完整矩形、站回 (0,0)，新页仍按旧宽度滑入，两页叠在一起。示例没处理 resize，您把时长压在两三百毫秒重合概率就小得多，要彻底处理就在 resizeEvent 里停动画、重摆几何、再续播。
 
-纯滑动不是唯一选择。移动端应用大量使用的是淡入淡出（opacity 渐变）配合轻微的缩放（scale），这种过渡比滑动更轻量、更"现代"。Qt 中实现淡入淡出的标准做法是给 QWidget 设置 QGraphicsOpacityEffect，然后用 QPropertyAnimation 动画改变 effect 的 opacity 属性。
+## 官方文档参考
 
-```cpp
-void fadeIn(QWidget *target, int duration = 250)
-{
-    auto *effect = new QGraphicsOpacityEffect(target);
-    target->setGraphicsEffect(effect);
-    effect->setOpacity(0.0);
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，widgetAdded 信号要 6.9 起才有。QStackedWidget、QStackedLayout 与 QPropertyAnimation 同在 QtWidgets，链接 Qt6::Widgets 即可。
 
-    auto *anim = new QPropertyAnimation(effect, "opacity");
-    anim->setDuration(duration);
-    anim->setStartValue(0.0);
-    anim->setEndValue(1.0);
-    anim->setEasingCurve(QEasingCurve::InOutQuad);
+[Qt 文档 · QStackedWidget](https://doc.qt.io/qt-6/qstackedwidget.html) -- 堆叠页面容器，removeWidget 的所有权说明与 setCurrentWidget 的前置条件定义处
 
-    connect(anim, &QPropertyAnimation::finished, effect, [target]() {
-        target->setGraphicsEffect(nullptr);
-    });
-    anim->start(QAbstractAnimation::DeleteWhenStopped);
-}
-```
+[Qt 文档 · QStackedLayout](https://doc.qt.io/qt-6/qstackedlayout.html) -- 堆叠布局，setCurrentIndex 路径、sizeHint 聚合与增删后继规则的实现地
 
-这里有一个很容易踩的坑：QGraphicsOpacityEffect 会给 QWidget 加一层独立的绘制层。动画结束后如果你不把 effect 移除（setGraphicsEffect(nullptr)），这个额外的绘制层会一直存在，在某些平台和某些 QSS 配置下会导致渲染性能下降甚至显示异常。特别是当你同时使用了 QSS 的 background-image 或者半透明背景时，opacity effect 可能会和 QSS 的绘制逻辑产生冲突——表现为文字模糊、背景色叠加错误等。
+[Qt 文档 · QStackedLayout::stackingMode](https://doc.qt.io/qt-6/qstackedlayout.html#stackingMode-prop) -- 堆叠模式属性，StackOne 默认与 StackAll 叠层用法
 
-如果你想把淡入淡出和滑动组合在一起——比如新页面从右侧滑入的同时还有从 0 到 1 的透明度变化——就把 pos 动画和 opacity 动画都加到 QParallelAnimationGroup 里同步执行。组合动画的重点是时长的协调：滑动和透明度的 duration 必须一致，否则一个动画结束了另一个还在跑，效果会非常违和。
+[Qt 文档 · QPropertyAnimation](https://doc.qt.io/qt-6/qpropertyanimation.html) -- 属性动画，滑动切换里驱动 pos 的引擎
 
-### 3.3 动画期间冻结交互
-
-动画播放过程中有一个棘手的问题：用户如果在动画还没结束时快速点击导航切换，就会出现状态混乱。比如当前正在从页面 0 滑到页面 1，动画进行到一半用户又点了页面 2，这时候你同时启动了两组动画——旧页面的位置已经不在 (0, 0) 了，新动画的偏移计算全部出错。
-
-解决方案是在动画播放期间屏蔽用户输入。最简单的做法是维护一个 `m_animating` 标志位，slideToIndex 开始时设为 true，finished 回调中设为 false。在标志位为 true 期间，所有的切换请求直接忽略或者入队等待。
-
-```cpp
-bool m_animating = false;
-
-void slideToIndex(int index, SlideDirection direction)
-{
-    if (m_animating || index == currentIndex()) {
-        return;
-    }
-    m_animating = true;
-    // ... 启动动画 ...
-
-    connect(group, &QParallelAnimationGroup::finished, this,
-            [this]() {
-        m_animating = false;
-    });
-}
-```
-
-如果你不想直接丢弃用户在动画期间的输入，可以用一个 `m_pendingIndex` 记录用户最后一次请求的目标索引，动画结束后检查是否有待处理的切换请求，如果有就立即启动新的切换动画。
-
-还有一种更粗暴但更省事的方案：在动画期间给整个 QStackedWidget 设置 setEnabled(false)，动画结束后恢复。这会阻止所有鼠标和键盘事件到达子控件，视觉上用户会看到控件变灰（取决于 QSS），清楚地知道"系统在忙"。
-
-### 3.4 窗口大小变化时的动画适配
-
-滑动动画的偏移量依赖 QStackedWidget 的当前尺寸（width 或 height）。如果动画播放过程中窗口大小发生了变化——比如用户拖拽了窗口边框——offset 计算的基础就变了。动画开始时偏移量是 800 像素（窗口宽 800），但动画还没结束窗口被拉宽到了 1000，新页面的终点位置 (0, 0) 仍然是正确的，但旧页面滑出的距离不够，会停在视口中间而不是完全滑出去。
-
-解决这个问题的思路有两个。第一种是在动画期间禁止窗口大小变化——如果你的 QStackedWidget 在一个固定大小的 QDialog 里，这不是问题。第二种是监听 resizeEvent，在窗口大小变化时调整正在进行的动画的 endValue。但 QPropertyAnimation 在运行时修改 endValue 的行为在 Qt 文档中没有明确保证，实测中虽然可以生效但时间参数不会自动调整，可能导致动画速度突变。
-
-更稳健的做法是在 resizeEvent 中重新计算所有页面的 geometry。因为 QStackedWidget 的页面 geometry 应该和 QStackedWidget 自身大小一致，所以在 resize 的时候把所有页面的 setGeometry 更新一下就行了。但注意，如果动画正在进行中且页面位置被动画控制着，你不能直接暴力 setGeometry——需要暂停动画、更新几何、再恢复动画。实际工程中最省事的做法就是在动画播放期间不让窗口 resize，或者把动画时长控制得足够短（200-300ms），让窗口 resize 和动画播放重合的概率降到最低。
-
-## 4. 踩坑预防
-
-第一个坑是动画结束后不调用 setCurrentIndex 或 setCurrentWidget 同步内部状态。QStackedWidget 内部维护着一个 currentIndex，你通过手动移动页面位置实现了视觉上的切换，但 QStackedWidget 的 currentIndex 还是旧值。这会导致 currentIndex() 和 currentWidget() 返回错误的结果，后续所有依赖这些方法的逻辑（比如导航控件的选中同步、页面状态判断）全部出错。后果就是下一次调用 slideToIndex 时 index == currentIndex() 判断为 true，切换直接被跳过。解决方案是在 finished 回调中必须调用 setCurrentWidget(next) 同步状态。
-
-第二个坑是 QGraphicsOpacityEffect 和 QSS 背景的冲突。给一个有 QSS 半透明背景或 background-image 的控件加上 QGraphicsOpacityEffect 后，在某些平台（特别是 Linux + X11）上会出现文字模糊、背景色叠加异常。原因是 opacity effect 在绘制时引入了额外的合成层，和 QSS 的绘制路径产生了重叠。后果就是动画看起来正常但页面上文字像被涂了一层毛玻璃。如果你的页面使用了复杂的 QSS 样式，尽量用滑动动画而不是淡入淡出——滑动不依赖 effect，不会和 QSS 冲突。
-
-第三个坑是动画结束时忘记重置页面 pos。QStackedWidget 正常工作时所有页面都在 (0, 0)，如果你在动画结束后不把旧页面和新页面的 pos 重置回 (0, 0)，下次用户手动调用 setCurrentIndex（不走你的 slideToIndex）时，页面会出现在偏移后的位置——你可能看到页面内容只显示了左半边或者完全不可见。养成习惯：finished 回调里遍历所有页面把 pos 重置。
-
-## 5. 练习项目
-
-练习项目：带动画的设置中心导航。我们要做一个视觉效果接近移动端的设置界面。
-
-完成标准是：左侧 QListWidget 作为导航列表，包含六个项目："通用"、"账户"、"通知"、"外观"、"隐私"、"关于"。右侧是一个自定义的 SlidingStackedWidget，每个导航项对应一个页面。点击导航列表时，页面以滑动动画切换——从上到下切换时新页面从下方滑入，从下到上切换时新页面从上方滑入。动画期间导航列表不可点击（setEnabled(false)）。动画使用 OutCubic 缓动曲线，时长 280ms。窗口标题通过 currentChanged 信号动态更新为"设置中心 — [页面名]"。SlidingStackedWidget 需要在 resizeEvent 中正确处理页面几何，确保窗口大小变化时不会出现页面错位。
-
-提示几个关键点：根据 currentIndex 和目标 index 的大小关系决定滑动方向——index 增大往左滑，index 减小往右滑；animation group 的 finished 回调里必须 setCurrentWidget + 重置 pos + 恢复导航列表 enabled；可以用 QSignalMapper 或者 Lambda 把导航项和页面索引绑定起来。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QStackedWidget](https://doc.qt.io/qt-6/qstackedwidget.html) -- 堆叠页面控件，包含 addWidget/removeWidget/setCurrentIndex 等接口
-
-[Qt 文档 · QPropertyAnimation](https://doc.qt.io/qt-6/qpropertyanimation.html) -- 属性动画类，用于动画化 QObject 的 Qt 属性
-
-[Qt 文档 · QParallelAnimationGroup](https://doc.qt.io/qt-6/qparallelanimationgroup.html) -- 并行动画组，同步执行多个动画
-
-[Qt 文档 · QEasingCurve](https://doc.qt.io/qt-6/qeasingcurve.html) -- 缓动曲线，控制动画的时间-值映射关系
-
-[Qt 文档 · QGraphicsOpacityEffect](https://doc.qt.io/qt-6/qgraphicsopacityeffect.html) -- 透明度效果，用于实现淡入淡出
+[Qt 文档 · QTabWidget](https://doc.qt.io/qt-6/qtabwidget.html) -- 标签页控件，壳内堆叠件的行为在 3.39 讲过
 
 ---
 
-到这里，QStackedWidget 的进阶内容就拆完了。核心收获就是一个：QStackedWidget 本身不支持动画，但你可以绕过它的 setCurrentIndex，用 QPropertyAnimation 手动控制页面位置来实现滑动、淡入淡出甚至更复杂的过渡效果。关键细节在于动画结束后的状态同步（必须 setCurrentWidget）、页面位置的重置（所有页面回到 (0, 0)）、以及动画期间的交互冻结（防止状态混乱）。把这些环节串起来，你就能做出流畅的页面切换体验——而不只是一个"能切换但不流畅"的堆叠容器。
+容器这半边读穿了，标签栏与堆叠页各写各的代码、共用同一套补位语义，40 篇开头的约定在这两篇里对上了号。下一程换分地盘的容器，[3.42 QSplitter 进阶](./42-qsplitter-advanced.md)，拖杆分尺寸的机制咱们接着看。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/41-qstackedwidget-advanced/，可执行文件 41-qstackedwidget-advanced），入口在 main.cpp 第 47-78 行，三页彩色堆叠加导航条一屏摆开。前进后退按钮直调 setCurrentIndex（main.cpp 第 91-105 行），页码指示靠 currentChanged 更新，出处（第 108-109 行）。您可以改 slide_stacked_widget.cpp 第 77、85 行的 QEasingCurve 换体感，或在动画播放时拖宽主窗口，观察旧页被布局拽回 (0,0) 的那一下，正是上文 setGeometry 分叉的现场。
+
+完成标准照旧。setCurrentIndex 越界为什么一声不吭，您指得出拦截在哪一行。删除当前页后接位的是谁，末位与非末位两种情形您按 takeAt 推得出来。从 StackAll 切回 StackOne、当前页是 0 号会发生什么，您答得出第 554 行的条件毛病在哪。动画结束为什么直调基类 setCurrentIndex，您说得清不对齐会让谁说谎。

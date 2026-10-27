@@ -1,143 +1,107 @@
 ---
 title: "3.21 QCommandLinkButton 进阶"
-description: "入门篇我们把 QCommandLinkButton 的外观构成、向导对话框应用场景和跨平台外观差异过了一遍。进阶篇我们要深入 QCommandLinkButton 的平台样式适配机制、description 文本的布局行为，以及何时应该选择 QCommandLinkButton 而非 QPushButton。"
+description: "入门篇把 QCommandLinkButton 的双层信息结构、向导对话框用法和跨平台外观回退过了一遍，进阶篇拆按钮面板静息跳过、悬停补画的绘制分岔，拆 QSS 颜色字号够得着却分不开标题与 description 的边界，再过 description 换行与 sizeHint 的联动，末尾按描述必要性与平台一致性两条判据过选型，配套示例在 examples/advanced/03-qtwidgets/21-qcommandlinkbutton-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.21——QCommandLinkButton 进阶
 
-## 1. 前言 / 这个按钮为什么只在 Windows 上好看
+[入门篇 QCommandLinkButton 基础](../../beginner/03-qtwidgets/21-qcommandlinkbutton-beginner.md) 把 setText 加 setDescription 的双层信息结构、向导对话框里的用法连同 Linux 与 macOS 上的外观回退过了一遍。[3.20 QCheckBox 进阶](./20-qcheckbox-advanced.md) 收尾说过按钮五连在本篇收官，QCommandLinkButton 是 QPushButton 的子类，却是五连里脾气最偏的一个：同一份代码，咱们拿去 Windows 上编译，出来的是蓝标题加一枚箭头图标的引导按钮。挪到 Linux 上一跑，箭头还在，只是退化成一枚普通的右向箭头，标题也从主题深蓝变回普通字色，引导感弱了一大截。代码没写错，绘制路径本身就分了岔。
 
-入门篇我们把 QCommandLinkButton 的基本用法讲清楚了——setText 加 setDescription 的双层信息结构、向导对话框中的应用场景、以及 Linux/macOS 上外观回退到 Fusion 风格的问题。说实话，如果你只是做 Windows 桌面应用，QCommandLinkButton 直接拿来用就好了——Vista 之后的原生风格绘制效果本身就很好看。但如果你需要跨平台部署，或者你的界面设计中有一组"带描述的选项按钮"但不确定该用 QCommandLinkButton 还是自己拼一个自定义 widget，那你需要理解的东西就比入门篇多不少。这一篇我们就把 QCommandLinkButton 的平台样式适配机制、description 的布局行为、以及按钮选型策略这三个进阶问题拆透。
+笔者把这类按钮最容易把人问住的场面摆出来。想用 QSS 单独把 description 调深一档颜色或缩一号字，color 和 font-size 写上去都生效，可标题跟着一起变，选择器翻遍文档也找不到只对准 description 的写法。给按钮 setIcon 配了自定义图标，默认箭头当场消失，自定义图标顶上了它的位置，文字的起点还跟着挪。同一个页面摆几个 QCommandLinkButton，description 长短不一，按钮高度参差不齐。这些场面各有一套根因，本篇顺着绘制路径、description 布局、选型三件事把它们拆完。
 
-## 2. 环境说明
+## 面板静息不画，悬停才补：分岔点在 CommandLinkButton 特性位
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。所有内容依赖 QtWidgets 模块，涉及 QStyle 的绘制机制。示例可在任何支持 Qt6 的桌面平台上编译运行，但原生命令链接外观仅在 Windows Vista 及以上版本中可用。
+先把分岔点找准，它不在绘制元素的枚举上。普通按钮非 flat 时静息状态下画的同样是 PE_PanelButtonCommand，QCommandLinkButton 画的也是它，两个类在这枚元素上跑的是同一段代码。[3.17 QPushButton 进阶](./17-qpushbutton-advanced.md) 聊 flat 的时候已经见过 PE_PanelButtonCommand 这名字，flat 按钮靠跳过它的背景绘制做出扁平感，当时看的是按钮怎么变干净，这回换个角度：QCommonStyle 的分支条件里，Flat 与 CommandLinkButton 两个特性位写进同一条“静息跳过面板”的判断，按下与选中面板照补，悬停补画单独认 CommandLinkButton，flat 按钮悬停时依旧没有面板。区别在这个位是谁置的，flat 要您手动 setFlat(true)，QCommandLinkButton 则在 initStyleOption 里给自己置上 CommandLinkButton 位，待遇生来就有。示例第三分区恰好有一枚普通 QPushButton 摆在命令链接按钮底下，咱们静息状态对一眼，普通按钮有边框面板，命令链接按钮只有文字和箭头悬在空白上，鼠标挪上去面板才补出来。
 
-## 3. 核心概念讲解
+Windows 的画法是专门修过门面的。QWindowsVistaStyle 在 polish 阶段就给 QCommandLinkButton 调好一套专属配色，ButtonText 角色设成深蓝，BrightText 角色设成亮蓝，字体顺带换成 Segoe UI，再给按钮置一个内部属性，标记它正处在 Vista 主题之下。画面板时样式拿着 CommandLinkButton 特性位换用命令链接的主题部件，调 Visual Styles API 只画背景。标题、description 和箭头都不走主题的文字绘制，箭头是一枚由主题位图生成的标准图标，两带文字全由按钮自己的 paintEvent 来画。咱们在 Windows 上看到的蓝，源头就是 polish 调进去的调色板。悬停的反馈是变色：光标停在按钮上且未按下时，两带文字一起取亮蓝，再跟当前颜色做插值，逐帧从深蓝向亮蓝过渡，全程没有下划线参与。这套配色只在 Vista 主题可用时成立，老系统或经典主题下按钮落回通用画法，跟 Linux 同路。
 
-### 3.1 平台样式适配——PE_PanelButtonCommand 的绘制路径
+Linux 上没有 Windows 那套主题，Fusion 的处理就是上面说的共用分支，静息不画面板，悬停补画。咱们在 Linux 上看到的两行文字，标题粗体 9pt，description 同样 9pt，颜色读同一个调色板角色，视觉上描述显得浅一些是标题独占粗体、笔画粗细不同带来的错觉，颜色本身与标题一致。macOS 的默认样式是 macos 插件，它没有给命令链接准备专属的主题绘制，面板画法交回 QCommonStyle 的共用分支，观感与 Linux 相近。
 
-QCommandLinkButton 在 Windows 上的原生外观不是靠 QSS 实现的，而是靠 QStyle 的绘制元素 PE_PanelButtonCommand。这个绘制元素是 QCommandLinkButton 专用的——QPushButton 使用的是 PE_PanelButtonBevel，两者的绘制路径完全不同。
+| 平台 | 绘制路径与外观 |
+| ---- | ---- |
+| Windows（Vista 及以上，主题启用） | QWindowsVistaStyle 用命令链接主题部件画面板，polish 调好深蓝标题，悬停向亮蓝过渡，箭头是主题位图生成的图标，文字由按钮自绘 |
+| Linux | Fusion 走 QCommonStyle 共用分支，静息无面板、悬停补画，标题粗体 9pt，description 同号同色 |
+| macOS | 默认 macos 插件，面板画法交回 QCommonStyle 共用分支，观感与 Linux 相近 |
 
-在 Windows 上，当 QCommonStyle 的派生类（QWindowsVistaStyle）检测到当前绘制的是 QCommandLinkButton 时，它会走一套完全不同的绘制逻辑：标题使用蓝色前景色（SysColor: COLOR_HOTLIGHT），鼠标悬停时加下划线并变深，左侧绘制一个绿色箭头图标（使用主题 API 的 TCS_COMMANDLINKGLYPH），description 使用灰色较小字号。这套绘制逻辑调用了 Windows 的 Visual Styles API（DrawThemeBackground / DrawThemeText），所以只有在 Vista 及以上版本且启用了 Aero/Fluent 主题时才会生效。
+### QSS 够得着颜色字号，分不开两带文字
 
-在 Linux 和 macOS 上，QCommonStyle 和 QFusionStyle 没有为 QCommandLinkButton 提供特殊的绘制逻辑。PE_PanelButtonCommand 在 Fusion 风格下的处理跟普通按钮几乎一样——唯一的区别是它会额外绘制 description 文本（字号比标题小一号，颜色稍浅），但整体外观确实跟 QPushButton 差别不大。
-
-理解了这个绘制路径的差异，我们就能精确地知道 QSS 能控制什么、不能控制什么。QSS 可以覆盖 PE_PanelButtonCommand 绘制的背景和边框（通过 background-color 和 border 属性），可以控制标题文字的颜色和字体（通过 color 和 font 属性），但无法控制 description 文本的颜色和字号——因为 description 的绘制是在 QStyle::drawControl 的 CE_CommandLinkButtonLabel 分支中完成的，QSS 的子控件选择器没有提供对 description 文本的访问入口。
-
-```cpp
-// QSS 能控制的范围
-QString style =
-    "QCommandLinkButton {"
-    "  color: #0066CC;"          // 标题颜色（有效）
-    "  background: transparent;" // 背景（有效）
-    "  border: none;"            // 边框（有效）
-    "  padding: 8px 16px;"
-    "}"
-    "QCommandLinkButton:hover {"
-    "  color: #004499;"          // 悬停标题颜色（有效）
-    "}";
-// description 的颜色和字号无法通过 QSS 控制
-```
-
-如果你需要精确控制 description 的外观（比如统一使用深灰色 12px 字体），唯一的方案是子类化 QStyle 并重写 drawControl 的 CE_CommandLinkButtonLabel 分支，或者干脆不用 QCommandLinkButton——自己用 QLabel 拼一个"标题 + 描述"的组合 widget，这样每个元素的样式都可以精确控制。
-
-### 3.2 description 文本的布局行为
-
-QCommandLinkButton 的 description 文本在布局上有几个值得注意的行为。首先，description 的换行是自动的——当文本超出按钮的宽度时，QStyle 的绘制逻辑会调用 QPainter::drawText 并传入 QTextOption(Qt::TextWordWrap)，让文本在按钮的可用宽度内自动换行。
-
-但这里有一个容易忽略的问题：description 文本的换行会影响按钮的 sizeHint。QCommandLinkButton 的 sizeHint 计算需要考虑 description 的文本行数——如果 description 有三行文字，按钮的高度就需要容纳标题 + 间距 + 三行 description。这意味着如果你在运行时通过 setDescription() 修改了描述文字的长度，按钮的 sizeHint 会改变，如果按钮在一个布局中，布局会自动重新计算并调整按钮的高度。
+绘制分岔定下了 QSS 的能力边界，只是边界的位置跟直觉不一样。QSS 可以覆盖面板的背景和边框（background-color 与 border 属性），color 与 font 属性也够得着文字：color 落进调色板的 ButtonText 角色，而 paintEvent 里标题和 description 读的恰恰是同一个角色，两带文字一起变色，字号同样两边一起动。真正够不着的是单独控制，description 的绘制在 QCommandLinkButton 自己的 paintEvent 里完成，不经过任何样式的绘制分支，QSS 没有一个子控件选择器能单独对准它。开篇第一个场面的根因在这里，您怎么换写法都绕不开，能落笔的位置只有两带共享的同一处。
 
 ```cpp
-// 动态更新 description 会触发 sizeHint 变化
-btn->setDescription("短描述");   // 按钮较矮
-// ... 用户操作后 ...
-btn->setDescription("这是一个非常非常长的描述文字，"
-                     "它会自动换行并撑高按钮的高度，"
-                     "如果同一页面有多个 QCommandLinkButton，"
-                     "它们的描述长度差异会让界面参差不齐");
-// 按钮变高，布局重新计算
+// color 落进 QPalette::ButtonText，标题和 description 同角色，一起变色
+// 背景、边框归面板绘制，QSS 同样够得着
+btn->setStyleSheet(
+    "QCommandLinkButton { color: #0066CC; background: transparent; border: none; }"
+    "QCommandLinkButton:hover { color: #004499; }");
+// 想只改 description 的颜色或字号，没有能单独对准它的选择器，写不出来
 ```
 
-如果你希望同一页面的多个 QCommandLinkButton 保持高度一致，有几种处理方式。第一种是统一 description 的长度——让每个按钮的描述文字行数尽量一致。第二种是给按钮设置 fixedHeight 或 minimumHeight，但这可能导致长描述文字被截断。第三种是用 QSS 设置一个统一的 min-height，让所有按钮至少有一个基准高度。
+您要是必须精确控制 description 的外观（比如统一成深灰 12px），路有两条。一条从 QCommandLinkButton 派生，重写 paintEvent，面板照旧交给样式画，两带文字自己 drawItemText，想怎么分就怎么分，代价是悬停变色、按下位移这些细节得自己接住。另一条干脆不用 QCommandLinkButton，自己拼，方案在选型一节展开。
 
-还有一个布局细节：QCommandLinkButton 的左箭头图标（Windows 原生风格）会占用一定的水平空间。如果你同时调用了 setIcon() 设置了自定义图标，按钮左侧会同时显示自定义图标和箭头图标——两者并排排列，这会让按钮变得更宽。如果你不需要箭头图标，目前 Qt 没有提供直接隐藏它的 API。在非 Windows 平台上，Fusion 风格默认不绘制箭头图标，所以这个问题只在 Windows 上存在。
+配套示例的第二分区摆着这套 QSS，写在 platform_style_demo.cpp 的 btnStyle 里，比上面的片段多补了边框、圆角与内边距（examples/advanced/03-qtwidgets/21-qcommandlinkbutton-advanced/，可执行文件与目录同名）。您把 btnStyle 里的 color 从 #0066CC 改成 #cc3300 重新编译，标题当场变色，description 跟着一起变，补一行 font-size 也一样两带同动。这个“分不开”正是能亲眼看到的真边界，边界不用背，看一眼就长在眼睛里。
 
-现在有一道思考题给大家。你正在设计一个安装向导的"选择安装方式"页面，有三个选项：完整安装、自定义安装、最小安装。每个选项需要一段两到三行的描述文字来说明安装内容。你在 Windows 上测试时发现 QCommandLinkButton 的原生外观非常好看——蓝色标题、绿色箭头、灰色描述，视觉引导性很强。但你的产品也需要支持 macOS。你会怎么做？
+## description 是画出来的，也是量出来的：换行与 sizeHint 联动
 
-核心考虑点在于两个方面。第一个方面是视觉一致性：macOS 上 Fusion 风格的 QCommandLinkButton 跟 QPushButton 差别不大，description 虽然能显示但视觉引导性弱了很多。如果你的设计高度依赖"蓝色文字链接 + 描述"这种交互模式，在 macOS 上可能需要额外的视觉补偿。第二个方面是维护成本：用 QSS 统一基本样式（文字颜色、去边框）成本不高，但精确控制 description 的样式需要子类化 QStyle 或者自定义 widget，成本就上去了。实际项目中的做法通常是：用 QCommandLinkButton + QSS 做基本统一样式，接受 description 在非 Windows 平台上的微小视觉差异——完全追求像素级一致的投入产出比通常不划算。
-
-### 3.3 选型策略——QCommandLinkButton vs QPushButton vs 自定义 widget
-
-理解了 QCommandLinkButton 的平台差异和布局行为之后，我们来回答一个更本质的问题：什么时候该用 QCommandLinkButton，什么时候该用 QPushButton，什么时候该自己拼一个自定义 widget？
-
-选型决策的核心判据是"描述文字的必要性"和"平台一致性要求"这两个维度。如果你的按钮只有标题、不需要描述文字，用 QPushButton 就够了——QCommandLinkButton 在没有 description 时跟 QPushButton 没有本质区别，反而多了一些不必要的绘制开销。如果你的按钮需要标题加描述，而且你的应用只面向 Windows 用户，QCommandLinkButton 是最佳选择——原生风格、零成本、效果好。如果你的按钮需要标题加描述，但需要跨平台一致性，你有两条路：QCommandLinkButton + QSS 基本统一样式（接受微小差异），或者自定义 widget 完全控制。
-
-自定义 widget 的方案是这样的：用一个 QWidget 做容器，内部 QVBoxLayout 包含一个 QLabel 做标题（蓝色、较大字号）、一个 QLabel 做描述（灰色、较小字号）。整个容器通过 setCursor(Qt::PointingHandCursor) 和 mousePressEvent 来模拟按钮行为。这个方案的优点是完全控制每个元素的样式，缺点是需要自己处理焦点、键盘、accessible 等交互属性。
+咱们说 description 的换行，它是自动的。文本超出按钮宽度时，绘制给 drawItemText 传了 Qt::TextWordWrap 加 Qt::ElideRight 的标志组，文字在按钮可用宽度内自动折行，放不下的行尾以省略号收场。换行本身省心，麻烦在换行牵动了尺寸：QCommandLinkButton 的 sizeHint 计算要考虑 description 的行数，三行描述就意味着按钮高度得容纳标题、间距和三行文字。运行时通过 setDescription() 修改描述长度，sizeHint 跟着变，按钮在布局里就自动重排，高度当场调整。
 
 ```cpp
-class CommandOption : public QWidget
-{
-    Q_OBJECT
-public:
-    CommandOption(const QString& title, const QString& desc, QWidget* parent = nullptr)
-        : QWidget(parent)
-    {
-        auto *layout = new QVBoxLayout(this);
-        layout->setContentsMargins(12, 8, 12, 8);
-        layout->setSpacing(2);
-
-        m_title = new QLabel(title);
-        m_title->setStyleSheet("color: #0066CC; font-size: 13px; font-weight: bold;");
-
-        m_desc = new QLabel(desc);
-        m_desc->setStyleSheet("color: #666666; font-size: 12px;");
-        m_desc->setWordWrap(true);
-
-        layout->addWidget(m_title);
-        layout->addWidget(m_desc);
-
-        setCursor(Qt::PointingHandCursor);
-    }
-
-signals:
-    void clicked();
-
-protected:
-    void mousePressEvent(QMouseEvent*) override { emit clicked(); }
-
-private:
-    QLabel* m_title;
-    QLabel* m_desc;
-};
+btn->setDescription("短描述");   // 行数少，sizeHint 小，按钮矮
+// 用户操作后换成一段长描述
+btn->setDescription("一段长到自动换行的描述文字……");   // 行数变多，sizeHint 变大，布局重排
 ```
 
-这个自定义方案在跨平台场景下比 QCommandLinkButton + QSS 更可控，但你需要自己处理更多细节——比如悬停效果（enterEvent / leaveEvent 切换样式）、焦点管理（setFocusPolicy）、accessible 名称（setAccessibleName）等。如果你的项目中有大量这种"标题 + 描述"的选项按钮，值得花时间把这个自定义 widget 封装好。
+咱们到配套示例第三分区看，platform_style_demo.cpp 的 createDynamicSection 摆了一个 m_dynamicBtn 和一个切换按钮，您点一下切换按钮，描述就在短文本与长文本之间来回换，盯着 m_dynamicBtn 的高度，一伸一缩全是 sizeHint 在背后动。
 
-## 4. 踩坑预防
+咱们把几个这样的按钮摆到同一页面，这个特性就变成了开篇第三个场面的麻烦：description 长短不齐，按钮高度参差，一行排下来高高低低。处理方式有几种，代价各不相同：
 
-第一个坑是 QSS 无法控制 description 文本的颜色和字号。description 的绘制走的是 QStyle::drawControl 的 CE_CommandLinkButtonLabel 分支，QSS 的子控件选择器没有提供对 description 的访问入口。如果你需要精确控制 description 的样式，考虑子类化 QStyle 或使用自定义 widget。
+| 处理方式 | 代价与边界 |
+| ---- | ---- |
+| 文案纪律，每个按钮的描述统一收在一到两行 | 零成本，靠写文案的人自觉 |
+| setFixedHeight / setMinimumHeight 固定高度 | 长描述被右端省略号截断，装不下的信息照样丢 |
+| QSS 设统一的 min-height | 只保下限，行数照样能撑超 |
 
-第二个坑是 Windows 上同时使用 setIcon() 和默认箭头图标导致按钮过宽。QCommandLinkButton 在 Windows 上默认会绘制一个左箭头图标，如果你再 setIcon() 设置一个自定义图标，按钮左侧会同时显示两个图标。解决方案是不设置自定义图标，或者在非 Windows 平台上才设置。
+布局上还有一个细节跟图标位有关。QCommandLinkButton 构造时会向样式要一枚命令链接标准图标放进自己的图标位，Fusion 把这个请求映射成普通右箭头，Windows 上才由主题位图生成那枚更有引导感的箭头。图标位只有一个，您再调 setIcon() 设置自定义图标，默认箭头当场被顶掉，自定义图标顶上它的位置。文字的起点又按当前图标的宽度来算，换一枚窄图标，标题和描述会整体左移。开篇第二个场面的来路在这里。想省掉箭头腾出空间，一行 setIcon(QIcon()) 就够，这就是隐藏它的正式办法。想在示例里亲眼看一下，给 createNativeSection 里的 fullBtn 补一行 setIcon()，图标被替换、文字起点跟着挪，宽度差异一眼可见。
 
-第三个坑是 description 长度差异导致同一页面的按钮高度参差不齐。setDescription() 会影响 sizeHint，不同长度的描述文字会让按钮高度不同。解决方案是统一描述文字的长度（控制在一到两行），或者给按钮设置统一的 minimumHeight。
+## 选型就两条判据：描述文字要不要，平台一致要多少
 
-## 5. 练习项目
+平台差异和布局行为咱们都过了一遍，选型的问题就能落得干脆。判据是描述文字的必要性与平台一致性要求，两条定下来，选哪个基本不用犹豫：
 
-练习项目：跨平台安装向导页面。我们要实现一个模拟安装向导的选项页面。窗口顶部是标题"选择安装方式"。窗口中间有三个选项按钮——方式一是 QCommandLinkButton（Windows 原生风格），方式二是用 QSS 美化的 QCommandLinkButton（跨平台统一样式），方式三是自定义的 CommandOption widget（完全自定义）。每个选项都有标题和描述文字。窗口底部有 QLabel 显示用户选择的安装方式。整个页面要求在 Windows 和 Linux 上都能正常工作且视觉效果可接受。
+| 需求场景 | 选什么 |
+| ---- | ---- |
+| 只要标题，不要描述 | QPushButton。QCommandLinkButton 不设描述也还挂着箭头和粗体标题，Linux 与 macOS 上静息无面板，高度也更高，与普通按钮的预期对不上 |
+| 标题加描述，产品只发 Windows | QCommandLinkButton，原生风格零成本，效果好 |
+| 标题加描述，要跨平台基本一致 | QCommandLinkButton 加 QSS，color 与 font-size 对两带文字一起生效，再配 background 与 border 统一面板，接受箭头位图的平台差异 |
+| 标题加描述，要像素级一致或工程里大量复用 | 自定义 widget，一次封装换完全控制 |
 
-完成标准是三种实现方式在同一页面中共存，每种方式的外观和交互都正确，用户点击后能在 QLabel 中显示选择的安装方式。提示几个关键点：QSS 美化时设置 color、background、border 来统一外观；自定义 CommandOption 需要 mousePressEvent 和 clicked 信号；三种方式在布局中用 QGroupBox 分组标注。
+咱们自己拼的时候，拿一个 QWidget 做容器，内部 QVBoxLayout 摆两个 QLabel，标题那个蓝色较大字号，描述那个灰色较小字号加 setWordWrap(true)，再配 setCursor(Qt::PointingHandCursor)，靠 mousePressEvent 模拟按钮的点击。关键片段长这样：
 
-## 6. 官方文档参考链接
+```cpp
+m_title = new QLabel(title);
+m_title->setStyleSheet("color: #0066CC; font-size: 13px; font-weight: bold;");
+m_desc = new QLabel(desc);
+m_desc->setStyleSheet("color: #666666; font-size: 12px;");
+m_desc->setWordWrap(true);
+setCursor(Qt::PointingHandCursor);
+// 按钮的交互要自己补：enterEvent / leaveEvent 切悬停样式
+// setFocusPolicy 定焦点策略，setAccessibleName 补辅助功能名称
+```
 
-[Qt 文档 · QCommandLinkButton](https://doc.qt.io/qt-6/qcommandlinkbutton.html) -- 命令链接按钮，setDescription 和绘制机制
+这个方案的好处是每个元素的样式完全可控，代价是按钮的交互属性全要自己接，悬停效果靠 enterEvent / leaveEvent 切换样式，焦点管理靠 setFocusPolicy，辅助功能名称靠 setAccessibleName，一样都不能省。您工程里这类“标题 + 描述”的选项按钮要是量大，值得花时间把它封装成公共控件，摊薄一次就回本。
 
-[Qt 文档 · QPushButton](https://doc.qt.io/qt-6/qpushbutton.html) -- 父类，setDefault / setAutoDefault
+咱们回到那个具体场景收个尾：安装向导的“选择安装方式”页面，完整安装、自定义安装、最小安装三项各配两三行描述，Windows 上原生风格确实好看，产品还要上 macOS。笔者的答案是先拿 QCommandLinkButton 加 QSS 把文字颜色和边框统一起来，macOS 上没有主题配色撑场面，观感朴素一截，能接受就收工，完全追求像素级一致的投入产出比通常不划算，真被设计卡住，再把自定义 widget 封装出来顶上。示例已经把前两种方案摆进了同一个窗口，第一种在 createNativeSection（原生），第二种在 createStyledSection（QSS 美化），第三种留给您动手，照本节的片段在 platform_style_demo.cpp 里拼一个 CommandOption 类，在示例窗口的构造函数里加一行 addWidget 摆进主布局，点谁就让 m_resultLabel 显示谁的文案，完成标准是三种实现同页共存、每种都能点出反馈。
+
+## 官方文档参考
+
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17。QCommandLinkButton 属于 QtWidgets 模块，绘制路径涉及 QStyle 与 QCommonStyle，示例可在任何支持 Qt 6 的桌面平台上编译运行，原生命令链接外观仅 Windows Vista 及以上可用。
+
+[Qt 文档 · QCommandLinkButton](https://doc.qt.io/qt-6/qcommandlinkbutton.html) -- 命令链接按钮，setDescription 与绘制机制
+
+[Qt 文档 · QPushButton](https://doc.qt.io/qt-6/qpushbutton.html) -- 父类，QCommandLinkButton 在它之上换掉了绘制路径与默认外观
 
 [Qt 文档 · QStyle](https://doc.qt.io/qt-6/qstyle.html) -- 样式系统，PE_PanelButtonCommand 绘制元素
 
-[Qt 文档 · QCommonStyle](https://doc.qt.io/qt-6/qcommonstyle.html) -- 通用样式基类，CE_CommandLinkButtonLabel 的绘制逻辑
+[Qt 文档 · QCommonStyle](https://doc.qt.io/qt-6/qcommonstyle.html) -- 通用样式基类，按钮面板静息跳过、悬停补画的共用分支在这里
 
 ---
 
-到这里，QCommandLinkButton 的进阶内容就过完了。PE_PanelButtonCommand 的绘制路径搞清楚了，就知道为什么 QSS 能控制标题颜色却控制不了 description 的样式。description 的布局行为理解了，动态修改描述文字时就不会因为 sizeHint 变化而措手不及。选型策略掌握了——根据"描述必要性"和"平台一致性要求"两个维度来做决策，QCommandLinkButton、QPushButton 和自定义 widget 各有各的适用场景。QCommandLinkButton 虽然是 Qt 按钮家族里存在感最低的一个，但理解它的平台差异和绘制机制，能帮助你在设计"选项引导"界面时做出更好的技术选型。
+按钮五连到本篇收官，QPushButton、QToolButton、QRadioButton、QCheckBox 加 QCommandLinkButton 一路看下来，按下、选中、三态、引导四种交互各归各位。下一篇 [3.22 QLineEdit 进阶](./22-qlineedit-advanced.md) 转进输入类，从单行输入框的验证器与输入掩码讲起。想再动手的，请您把示例（examples/advanced/03-qtwidgets/21-qcommandlinkbutton-advanced/，可执行文件 21-qcommandlinkbutton-advanced）完整跑一轮，前两个分区对照两套外观，btnStyle 改一色看标题和描述一起变色，第三分区点切换按钮看高度一伸一缩，再照选型一节补上自定义 widget，三种方案同页点个遍。您手头要是正有要上双平台的向导页，先把两条判据过一遍再动手。

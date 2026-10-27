@@ -15,26 +15,28 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// 已知的系统保留快捷键（不完全列表，按需补充）。
+/// Qt 在 Apple 平台把 Ctrl 与 Meta 对调，Ctrl 名下对应 Command 键，
+/// Meta 名下对应物理 Control 键，同一个串在两个平台指的物理键不同。
 static const QList<QKeySequence> kSystemReservedShortcuts = {
-    QKeySequence(QStringLiteral("Ctrl+Space")),    // 输入法切换
-    QKeySequence(QStringLiteral("Meta+Space")),    // Spotlight (macOS)
-    QKeySequence(QStringLiteral("Meta+L")),        // 锁屏 (Windows)
-    QKeySequence(QStringLiteral("Meta+D")),        // 显示桌面 (Windows)
+    QKeySequence(
+        QStringLiteral("Ctrl+Space")), // 输入法切换 (Windows/Linux)，macOS 上是 ⌘Space 聚焦搜索
+    QKeySequence(
+        QStringLiteral("Meta+Space")),      // macOS 的物理 Ctrl+Space，对调后 Meta 落在 Control 键
+    QKeySequence(QStringLiteral("Meta+L")), // 锁屏 (Windows)
+    QKeySequence(QStringLiteral("Meta+D")), // 显示桌面 (Windows)
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-ShortcutConflictPanel::ShortcutConflictPanel(QWidget* parent)
-    : QWidget(parent)
-{
+ShortcutConflictPanel::ShortcutConflictPanel(QWidget* parent) : QWidget(parent) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // 标题
-    auto* titleLabel = new QLabel(
-        QStringLiteral("快捷键冲突检测面板\n"
-                       "为每个操作设置快捷键，系统会自动检测冲突和系统保留键。"));
+    auto* titleLabel =
+        new QLabel(QStringLiteral("快捷键冲突检测面板\n"
+                                  "为每个操作设置快捷键，系统会自动检测冲突和系统保留键。"));
     titleLabel->setWordWrap(true);
 
     mainLayout->addWidget(titleLabel);
@@ -68,12 +70,12 @@ ShortcutConflictPanel::ShortcutConflictPanel(QWidget* parent)
 
         // editingFinished：录制完成或焦点丢失时触发
         // 用于检测 keySequence 是否为空（焦点丢失导致录制中断）
-        connect(m_entries[i].sequenceEdit, &QKeySequenceEdit::editingFinished,
-                this, [this, entryIndex]() { onEditingFinished(entryIndex); });
+        connect(m_entries[i].sequenceEdit, &QKeySequenceEdit::editingFinished, this,
+                [this, entryIndex]() { onEditingFinished(entryIndex); });
 
         // keySequenceChanged：快捷键值发生变化时重新检测冲突
-        connect(m_entries[i].sequenceEdit, &QKeySequenceEdit::keySequenceChanged,
-                this, [this]() { refreshAllStatus(); });
+        connect(m_entries[i].sequenceEdit, &QKeySequenceEdit::keySequenceChanged, this,
+                [this]() { refreshAllStatus(); });
 
         // 记住录入前的有效值
         m_entries[i].previousSequence = m_entries[i].sequenceEdit->keySequence();
@@ -92,20 +94,19 @@ ShortcutConflictPanel::ShortcutConflictPanel(QWidget* parent)
 // 初始化操作列表
 // ─────────────────────────────────────────────────────────────────────────────
 
-void ShortcutConflictPanel::setupEntries()
-{
+void ShortcutConflictPanel::setupEntries() {
     // 预设十个操作的名称和默认快捷键
     const QList<QPair<QString, QKeySequence>> kDefaultBindings = {
-        {QStringLiteral("新建文件"),   QKeySequence(QKeySequence::New)},
-        {QStringLiteral("打开文件"),   QKeySequence(QKeySequence::Open)},
-        {QStringLiteral("保存文件"),   QKeySequence(QKeySequence::Save)},
-        {QStringLiteral("撤销"),       QKeySequence(QKeySequence::Undo)},
-        {QStringLiteral("重做"),       QKeySequence(QKeySequence::Redo)},
-        {QStringLiteral("复制"),       QKeySequence(QKeySequence::Copy)},
-        {QStringLiteral("粘贴"),       QKeySequence(QKeySequence::Paste)},
-        {QStringLiteral("剪切"),       QKeySequence(QKeySequence::Cut)},
-        {QStringLiteral("全选"),       QKeySequence(QKeySequence::SelectAll)},
-        {QStringLiteral("查找"),       QKeySequence(QKeySequence::Find)},
+        {QStringLiteral("新建文件"), QKeySequence(QKeySequence::New)},
+        {QStringLiteral("打开文件"), QKeySequence(QKeySequence::Open)},
+        {QStringLiteral("保存文件"), QKeySequence(QKeySequence::Save)},
+        {QStringLiteral("撤销"), QKeySequence(QKeySequence::Undo)},
+        {QStringLiteral("重做"), QKeySequence(QKeySequence::Redo)},
+        {QStringLiteral("复制"), QKeySequence(QKeySequence::Copy)},
+        {QStringLiteral("粘贴"), QKeySequence(QKeySequence::Paste)},
+        {QStringLiteral("剪切"), QKeySequence(QKeySequence::Cut)},
+        {QStringLiteral("全选"), QKeySequence(QKeySequence::SelectAll)},
+        {QStringLiteral("查找"), QKeySequence(QKeySequence::Find)},
     };
 
     for (const auto& binding : kDefaultBindings) {
@@ -123,9 +124,7 @@ void ShortcutConflictPanel::setupEntries()
 // 冲突检测
 // ─────────────────────────────────────────────────────────────────────────────
 
-QString ShortcutConflictPanel::findConflict(const QKeySequence& sequence,
-                                             int excludeIndex) const
-{
+QString ShortcutConflictPanel::findConflict(const QKeySequence& sequence, int excludeIndex) const {
     if (sequence.isEmpty()) {
         return QString();
     }
@@ -143,8 +142,7 @@ QString ShortcutConflictPanel::findConflict(const QKeySequence& sequence,
     return QString();
 }
 
-bool ShortcutConflictPanel::isSystemReserved(const QKeySequence& sequence)
-{
+bool ShortcutConflictPanel::isSystemReserved(const QKeySequence& sequence) {
     if (sequence.isEmpty()) {
         return false;
     }
@@ -155,22 +153,19 @@ bool ShortcutConflictPanel::isSystemReserved(const QKeySequence& sequence)
 // 状态刷新
 // ─────────────────────────────────────────────────────────────────────────────
 
-void ShortcutConflictPanel::refreshAllStatus()
-{
+void ShortcutConflictPanel::refreshAllStatus() {
     for (int i = 0; i < m_entries.size(); ++i) {
         const QKeySequence seq = m_entries[i].sequenceEdit->keySequence();
 
         if (seq.isEmpty()) {
             m_entries[i].statusLabel->setText(QStringLiteral("未设置"));
-            m_entries[i].statusLabel->setStyleSheet(
-                QStringLiteral("color: gray;"));
+            m_entries[i].statusLabel->setStyleSheet(QStringLiteral("color: gray;"));
             continue;
         }
 
         // 三重检查：系统保留 -> 冲突 -> 正常
         if (isSystemReserved(seq)) {
-            m_entries[i].statusLabel->setText(
-                QStringLiteral("⚠ 可能被系统拦截"));
+            m_entries[i].statusLabel->setText(QStringLiteral("⚠ 可能被系统拦截"));
             m_entries[i].statusLabel->setStyleSheet(
                 QStringLiteral("color: orange; font-weight: bold;"));
             continue;
@@ -178,18 +173,15 @@ void ShortcutConflictPanel::refreshAllStatus()
 
         const QString conflictWith = findConflict(seq, i);
         if (!conflictWith.isEmpty()) {
-            m_entries[i].statusLabel->setText(
-                QStringLiteral("⚠ 冲突：%1").arg(conflictWith));
+            m_entries[i].statusLabel->setText(QStringLiteral("⚠ 冲突：%1").arg(conflictWith));
             m_entries[i].statusLabel->setStyleSheet(
                 QStringLiteral("color: red; font-weight: bold;"));
             continue;
         }
 
-        // 显示当前快捷键的 NativeText 表示
-        m_entries[i].statusLabel->setText(
-            QStringLiteral("✓ 已设置 (%1)").arg(seq.toString()));
-        m_entries[i].statusLabel->setStyleSheet(
-            QStringLiteral("color: green;"));
+        // 显示当前快捷键的 PortableText 表示（toString() 的默认格式）
+        m_entries[i].statusLabel->setText(QStringLiteral("✓ 已设置 (%1)").arg(seq.toString()));
+        m_entries[i].statusLabel->setStyleSheet(QStringLiteral("color: green;"));
     }
 }
 
@@ -197,8 +189,7 @@ void ShortcutConflictPanel::refreshAllStatus()
 // editingFinished 处理
 // ─────────────────────────────────────────────────────────────────────────────
 
-void ShortcutConflictPanel::onEditingFinished(int entryIndex)
-{
+void ShortcutConflictPanel::onEditingFinished(int entryIndex) {
     auto& entry = m_entries[entryIndex];
     const QKeySequence current = entry.sequenceEdit->keySequence();
 

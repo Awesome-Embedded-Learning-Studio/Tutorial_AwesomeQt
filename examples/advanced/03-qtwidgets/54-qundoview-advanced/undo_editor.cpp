@@ -10,30 +10,23 @@
 #include <QTextDocument>
 #include <QToolBar>
 
-InsertTextCommand::InsertTextCommand(QPlainTextEdit* editor, int position,
-                                     const QString& text, QUndoCommand* parent)
-    : QUndoCommand(parent)
-    , m_editor(editor)
-    , m_position(position)
-    , m_text(text)
-{
+InsertTextCommand::InsertTextCommand(QPlainTextEdit* editor, int position, const QString& text,
+                                     QUndoCommand* parent)
+    : QUndoCommand(parent), m_editor(editor), m_position(position), m_text(text) {
     // 命令描述显示在 QUndoView 中
     setText(QObject::tr("Insert \"%1\"").arg(text.left(20)));
 }
 
-void InsertTextCommand::undo()
-{
+void InsertTextCommand::undo() {
     // 撤销插入 = 删除对应位置的文本
     QTextCursor cursor = m_editor->textCursor();
     cursor.setPosition(m_position);
-    cursor.setPosition(m_position + static_cast<int>(m_text.length()),
-                       QTextCursor::KeepAnchor);
+    cursor.setPosition(m_position + static_cast<int>(m_text.length()), QTextCursor::KeepAnchor);
     cursor.removeSelectedText();
     m_editor->setTextCursor(cursor);
 }
 
-void InsertTextCommand::redo()
-{
+void InsertTextCommand::redo() {
     // 重做插入 = 在对应位置插入文本
     QTextCursor cursor = m_editor->textCursor();
     cursor.setPosition(m_position);
@@ -41,18 +34,13 @@ void InsertTextCommand::redo()
     m_editor->setTextCursor(cursor);
 }
 
-DeleteTextCommand::DeleteTextCommand(QPlainTextEdit* editor, int position,
-                                     const QString& text, QUndoCommand* parent)
-    : QUndoCommand(parent)
-    , m_editor(editor)
-    , m_position(position)
-    , m_text(text)
-{
+DeleteTextCommand::DeleteTextCommand(QPlainTextEdit* editor, int position, const QString& text,
+                                     QUndoCommand* parent)
+    : QUndoCommand(parent), m_editor(editor), m_position(position), m_text(text) {
     setText(QObject::tr("Delete \"%1\"").arg(text.left(20)));
 }
 
-void DeleteTextCommand::undo()
-{
+void DeleteTextCommand::undo() {
     // 撤销删除 = 恢复文本到原位
     QTextCursor cursor = m_editor->textCursor();
     cursor.setPosition(m_position);
@@ -60,24 +48,18 @@ void DeleteTextCommand::undo()
     m_editor->setTextCursor(cursor);
 }
 
-void DeleteTextCommand::redo()
-{
+void DeleteTextCommand::redo() {
     // 重做删除 = 再次移除文本
     QTextCursor cursor = m_editor->textCursor();
     cursor.setPosition(m_position);
-    cursor.setPosition(m_position + static_cast<int>(m_text.length()),
-                       QTextCursor::KeepAnchor);
+    cursor.setPosition(m_position + static_cast<int>(m_text.length()), QTextCursor::KeepAnchor);
     cursor.removeSelectedText();
     m_editor->setTextCursor(cursor);
 }
 
 UndoEditorWindow::UndoEditorWindow(QWidget* parent)
-    : QMainWindow(parent)
-    , m_editor(new QPlainTextEdit(this))
-    , m_undoStack(new QUndoStack(this))
-    , m_undoView(new QUndoView(m_undoStack, this))
-    , m_isUndoing(false)
-{
+    : QMainWindow(parent), m_editor(new QPlainTextEdit(this)), m_undoStack(new QUndoStack(this)),
+      m_undoView(new QUndoView(m_undoStack, this)), m_isUndoing(false) {
     setCentralWidget(m_editor);
 
     // 禁用 QPlainTextEdit 内置的撤销栈，我们完全使用自己的 QUndoStack
@@ -87,26 +69,38 @@ UndoEditorWindow::UndoEditorWindow(QWidget* parent)
     createUndoPanel();
     connectSignals();
 
-    setWindowTitle("QUndoView 完整撤销重做系统");
+    setWindowTitle("QUndoView 完整撤销重做系统[*]");
     resize(900, 600);
 
-    statusBar()->showMessage(
-        "Type text to create undo commands. "
-        "Use Ctrl+Z / Ctrl+Y to undo/redo.");
+    statusBar()->showMessage("Type text to create undo commands. "
+                             "Use Ctrl+Z / Ctrl+Y to undo/redo.");
 }
 
-void UndoEditorWindow::createActions()
-{
+void UndoEditorWindow::createActions() {
     auto* editMenu = menuBar()->addMenu(tr("&Edit"));
 
-    // 撤销动作：从 QUndoStack 创建，自动管理 enabled 状态和快捷键
-    QAction* undoAction = m_undoStack->createUndoAction(this, tr("&Undo"));
+    // 撤销动作：自带动作包一层守卫——undo()/redo() 改动文档会同步触发
+    // contentsChange，不拦的话会把撤销动作本身又压成新命令（回环）。
+    // enabled 状态挂 canUndoChanged/canRedoChanged 保持自动管理。
+    QAction* undoAction = new QAction(tr("&Undo"), this);
     undoAction->setShortcut(QKeySequence::Undo);
+    connect(undoAction, &QAction::triggered, this, [this]() {
+        m_isUndoing = true;
+        m_undoStack->undo();
+        m_isUndoing = false;
+    });
+    connect(m_undoStack, &QUndoStack::canUndoChanged, undoAction, &QAction::setEnabled);
     editMenu->addAction(undoAction);
 
-    // 重做动作
-    QAction* redoAction = m_undoStack->createRedoAction(this, tr("&Redo"));
+    // 重做动作，同样包守卫
+    QAction* redoAction = new QAction(tr("&Redo"), this);
     redoAction->setShortcut(QKeySequence::Redo);
+    connect(redoAction, &QAction::triggered, this, [this]() {
+        m_isUndoing = true;
+        m_undoStack->redo();
+        m_isUndoing = false;
+    });
+    connect(m_undoStack, &QUndoStack::canRedoChanged, redoAction, &QAction::setEnabled);
     editMenu->addAction(redoAction);
 
     editMenu->addSeparator();
@@ -124,8 +118,7 @@ void UndoEditorWindow::createActions()
     toolBar->addAction(redoAction);
 }
 
-void UndoEditorWindow::createUndoPanel()
-{
+void UndoEditorWindow::createUndoPanel() {
     // QUndoView 作为可停靠面板，实时显示命令历史列表
     auto* dock = new QDockWidget(tr("Command History"), this);
     dock->setWidget(m_undoView);
@@ -136,30 +129,26 @@ void UndoEditorWindow::createUndoPanel()
     viewMenu->addAction(dock->toggleViewAction());
 }
 
-void UndoEditorWindow::connectSignals()
-{
+void UndoEditorWindow::connectSignals() {
     // 核心：使用 QTextDocument::contentsChange 获取精确的文本增量信息
     // 这个信号在每次文本变化时触发，提供 position/removed/added 三要素
-    connect(m_editor->document(), &QTextDocument::contentsChange,
-            this, &UndoEditorWindow::onContentsChange);
+    connect(m_editor->document(), &QTextDocument::contentsChange, this,
+            &UndoEditorWindow::onContentsChange);
 
     // 撤销栈的 clean 状态变化更新窗口标题标记
-    connect(m_undoStack, &QUndoStack::cleanChanged, this, [this](bool clean) {
-        setWindowModified(!clean);
-    });
+    connect(m_undoStack, &QUndoStack::cleanChanged, this,
+            [this](bool clean) { setWindowModified(!clean); });
 }
 
-void UndoEditorWindow::onContentsChange(int position, int charsRemoved,
-                                         int charsAdded)
-{
+void UndoEditorWindow::onContentsChange(int position, int charsRemoved, int charsAdded) {
     // undo/redo 执行期间触发的文本变化不应创建新命令
     if (m_isUndoing) {
         return;
     }
 
     // 临时断开信号，避免 push 命令时 redo() 触发的文本变化再次进入此方法
-    disconnect(m_editor->document(), &QTextDocument::contentsChange,
-               this, &UndoEditorWindow::onContentsChange);
+    disconnect(m_editor->document(), &QTextDocument::contentsChange, this,
+               &UndoEditorWindow::onContentsChange);
 
     if (charsRemoved > 0 && charsAdded == 0) {
         // 纯删除操作：提取被删除的文本
@@ -169,12 +158,9 @@ void UndoEditorWindow::onContentsChange(int position, int charsRemoved,
         QString deletedText;
         // 使用 m_editor 的 undo 功能回退获取原文不太合理
         // 实际做法是预先缓存，但为简化演示，标记删除位置和长度
-        deletedText = QString("<%1 chars removed at pos %2>")
-                          .arg(charsRemoved)
-                          .arg(position);
+        deletedText = QString("<%1 chars removed at pos %2>").arg(charsRemoved).arg(position);
 
-        m_undoStack->push(
-            new DeleteTextCommand(m_editor, position, deletedText));
+        m_undoStack->push(new DeleteTextCommand(m_editor, position, deletedText));
     } else if (charsAdded > 0) {
         // 纯插入或替换操作：从文档中提取新增的文本
         QTextCursor cursor(m_editor->document());
@@ -190,24 +176,19 @@ void UndoEditorWindow::onContentsChange(int position, int charsRemoved,
         if (charsRemoved > 0) {
             // 替换 = 先删除再插入，用宏命令包装
             QString removedText =
-                QString("<%1 chars replaced at pos %2>")
-                    .arg(charsRemoved)
-                    .arg(position);
+                QString("<%1 chars replaced at pos %2>").arg(charsRemoved).arg(position);
 
             m_undoStack->beginMacro(tr("Replace text"));
-            m_undoStack->push(
-                new DeleteTextCommand(m_editor, position, removedText));
-            m_undoStack->push(
-                new InsertTextCommand(m_editor, position, addedText));
+            m_undoStack->push(new DeleteTextCommand(m_editor, position, removedText));
+            m_undoStack->push(new InsertTextCommand(m_editor, position, addedText));
             m_undoStack->endMacro();
         } else {
             // 纯插入
-            m_undoStack->push(
-                new InsertTextCommand(m_editor, position, addedText));
+            m_undoStack->push(new InsertTextCommand(m_editor, position, addedText));
         }
     }
 
     // 重新连接信号
-    connect(m_editor->document(), &QTextDocument::contentsChange,
-            this, &UndoEditorWindow::onContentsChange);
+    connect(m_editor->document(), &QTextDocument::contentsChange, this,
+            &UndoEditorWindow::onContentsChange);
 }

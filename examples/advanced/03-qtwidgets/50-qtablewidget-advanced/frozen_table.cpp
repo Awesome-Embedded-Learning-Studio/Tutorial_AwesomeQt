@@ -1,5 +1,5 @@
 /// @file    frozen_table.cpp
-/// @brief   FrozenTable 类的实现，单元格合并与冻结首行首列。
+/// @brief   FrozenTable 类的实现，单元格合并与冻结左上角交汇格。
 
 #include "frozen_table.h"
 
@@ -9,17 +9,14 @@
 #include <QScrollBar>
 #include <QVBoxLayout>
 
-namespace
-{
-    constexpr int kRowCount = 8;
-    constexpr int kColCount = 8;
-}
+namespace {
+constexpr int kRowCount = 8;
+constexpr int kColCount = 8;
+} // namespace
 
 FrozenTable::FrozenTable(int rows, int columns, QWidget* parent)
-    : QWidget(parent)
-    , m_mainTable(new QTableWidget(rows, columns, this))
-    , m_frozenTable(new QTableWidget(1, 1, this))
-{
+    : QWidget(parent), m_mainTable(new QTableWidget(rows, columns, this)),
+      m_frozenTable(new QTableWidget(1, 1, this)) {
     // 主布局：直接将主表格铺满，冻结表格叠在上面
     auto* layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -30,13 +27,11 @@ FrozenTable::FrozenTable(int rows, int columns, QWidget* parent)
     updateFrozenTableGeometry();
 }
 
-void FrozenTable::setupMainTable()
-{
+void FrozenTable::setupMainTable() {
     m_mainTable->setHorizontalHeaderLabels(
         QStringList{"项目", "Q1", "Q2", "Q3", "Q4", "合计", "备注", "评级"});
     m_mainTable->setVerticalHeaderLabels(
-        QStringList{"产品A", "产品B", "产品C", "产品D",
-                     "产品E", "产品F", "产品G", "产品H"});
+        QStringList{"产品A", "产品B", "产品C", "产品D", "产品E", "产品F", "产品G", "产品H"});
 
     // 填充示例数据
     for (int row = 0; row < kRowCount; ++row) {
@@ -72,11 +67,10 @@ void FrozenTable::setupMainTable()
 
     m_mainTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Interactive);
     m_mainTable->verticalHeader()->setDefaultSectionSize(30);
-    m_mainTable->setWindowTitle("QTableWidget 冻结首行首列 + 合并单元格");
+    m_mainTable->setWindowTitle("QTableWidget 冻结左上角格 + 合并单元格");
 }
 
-void FrozenTable::setupFrozenTable()
-{
+void FrozenTable::setupFrozenTable() {
     // 冻结表格只显示主表的第 0 行和第 0 列交汇的单元格
     m_frozenTable->setParent(m_mainTable->viewport());
     m_frozenTable->setFocusPolicy(Qt::NoFocus);
@@ -96,20 +90,17 @@ void FrozenTable::setupFrozenTable()
     }
 
     // 行高/列宽同步：用户拖拽主表列宽时，冻结表必须跟随
-    connect(m_mainTable->horizontalHeader(), &QHeaderView::sectionResized,
-            this, &FrozenTable::syncColumnWidths);
-    connect(m_mainTable->verticalHeader(), &QHeaderView::sectionResized,
-            this, &FrozenTable::syncRowHeight);
+    connect(m_mainTable->horizontalHeader(), &QHeaderView::sectionResized, this,
+            &FrozenTable::syncColumnWidths);
+    connect(m_mainTable->verticalHeader(), &QHeaderView::sectionResized, this,
+            &FrozenTable::syncRowHeight);
 
     // 滚动时冻结表不跟着滚，只需要同步选中高亮
-    m_frozenTable->horizontalHeader()->setSectionResizeMode(
-        QHeaderView::ResizeMode::Fixed);
-    m_frozenTable->verticalHeader()->setSectionResizeMode(
-        QHeaderView::ResizeMode::Fixed);
+    m_frozenTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Fixed);
+    m_frozenTable->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeMode::Fixed);
 }
 
-void FrozenTable::updateFrozenTableGeometry()
-{
+void FrozenTable::updateFrozenTableGeometry() {
     // 冻结表格定位在主表 viewport 左上角，尺寸取第 0 行行高和第 0 列列宽
     const int colWidth = m_mainTable->columnWidth(0);
     const int rowHeight = m_mainTable->rowHeight(0);
@@ -121,8 +112,7 @@ void FrozenTable::updateFrozenTableGeometry()
     m_frozenTable->setRowHeight(0, rowHeight);
 }
 
-void FrozenTable::syncColumnWidths(int column, int /*oldWidth*/, int newWidth)
-{
+void FrozenTable::syncColumnWidths(int column, int /*oldWidth*/, int newWidth) {
     // 只需同步第 0 列的宽度到冻结表格
     if (column == 0) {
         m_frozenTable->setColumnWidth(0, newWidth);
@@ -130,8 +120,7 @@ void FrozenTable::syncColumnWidths(int column, int /*oldWidth*/, int newWidth)
     }
 }
 
-void FrozenTable::syncRowHeight(int row, int /*oldHeight*/, int newHeight)
-{
+void FrozenTable::syncRowHeight(int row, int /*oldHeight*/, int newHeight) {
     // 只需同步第 0 行的高度到冻结表格
     if (row == 0) {
         m_frozenTable->setRowHeight(0, newHeight);
@@ -139,8 +128,7 @@ void FrozenTable::syncRowHeight(int row, int /*oldHeight*/, int newHeight)
     }
 }
 
-void FrozenTable::resizeEvent(QResizeEvent* event)
-{
+void FrozenTable::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
     updateFrozenTableGeometry();
 }

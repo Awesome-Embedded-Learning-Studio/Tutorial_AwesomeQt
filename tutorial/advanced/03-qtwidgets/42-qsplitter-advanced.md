@@ -1,185 +1,111 @@
 ---
 title: "3.42 QSplitter 进阶"
-description: "入门篇我们用 QSplitter 搭了左右分栏布局，掌握了水平/垂直分割、addWidget、setSizes/sizes、setCollapsible、saveState/restoreState 持久化等基本操作。"
+description: "入门篇用 QSplitter 搭过左右分栏，进阶篇把分割器当尺寸谈判机对着 6.9.1 读实现，手柄与子件在私有链表里一一配对且 0 号手柄永远隐藏、createHandle 是造手柄的工厂虚函数、拖动链从手柄按下经 adjustPos 的 40 像素吸附阈值落到 doMove 与 setGeo 再发 splitterMoved、setStretchFactor 写的是子件自身 sizePolicy 的水平垂直伸展且没人设时全员按伸展分地盘权重是当前尺寸乘因子、setSizes 的数值当权重用多退少补 0 值可折叠就收没、collapsible 字段三态 Default 回落 childrenCollapsible、收没的件靠挪到负坐标保住手柄（hide 未被调用）、handleWidth 默认走 PM_SplitterWidth 且不超过 3 时热区外扩补足抓取带、opaqueResize 默认经 SH_Splitter_OpaqueResize 由 QCommonStyle 返回真、saveState 连方向与折叠开关一起存而 restoreState 只校验魔数和版本数量不校验、childEvent 自动收编散落子件但拒绝 QLayout、setOrientation 转置策略全家转、sizeHint 顺轴求和横轴取最大，配套示例在 examples/advanced/03-qtwidgets/42-qsplitter-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.42——QSplitter 进阶
 
-## 1. 前言 / 当那条分割线不只是"一条线"
+[3.41 QStackedWidget 进阶](./41-qstackedwidget-advanced.md) 收尾时咱们把话递到拖杆分尺寸，本篇的 QSplitter 正是管分地盘的。入门篇您搭过左右分栏，addWidget、setSizes、saveState 都摸过，进阶篇把它当一台尺寸谈判机来读，手柄从哪造出来，拖动走哪条链，地盘按什么规则分，状态存了些什么。源稿把重心压在自定义手柄与最小宽度上，机制层几乎空白，还有几处断言与 6.9.1 对不上，本篇按源码重排，改准的地方随文给出行号。
 
-入门篇我们用 QSplitter 搭了左右分栏布局，掌握了水平/垂直分割、addWidget、setSizes/sizes、setCollapsible、saveState/restoreState 持久化等基本操作。说实话，对于大多数桌面应用的分栏需求，入门篇的内容已经够用了。但一旦你开始追求视觉品质——比如想让分割手柄看起来像 VS Code 那种带悬停高亮的宽条而不是 Qt 默认那条几乎看不见的细线，或者想让某个面板在折叠时有一个平滑的收缩动画而不是瞬间消失——你就会发现 QSplitter 默认提供的定制能力相当有限。
+本篇引用以 qsplitter.cpp 为主，类与属性的定义补 qsplitter.h，折叠三态的私有结构补 qsplitter_p.h，样式默认值补 qcommonstyle.cpp 与 qfusionstyle.cpp。配套示例的完整玩法咱们放在结语，正文引用文件名加行号。
 
-今天我们把 QSplitter 的进阶能力拆透。核心内容是四个方面：通过子类化 QSplitterHandle 自定义手柄的绘制外观和行为，setStretchFactor 和 setSizes 配合实现最小宽度约束，handle(int index) 拿到手柄指针后的定制操作，以及嵌套分割器的状态恢复和尺寸协调。
+## createHandle 是工厂，handle() 按件取左
 
-## 2. 环境说明
+QSplitterHandle 是公开导出类（qsplitter.h 第 97 行），构造函数摆在明面上谁都能调，官方推荐的路子却是子类化 QSplitter 重写 createHandle，类注释写得很清楚（qsplitter.cpp 第 50-76 行）。工厂本体一行，new QSplitterHandle(d->orient, this)，出处（第 1197-1201 行）。私有链表里每个条目都握着两样东西，一个子件加一根手柄（qsplitter_p.h 第 29-45 行），新件插进来时工厂被调，手柄对象名拼成 qt_splithandle_ 加件名，方便您在对象树里对号（qsplitter.cpp 第 844-847 行）。
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。QSplitter 和 QSplitterHandle 都属于 QtWidgets 模块，链接 Qt6::Widgets 即可。自定义手柄绘制涉及 QPainter，需要 QtGui 模块（Qt6::Widgets 已包含）。所有行为在 Qt 6.9.1 上验证通过。
+手柄与子件同数，handle(index) 取的是 index 号件左侧或上方那根，0 号手柄永远隐藏，recalc 用 setHidden(first || widgetHidden) 落实（第 368-378 行），接口文档把配对规则写得很直白（第 1203-1213 行）。入门材料常把手柄数记成子件数减一，可见手柄确实少一根，对象一根不少，indexOf 认件也认手柄（第 1179-1188 行）。您拿 handle(1) 到手的正是 0 号与 1 号件之间那根。示例里 CustomSplitter 重写 createHandle 返回带防滑点的 CustomHandle，出处（custom_splitter.cpp 第 13-16 行），两根可见手柄全部换成自绘外观。
 
-## 3. 核心概念讲解
+## 拖杆的一条链：按下、吸附、落位、发信号
 
-### 3.1 子类化 QSplitterHandle 自定义手柄外观
+拖动咱们从头跟到尾。按下时手柄记下偏移并置 pressed（第 272-280 行），move 时 opaqueResize 为真就直接 moveSplitter，为假只画橡皮筋 setRubberBand（第 254-267 行），松手时收掉橡皮筋，再补一次 moveSplitter（第 285-300 行）。手柄侧的 moveSplitter 做完从右到左语言的坐标映射，转调 QSplitter::moveSplitter，出处（第 160-166 行）。正戏在后者，adjustPos 调位置，doMove 向两侧推，setGeo 落几何，storeSizes 把新尺寸写回 sizer（第 532-538 行），末尾 emit splitterMoved(pos, index)（第 1423 行）。您挂槽同步状态栏，拿到的 pos 是吸附调整之后的值，别当鼠标原始位置用。
 
-QSplitter 的分割手柄默认渲染成一条 2-4 像素的细线（具体宽度取决于平台和 QStyle），在深色主题下几乎不可见。如果你想做一个 VS Code 风格的、有悬停效果、有拖动状态反馈的宽手柄，就需要子类化 QSplitterHandle 并重写 paintEvent。
+吸附值得笔者停半拍。adjustPos 里 Threshold 定在 40（第 631 行），拖出常规极值后，位移超过剩余宽度一半且越过 qMin(40, 宽度)，位置就整段跳到折叠边界，去 farMin 或 farMax（第 629-658 行）。您把手柄往边上甩，面板要么停在最小尺寸要么整个收没，中间不悬停，干脆的手感来自这 40 像素。
 
-QSplitterHandle 是 QSplitter 的内部子控件——你不能直接构造它，而是需要重写 QSplitter::createHandle() 方法来返回你的自定义手柄实例。QSplitter 每次需要在两个子控件之间插入手柄时都会调用 createHandle()。
+## setStretchFactor 落在子件的 sizePolicy 上
 
-```cpp
-class CustomHandle : public QSplitterHandle
-{
-    Q_OBJECT
-
-public:
-    explicit CustomHandle(Qt::Orientation orientation,
-                          QSplitter *parent = nullptr)
-        : QSplitterHandle(orientation, parent)
-        , m_hovered(false)
-    {
-        setMouseTracking(true);
-    }
-
-protected:
-    void paintEvent(QPaintEvent *) override
-    {
-        QPainter painter(this);
-        QColor bg = m_hovered ? QColor(80, 140, 220, 100)
-                               : QColor(60, 60, 60);
-        painter.fillRect(rect(), bg);
-
-        // 画中间的拖动指示条
-        QColor indicator = m_hovered ? QColor(80, 140, 220)
-                                      : QColor(120, 120, 120);
-        if (orientation() == Qt::Horizontal) {
-            int x = width() / 2 - 1;
-            painter.fillRect(x, 0, 2, height(), indicator);
-        } else {
-            int y = height() / 2 - 1;
-            painter.fillRect(0, y, width(), 2, indicator);
-        }
-    }
-
-    void enterEvent(QEnterEvent *) override
-    {
-        m_hovered = true;
-        update();
-    }
-
-    void leaveEvent(QEvent *) override
-    {
-        m_hovered = false;
-        update();
-    }
-
-private:
-    bool m_hovered;
-};
-
-class CustomSplitter : public QSplitter
-{
-    Q_OBJECT
-
-protected:
-    QSplitterHandle *createHandle() override
-    {
-        return new CustomHandle(orientation(), this);
-    }
-};
-```
-
-手柄宽度通过 setHandleWidth(int) 设置。默认值取决于平台——Windows 上通常是 4 像素，Fusion 风格下可能是 2 像素。如果你需要更宽的拖动热区（比如触摸屏场景），设成 8-12 像素比较合适。注意 setHandleWidth(0) 会完全隐藏手柄——此时用户无法通过拖拽来调整分割比例，但你在代码中仍然可以通过 setSizes 程序化控制。
-
-重写 createHandle 时有一个容易忽略的约束：你必须把 orientation() 传给 QSplitterHandle 的构造函数。orientation 决定了手柄的方向——水平分割器中的手柄是垂直的（上下的），垂直分割器中的手柄是水平的（左右的）。如果 orientation 传错了，手柄的鼠标拖动行为会完全反向。
-
-### 3.2 setStretchFactor 和最小宽度约束
-
-QSplitter 在分配空间时有一套优先级系统：先满足所有子控件的 minimumSizeHint，然后把剩余空间按 stretch factor 比例分配。setStretchFactor(int index, int stretch) 设置某个子控件的伸展因子——默认值是 0，表示"不主动要空间"。
-
-但这里有一个很多人搞混的地方：stretch factor 只控制"多余空间怎么分"，不控制"最小尺寸是多少"。如果你的左侧面板需要至少 200 像素宽，右侧面板至少 400 像素，正确的做法是通过子控件自身的 setMinimumWidth 来约束，而不是靠 stretch factor。
+笔者把 setStretchFactor 的落点翻出来核过，它把水平垂直两个伸展同时写进子件的 sizePolicy（第 1750-1761 行），离开分割器照样在，存的是子件自己的属性，越界索引静默返回（第 1753-1754 行）。分配在 doResize 里做，手柄与子件交替进 QLayoutStruct 数组，qGeomCalc 一把算完（第 449-530 行）。分地盘的资格有个总开关，咱们看摘录。
 
 ```cpp
-auto *splitter = new QSplitter(Qt::Horizontal);
-
-auto *sidebar = new QWidget;
-sidebar->setMinimumWidth(200);   // 最小宽度约束
-auto *editor = new QWidget;
-editor->setMinimumWidth(400);
-
-splitter->addWidget(sidebar);
-splitter->addWidget(editor);
-
-// stretch factor 控制多余空间的分配：侧栏 1 份，编辑器 3 份
-splitter->setStretchFactor(0, 1);
-splitter->setStretchFactor(1, 3);
-```
-
-这两层约束是叠加的：minimumWidth 决定了"底线"，stretch factor 决定了"底线以上的多余空间怎么分"。当窗口缩小时，QSplitter 会优先保证所有子控件的 minimumSize，实在放不下时才会截断。这意味着如果你设了一个比较大的 minimumWidth，即使窗口很小，那个面板也不会被压缩到最小值以下。
-
-setCollapsible(int index, bool) 控制的是用户能否把某个面板拖到完全折叠（宽度/高度变为 0）。默认情况下所有面板都可以折叠。如果你的某个面板有 minimumWidth 约束（比如设了 200），而 setCollapsible 没有禁用，用户仍然可以把面板拖到 0——minimumWidth 只约束 QSplitter 的自动分配，不约束用户的拖拽行为。如果你需要同时禁止用户拖拽折叠和保证最小宽度，必须同时设 setMinimumWidth 和 setCollapsible(index, false)。
-
-### 3.3 handle() 获取手柄指针与事件拦截
-
-QSplitter::handle(int index) 返回第 index 个手柄的指针。对于有 N 个子控件的 QSplitter，有 N-1 个手柄，索引从 1 开始——handle(1) 是第一个和第二个子控件之间的手柄，handle(2) 是第二个和第三个之间的，以此类推。这个接口让你可以在拿到手柄后做一些额外的操作，比如在手柄上安装事件过滤器或者直接调用手柄的 setCursor。
-
-```cpp
-// 获取手柄并设置鼠标光标
-if (auto *h = splitter->handle(1)) {
-    h->setCursor(Qt::SplitHCursor);  // 水平双向箭头
+// stretch 资格的取舍（qsplitter.cpp 第 492-499 行）：
+bool stretch = noStretchFactorsSet;
+if (!stretch) {
+    QSizePolicy p = s->widget->sizePolicy();
+    int sf = orient == Qt::Horizontal ? p.horizontalStretch() : p.verticalStretch();
+    stretch = (sf != 0);
 }
+if (stretch) {
+    a[j].stretch = s->getWidgetSize(orient);
+```
 
-// 在手柄上安装事件过滤器追踪拖动
-for (int i = 1; i < splitter->count(); ++i) {
-    if (auto *h = splitter->handle(i)) {
-        h->installEventFilter(this);
+没人设 stretch 时开关为真，全员按伸展对待、expansive 全开，剩余空间按各自当前尺寸的权重分（第 457-465 行）。一旦有人设了，只有设了的件保有资格，没设的按 sizeHint 夹在 min 与 max 之间。权重还带乘法，getWidgetSize 里伸展因子大于 1 时 sizer 乘上因子（第 337-341 行），函数注释写明，有效伸展由初始尺寸乘 stretch 得来，出处（第 1737-1743 行）。所以 setStretchFactor(0, 1) 配 setStretchFactor(1, 3) 分出来的远超 “一比三”，两件的初始尺寸也压在秤上。最小尺寸不靠 stretch 托底，doResize 填表时用 qSmartMinSize（第 488 行），您给面板 setMinimumWidth(200)，自动分配不会给到线下，用户拖拽是另一套规则，归折叠一节交代。
+
+## setSizes 给的是权重，0 值直接收没
+
+setSizes 转 setSizes_helper(list, true)（第 1596-1600 行）。helper 逐件填 sizer，您看摘录。
+
+```cpp
+// 0 值的归宿（qsplitter.cpp 第 686-698 行）：
+int smartMinSize = pick(qSmartMinSize(s->widget));
+
+// Make sure that we reset the collapsed state.
+if (s->sizer == 0) {
+    if (collapsible(s) && smartMinSize > 0) {
+        s->collapsed = true;
+    } else {
+        s->sizer = smartMinSize;
     }
+} else {
+    if (s->sizer < smartMinSize)
+        s->sizer = smartMinSize;
 }
 ```
 
-在事件过滤器中你可以捕获手柄的鼠标按下/移动/松开事件，实现类似"拖动时实时预览布局效果"或者"拖动距离超过阈值才真正触发分割"的功能。但注意不要在事件过滤器中吞掉手柄的核心交互事件——如果你在 mousePressEvent 中返回了 true，手柄的拖动功能就被你截断了，用户完全无法拖动分割线。
+0 值时件可折叠就置 collapsed 收没，不可折叠抬回 hint，低于 hint 的值同样抬回。数组多给的值被循环忽略，给少了后来件兜默认 0 落进折叠分支（第 679-699 行）。函数文档点明整体尺寸不动，多退少补按相对权重分（第 1575-1594 行），您设 {230, 230, 240}，窗口够宽时大致照单收，缩到五百像素就按 23:23:24 重新分，绝对值不作数。sizes() 读的是 s->rect 的实占尺寸（第 1559-1573 行），setSizes 之后立刻读回来，值可能已被 doResize 重分，您别拿它当回声用。
 
-### 3.4 嵌套分割器的状态恢复
+## 折叠三态：Default 回落 childrenCollapsible，收没的件被挪到负坐标
 
-入门篇讲了 saveState/restoreState 对单个 QSplitter 的持久化。但实际项目中更常见的是嵌套分割器——水平分割器里嵌一个垂直分割器，形成"左 | 右上 + 右下"的三区布局。这种嵌套情况下 saveState 必须在每个 QSplitter 上分别调用，不能只在最外层调一次。
+咱们把 collapsible 字段翻出来看，两位宽，Default 值就是 2（qsplitter_p.h 第 27、34-35 行），setCollapsible 只往里写 0 或 1（qsplitter.cpp 第 1043 行），索引越界给一句 qWarning 就返回（第 1039-1042 行）。取值时看到 Default 就回落到 childrenCollapsible（第 660-667 行），后者私有初值真（qsplitter_p.h 第 56 行），要全局关折叠，调 setChildrenCollapsible(false)，出处（qsplitter.cpp 第 1010-1020 行）。
 
-```cpp
-// 保存嵌套分割器状态
-QSettings settings("MyOrg", "MyApp");
-settings.setValue("main_splitter", mainSplitter->saveState());
-settings.setValue("right_splitter", rightSplitter->saveState());
+拖拽绕过最小尺寸的机关在 doMove，允许折叠时 ws 直接归 0，不再夹回 qSmartMinSize（第 776-783 行），接口文档也写明，用户能把设了 minimumSize 的件拖到 0，出处（第 1022-1032 行）。您要面板有底又拖不动，setMinimumWidth 与 setCollapsible(index, false) 得两样一起设。收没的实现笔者多看了一眼，它不调 hide，把件挪到 (-w-1, -h-1)，注释写明为了保住手柄可见（第 732-740 行）。手柄在，面板随时拖得回来，对象树里它也始终是可见状态。
 
-// 恢复时必须按从内到外的顺序
-rightSplitter->restoreState(
-    settings.value("right_splitter").toByteArray());
-mainSplitter->restoreState(
-    settings.value("main_splitter").toByteArray());
-```
+## handleWidth 的热区补偿：视觉细与抓取宽解耦
 
-恢复顺序很重要。如果你先恢复了外层的 mainSplitter，外层分割器会按照保存的状态设置子控件的大小——但此时内层的 rightSplitter 还没有恢复，它的子控件尺寸是默认值。外层分配给 rightSplitter 的空间可能和 rightSplitter 恢复后的需求不一致，导致布局闪跳。正确的做法是先恢复内层，再恢复外层。
+默认宽度走 PM_SplitterWidth 样式度量，私有初值 -1 表示没设过（第 1613-1621 行，qsplitter_p.h 第 56 行），具体几像素随平台与样式走，源码不写死。手柄的 resizeEvent 里有一段补偿，handleMargin 拿 (5-宽)/2 算，宽不超过 3 时 margin 大于 0 进 tiny mode，置 WA_MouseNoMask 并撑开 contentsMargins，让抓取区外扩压到相邻件的地盘（第 203-228 行），属性文档写明，宽设成 0 或 1 时，抓取区会向外多占几像素（第 1609-1611 行）。您给触摸屏做界面，视觉上一根细线也留着 4 到 5 像素的热区（源码注释原话 at least 4 or 5 pixels，宽 0 得 4、宽 1 得 5），两件事互不牵扯。
 
-restoreState 有一个隐含的限制：它只在 QSplitter 的子控件数量和保存时一致的情况下才能正确恢复。如果你在两次运行之间添加或删除了一个子控件，restoreState 会静默失败（返回 false），分割器回到默认布局。如果你的应用有"可选面板"的功能——用户可以在设置中启用或禁用某些面板——必须在恢复状态之前先确定最终的子控件列表，然后再调用 restoreState。
+绘制走 CE_Splitter，悬停与按下经 State_MouseOver 和 State_Sunken 传给样式（第 305-323 行），状态翻转在 event() 里做，HoverEnter 置真、HoverLeave 置假，出处（第 233-249 行）。悬停事件要有 WA_Hover 才会来，Fusion 的 polish 名单明确收了 QSplitterHandle，出处（qfusionstyle.cpp 第 2977-2989 行），别的样式不一定置，您做悬停高亮就在子类构造里自己 setAttribute(Qt::WA_Hover, true)，事件与状态位全都现成。
 
-## 4. 踩坑预防
+## opaqueResize 默认随样式，false 时走橡皮筋
 
-第一个坑是 setCollapsible 和 minimumSize 之间的行为差异。setCollapsible(index, false) 禁止用户通过拖拽把手柄把面板折叠到 0，但它不会自动给面板设最小尺寸。反过来，setMinimumWidth(200) 约束了 QSplitter 的空间分配，但不阻止用户把手柄拖到 0。如果你需要"面板有最小尺寸且不能被折叠"，必须同时设两者。只设一个的后果是用户仍然能把面板拖成一条缝，或者面板虽然有最小尺寸但用户可以把它拖没。
+私有 opaque 初值真，opaqueResizeSet 初值假，取值时转问样式 SH_Splitter_OpaqueResize，两级出处（qsplitter_p.h 第 55-56 行，qsplitter.cpp 第 1459-1475 行）。QCommonStyle 对该提示一律返回真（qcommonstyle.cpp 第 5393-5395 行），6.9.1 的样式目录里也没有谁改写它，常见平台默认都是拖动实时重排。您调 setOpaqueResize(false) 后，拖动期间只画一条 QRubberBand 线（第 1300-1326 行），松手才一次性落位，面板重排昂贵的大界面改用它更省心。
 
-第二个坑是 restoreState 在子控件数量变化时静默失败。如果你在上次保存时有 3 个子控件，这次运行时只 addWidget 了 2 个（比如某个面板在设置中被禁用了），restoreState 会返回 false 并且不做任何恢复。如果你没有检查返回值，用户看到的就是默认布局，而不是上次保存的布局。解决方案是在 restoreState 返回 false 时用 setSizes 设置一个合理的默认布局。
+## saveState 连方向一起存，restoreState 只认魔数和版本
 
-第三个坑是 setHandleWidth 设得太小导致触摸设备上几乎无法拖动。桌面鼠标的精度足够点中 2-4 像素的手柄，但触摸屏上手指的热区通常至少需要 12-16 像素。如果你的应用需要支持触摸操作，把手柄宽度设到至少 8 像素，或者用自定义手柄在 paintEvent 中画一个视觉上细但点击热区宽的手柄。
+saveState 用 QDataStream 依次写魔数 0xff、版本、sizer 列表、childrenCollapsible、handleWidth、opaqueResize、orientation、opaqueResizeSet（第 1654-1677 行），存的远超尺寸一栏。restoreState 的校验只有魔数与版本两道（第 1709-1712 行），子件数量根本不看。数量对不上时的走向在 setSizes_helper，保存三件恢复两件，多余的值被循环忽略，保存两件恢复三件，后来件兜默认 0，可折叠就整个收没（第 679-699 行），函数照样返回真。源稿说数量不一致时静默失败，6.9.1 里查无此事，您做可选面板的恢复逻辑，返回值护不住，得自己核对 count。
 
-## 5. 练习项目
+嵌套分割器的恢复次序咱们自己排，内层恢复完再动外层。依据是外层分地盘时拿的是子件现时的 sizer 与 sizeHint，内层没就位，外层就拿旧值谈，落位后再被内层顶一下。Qt 本身没规定顺序，排错的代价也只是一个回合的闪跳，咱们顺手排对就是。
 
-练习项目：IDE 风格三区布局面板。我们要实现一个具备完整分割管理能力的面板。
+## childEvent 收编散落子件，setOrientation 全家跟着转
 
-完成标准是：最外层一个水平 QSplitter，左侧是文件树面板（QTreeWidget），右侧是一个垂直 QSplitter 嵌套。右侧垂直 QSplitter 上半部分是代码编辑区（QPlainTextEdit），下半部分是输出面板（QTextEdit）。所有分割手柄使用自定义外观——悬停时变蓝色，默认灰色，手柄宽度 6 像素。左侧面板最小宽度 200 且不可折叠，代码编辑区最小高度 300，输出面板最小高度 100。三个面板的伸展因子分别是 1:3:1。程序关闭时保存两层 QSplitter 的状态到 QSettings，启动时恢复。恢复失败时（比如面板数量变化）使用默认尺寸比例 250:500:150。
+拿 QSplitter 当 parent 直接 new 出来的子件，childEvent 会自动收编追加到队尾（第 1262-1273 行），注释标明兼容用途，新代码还是走 addWidget。子件是 QLayout 时直接 qWarning 顶回，分割器不接待布局（第 1267-1268 行）。件被删时条目同步移除并 recalc（第 1280-1290 行）。方向切换在 setOrientation，尺寸策略转置、逐根手柄转方向连带换光标、recalc 重排（第 973-991 行，光标在第 106-113 行），restoreState 里 orientation 也原样写回（第 1726-1727 行），存好的状态跨方向恢复不怕错位。咱们顺带把尺寸聚合记一笔，sizeHint 顺轴求和、横轴取最大（第 1489-1506 行），minimumSizeHint 把手柄的建议尺寸也算进去（第 1513-1540 行），面板越加越多，窗口的最小建议宽度跟着水涨船高。
 
-提示几个关键点：createHandle 里传 orientation()，水平分割器的手柄方向是 Qt::Horizontal；嵌套分割器的 restore 顺序是从内到外；判断 restoreState 返回值来决定是否用 setSizes 设默认值。
+## 官方文档参考
 
-## 6. 官方文档参考链接
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，全部行为在 6.9.1 源码核对。QSplitter 与 QSplitterHandle 同在 QtWidgets，链接 Qt6::Widgets 即可。
 
-[Qt 文档 · QSplitter](https://doc.qt.io/qt-6/qsplitter.html) -- 分割容器控件，包含 setSizes/setStretchFactor/saveState/restoreState 等接口
+[Qt 文档 · QSplitter](https://doc.qt.io/qt-6/qsplitter.html) -- 分割容器，setSizes 的权重语义与 saveState/restoreState 的定义处
 
-[Qt 文档 · QSplitterHandle](https://doc.qt.io/qt-6/qsplitterhandle.html) -- 分割手柄控件，用于自定义手柄外观
+[Qt 文档 · QSplitterHandle](https://doc.qt.io/qt-6/qsplitterhandle.html) -- 分割手柄，paintEvent 与鼠标事件的默认实现
 
-[Qt 文档 · QSplitter::createHandle](https://doc.qt.io/qt-6/qsplitter.html#createHandle) -- 创建自定义手柄的虚函数
+[Qt 文档 · QSplitter::createHandle](https://doc.qt.io/qt-6/qsplitter.html#createHandle) -- 手柄工厂虚函数，自定义外观的官方入口
+
+[Qt 文档 · QSplitter::opaqueResize](https://doc.qt.io/qt-6/qsplitter.html#opaqueResize-prop) -- 拖动是否实时重排的属性，默认值交给样式提示
+
+[Qt 文档 · QSizePolicy](https://doc.qt.io/qt-6/qsizepolicy.html) -- 伸展因子的存放地，setStretchFactor 的落点
 
 ---
 
-到这里，QSplitter 的进阶内容就拆完了。子类化 QSplitterHandle 并重写 createHandle 是自定义手柄外观的标准路径——你可以在 paintEvent 里画任何你想要的效果。setStretchFactor 控制多余空间的分配，setMinimumWidth 控制底线，两者必须配合使用。嵌套分割器的状态恢复要注意从内到外的顺序和子控件数量的一致性。把这些机制搞透后，你就能做出专业级的分栏布局——而不只是"能拖但丑"的分割界面。
+分地盘的容器读穿，谈判规则全在 qGeomCalc 一张表里，41 篇递过来的话到这里对上了号。下一程收进一个抽屉里翻页，[3.43 QToolBox 进阶](./43-qtoolbox-advanced.md)，标签列配折叠页的机制咱们接着看。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/42-qsplitter-advanced/，可执行文件 42-qsplitter-advanced）。三块彩色面板的最小宽度各不相同（main.cpp 第 76-78 行），setSizes 给了 230、230、240 的初值（第 81 行），您可以拖右边的蓝面板试试，最小宽度 80 挡不住它整个收没，折叠默认开着。防滑点的半径、间距、数量在 custom_handle.cpp 第 50-52 行，改三个数换一版手感。想看热区补偿，给 CustomSplitter 补一句 setHandleWidth(1)，视觉上近乎消失，照样拖得动。
+
+完成标准照旧。handle(1) 在哪两件之间，您说得清 0 号手柄去了哪。拖到边上的干脆吸附从哪来，您指得出 Threshold 在哪一行。setStretchFactor(0, 1) 配 (1, 3) 实际怎么分，您按 getWidgetSize 的乘法推得出来。三件的字节数组恢复进两件的分割器会发生什么，您答得出多余值的归宿。

@@ -1,253 +1,111 @@
 ---
 title: "3.56 QMenuBar 进阶"
-description: "入门篇我们用 QMenuBar 搭了静态菜单结构——这次我们解决菜单的运行时动态构建、最近文件列表的完整实现、菜单项的按状态启用/可见性控制、以及 macOS 原生菜单栏的平台差异。"
+description: "进阶篇把 QMenuBar 的机制读明白：平台给了原生菜单栏这只部件就被 hide（qmenubar.cpp 第 673-677 行），macOS 与 Android 恒原生、Linux 看 D-Bus 服务、Windows 的 QApplication 默认自绘，原生菜单栏生效时尺寸函数跳过条目几何只剩角部件（第 1528、1578、1629 行），setVisible 的 show 是空操作（第 943-951 行），setNativeMenuBar 随时换向且旧项由 actionEvent 镜像补同步（第 1783-1798、1190-1231 行），insertMenu 插的是 menuAction（第 805-811 行），QMenuBar::clear 只摘不删（第 846-852 行）而 QMenu::clear 会删 parent 归属且未共享的动作（qmenu.cpp 第 2213-2225 行），装不下的项进 hiddenActions 塞进 extension 按钮的 QMenu（第 126-212 行），setCornerWidget 只认两只上角（第 1713-1745 行），setDefaultUp 默认向下弹（qmenubar_p.h 第 34-35 行），键盘导航经 getNextAction 跳过空矩形与禁用项（第 688-716 行），aboutToShow 在部件与原生两条路径都发出（qmenu.cpp 第 2366、196、1549-1551 行，macOS 桥头在 qcocoansmenu.mm 第 168-177 行），最近文件列表的 aboutToShow 重建与示例玩法在 examples/advanced/03-qtwidgets/56-qmenubar-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.56——QMenuBar 进阶
 
-## 1. 前言 / 当菜单不再是一张写死的清单
+上一篇收尾时留了一句，menuBar() 懒创建，头一次调用才 new 出一只 QMenuBar 挂上主窗口。懒创建回答的是部件出生的时机，本篇接着往下问，出生以后它在窗口里占不占地方，占的话运行时增删菜单它怎么应付。QMenuBar 与 QMenu 的分工一句话说清，前者管窗口顶上的横条和顶层菜单项，后者管弹出来的菜单清单，咱们本篇两条腿都走。
 
-入门篇我们把 QMenuBar + QMenu + QAction 的基本用法过了一遍——在构造函数里 addMenu、addAction、addSeparator，连接 triggered 信号，菜单就能用了。对于功能固定的工具类应用，静态菜单完全够用。但如果你做的是 IDE、编辑器或者数据管理工具，菜单内容往往不是写死的——"最近打开的文件"列表会变，插件注册的菜单项会变，某些操作在当前状态下不可用需要灰掉。这些场景都要求菜单具备运行时动态构建和状态感知的能力。
+咱们把引用文件交代清楚。主战场是 qmenubar.cpp 与 qmenubar_p.h（src/widgets/widgets），菜单侧下探 qmenu.cpp，removeAction 的出处要翻到 qwidget.cpp（src/widgets/kernel），平台插件只取要紧的几行。配套示例是一只动态菜单加最近文件列表的演示窗口（examples/advanced/03-qtwidgets/56-qmenubar-advanced/），完整玩法放结语。
 
-本篇我们要解决四个核心问题：怎么在运行时动态添加/删除菜单和菜单项，怎么实现一个完整的最近文件列表（带持久化和数量上限），怎么根据应用状态动态控制菜单项的 enabled 和 visible，以及 macOS 原生菜单栏带来的平台差异怎么处理。
+## 出生那天就可能被平台收走：原生菜单栏与窗口里的净高
 
-## 2. 环境说明
-
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。涉及 QtWidgets 模块（QMenuBar、QMenu、QAction）和 QtCore 模块（QSettings、QFileInfo、QUrl）。macOS 原生菜单栏的行为在 Qt 6.x 上没有重大变化，但 Qt::AA_DontUseNativeMenuBar 属性的行为在不同小版本间有细微调整，建议使用 Qt 6.5+ 以获得一致体验。
-
-## 3. 核心概念讲解
-
-### 3.1 动态构建菜单
-
-QMenu 和 QMenuBar 都是 QWidget 的子类，它们的子项管理用的是 QAction 的添加/删除接口。QMenu::addAction、QMenu::addMenu、QMenu::addSeparator 在运行时随时可以调用，效果是立即在菜单末尾追加新项。QMenu::insertAction 和 QMenu::insertMenu 则可以在指定 QAction 之前插入。QMenu::removeAction 从菜单中移除一个 QAction。
-
-动态构建菜单的典型场景是插件系统——插件在加载时注册自己的菜单项到主窗口的菜单栏中。我们看一个关键片段：插件加载后往"工具"菜单中添加自己的入口。
+咱们从出生现场读起：
 
 ```cpp
-void PluginManager::register_plugin_menu(PluginInterface* plugin)
+// 平台交出原生菜单栏，这只部件就被藏起来（qmenubar.cpp 第 673-677 行，摘录）
+if (!QCoreApplication::testAttribute(Qt::AA_DontUseNativeMenuBar))
+    platformMenuBar = QGuiApplicationPrivate::platformTheme()->createPlatformMenuBar();
+
+if (platformMenuBar)
+    q->hide();
+```
+
+平台上谁会交货，笔者挨个翻过插件。macOS 恒给，QCocoaTheme 每次都 new 一只 QCocoaMenuBar，出处 qcocoatheme.mm 第 539 行。Android 同样恒给，出处 qandroidplatformtheme.cpp 第 400 行。Linux 上通用、KDE、GNOME 三套主题都要看 D-Bus 会话总线，找得到 com.canonical.AppMenu 服务才交出 QDBusMenuBar，出处 qgenericunixthemes.cpp 第 468-473 行，另两处同款。Windows 上 useNativeMenus() 不开就返 nullptr，出处 qwindowstheme.cpp 第 1211-1215 行，QApplication 程序默认不开。所以咱们平时在 Windows 和 Linux 桌面上看到的是 QMenuBar 自己画的部件，macOS 上您在窗口里根本找不到它，藏它的就是那句 q->hide()，窗口里的净高是 0。
+
+净高 0 在尺寸函数里还有一层保险。sizeHint、minimumSizeHint、heightForWidth 三个尺寸函数开头都取同一个开关，as_gui_menubar = !isNativeMenuBar()，出处第 1578、1528、1629 行，原生菜单栏生效时条目几何整段跳过，尺寸从 (0,0) 起步，只有角部件能往上叠。setVisible 同款脾气（第 943-951 行），原生形态下您调 setVisible(true) 它直接 return，显隐归平台管，您叫不动它。
+
+setNativeMenuBar 随时可以改主意，出处第 1783-1798 行。值没变它不动手，true 改 false 时 delete 掉平台菜单栏、置脏几何标记，有父窗口就 setVisible(true)，菜单栏当场在窗口里重新出现。false 改 true 时向主题再要一只，已经 addMenu 进去的项由 actionEvent 的镜像逻辑补同步（第 1190-1231 行），下一节咱们就读它。全局开关是 Qt::AA_DontUseNativeMenuBar，全文件只在 init 里判断一次（第 673 行），属性说明写明默认行为跟随它，您显式调过 setNativeMenuBar 之后，就以显式值为准，出处第 1767-1780 行。在不支持的平台上调这属性没有效果，读回去恒是 false，因为主题压根交不出平台菜单栏。
+
+## 运行时增删：insertMenu、removeAction 与两只 clear 的不同下场
+
+想把一只 QMenu 插进菜单栏中间，insertMenu（第 805-811 行）拿的是 menu->menuAction()，插到您指定的 before 动作之前，返回值就是 menuAction 本身，往后想挪位置，操作对象也是它。insertSeparator（第 783-793 行）同款路数。
+
+removeAction 是 QWidget 层的通用接口，出处 qwidget.cpp 第 3215-3227 行，从动作表里摘掉，发一个 ActionRemoved 事件，不 delete。咱们跟着事件流走到 QMenuBar::actionEvent（第 1190-1241 行），几何标记当场置脏，原生形态下再镜像调 platformMenuBar->removeMenu（第 1210-1213 行），两边保持一致。ActionAdded 进门时还有一步接线，triggered 与 hovered 连到菜单栏自己的转发槽（第 1236-1239 行），菜单栏上的 triggered(QAction*) 信号，源头就是这些接线。
+
+动作属性变化也走同一个门。ActionChanged 进门时，原生形态下查当前动作关联的平台菜单，跟它名下该挂的菜单对不对得上，对不上就 removeMenu 换成 insertMenu，对得上就把文本、可见、可用三样抄过去再 syncMenu（第 1214-1231 行，抄写动作在 copyActionToPlatformMenu，第 1177-1186 行）。您 setEnabled 一只顶层动作，窗口里它变灰，macOS 顶栏上同步变灰，跑的就是整条链。
+
+两只 clear 的下场不同，咱们摆在一起看。QMenuBar::clear（第 846-852 行）只循环 removeAction，一只动作都不删，它们的 QObject 父亲仍是菜单栏，等析构才收走。QMenu::clear 就下手了：
+
+```cpp
+// QMenu::clear 摘之外还删，带条件（qmenu.cpp 第 2213-2225 行，摘录）
+void QMenu::clear()
 {
-    QMenu* tools_menu = find_tools_menu();  // 找到"工具"菜单
-    if (!tools_menu) {
-        return;
-    }
+    QList<QAction*> acts = actions();
 
-    QString plugin_name = plugin->name();
-    QAction* plugin_action = tools_menu->addAction(
-        QString("启动 %1").arg(plugin_name));
-
-    // 用 Lambda 捕获插件指针，触发时调用插件的 run 方法
-    connect(plugin_action, &QAction::triggered, this, [plugin]() {
-        plugin->run();
-    });
-
-    // 记住这个 action，方便插件卸载时移除
-    m_plugin_actions.insert(plugin_name, plugin_action);
-}
-
-void PluginManager::unregister_plugin_menu(const QString& plugin_name)
-{
-    QAction* action = m_plugin_actions.take(plugin_name);
-    if (action) {
-        // removeAction 只是从菜单中移除，不会 delete QAction
-        // 如果 action 的 parent 是 menu，需要手动 delete
-        action->menu()->removeAction(action);
-        delete action;
+    for(int i = 0; i < acts.size(); i++) {
+        removeAction(acts[i]);
+        if (acts[i]->parent() == this && acts[i]->d_func()->associatedObjects.isEmpty())
+            delete acts[i];
     }
 }
 ```
 
-这里有几个要点值得注意。QMenu::addAction 有多个重载——无参的返回 QAction* 需要你自己连接信号，带接收者和槽的重载直接连接。在动态菜单场景下推荐用无参版本 + Lambda，因为插件的回调逻辑各不相同。另外，removeAction 不会 delete QAction 对象——它只是从菜单的布局中移除。如果 QAction 的 parent 是菜单本身（addAction 时默认行为），移除后它仍然存在内存中，你需要手动 delete 或者交给 Qt 对象树在菜单析构时自动清理。
+您看判据有两个，parent 得是菜单本尊，而且它没出现在任何别的部件里。同一只 QAction 同时挂在工具栏上的，clear 之后还活着。危险的是您把动作指针长期存在 QMap 里做状态更新，菜单侧一次 clear，没有共享关系的指针全悬空。示例的做法是每次重建都 clear（menu_bar_demo.cpp 第 119 行），动作当场建当场用完就丢，没人长期持有，这个用法就安全。
 
-如果你的菜单需要"重建"——比如某个菜单的内容完全依赖外部配置文件，每次配置变化都要重置菜单——用 QMenu::clear() 一次性移除所有 action。clear() 会 delete 所有子 QAction（因为它们的 parent 是这个 QMenu），所以调用 clear 之后不要再持有旧的 QAction 指针。
+## 装不下的项去哪儿：几何重算与溢出按钮
 
-### 3.2 最近文件列表
+actionEvent 头一行 itemsDirty = true（第 1192 行），重算的活推迟到 updateGeometries（第 126-212 行），脏标记守门，不脏直接返回。calcActionRects（第 381-473 行）拿字体逐项量尺寸，不可见的项跳过，分给每只动作一个矩形。窗口压窄后 menuRect 装不下的项进 hiddenActions（第 178-196 行），整批塞进 extension 按钮自带的一只 QMenu（第 198-208 行），按钮亮在菜单栏右端。您把示例窗口拖窄，顶层菜单会自己躲进那枚箭头按钮，机制就在这里。重算还顺带把 shortcutIndexMap 重建一遍（第 162-172 行），Alt 加字母的助记符每次都重新 grab。
 
-Qt 没有内置的"最近文件菜单"组件。Qt Creator 里有一个 KRecentFilesMenu，但那是 Qt Creator 内部代码，不属于 Qt 框架。我们需要自己用 QMenu + QSettings + QAction 实现。实现思路不复杂但细节比较多，我们把完整逻辑拆开讲。
+置脏的入口不止 actionEvent 一处，resizeEvent 同样把标记打脏（第 880-885 行），窗口宽度一变布局就得跟着来。您想拿到某只动作的矩形，公开接口 actionGeometry 返回的就是私有缓存里的矩形，出处第 1519-1524 行。绘制在 paintEvent，逐项交给风格画 CE_MenuBarItem（第 890-910 行），QMenuBar 自己不写字不画框，画法全听当前风格的，这也是同一份代码在各平台长相不同的来路。
 
-核心数据结构是一个 QStringList，保存最近打开过的文件路径，按时间倒序排列（最新的在前面）。每次打开文件时，把路径插入列表头部，去重，然后截断到最大数量（通常 10 个）。这个列表持久化到 QSettings 中。
+## 角落部件与弹向：setCornerWidget、setDefaultUp
 
-```cpp
-class RecentFilesManager : public QObject
-{
-    Q_OBJECT
+setCornerWidget（第 1713-1745 行）只认 TopLeftCorner 与 TopRightCorner，其余枚举值 qWarning 拒收（第 1728 行）。收养走 setParent(this)，再装事件过滤器（第 1732-1734 行）。换角部件时旧件只被摘掉过滤器，仍是菜单栏的可见子部件（属性说明第 1706-1711 行），它不会消失，只是丢了边角排位，收留或挪走得您自己动手。
 
-public:
-    static constexpr int kMaxRecentFiles = 10;
+几何上角部件全程参与。咱们看 updateGeometries 量它们的建议尺寸并扣掉对应宽度（第 133-153 行），sizeHint 再把高度叠进总尺寸（第 1601-1614 行）。上一篇读过 QMainWindow::setMenuBar，换栏时它会把旧栏两只角的部件搬去新栏，再销毁旧栏，出处 qmainwindow.cpp 第 482-506 行，角部件的寿命跨菜单栏，那层衔接正好对上。
 
-    explicit RecentFilesManager(QMenu* recent_menu,
-                                 QObject* parent = nullptr)
-        : QObject(parent)
-        , m_recent_menu(recent_menu)
-    {
-        // 菜单被点击前的刷新：确保列表和菜单同步
-        connect(m_recent_menu, &QMenu::aboutToShow, this,
-                &RecentFilesManager::rebuild_menu);
+setDefaultUp（第 865-873 行）管弹出方向。私有点 defaultPopDown 初值是 1（qmenubar_p.h 第 34-35 行），所以默认向下弹，isDefaultUp 返 false。您置 true 后，从菜单栏弹出的菜单改向上弹，屏幕放不下时自动换方向（属性说明第 851-864 行）。弹向的实算在 popupAction（第 272-336 行），fitUp 与 fitDown 拿菜单高度对屏幕上下边缘各量一遍，第 328-329 行的判据里 defaultPopDown 参与决策，两头都放不下时还会平移菜单。菜单长在内容下方的应用会需要它。
 
-        // "清除最近文件"动作
-        m_clear_action = new QAction("清除最近文件", this);
-        connect(m_clear_action, &QAction::triggered, this, [this]() {
-            m_recent_files.clear();
-            save_to_settings();
-        });
-    }
+## 高亮与键盘导航：currentAction 走到哪，哪儿亮
 
-    void add_file(const QString& file_path)
-    {
-        // 去重：如果已存在则移到最前面
-        m_recent_files.removeAll(file_path);
-        m_recent_files.prepend(file_path);
+咱们把三条路放在一起看，鼠标划过、键盘移动、菜单弹出，高亮都汇进同一个函数，QMenuBarPrivate::setCurrentAction，出处第 338 行。移动时的挑选逻辑在 getNextAction（第 688-716 行），它逐个看动作矩形，矩形为空的项（躲进溢出按钮的那些）跳过，禁用项默认也跳过，例外得靠风格提示放行，提示名叫 SH_Menu_AllowActiveAndDisabled。咱们回到公开接口，activeAction 与 setActiveAction 在第 816-837 行，后者转手就调 setCurrentAction。
 
-        // 截断到上限
-        while (m_recent_files.size() > kMaxRecentFiles) {
-            m_recent_files.removeLast();
-        }
-        save_to_settings();
-    }
+鼠标离开也有收尾。leaveEvent（第 1141-1147 行）在菜单栏没有焦点又不在弹开状态时把高亮清空，唯一例外是当前项挂着菜单的场合，弹着的菜单不收。所以您鼠标扫过菜单栏再移开，高亮自己退场，不用您管。
 
-    void load_from_settings()
-    {
-        QSettings settings("MyCompany", "MyApp");
-        m_recent_files = settings.value("recent_files").toStringList();
-    }
+keyPressEvent（第 1013-1055 行）咱们按按键走。Tab 折算成 Right（第 1024-1027 行），从右到左的布局里左右互换（第 1018-1023 行）。Enter、Return、Space、Down 在当前项有菜单时把它弹出（第 1031-1037 行），Left 与 Right 沿 getNextAction 挪动高亮（第 1048-1055 行），Esc 撤掉高亮，单个字符再去对助记符（第 1064 行起）。您按 Alt 再按 F 敲开 File 菜单，走的就是重算时重建的 shortcutIndexMap。
 
-signals:
-    void file_selected(const QString& file_path);
+想用代码打开某只顶层菜单也有现成入口。setActiveAction 转手调 setCurrentAction 时把 popup 传了 true（第 827-837 行），后者一路走到 popupAction 把菜单弹开（第 367-368 行），所以一句 setActiveAction 就能替您完成高亮加弹出两件事。
 
-private:
-    void rebuild_menu()
-    {
-        m_recent_menu->clear();
+## 最近文件列表：aboutToShow 重建，两条路径都通
 
-        if (m_recent_files.isEmpty()) {
-            // 空列表时显示一个灰色的占位
-            QAction* empty = m_recent_menu->addAction("（无最近文件）");
-            empty->setEnabled(false);
-            return;
-        }
+aboutToShow 的发出有两条路，咱们都验过。部件路径在 QMenuPrivate::popup，摆位置之前 emit（qmenu.cpp 第 2304、2366 行）。原生路径靠转发，setPlatformMenu 把平台菜单的 aboutToShow 连到 _q_platformMenuAboutToShow（第 196 行），它再替 QMenu 把自己的 aboutToShow 发出去，出处第 1549-1551 行。macOS 侧的入口在 QCocoaNSMenu 的 menuWillOpen，NSMenu 一开就 emit platformMenu 的 aboutToShow 信号，出处 qcocoansmenu.mm 第 168-177 行。笔者特意核对了整条转发链，因为不少老资料断言 mac 上 aboutToShow 不可靠，6.9 的源码里转发链已经接通，您放心把重建逻辑挂在它上面。
 
-        for (const QString& file_path : m_recent_files) {
-            // 用 QFileInfo 只显示文件名，tooltip 显示完整路径
-            QFileInfo info(file_path);
-            QAction* action = m_recent_menu->addAction(info.fileName());
-            action->setToolTip(file_path);
-            connect(action, &QAction::triggered, this, [this, file_path]() {
-                emit file_selected(file_path);
-            });
-        }
+示例的最近文件就是这么挂的，咱们顺着代码走一遍。Recent Files 子菜单出生在 setupMenus，出处 menu_bar_demo.cpp 第 44-46 行，aboutToShow 连到 rebuildRecentFilesMenu，对应第 117-135 行。重建时 clear（第 119 行），空列表给一只禁用的占位项（第 122-124 行），有列表就逐项建动作，带编号前缀与 setData（第 127-133 行），点击后 sender() 回取，再用 data 拿回路径（第 108-113 行）。入列在 openFile，removeAll 加 prepend 完成去重置顶（第 89-90 行），while 截到上限（第 93-94 行），上限 5 写在 menu_bar_demo.h 第 56 行。Edit 菜单里的 Add Dynamic Item 是运行时增删的最小现场（第 59-71 行），每点一次 lambda 里 addAction 追加一项，actionEvent 收到事件当场重算几何，菜单上的项肉眼可见地多起来。
 
-        m_recent_menu->addSeparator();
-        m_recent_menu->addAction(m_clear_action);
-    }
+咱们顺手问一句，为什么挂在 aboutToShow 上，不在每次 openFile 时实时维护清单？菜单绝大部分时间不可见，弹开那一刻照着数据重建一次，两边必然一致，还省掉了维护一份常驻动作表的力气，惰性更新是动态菜单的常规做法，状态灰显也能如法炮制。
 
-    void save_to_settings()
-    {
-        QSettings settings("MyCompany", "MyApp");
-        settings.setValue("recent_files", m_recent_files);
-    }
+持久化示例没做，咱们通常用 QSettings 存下整列路径，启动时读回，入列之后写回，细节属于 QSettings 自己的章节，本篇不铺开。
 
-    QMenu* m_recent_menu;
-    QStringList m_recent_files;
-    QAction* m_clear_action;
-};
-```
+## 官方文档参考
 
-这里有几个设计决策值得展开讲。第一，为什么用 aboutToShow 信号来重建菜单而不是每次 add_file 时实时更新？因为菜单在大部分时间是不可见的，实时维护一份 QAction 列表浪费资源。aboutToShow 在用户点击菜单时触发，此时重建保证菜单内容和数据列表完全同步。这种"惰性更新"是动态菜单的最佳实践。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 6.9.1 源码核对过。
 
-第二，文件路径的显示策略。完整的路径（比如 `/home/user/projects/data/2024/report_final_v2.xlsx`）放在菜单项文本里会撑爆菜单宽度。用 QFileInfo::fileName() 只显示文件名，完整路径放在 toolTip 里，用户悬停时能看到。如果你的应用可能打开不同目录下的同名文件，可以在文件名后加上目录路径的前几级作为区分。
+[Qt 文档 · QMenuBar](https://doc.qt.io/qt-6/qmenubar.html) -- 菜单栏类，addMenu、insertMenu、setNativeMenuBar 与平台行为的定义处
 
-第三，最大数量的选择。10 是一个惯例（Qt Creator 默认也是 10），但你可以根据应用场景调整。如果你的文件路径很长，菜单项太多会导致菜单高度超出屏幕。建议不超过 15。
+[Qt 文档 · QMenu](https://doc.qt.io/qt-6/qmenu.html) -- 菜单类，addAction、removeAction、clear 与 aboutToShow 信号
 
-### 3.3 菜单项的 enabled / visible 动态控制
+[Qt 文档 · QAction](https://doc.qt.io/qt-6/qaction.html) -- 动作类，menuRole、enabled、visible 与触发语义
 
-菜单项的 enabled 和 visible 属性控制着用户能不能看到它、能不能点击它。setEnabled(false) 让菜单项灰显但仍然可见，setVisible(false) 直接隐藏菜单项。
+[Qt 文档 · QSettings](https://doc.qt.io/qt-6/qsettings.html) -- 持久化最近文件列表的常规去处
 
-动态控制的核心问题是"什么时候更新"。一个常见的错误做法是在每个可能的操作之后手动调用 action->setEnabled(true/false)。这种方式在小型应用中可能够用，但随着功能增加，维护难度会急剧上升——你需要在十几个地方都记得去更新菜单状态，遗漏一个就会出现"已经打开了文件但关闭按钮还是灰的"这种 bug。
-
-更好的做法是集中管理。在一个统一的 update_menu_state() 方法中，根据应用的当前状态（有没有打开文件、有没有选中文本、有没有未保存的修改等）统一设置所有相关 action 的 enabled/visible 状态。然后在一个集中的入口调用这个方法——比如 after_state_changed 信号触发时。
-
-```cpp
-void MainWindow::update_menu_state()
-{
-    bool has_document = (m_current_document != nullptr);
-    bool has_selection = has_document && m_current_document->has_selection();
-    bool is_modified = has_document && m_current_document->is_modified();
-
-    m_save_action->setEnabled(has_document && is_modified);
-    m_save_as_action->setEnabled(has_document);
-    m_close_action->setEnabled(has_document);
-    m_copy_action->setEnabled(has_selection);
-    m_cut_action->setEnabled(has_selection);
-    m_paste_action->setEnabled(has_document && can_paste());
-}
-```
-
-同样可以利用 aboutToShow 信号来惰性更新。每个 QMenu 在弹出之前都会触发 aboutToShow，在此时更新该菜单内所有 action 的状态是最高效的——因为只有用户实际点开的菜单才需要更新。
-
-```cpp
-connect(edit_menu, &QMenu::aboutToShow, this, &MainWindow::update_edit_menu);
-connect(file_menu, &QMenu::aboutToShow, this, &MainWindow::update_file_menu);
-```
-
-这种方式比全局 update_menu_state 更细粒度，也更高效。每个菜单只更新自己的 action，不需要关心其他菜单的状态。
-
-### 3.4 平台差异：macOS 原生菜单栏
-
-macOS 的菜单栏和 Windows/Linux 有一个根本性区别：macOS 的菜单栏不属于任何一个窗口，它属于整个应用，并且永远显示在屏幕最顶部。Qt 在 macOS 上默认使用原生菜单栏——你创建的 QMenuBar 会被映射到 macOS 的系统菜单栏。
-
-这个行为大部分时候是透明的——你正常用 QMenuBar::addMenu、QMenu::addAction，Qt 内部自动处理和原生菜单栏的同步。但有几种情况你会察觉到差异。
-
-第一种是"合并"问题。macOS 会自动在应用菜单中插入"关于"、"偏好设置"、"退出"等标准项。如果你自己创建了同名的 action，可能会出现重复——你的"退出"和系统的"Quit"同时存在。Qt 提供了专门的菜单角色枚举来处理这个问题。设置 QAction 的 MenuRole 可以告诉 macOS 这个 action 对应哪个系统标准项。
-
-```cpp
-about_action->setMenuRole(QAction::AboutRole);        // 映射到"关于"
-pref_action->setMenuRole(QAction::PreferencesRole);    // 映射到"偏好设置..."
-quit_action->setMenuRole(QAction::QuitRole);           // 映射到"Quit"
-```
-
-设置了正确的 MenuRole 后，macOS 会自动把这些 action 放到正确的位置（"关于"在应用菜单第一个，"退出"在最后），不会重复。这个属性在 Windows/Linux 上没有任何效果，所以放心设置。
-
-第二种情况是"不想要原生菜单栏"。某些应用可能需要 Qt 自己绘制菜单栏（比如需要在菜单栏中嵌入自定义控件），此时可以用 QMenuBar::setNativeMenuBar(false) 或全局设置 Qt::AA_DontUseNativeMenuBar 属性来禁用原生菜单栏。
-
-```cpp
-// 方法一：全局禁用
-QApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, true);
-
-// 方法二：单个菜单栏禁用
-menuBar()->setNativeMenuBar(false);
-```
-
-说实话，除非你有非常特殊的需求，否则不要禁用原生菜单栏。macOS 用户期望看到的是原生风格的菜单栏——禁用后 Qt 自己画的菜单栏在 macOS 上看起来格格不入，而且会丢失一些系统级的功能（比如键盘导航和辅助功能的兼容性）。
-
-## 4. 踩坑预防
-
-第一个坑是 QMenu::clear() 会 delete 所有子 QAction。这是 QMenu 的行为——clear() 不仅移除所有 action，还会 delete 那些 parent 是这个 QMenu 的 action。如果你在代码中仍然持有 clear 之前的 QAction 指针，调用 clear 之后这些指针全部变成悬空指针。场景是：你把菜单的 action 指针保存在 QMap<QString, QAction*> 里用于后续状态更新，某次调用了 clear()，之后再通过 map 访问 action 就会崩溃。解决方案是用 aboutToShow 信号在每次显示时重建菜单，不要长期持有 QAction 指针；或者在 clear 之前手动把需要保留的 action 用 takeAction（Qt 没有这个方法，需要用 removeAction）移出来，clear 之后再添加回去。
-
-第二个坑是 macOS 上 QMenu 的 aboutToShow 信号不触发。这个坑在 Qt 论坛上出现过多次。原因是 macOS 原生菜单栏的菜单弹出事件走的是 Cocoa 的菜单回调，在 Qt 的某些版本中这个回调没有被正确桥接到 aboutToShow 信号。如果你依赖 aboutToShow 来做菜单状态更新，在 macOS 上可能不生效。解决方案是用定时器轮询方式或者把状态更新逻辑放到数据变化时触发（而不是在 aboutToShow 中），绕过这个平台 bug。Qt 6.5+ 版本中这个问题基本已经修复，但如果你需要兼容更早的 Qt 6.x 版本，需要注意。
-
-第三个坑是最近文件列表中的路径失效。用户可能移动、重命名或删除了文件，但你的最近文件列表里还存着旧路径。用户点击后触发文件打开失败，体验很差。解决方案是在 add_file 时用 QFileInfo::canonicalFilePath() 保存规范化的绝对路径（解析符号链接、去除 `.` 和 `..`），在 rebuild_menu 时可以选择检查文件是否存在（QFileInfo::exists()），对不存在的文件灰显或直接不显示。
-
-第四个坑是菜单项的 shortcut 冲突。动态添加的菜单项如果设置了快捷键，可能会和已有的全局快捷键冲突。比如你给一个动态菜单项设了 Ctrl+S，和"保存"冲突。动态菜单的快捷键应该在添加时做冲突检测——遍历已有的 QAction 检查是否有相同的 shortcut。更好的做法是：动态菜单项不设置固定快捷键，改用 QKeySequence 编辑器让用户自定义。
-
-## 5. 练习项目
-
-练习项目：带最近文件列表的文本编辑器菜单系统。我们要实现一个完整的主窗口菜单系统，核心功能围绕文件操作展开。
-
-我们要实现的功能是：文件菜单包含新建、打开、保存、另存为、最近文件子菜单、分隔线、退出。编辑菜单包含撤销、重做、剪切、复制、粘贴，各项根据当前编辑状态（是否有选中文本、是否有未保存修改等）动态启用/禁用。最近文件子菜单最多显示 8 个文件，支持清除操作，列表持久化到 QSettings。菜单在 macOS 上正确显示（标准项合并到应用菜单）。完成标准是程序能在三个平台上正确显示菜单，最近文件列表重启后恢复，编辑菜单的状态更新正确无误，不会出现"已经选中文本但复制按钮还是灰色"的情况。
-
-提示几个关键点：用 aboutToShow 信号驱动菜单状态更新，用 QFileInfo::canonicalFilePath() 规范化路径，用 QAction::setMenuRole() 处理 macOS 的标准菜单项合并，编辑菜单的 enabled 状态需要集中管理而不是散落在各处。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QMenuBar](https://doc.qt.io/qt-6/qmenubar.html) -- 菜单栏类，addMenu/setNativeMenuBar 以及平台行为说明
-
-[Qt 文档 · QMenu](https://doc.qt.io/qt-6/qmenu.html) -- 菜单类，addAction/removeAction/clear/aboutToShow 信号
-
-[Qt 文档 · QAction](https://doc.qt.io/qt-6/qaction.html) -- 菜单项动作类，setEnabled/setVisible/setMenuRole/setShortcut
-
-[Qt 文档 · QSettings](https://doc.qt.io/qt-6/qsettings.html) -- 持久化最近文件列表和菜单状态
-
-[Qt 文档 · Menus Example](https://doc.qt.io/qt-6/qtwidgets-mainwindows-menus-example.html) -- Qt 官方菜单示例，展示完整的菜单构建流程
+[Qt 文档 · Menus Example](https://doc.qt.io/qt-6/qtwidgets-mainwindows-menus-example.html) -- 官方菜单示例，完整的菜单构建流程
 
 ---
 
-到这里我们把 QMenuBar 的动态构建、最近文件列表和平台差异讲完了。动态菜单的核心思路是"数据驱动、惰性更新"——菜单只是数据的视图，数据变了重建菜单就行，不要试图在数据变化时精确地增删改单个 QAction。下一篇我们讲 QMainWindow 的另一个重要组件——QToolBar 的响应式设计和溢出机制。
+菜单栏读完，工具栏接戏。下一篇咱们去 [3.57 QToolBar 进阶](./57-qtoolbar-advanced.md)，响应式布局与溢出机制在那边等着，正好与本篇的溢出按钮对照着读。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/56-qmenubar-advanced/，可执行文件 56-qmenubar-advanced）。点 Open File 四五次再开 Recent Files，清单每次都是最新的，超过五条最旧的被挤掉，编号跟着重排。Edit 菜单里连点 Add Dynamic Item 十来次，清单再长也只撑开 Edit 自己的下拉，菜单栏顶层照旧三只。再把窗口拖到很窄，躲进右端箭头按钮的是顶层菜单本身：File、Edit、Help 谁装不下谁进溢出 QMenu，点开它能看到躲起来的顶层项，动态项长在 Edit 的 QMenu 里，永远轮不到这一层。给 Help 菜单加一只带 AboutRole 的关于项，Windows 上毫无动静，macOS 上它会归位到应用菜单，menuRole 的规则上一篇已经读过。
+
+完成标准照旧。QMenu::clear 与 QMenuBar::clear 的差别落在哪两个判据上，您说得出。原生菜单栏下您为什么叫不动菜单栏的显隐，您指得出 setVisible 那几行。装不下的顶层菜单项去了哪儿，您讲得明。setDefaultUp 默认弹向哪边，您答得上。

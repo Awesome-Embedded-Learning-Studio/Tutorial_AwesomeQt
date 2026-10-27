@@ -14,8 +14,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     QApplication app(argc, argv);
 
     auto* window = new QWidget;
@@ -33,7 +32,8 @@ int main(int argc, char* argv[])
     mainLayout->addWidget(slider);
 
     // ── 实时数值显示区 ──
-    // 展示 sliderPosition（拖拽中实时）和 value（松开后确定）的差异
+    // 展示 sliderPosition 与 value 的差异（tracking 默认开，拖拽中同步实时更新，松手才定值是
+    // setTracking(false) 后的行为）
     auto* infoLayout = new QHBoxLayout;
 
     auto* posLabel = new QLabel(QStringLiteral("sliderPosition: 50"));
@@ -44,14 +44,15 @@ int main(int argc, char* argv[])
     mainLayout->addLayout(infoLayout);
 
     // sliderMoved 携带的是 sliderPosition，在拖拽过程中每帧触发
-    QObject::connect(slider, &QSlider::sliderMoved, slider,
-                     [posLabel](int pos)
-                     { posLabel->setText(QStringLiteral("sliderPosition: %1").arg(pos)); });
+    QObject::connect(slider, &QSlider::sliderMoved, slider, [posLabel](int pos) {
+        posLabel->setText(QStringLiteral("sliderPosition: %1").arg(pos));
+    });
 
-    // valueChanged 在松开鼠标后触发（tracking=true 时拖拽中也会触发）
-    QObject::connect(slider, &QSlider::valueChanged, slider,
-                     [valLabel](int val)
-                     { valLabel->setText(QStringLiteral("value: %1").arg(val)); });
+    // valueChanged 携带 value，tracking 默认开，拖拽过程中就实时触发（松手才触发是
+    // setTracking(false) 后的行为）
+    QObject::connect(slider, &QSlider::valueChanged, slider, [valLabel](int val) {
+        valLabel->setText(QStringLiteral("value: %1").arg(val));
+    });
 
     mainLayout->addStretch();
 

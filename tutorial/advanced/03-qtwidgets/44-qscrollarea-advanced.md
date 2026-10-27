@@ -1,192 +1,111 @@
 ---
 title: "3.44 QScrollArea 进阶"
-description: "入门篇我们用 QScrollArea 解决了'控件太多装不下'的问题，掌握了 setWidget/setWidgetResizable/setWidgetVisible 动态滚动到底部以及 QSS 自定义滚动条外观。"
+description: "入门篇用 QScrollArea 装下放不下的控件，进阶篇把本体对着 6.9.1 读穿：内容部件 re-parent 到 viewport 而非本体且旧部件被 delete、布局须在 setWidget 前建好否则内容不显示、widgetResizable 走 updateScrollBars 同一个函数的两条路而 resize 被布局最小最大值夹住、heightForWidth 内容触发滚动条宽度收窄循环防止滚动条反复出现消失、滚动联动链是 valueChanged 到 _q_vslide 到 scrollContentsBy 再到 updateWidgetPosition、滚轮事件被 sendEvent 整个转发给滚动条且每格步数等于 wheelScrollLines 乘 delta 除以 120 乘 singleStep 单次封顶 pageStep 小数余量跨事件累积、方向键与翻页键转发 triggerAction 而 Tab 经 focusNextPrevChild 滚动跟进、ensureWidgetVisible 开头验出身再取 ImCursorRectangle 的 microFocus 且目标比视口大时对齐中心、alignment 只在该轴内容小于视口时发言、sizeHint 封顶 36 行字高乘 24 行字高且 AlwaysOn 滚动条正向补条宽反向扣视口、QSS 背景规则经 embeddedWidget 映射落到 viewport 上、平滑滚动动画须停掉在跑的动画再启新的，配套示例在 examples/advanced/03-qtwidgets/44-qscrollarea-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.44——QScrollArea 进阶
 
-## 1. 前言 / 当滚动不再是"出现滚动条然后拉"
+[3.43 QToolBox 进阶](./43-qtoolbox-advanced.md) 收尾说，抽屉里的页面们各自住在一个去边框的 QScrollArea 里，43 篇只是路过打了个照面，本篇把它本体读穿。入门篇您用 setWidget 装下放不下的控件，出了滚动条能拉就算完成任务。进阶篇咱们换一双更细的眼睛：内容部件到底住在哪里，widgetResizable 的自适应是怎么算出来的，滚动条与内容谁牵着谁走，还有 ensureWidgetVisible 那手精确滚动。源稿把重心压在平滑滚动动画上，机制层几乎没碰，本篇按源码重排，改准的地方随文给出行号。
 
-入门篇我们用 QScrollArea 解决了"控件太多装不下"的问题，掌握了 setWidget / setWidgetResizable / 动态添加内容后自动滚动到底部、以及 QSS 自定义滚动条外观。对于一个标准的表单或者列表场景，入门篇那些内容已经够用了——内容超出了就出滚动条，用户拖动滚动条或者滚轮就能看全部内容。但在一些更讲究交互体验的场景中，QScrollArea 的默认行为会显得粗糙：滚动只有一帧跳切，没有平滑过渡；触控板上的双指滑动在 Qt 中可能表现为一卡一卡的步进滚动而不是丝滑的惯性滚动；程序化滚动到某个位置（比如 scrollToTop、scrollToBottom）时内容瞬间跳转，视觉上非常突兀。
+本篇引用以 qscrollarea.cpp 为主，咱们把视口与键盘滚轮的转发补到 qabstractscrollarea.cpp，滚轮的步数量化补 qabstractslider.cpp，QSS 的落点补 qstylesheetstyle.cpp。配套示例的完整玩法放在结语，正文引用文件名加行号。
 
-今天我们把 QScrollArea 的进阶能力拆透。核心内容是四个方面：用 QPropertyAnimation 实现平滑滚动动画、触控板手势与滚动惯性支持、ensureVisible 和 ensureWidgetVisible 精确定位到某个子控件，以及 setWidgetResizable 与子控件尺寸策略的深层交互。
+## 内容部件不住在本体里，它住在 viewport 的屋檐下
 
-## 2. 环境说明
-
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。QScrollArea 属于 QtWidgets 模块，链接 Qt6::Widgets 即可。平滑滚动涉及 QPropertyAnimation（QtCore）和 QScrollBar。所有行为在 Qt 6.9.1 上验证通过。
-
-## 3. 核心概念讲解
-
-### 3.1 平滑滚动动画实现
-
-QScrollArea 的默认滚动行为是步进式的——每滚一次跳 3-4 行（步长由 QScrollBar::singleStep 控制），没有中间过渡。要实现平滑滚动，核心思路是用 QPropertyAnimation 动画化 QScrollBar 的 value 属性。
+一棵对象树数下来，滚动区里其实叠了三层，咱们从外往里数。最外层是 QScrollArea 本体，一个带框的 QFrame。中间是 viewport，QAbstractScrollAreaPrivate 的 init 里 new 出来的一个普通 QWidget，对象名 qt_scrollarea_viewport，背景角色 Base，自动填充背景（qabstractscrollarea.cpp 第 249-253 行）。最里层才是您的页面。setWidget 干的就是把页面搬进 viewport 的屋檐。
 
 ```cpp
-void smoothScroll(QScrollArea *area, int target_value,
-                  int duration = 300)
-{
-    auto *bar = area->verticalScrollBar();
-    auto *anim = new QPropertyAnimation(bar, "value");
-    anim->setDuration(duration);
-    anim->setStartValue(bar->value());
-    anim->setEndValue(target_value);
-    anim->setEasingCurve(QEasingCurve::OutCubic);
-    anim->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-// 滚动到顶部
-smoothScroll(scrollArea, 0);
-
-// 滚动到底部
-smoothScroll(scrollArea,
-             scrollArea->verticalScrollBar()->maximum());
-
-// 滚动到指定偏移
-smoothScroll(scrollArea, 500);
+// setWidget 的搬家动作（qscrollarea.cpp 第 237-250 行）
+delete d->widget;
+d->hbar->setValue(0);
+d->vbar->setValue(0);
+if (widget->parentWidget() != d->viewport)
+    widget->setParent(d->viewport);
+if (!widget->testAttribute(Qt::WA_Resized))
+    widget->resize(widget->sizeHint());
 ```
 
-这个方案简洁有效，但有一个细节需要注意：如果在动画播放过程中用户手动滚动了鼠标滚轮，QScrollBar 的 value 会被用户操作和动画同时修改，两者互相打架，表现为滚动位置在目标值和用户期望值之间来回跳动。解决方案是在动画开始前 cancel 正在进行的动画，或者用一个 m_scroll_anim 持久指针来追踪当前动画，用户交互时先 stop 再响应用户操作。
+搬家的次序咱们逐行看。旧的页面部件直接 delete（第 237 行），想换掉页面部件又不想删旧的，要走 takeWidget，它把部件的父对象清空后交还给您（第 260-268 行）。两条滚动条的值归零（第 239-240 行），新部件 re-parent 到 viewport（第 241-242 行），没被手动改过尺寸的话，就按 sizeHint 摆好初始大小（第 243-244 行）。搬完还有两笔小动作，autoFillBackground 被强制置真（第 246 行），部件装上事件过滤器（第 247 行），后面 resize 时靠它刷新滚动范围。
+
+这里有一处文档里用粗体叮嘱过的限制，咱们把它织进搬家的叙述。布局必须在 setWidget 之前建好，之后再往部件上安布局，内容怎么 show 都不显示（函数文档第 223-227 行）。根因是 re-parent 与 resize 都发生在 setWidget 那一刻，布局晚到就错过了部件定尺寸的窗口。另外构造函数把 viewport 的背景角色从 Base 改成了 NoRole（第 107 行），同时给两条滚动条设了 20 像素的 singleStep（第 108-109 行），背景与步长两件事后面都会回来看。
+
+## widgetResizable 的自适应：同一个函数里的两条路
+
+开关本身很薄，咱们翻实现，setWidgetResizable 只改一个标志、更新几何、重跑 updateScrollBars（第 352-358 行），真活全在 updateScrollBars 里。它开口就取两把尺子，qSmartMinSize 与 qSmartMaxSize，从部件的布局与尺寸策略里算出允许的最小与最大（第 153-154 行）。
+
+resizable 为假时，判断条件是最大视口装得下部件的当前尺寸就不出滚动条（第 180-182 行），部件保持自己的大小，谁也不动它。resizable 为真时走另一条路，一句 resize 把部件直接改到 p.expandedTo(min).boundedTo(max)（第 184-185 行）。源稿说视口尺寸会传给部件当参考、部件的 sizePolicy 决定接不接受，机制对不上。updateScrollBars 不咨询部件，它直接 resize，起约束作用的是那两把尺子，布局算出来的最小值撑着底，最大值封着顶。您设了 resizable 内容还是窄窄一条，去查容器布局算出的最小宽度，从那里入手比查 sizePolicy 直接。
+
+范围算完统一登记到滚动条上，咱们看摘录。
 
 ```cpp
-// 封装一个 SmoothScrollArea 类管理动画状态
-class SmoothScrollArea : public QScrollArea
-{
-    Q_OBJECT
-
-public:
-    void smoothScrollTo(int target)
-    {
-        if (m_anim && m_anim->state() == QAbstractAnimation::Running) {
-            m_anim->stop();
-        }
-        m_anim = new QPropertyAnimation(verticalScrollBar(), "value");
-        m_anim->setDuration(300);
-        m_anim->setStartValue(verticalScrollBar()->value());
-        m_anim->setEndValue(target);
-        m_anim->setEasingCurve(QEasingCurve::OutCubic);
-        connect(m_anim, &QPropertyAnimation::finished,
-                m_anim, &QObject::deleteLater);
-        m_anim->start();
-    }
-
-protected:
-    void wheelEvent(QWheelEvent *event) override
-    {
-        // 拦截滚轮事件，用平滑滚动替代默认的步进滚动
-        int delta = event->angleDelta().y();
-        int step = verticalScrollBar()->singleStep() * 3;
-        int target = verticalScrollBar()->value() - delta / 120 * step;
-        target = qBound(verticalScrollBar()->minimum(),
-                        target,
-                        verticalScrollBar()->maximum());
-        smoothScrollTo(target);
-        event->accept();
-    }
-
-private:
-    QPointer<QPropertyAnimation> m_anim;
-};
+// 滚动范围与页步（qscrollarea.cpp 第 188-191 行）
+hbar->setRange(0, v.width() - p.width());
+hbar->setPageStep(p.width());
+vbar->setRange(0, v.height() - p.height());
+vbar->setPageStep(p.height());
 ```
 
-重写 wheelEvent 是关键——默认的 wheelEvent 会直接设置 QScrollBar 的 value（步进式），你把它替换成平滑滚动动画后，用户的每次滚轮操作都会触发一个平滑过渡。这里用 delta / 120 来标准化滚轮步进量——120 是 Windows 下一个标准滚轮增量的值，Linux 下可能不同。用 QPointer 而不是裸指针是因为动画可能在任何时刻被 deleteLater 销毁。
+范围的上限就是内容减视口，pageStep 直接取视口边长。heightForWidth 的内容另有一段收窄循环，源码注释写明了动机：算出的高度需要垂直滚动条时，就压着宽度重算高度，免得滚动条翻来覆去地出现又消失（第 157-177 行）。手柄长度随 range 与 pageStep 怎么变化，咱们在 3.32 篇读过公式，这里不重讲。
 
-### 3.2 触控板手势支持
+## 滚动条牵着内容走：一条以 setValue 为源头的短链
 
-触控板的双指滑动和鼠标滚轮的触发方式不同——鼠标滚轮每次产生一个固定的 delta（通常是 ±120），而触控板产生的是连续的小 delta 值（可能是 ±1 到 ±几十），且频率非常高。如果你把触控板的每个 delta 都启动一个 QPropertyAnimation，动画还没播完下一个又来了，结果是动画堆叠、滚动卡顿。
+部件的定位正身是 updateWidgetPosition，咱们看它怎么摆。滚动值取负、按部件尺寸摆出 scrolled 矩形，再按 alignment 摆出 aligned 矩形，每个坐标轴各挑一个（第 135-143 行）。挑法后面 alignment 一节细说。
 
-处理触控板需要区分"滚动阶段"。QWheelEvent 在 Qt 6 中有 phase() 方法，返回 Qt::ScrollBegin / Qt::ScrollUpdate / Qt::ScrollEnd / Qt::ScrollMomentum。触控板的滑动序列是：ScrollBegin（手指放下）→ 多个 ScrollUpdate（手指移动）→ ScrollEnd（手指抬起）→ 可选的 ScrollMomentum（惯性阶段）。鼠标滚轮的 phase 总是 Qt::NoScrollPhase。
+联动链短得出乎笔者意料。滚动条的 valueChanged，连到私有槽 _q_vslide（qabstractscrollarea.cpp 第 268 行），槽里算出位移增量，交给虚函数 scrollContentsBy（第 1372-1378 行），QScrollArea 的实现只做一件事，updateWidgetPosition（qscrollarea.cpp 第 323-329 行）。所以程序化滚动的正规姿势从来是改滚动条的 value，文档把直接调 scrollContentsBy 判为误用。链条的源头只有一个，手柄、键盘、滚轮全汇到 setValue 那一点上。
+
+滚轮的路径值得咱们单独走一遍。视口上滚轮来了，wheelEvent 按两个方向分量谁大，把整个事件经 sendEvent 转发，交给对应的滚动条（qabstractscrollarea.cpp 第 1170-1176 行），源稿说默认实现直接设置 value，不准确，转发才是实情。
+
+QScrollBar::wheelEvent 收下后，咱们跟着进量化环节。它调 scrollByDelta（qscrollbar.cpp 第 475-491 行），步数在 qabstractslider.cpp 里量化，delta 除以 120 得格数，乘 wheelScrollLines 再乘 singleStep，单次封顶 pageStep，凑不满一整格的小数余量留着，跟下一个事件累积（第 676、687-698 行）。触控板上连续的小 delta 就靠余量累积走通，平台默认已备好这套机制，自己写滚动逻辑时别把它算重了。
+
+键盘的转发咱们在同一片区域找。Up 与 Down 各触发一次 singleStep 的加减，翻页键走 pageStep（qabstractscrollarea.cpp 第 1199-1221 行）。Tab 更体贴，focusNextPrevChild 把焦点交给下一个部件后，顺手调用 ensureWidgetVisible，把滚动跟上去（qscrollarea.cpp 第 400-408 行），表单里按 Tab 永远看得见焦点落点，靠的就是这一句。
+
+## ensureWidgetVisible：滚到刚好够见，大目标对中
+
+ensureVisible 吃内容坐标系里的一个点，四个方向的判断各自独立，已经可见就一个值都不动，默认留白 50 像素（第 416-433 行）。ensureWidgetVisible 是它的部件版，笔者把实现翻开后看到三道工序。
+
+咱们逐道看。头一道验出身，目标部件若不是 widget() 的后代，直接返回（第 450-451 行）。二道取目标矩形，部件支持输入法时改取 ImCursorRectangle 的光标矩形，文本类部件会滚到光标处，普通部件取整个自身（第 453-458 行）。三道比较，可见矩形就是内容部件当前位置取负拼上视口尺寸（第 459 行），目标已经躺在里面就早退（第 461-462 行），否则分轴滚动。
 
 ```cpp
-void wheelEvent(QWheelEvent *event) override
-{
-    if (event->phase() == Qt::ScrollBegin) {
-        // 触控板滑动开始：取消当前动画
-        if (m_anim) {
-            m_anim->stop();
-        }
-        m_scroll_accumulator = 0;
-    }
-
-    // 直接累积 delta，不启动动画
-    m_scroll_accumulator += event->angleDelta().y();
-
-    if (event->phase() == Qt::ScrollEnd
-        || event->phase() == Qt::NoScrollPhase) {
-        // 鼠标滚轮或触控板结束：启动一次平滑滚动
-        int target = verticalScrollBar()->value()
-                     - m_scroll_accumulator;
-        target = qBound(verticalScrollBar()->minimum(),
-                        target,
-                        verticalScrollBar()->maximum());
-        smoothScrollTo(target);
-        m_scroll_accumulator = 0;
-    }
-}
+// 目标比视口大时的对中（qscrollarea.cpp 第 473-478 行）
+if (focusRect.height() > visibleRect.height())
+    d->vbar->setValue(focusRect.center().y() - d->viewport->height() / 2);
+else if (focusRect.bottom() > visibleRect.bottom())
+    d->vbar->setValue(focusRect.bottom() - d->viewport->height() + 1);
+else if (focusRect.top() < visibleRect.top())
+    d->vbar->setValue(focusRect.top());
 ```
 
-这个方案在触控板场景下只启动一次动画（ScrollEnd 时），避免了动画堆叠。但代价是触控板滑动过程中内容不跟随手指移动——手指松开后内容才平滑滚动到目标位置。如果你需要"手指移动时内容实时跟随"（类似手机上的原生滚动），就不能用动画化 value 的方式了，而需要直接在 ScrollUpdate 中设置 value（`verticalScrollBar()->setValue(current + delta)`），然后在 ScrollEnd 时加一个惯性动画。这种实现复杂度高得多，需要对每个 ScrollUpdate 的时间戳做速度估算，然后在手指离开后按估算速度做减速动画。
+源稿说目标比视口大时尽量让左上角可见，笔者对着源码核过，恰好相反，装不下时对齐的是中心（第 466-467、473-474 行），装得下时才把边缘对齐边缘。嵌套滚动区只滚外层的观感也从第一道工序来，isAncestorOf 检查只认 widget() 一脉，内层滚动控件里的目标根本进不了门。
 
-### 3.3 ensureWidgetVisible 精确定位
+## alignment 只在内容更小时发言，sizeHint 有封顶
 
-QScrollArea::ensureWidgetVisible(QWidget *childWidget, int xmargin = 50, int ymargin = 50) 是一个非常实用但很多人不知道的方法。它会滚动内容使指定的子控件完全可见——如果子控件已经在可见区域内，什么都不做；如果子控件在可见区域外面，滚动到刚好让子控件可见的位置。xmargin 和 ymargin 控制子控件周围的最小留白。
+updateWidgetPosition 每个轴上二选一，部件小于视口用 aligned 矩形的对齐坐标，大于视口用滚动坐标（第 139-142 行）。所以 alignment 只管“内容装得下时靠哪边”，内容溢出的轴上对齐设置无效，滚动说了算，您拿规则一推就知道行为。默认 Qt::AlignLeft 配 AlignTop，内容贴在左上角，setAlignment 改完立即重摆（第 500-506 行）。
 
-```cpp
-// 滚动到第 5 个子控件并确保周围有 20 像素留白
-scrollArea->ensureWidgetVisible(widgetList[4], 20, 20);
-```
+尺寸建议这边有出人意料的天花板，咱们接着看。有部件时，sizeHint 取部件的 sizeHint 或当前尺寸，再被 36 行字高乘 24 行字高封顶（第 363-381 行），一个 3000 像素的长图进来，滚动区的建议尺寸也就巴掌大，窗口布局不会被内容拖走。滚动条策略是 AlwaysOn 时，建议宽度还主动补上滚动条的条宽（第 376-379 行），maximumViewportSize 反着做同一件事，视口尺寸里扣掉常驻滚动条（qabstractscrollarea.cpp 第 535-546 行）。一边补条宽一边扣视口，空间分配互相抵平，守恒的来路就在一补一扣之间，滑块侧的机制 3.32 与 3.33 篇都铺垫过，本篇正好接上。
 
-这个方法在"下一步"向导、"跳转到错误项"、"搜索结果高亮定位"等场景下非常方便。但它的行为有一个细节需要注意：如果子控件比 QScrollArea 的可见区域还大（比如一个很宽的表格），ensureWidgetVisible 会尽量让子控件的左上角可见，但右下角可能仍然在视口外面。它不会自动缩放子控件。
+## QSS 的背景落点在 viewport，写规则前认清收件人
 
-ensureWidgetVisible 内部通过计算子控件相对于内容 widget 的坐标偏移来决定滚动位置。如果你的内容 widget 使用了复杂的嵌套布局或者子控件有 transform（这在 QWidget 中很少见），坐标计算可能不准确。
+样式表层维护着一张收件人映射。embeddedWidget 拿到 QAbstractScrollArea，返回的就是它的 viewport（qstylesheetstyle.cpp 第 2514-2516 行），调色板相关的规则随后落到它身上。您写 QScrollArea 加 background 的选择器，颜料刷在 viewport 上，本体那圈边框另走 QFrame 的绘制路径。配合构造时背景角色被改成 NoRole 那一笔（qscrollarea.cpp 第 107 行），默认外观里视口不抢背景，内容部件自己带着置真的 autoFillBackground，盖在上面。想给滚动区换底色，规则写给 QScrollArea 即可命中视口，想动边框就得另写，两个盒子分开对待才不白写。
 
-### 3.4 setWidgetResizable 与尺寸策略交互
+配套示例的动画部分不碰 QSS，纯走属性动画，动画与默认滚动的冲突怎么处理，咱们放到结语一起看。
 
-入门篇讲了 setWidgetResizable(true) 会让内容 widget 跟随 QScrollArea 的宽度自适应。但这个行为和子控件的 sizePolicy 之间有微妙的交互关系，理解不透很容易踩坑。
+## 官方文档参考
 
-当 setWidgetResizable(true) 时，QScrollArea 的 viewport 的大小会传递给内容 widget 作为 sizeHint 的参考。内容 widget 的水平 sizePolicy 决定了最终行为：如果 sizePolicy 是 Preferred 或 Expanding，内容 widget 会填满 viewport 宽度；如果是 Fixed 或 Minimum，内容 widget 保持自己的 sizeHint 宽度不变。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，全部行为在 6.9.1 源码核对。QScrollArea 属于 QtWidgets 模块，链接 Qt6::Widgets 即可。动画部分涉及 QtCore 的 QPropertyAnimation。
 
-这意味着 setWidgetResizable(true) 并不保证内容一定填满宽度——它只是给了内容 widget 一个"你可以变大"的机会，内容 widget 的 sizePolicy 最终决定它接不接受。如果你发现 setWidgetResizable(true) 没有效果（内容还是窄窄的一条），检查内容 widget 的 sizePolicy 是否设成了 Fixed。
+[Qt 文档 · QScrollArea](https://doc.qt.io/qt-6/qscrollarea.html) -- setWidget 与 ensureWidgetVisible 的定义处
 
-```cpp
-auto *content = new QWidget;
-auto *content_layout = new QVBoxLayout(content);
+[Qt 文档 · QAbstractScrollArea](https://doc.qt.io/qt-6/qabstractscrollarea.html) -- viewport 与滚动条策略的所属基类
 
-// 确保 content 愿意横向展开
-content->setSizePolicy(QSizePolicy::Preferred,
-                       QSizePolicy::Preferred);
+[Qt 文档 · QScrollBar](https://doc.qt.io/qt-6/qscrollbar.html) -- 滚动条本体，value 是联动链的源头
 
-scrollArea->setWidgetResizable(true);
-scrollArea->setWidget(content);
-```
+[Qt 文档 · QPropertyAnimation](https://doc.qt.io/qt-6/qpropertyanimation.html) -- 动画化滚动条 value 的工具
 
-另一个容易搞混的是 setWidgetResizable 和 setWidget 的调用顺序。setWidget 把内容 widget 放进 QScrollArea 时会根据当前的 widgetResizable 设置来初始化布局。如果你先 setWidget 再 setWidgetResizable(true)，QScrollArea 会在 setWidgetResizable 的调用中触发一次 resizeEvent 来重新布局，这通常是没问题的。但如果你在 setWidget 之后立即获取了内容 widget 的 width()，拿到的是 widgetResizable=false 状态下的宽度——可能不是你期望的值。
-
-## 4. 踩坑预防
-
-第一个坑是平滑滚动动画和用户滚轮操作互相冲突。QPropertyAnimation 正在动画化 QScrollBar 的 value 时，如果用户滚了鼠标滚轮，默认的 wheelEvent 会直接设置 value，和动画的目标值打架。后果就是滚动位置在两个值之间来回跳动，看起来像在抽搐。解决方案是重写 wheelEvent 时先 stop 当前动画，再启动新动画，或者完全接管滚动逻辑不使用默认的 wheelEvent。
-
-第二个坑是触控板连续 delta 导致动画堆叠。触控板每次 ScrollUpdate 都产生一个 delta，如果你对每个 delta 都启动一个 QPropertyAnimation，瞬间就会积累几十个动画——每个动画都在试图设置 value 到不同的目标值，结果是滚动完全卡死。后果是触控板用户在你的应用里完全无法正常滚动。解决方案是区分 ScrollPhase，在 ScrollUpdate 中只累积 delta 不启动动画，在 ScrollEnd 时一次性启动。
-
-第三个坑是 ensureWidgetVisible 在嵌套滚动区域中行为不一致。如果你的内容 widget 里面又嵌套了一个 QScrollArea 或者 QListView 之类的滚动控件，ensureWidgetVisible 只会滚动外层 QScrollArea——它不会影响内层滚动控件的位置。如果你的目标是让内层控件中的某个项可见，你需要分别调外层的 ensureWidgetVisible 和内层的 scrollTo。
-
-## 5. 练习项目
-
-练习项目：带平滑滚动的聊天消息面板。我们要做一个视觉效果接近现代聊天应用的消息滚动区域。
-
-完成标准是：一个自定义的 SmoothScrollArea 包裹一个 QVBoxLayout 的消息列表。初始包含 20 条模拟消息（QLabel 放在 QWidget 容器里，交替左右对齐）。滚动使用平滑动画，滚轮每次滚动 3 条消息的距离。新消息通过一个 QPushButton 添加到列表底部，添加后自动平滑滚动到最新消息。支持 ensureWidgetVisible：列表上方有一个 QSpinBox 输入消息编号（1-20），一个 QPushButton "跳转到"，点击后平滑滚动到对应消息并高亮 2 秒（背景变蓝色后恢复）。
-
-提示几个关键点：smoothScrollTo 在添加消息后用 verticalScrollBar()->maximum() 作为目标值；高亮效果可以用 QTimer 延迟恢复背景色；消息容器需要 setSizePolicy(Preferred, Preferred) + setWidgetResizable(true) 确保宽度填满。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QScrollArea](https://doc.qt.io/qt-6/qscrollarea.html) -- 滚动区域容器，包含 setWidget/setWidgetResizable/ensureWidgetVisible 等接口
-
-[Qt 文档 · QScrollBar](https://doc.qt.io/qt-6/qscrollbar.html) -- 滚动条控件，value 属性可用于动画化
-
-[Qt 文档 · QPropertyAnimation](https://doc.qt.io/qt-6/qpropertyanimation.html) -- 属性动画类，动画化 QScrollBar::value
-
-[Qt 文档 · QWheelEvent](https://doc.qt.io/qt-6/qwheelevent.html) -- 滚轮事件，包含 phase() 和 angleDelta() 方法
+[Qt 文档 · QWheelEvent](https://doc.qt.io/qt-6/qwheelevent.html) -- 滚轮事件，angleDelta 与 phase 的定义处
 
 ---
 
-到这里，QScrollArea 的进阶内容就拆完了。平滑滚动的核心就是用 QPropertyAnimation 动画化 QScrollBar 的 value，但要注意处理动画和用户操作的冲突——重写 wheelEvent 是必须的。触控板的支持需要区分 ScrollPhase，不能对每个 delta 都启动动画。ensureWidgetVisible 是一个被低估的好方法，精确定位子控件一行代码搞定。setWidgetResizable 的效果取决于内容 widget 的 sizePolicy，两者必须配合。把这些搞透后，你就能做出流畅的滚动体验——而不只是"出了滚动条能拉"的基本功能。
+视口的裁剪、部件的搬家、滚动的短链与两处尺寸计算都对上了号，43 篇递过来的那句话在这里收梢。QScrollArea 的头顶是 QAbstractScrollArea，再往上是 QFrame，带框控件们的共同基类，下一篇把它读穿，[3.45 QFrame 进阶](./45-qframe-advanced.md)，边框的样式与阴影怎么画，咱们接着看。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/44-qscrollarea-advanced/，可执行文件 44-qscrollarea-advanced）。窗口里是 15 段各 120 像素的彩色长图，底部三个按钮驱动平滑滚动（main.cpp 第 82-84、92-98 行）。SmoothScrollArea 一构造，就把 widgetResizable 设好，出处是 smooth_scroll_area.cpp 第 17 行。动画前必将在跑的旧动画停掉（第 40-42 行），时长按距离伸缩，压在 200 到 800 毫秒之间（第 45 行），缓动曲线取 OutQuad（第 61 行）。中间那个按钮的目标值计算用到了 viewport 的高度（main.cpp 第 106-112 行），正好把本篇的视口概念落在实处。您滚一格滚轮感受一格步进。示例在 configureScrollbar 里把 singleStep 调成了 30，出处 smooth_scroll_area.cpp 第 91 行，滚一格走 wheelScrollLines 默认的 3 乘 30 共 90 像素，比构造默认的 20 爽快。再点按钮看动画接管，两条路径汇到同一个 value 上的体感会非常清楚。
+
+完成标准照旧。内容部件的父对象是谁，您说得出口。resizable 为真时部件尺寸被哪两把尺子夹住，您指得出算尺子的那两行。滚轮事件从视口到 setValue 中间经过谁的手，您数得清。目标比视口大时 ensureWidgetVisible 对齐哪里，alignment 在什么条件下才发言，您能分开答。

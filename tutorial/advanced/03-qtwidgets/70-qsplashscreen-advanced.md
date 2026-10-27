@@ -1,188 +1,90 @@
 ---
 title: "3.70 QSplashScreen 进阶"
-description: "入门篇我们学会了 QSplashScreen 的基本用法：设置一张 pixmap、showMessage 显示加载状态、主窗口 show 后 close。进阶篇要解决的是工程中真正头疼的问题——启动画面怎么优雅地消失，加载太快时闪一下就没了怎么办，以及怎么在 splash 上画一个靠谱的进度条。"
+description: "进阶篇把 QSplashScreen 的实现细节对到源码行上：构造函数固定注入 Qt::SplashScreen 加 FramelessWindowHint（qsplashscreen.cpp 第 100 行），setPixmap 按图的 devicePixelRatio 定窗口逻辑尺寸并挪到屏幕中心（第 250-262 行），绘制不走 paintEvent 而是重写的 event() 拦下 Paint 交给私有类画图再调虚函数 drawContents（第 319-347 行），repaint 重写里多泵一轮 processEvents（第 142-146 行），showMessage 默认左对齐黑字（qsplashscreen.h 第 32-33 行），落笔矩形四边各让五像素（第 290 行），富文本走 QTextDocument（第 291-313 行），点一下画面 mousePressEvent 直接 hide（第 132-135 行），finish 轮询等主窗口映射完成再 close（第 206-244 行），渐变消隐与最小展示时长咱们自己搭，示例在 examples/advanced/03-qtwidgets/70-qsplashscreen-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.70——QSplashScreen 进阶
 
-## 1. 前言 / 启动画面不是 show 一下就完事的
+启动屏是“主窗口出现前的第一面”。咱们想想 QApplication 的时间线：构造、建主窗口、exec()，把画面交给用户是第三步，那主窗口露面之前的几秒钟，用户看到的是桌面。QSplashScreen 就是来填这段空档的，数据库连接、插件加载、大资源初始化，这些活儿干多久，它就占着画面多久。笔者把 Qt 6.9.1 的 QSplashScreen 源码（qsplashscreen.cpp）从头读到尾，满打满算三百来行，发现它的几处要紧细节全藏在重写里：绘制不走 paintEvent，repaint 多泵一轮事件，连点一下消失都是 mousePressEvent 里的一句 hide。网上流传的几处讲法，咱们这篇拿行号逐一对照，有对得上的，也有要当面驳回的。
 
-入门篇我们学会了 QSplashScreen 的基本用法：设置一张 pixmap、showMessage 显示加载状态、主窗口 show 后 close。说实话，做到这一步已经能用了——但如果你的应用启动加载比较快，splash 画面可能闪一下就消失了，用户体验比没有 splash 还差。反过来，如果你的应用启动特别慢，用户盯着一张静态图片什么反馈都没有，会以为程序卡死了。
+引用文件咱们交代清楚。主战场是 qsplashscreen.cpp 与 qsplashscreen.h（src/widgets/widgets），paintEvent 的分发对照，要借 qwidget.cpp 一小段，渐变消隐的平台条件也写在 qwidget.cpp 的属性文档里。官方示例片段，咱们借自 Qt 源码树自带的 snippets 目录。入门篇走过的构造加 show 加 close 流程本篇不重讲，配套示例带渐变消隐与最小展示时长，完整玩法放结语。
 
-这篇文章要解决的是工程中真正头疼的三个问题：第一，怎么让 splash 画面在关闭时有一个渐变消隐动画，而不是突兀地消失；第二，怎么保证 splash 至少显示一个最小时间（比如 2 秒），避免快速启动时画面闪烁；第三，怎么在 splash 的 pixmap 上叠加一个自绘的进度条，让用户知道加载进展到哪了。这三个问题搞清楚了，QSplashScreen 就从"能用"变成"好用"。
+## 构造函数把旗标与居中都办妥了：咱们只管递图
 
-## 2. 环境说明
+构造函数只有一行正事（qsplashscreen.cpp 第 99-103 行），递给 QWidget 的旗标，是 Qt::SplashScreen 加 Qt::FramelessWindowHint，再叠上咱们传入的 f（第 100 行）。也就是说无框加无边框装饰这套外观，是构造那天就定下的，f 只能往上叠。文档给 f 的建议只有一条值得您考虑，Qt::WindowStaysOnTopHint（第 96-97 行），让启动屏压住桌面上全部窗口。类文档同时给 X11 留了备用方案，有些窗口管理器不理会置顶旗标，替代做法是起一只定时器周期性调 raise()（第 57-59 行），拿轮询模拟置顶。
 
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。QSplashScreen 属于 QtWidgets 模块，渐变动画需要用到 Qt 的 QPropertyAnimation（QtCore 模块）。计时功能使用 QElapsedTimer（QtCore 模块），不需要额外依赖。
+多屏的场合有第二个构造函数，5.15 起提供，咱们多屏部署时用得上。它的头一个参数收 QScreen，私有类的 setScreen 把它指到副屏（第 105-120 行）。官方片段给的写法，咱们照着看，从 screens() 里取第二块屏再构造，见片段 main.cpp 第 28-32 行。
 
-## 3. 核心概念讲解
+图递进去之后，setPixmap 一个人做了四件事，咱们挨个数（第 250-262 行）。存图（第 253 行），按 pixmap.hasAlpha() 决定给不给窗口开 WA_TranslucentBackground（第 254 行），把窗口 resize 到图的 deviceIndependentSize（第 256-257 行），再把窗口挪到屏幕几何中心（第 259 行）。构造函数的注释还写明，这一步顺手 repaint（第 102 行）。
 
-### 3.1 showMessage 与 pixmap 的绘制层级
+高分屏的讲究就藏在 deviceIndependentSize 里，笔者把它翻出来给您看。这个尺寸是物理像素除以图自带的 devicePixelRatio，咱们递一张两倍分辨率的图并在图上设 dpr 为 2.0，窗口的逻辑尺寸与设计稿一比一，绘制时又开着 SmoothPixmapTransform（第 323 行，下一节讲它的出处），画面就是脆的。反过来递一张不带 dpr 的固定尺寸图，200% 缩放的屏幕上窗口按物理尺寸摆，画面被拉伸发糊。有流传说法称 QSplashScreen 会自动缩放大图，笔者在 setPixmap 的身体里没找到任何缩放路径，它只按图的 dpr 定窗口尺寸，图本身多大就画多大，缩放的准备得咱们自己做。
 
-入门篇我们用 showMessage 在 splash 上显示文字。现在要搞清楚的是这个文字是怎么画上去的——因为理解了绘制层级，后面自绘进度条才能找对位置。
+## 上屏的路径：绘制由 event() 的 Paint 分支接管
 
-QSplashScreen 的绘制机制是这样的：它内部持有一个 QPixmap 作为背景图，每次 paintEvent 时先绘制这个 pixmap，然后在 pixmap 上方绘制 showMessage 设置的消息文字。文字的颜色和位置由 setMessageRect 和消息文本决定。也就是说，pixmap 是底层，message 是上层。
+咱们跟着一次重绘走一遍。QSplashScreen 重写了 event()（第 331-347 行），QEvent::Paint 被它拦下，转手交给私有类的 handlePaintEvent（第 336-337 行），QEvent::Show 也拦下，触发 waitForWidgetMapped，等自己真的映射到屏幕（第 339-340 行）。handlePaintEvent（第 319-328 行）开一只 QPainter，renderHints 里设了 SmoothPixmapTransform（第 323 行），画两笔：图不为空就画在原点（第 325-326 行），再调虚函数 drawContents（第 327 行）。层级就此定下，pixmap 在底，drawContents 画的内容在上，showMessage 的字也从这里画上去，所以它永远盖在图上。
 
-这个层级关系意味着：如果你在 pixmap 本身画了东西（比如进度条），然后调用 showMessage，文字会覆盖在进度条上方。反过来，如果你想在文字上方再画东西，就需要在 paintEvent 里自己处理绘制顺序——因为 showMessage 的绘制发生在 QSplashScreen::paintEvent 的默认实现中。
+旧稿的方案在这里出了错，咱们得把它纠正过来。那个方案是重写 paintEvent 并调用父类实现，理由是父类实现画图加字，实际上 QSplashScreen 根本没有重写 paintEvent，子类里调 QSplashScreen::paintEvent 落到 QWidget 的空实现上，一笔不画。重写 paintEvent 出不出得来效果？碰巧出得来，因为 event() 拦完 Paint 仍把事件交回 QWidget::event，那里照常分发给 paintEvent（qwidget.cpp 第 9144-9149 行），子类的重写排在 handlePaintEvent 之后落笔，叠在上层纯属顺序使然。正路是类文档指明的方案，子类化并重写 drawContents（qsplashscreen.cpp 第 85 行），绘制入口收拢在一个虚函数里，第三节的进度条咱们就挂在它身上。
 
-```cpp
-class MySplash : public QSplashScreen {
-    // ...
-protected:
-    void paintEvent(QPaintEvent* event) override
-    {
-        // 先调用父类实现——它画 pixmap + message
-        QSplashScreen::paintEvent(event);
-        // 再画进度条，覆盖在 message 之上
-        QPainter painter(this);
-        drawProgressBar(&painter);
-    }
-};
-```
+repaint 的重写是另一处要紧改动（第 142-146 行）。QWidget::repaint 之后跟着一句 QCoreApplication::processEvents()，文档写明差别就在这一句，没有事件循环在场，更新也能上屏。showMessage 内部调的正是重写过的 repaint（第 177 行），所以 exec() 起来之前的那段加载代码里，咱们随手 showMessage，画面立刻换字，不必自己处理事件。官方片段在 splash.show() 之后补一句 app.processEvents()，见片段 main.cpp 第 15-16 行，伺候的是点击与首轮显示，消息刷新不指望它。
 
-这里我们要做的就是在自定义 QSplashScreen 子类中重写 paintEvent，先调用父类的 paintEvent（完成 pixmap 和 message 的绘制），再用 QPainter 画我们自己的内容。这样自定义内容就叠在 pixmap 和 message 之上。如果你希望 message 在最顶层（盖住进度条），就反过来：先画进度条，再调用父类 paintEvent。绘制顺序完全由你控制。
+说到点击，mousePressEvent 的实现干净得很，一句 hide()（第 132-135 行），用户点一下启动屏就把它收走。类文档叮嘱鼠标处理要生效，启动期间得周期性调 QApplication::processEvents()（第 71-73 行），道理同前，没人处理事件，点击永远排不上队。repaint 里泵事件的另一面您也要留神，被处理的事件里若有回头再碰启动屏的，重入的口子比普通控件大，所以咱们在 drawContents 里只画图，不做任何会再触发重绘的动作。
 
-### 3.2 QPropertyAnimation 实现渐变消隐
+## showMessage：落笔的矩形四边各让五像素
 
-默认情况下 QSplashScreen::close() 是瞬间消失的。要让它在关闭时有一个淡出效果，我们需要用 QPropertyAnimation 对窗口透明度（windowOpacity）做动画。思路很直接：在主窗口准备好之后，不直接 close splash，而是启动一个 300-500ms 的 opacity 动画，从 1.0 渐变到 0.0，动画结束后再 close。
+签名咱们看头文件（qsplashscreen.h 第 32-33 行），alignment 默认 Qt::AlignLeft，color 默认 Qt::black，私有类构造里 currAlign 也初始化成 AlignLeft，出处 qsplashscreen.cpp 第 276 行。showMessage 把三样存进私有成员（第 173-175 行），发出 messageChanged（第 176 行），再 repaint（第 177 行）。clearMessage 清空后同样发信号（第 199-204 行），文档写明此时的参数是空串。message() 从 5.2 起能把当前文字读回来（第 180-192 行）。
+
+字画在哪，咱们进 drawContents 看（第 286-317 行）。画笔蘸的是 currColor（第 289 行），落笔的矩形是 rect().adjusted(5, 5, -5, -5)（第 290 行），四边各让出五像素，这是文字的活动范围。有流传讲法称有个 setMessageRect 函数能划文字区，笔者在 Qt 6.9.1 的源码树里 grep 过，这个函数不存在，那是别的工具包的接口，落点只由对齐旗标加这五像素边距决定。
+
+富文本还有一条专用路径。Qt::mightBeRichText 判定消息像 HTML 时（第 291 行），改走 QTextDocument 路线，setHtml、设文本宽度、用 QTextCursor 把对齐写进段落格式（第 292-304 行），AlignBottom 与 AlignVCenter 再挪矩形的顶边（第 306-309 行），doc.drawContents 收尾（第 312 行）。纯文本则一句 drawText(r, currAlign, currStatus) 画完（第 315 行）。咱们给消息加个颜色标签就能换字体换行，不用自绘。
+
+自绘就重写 drawContents。pixmap() 返回的图不带 showMessage 画的字（第 264-271 行），文档说自绘可以拿它当底（第 82-85 行），但它按值返回，递到您手里的是隐式共享的副本，直接在副本上动笔，改动不会回到启动屏身上。挂一只进度条，咱们还是进 drawContents。
 
 ```cpp
-// 主窗口准备就绪后，开始渐变消隐
-auto *opacity_anim = new QPropertyAnimation(splash, "windowOpacity");
-opacity_anim->setDuration(400);      // 400ms 淡出
-opacity_anim->setStartValue(1.0);
-opacity_anim->setEndValue(0.0);
-opacity_anim->setEasingCurve(QEasingCurve::OutQuad);
-
-QObject::connect(opacity_anim, &QAbstractAnimation::finished, splash, &QWidget::close);
-opacity_anim->start(QAbstractAnimation::DeleteWhenStopped);
-```
-
-这里有一个细节：QPropertyAnimation 对 windowOpacity 做动画时，窗口并不是真的"变透明"——它通过平台窗口系统的合成器（compositor）来改变整个窗口的 alpha 值。在 Windows 和 macOS 上效果很好，因为原生支持窗口级透明度。但在某些 Linux 窗口管理器上（特别是没有合成器的环境），windowOpacity 动画可能没有效果，窗口会直接消失。如果需要跨平台一致的淡出效果，可以考虑用 QGraphicsOpacityEffect 配合 QPropertyAnimation 作用于 graphicsOpacity 属性。
-
-```cpp
-// 备选方案：QGraphicsOpacityEffect（跨平台一致性更好）
-auto *effect = new QGraphicsOpacityEffect(splash);
-effect->setOpacity(1.0);
-splash->setGraphicsEffect(effect);
-
-auto *opacity_anim = new QPropertyAnimation(effect, "opacity");
-opacity_anim->setDuration(400);
-opacity_anim->setStartValue(1.0);
-opacity_anim->setEndValue(0.0);
-```
-
-不过 QGraphicsOpacityEffect 也有代价——它会在每一帧对整个 widget 做一次 offscreen 渲染再合成，对于 splash 这种只显示几秒的窗口来说性能影响可以忽略。但要注意：如果在 splash 上同时使用了 setGraphicsEffect 和自绘进度条，绘制顺序可能受影响，需要实际测试。
-
-### 3.3 最小显示时长保证
-
-这是工程中最常见的需求：应用启动特别快（比如 200ms 就加载完了），但 splash 闪一下就没了，用户甚至来不及看到上面的 logo。我们需要一个"最小显示时长"的保证——即使加载很快，splash 也至少显示 N 秒。
-
-实现方式是用 QElapsedTimer 记录 splash 显示的时刻，在主窗口加载完成后检查"已经过了多久"。如果还没到最小时长，就用一个 QTimer 延迟剩余时间后再触发渐变消隐。
-
-```cpp
-QElapsedTimer timer;
-timer.start();
-
-// ... 主窗口加载过程 ...
-
-const qint64 kMinSplashMs = 2000;  // 最少显示 2 秒
-qint64 elapsed = timer.elapsed();
-
-auto finish_splash = [=]() {
-    // 开始渐变消隐动画（3.2 的代码）
-    startFadeOutAnimation(splash, main_window);
-};
-
-if (elapsed < kMinSplashMs) {
-    QTimer::singleShot(static_cast<int>(kMinSplashMs - elapsed), finish_splash);
-} else {
-    finish_splash();
-}
-```
-
-这个方案的关键是 finish_splash 是一个延迟执行的回调——要么立即调用（已经超过最小时长），要么通过 QTimer::singleShot 延迟调用（还差一点时间）。注意不要用 QThread::msleep 去等待，那会阻塞事件循环，导致 splash 的消息和动画都无法更新，得不偿失。
-
-在 main 函数中，典型的调用流程是这样的：先 show splash 并启动 QElapsedTimer，然后调用 QApplication::processEvents 让 splash 有机会渲染出来，接着执行主窗口的初始化（加载配置、连接数据库、初始化资源等），最后调用 finish_splash 检查最小时长并触发消隐动画。整个过程中可以穿插调用 showMessage 更新加载状态。
-
-### 3.4 进度条集成：在 splash pixmap 上自绘
-
-光有文字提示还不够直观——用户更希望看到一个进度条。QSplashScreen 没有内置进度条，但我们可以通过 3.1 讲的绘制层级机制，在 paintEvent 中自绘一个。
-
-思路是这样的：我们维护一个 0.0 到 1.0 的进度值（m_progress），每次主窗口初始化过程中完成一个阶段就更新这个值并调用 repaint() 触发重绘。paintEvent 中根据 m_progress 在 splash 底部画一个半透明的进度条。
-
-```cpp
-class MySplash : public QSplashScreen {
+// 伪代码：在 drawContents 里叠加进度条，铺在官方绘制之上
+class ProgressSplash : public QSplashScreen {
 public:
-    void set_progress(float progress)
-    {
-        m_progress = progress;
-        repaint();  // 立即重绘
-    }
-
+    using QSplashScreen::QSplashScreen;
+    void setProgress(float p) { m_progress = p; repaint(); }
 protected:
-    void paintEvent(QPaintEvent* event) override
+    void drawContents(QPainter* painter) override
     {
-        QSplashScreen::paintEvent(event);  // 先画 pixmap + message
-
-        QPainter painter(this);
-        int bar_height = 6;
-        int bar_y = height() - bar_height - 10;  // 底部留 10px 边距
-        int bar_width = static_cast<int>((width() - 20) * m_progress);
-
-        // 背景轨道
-        painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor(255, 255, 255, 60));
-        painter.drawRoundedRect(10, bar_y, width() - 20, bar_height, 3, 3);
-
-        // 进度填充
-        painter.setBrush(QColor(0, 200, 120, 200));
-        painter.drawRoundedRect(10, bar_y, bar_width, bar_height, 3, 3);
+        QSplashScreen::drawContents(painter);  // 官方的字照画，进度条铺在字的上层
+        const int barY = height() - 16;
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(255, 255, 255, 60));
+        painter->drawRoundedRect(10, barY, width() - 20, 6, 3, 3);  // 轨道
+        painter->setBrush(QColor(0, 200, 120, 200));
+        painter->drawRoundedRect(10, barY, int((width() - 20) * m_progress), 6, 3, 3);
     }
-
 private:
     float m_progress = 0.0f;
 };
 ```
 
-这里有个关键点：repaint() 而不是 update()。原因是 update() 会把重绘请求放入事件队列，而在主窗口初始化的密集计算过程中，事件队列可能来不及处理——结果就是进度条跳帧，从 20% 直接跳到 80%。repaint() 是同步重绘，立刻触发 paintEvent，代价是略占 CPU，但进度条更新更及时。在 splash 这种短暂场景下完全可以接受。
+setProgress 里调 repaint 而非 update，讲究咱们也落在源码上。重写过的 repaint 自带一轮 processEvents（第 142-146 行），进度一推进，重绘当场发生，排队中的事件一并被处理，刷新不依赖事件循环转得多欢。旧稿对比两者时讲的是队列与同步的老话，没提这一句，笔者替您补上。
 
-进度的设置方式取决于你的初始化流程。如果你能预知各个阶段的耗时比例，可以手动设置 set_progress(0.3)、set_progress(0.6) 等。如果初始化过程是异步的（比如等待网络响应），可以在每个异步回调中更新进度。不管哪种方式，记得在设置进度后调用 QApplication::processEvents()，让 splash 有机会处理重绘事件。
+## finish 等主窗口就位：消隐动画与最短时长咱们自己搭
 
-## 4. 踩坑预防
+退场有两个层次，咱们分头看。保守的一层是 finish(QWidget* mainWin)（第 236-244 行），主窗口还没有原生窗口句柄就 createWinId（第 239-240 行），然后交给 waitForWidgetMapped 轮询，等它真的可见，最后 close() 自己（第 243 行）。waitForWidgetMapped（第 206-229 行）的等法是泵事件、送投递事件、睡十毫秒，一圈圈转到 windowHandle 可见为止，默认一千毫秒超时。这一手防的是启动屏撤得比主窗口上屏还早，中间露出一瞬空白桌面。官方片段的收尾，咱们也见过，正是主窗口 show() 之后一句 splash.finish(&window)，见片段 main.cpp 第 21-24 行。
 
-第一个坑是 windowOpacity 动画在 Linux 上可能无效。QPropertyAnimation 对 windowOpacity 做动画依赖平台窗口合成器的支持，没有合成器的 X11 环境（比如某些最小化的 i3wm 配置）下，动画完全没有效果，窗口直接消失。解决方案是用 QGraphicsOpacityEffect 替代 windowOpacity 属性动画，graphicsOpacity 的淡出由 Qt 自己在 offscreen buffer 中处理，不依赖平台合成器。代价是每帧多一次 offscreen 渲染，但 splash 场景下影响可以忽略。
+体面的一层是渐变消隐，Qt 没有内置，咱们拿 QPropertyAnimation 对 windowOpacity 做动画，从 1.0 淡到 0.0。windowOpacity 是 QWidget 的属性，取值从 1.0 到 0.0（qwidget.cpp 第 11602-11607 行），平台条件您部署前要心里有数，属性文档写明它覆盖 Embedded Linux、macOS、Windows 与支持 Composite 扩展的 X11（第 11610-11611 行），X11 上还得有合成管理器在跑，窗口管理器也要认 _NET_WM_WINDOW_OPACITY 原子，条件写在第 11613-11616 行。精简的窗口管理器配齐不了这些，动画就指望不上，这是您上线前值得试一遍的事。
 
-第二个坑是 splash 上同时使用 setGraphicsEffect 和子类 paintEvent 自绘时的绘制冲突。setGraphicsEffect 会改变 widget 的绘制管线——默认情况下 Qt 会先把 widget 渲染到一张 offscreen pixmap 上，再对这张 pixmap 应用效果。如果你的 paintEvent 里有自定义绘制，这些绘制会被包含在 offscreen pixmap 中，然后整体被 opacity effect 作用。这通常是正确的行为，但如果你在 paintEvent 中做了 setClipping 或者复杂的坐标变换，可能会出现意外的裁剪。解决方案是在 opacity 动画期间避免复杂的 paintEvent 逻辑，或者干脆不用 setGraphicsEffect，改用 windowOpacity 并接受 Linux 上可能没有动画的代价。
+最短展示时长用 QElapsedTimer 保证。启动屏现身那一刻开始计时，加载收尾时核对差值，不够就 QTimer::singleShot 补足再起淡出。示例的补差算法咱们直接看（splash_demo.cpp 第 60-92 行）：四条加载消息按 600 毫秒一条排队，总时长按五个间隔算出 3000 毫秒，恰好等于 kMinimumSplashMs（splash_demo.h 第 55 行），差值为零，淡出从第 3000 毫秒起跑，时长 800 毫秒（splash_demo.cpp 第 103 行）。等待千万别用 sleep 凑，阻塞了事件循环，消息换不了字，动画也走不动，singleShot 让等待落在事件循环里，画面一直活着。
 
-第三个坑是 repaint() 在某些情况下可能导致重入问题。如果在 splash 的 paintEvent 中又触发了 repaint()（比如通过信号槽间接触发），就会陷入无限递归。这听起来不太可能发生，但如果你在 set_progress 中调用了某些会间接触发 paintEvent 的操作（比如调整 geometry、修改 stylesheet），就可能踩进去。解决方案是确保 set_progress 只修改数据（m_progress）并调用 repaint()，不做其他可能触发重绘的操作。
+## 官方文档参考
 
-第四个坑是 QPixmap 在高 DPI 屏幕上的缩放问题。如果你用 QPixmap(":/splash.png") 加载了一张固定尺寸的图片，在 200% 缩放的屏幕上会被拉伸变糊。解决方案是使用 QPixmap 的 devicePixelRatio 感知版本——要么提供 @2x 后缀的图片资源让 Qt 自动选择，要么在代码中手动设置 devicePixelRatio：
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，行为咱们在 6.9.1 源码核对过。
 
-```cpp
-QPixmap pixmap(":/splash.png");
-qreal dpr = qApp->devicePixelRatio();
-pixmap.setDevicePixelRatio(dpr);
-```
+[Qt 文档 · QSplashScreen](https://doc.qt.io/qt-6/qsplashscreen.html) -- 启动画面类，showMessage、drawContents 与 finish 的定义处
 
-不过更推荐的做法是直接提供高分辨率图片（比如 2x 大小），让 QSplashScreen 自动缩放，这样在任何 DPI 下都能保持清晰。
+[Qt 文档 · QPropertyAnimation](https://doc.qt.io/qt-6/qpropertyanimation.html) -- 属性动画，windowOpacity 淡出的引擎
 
-## 5. 练习项目
-
-练习项目：带进度条和渐变消隐的启动画面。我们要实现一个自定义 QSplashScreen 子类，加载一张 splash 图片（可以用 QPixmap 自己画一个纯色背景加文字作为替代），在底部绘制一个圆角进度条。主窗口的初始化过程模拟为 5 个阶段（每个阶段用 QTimer::singleShot 延迟 400ms），每完成一个阶段进度条前进一步。全部加载完成后，保证 splash 至少显示了 2 秒，然后以 500ms 的 opacity 动画渐变消隐，最后显示主窗口。
-
-完成标准是：进度条随阶段平滑前进，不跳帧不闪烁；splash 至少显示 2 秒（即使模拟加载更快）；消隐动画流畅无卡顿；主窗口在 splash 完全消失后可见。提示几个关键点：用 QElapsedTimer 记录 splash 显示时间，finish 回调中检查是否达到最小时长；进度条在 paintEvent 中绘制，repaint() 触发即时更新；opacity 动画结束后再 show 主窗口和 close splash。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QSplashScreen](https://doc.qt.io/qt-6/qsplashscreen.html) -- 启动画面控件，包含 showMessage、setPixmap、finish 方法说明
-
-[Qt 文档 · QPropertyAnimation](https://doc.qt.io/qt-6/qpropertyanimation.html) -- 属性动画类，用于实现 windowOpacity 或 graphicsOpacity 的渐变动画
-
-[Qt 文档 · QElapsedTimer](https://doc.qt.io/qt-6/qelapsedtimer.html) -- 高精度计时器，用于实现最小显示时长保证
-
-[Qt 文档 · QGraphicsOpacityEffect](https://doc.qt.io/qt-6/qgraphicsopacityeffect.html) -- 图形透明度效果，替代 windowOpacity 的跨平台淡出方案
+[Qt 文档 · QElapsedTimer](https://doc.qt.io/qt-6/qelapsedtimer.html) -- 单调时钟，最短展示时长的度量尺
 
 ---
 
-到这里，QSplashScreen 的进阶内容就过了一遍。绘制层级搞清楚了——pixmap 在底层，message 在中层，paintEvent 自绘在最上层，调用父类 paintEvent 的位置决定了自定义内容的叠放关系。渐变消隐的两种实现各有取舍：windowOpacity 简单但依赖平台合成器，QGraphicsOpacityEffect 更可靠但有 offscreen 渲染开销。最小显示时长用 QElapsedTimer + QTimer::singleShot 实现最干净，千万别用 sleep 阻塞事件循环。自绘进度条的关键是用 repaint() 而不是 update() 保证即时更新，同时在 paintEvent 里只做绘制不做其他可能触发重绘的操作。把这些点都注意到，你的 splash 画面就能从"闪一下"变成"体面的启动体验"了。
+启动屏这篇给窗口杂项收个尾，下一站 [3.71 QMdiArea 进阶](./71-qmdiarea-advanced.md)，多文档界面把一批子窗口收进一只容器里排布，画面从启动屏的单窗口换成多窗口，咱们换个方向继续。
+
+想动手的您把示例跑起来（examples/advanced/03-qtwidgets/70-qsplashscreen-advanced/，可执行文件 70-qsplashscreen-advanced）。主窗口已经显示出来，启动屏随后盖上来居中显示，画面是代码现画的 500×300 渐变底加标题（splash_demo.cpp 第 119-147 行），底部中间每隔 600 毫秒换一条白色加载消息（第 68-84 行）。满三秒起 800 毫秒的淡出，画面渐隐收干净，主窗口被 activateWindow 请回前台，重新拿到焦点（第 108-113 行）。您手快点一下启动屏，它当场隐藏，这正是 mousePressEvent 里那句 hide() 的直接后果，后面的淡出照常走完，只是藏在隐藏状态下看不见，收尾的 close 和 deleteLater 照常执行。窗口里的 Replay Splash Screen 按钮能把整套流程再放一遍，适合反复观察淡出的节奏。
+
+完成标准照旧。绘制走 event() 不走 paintEvent，您说得清。showMessage 落笔的矩形四边各让五像素，默认左对齐黑字，您数得出。finish 等的是主窗口映射完成，您答得准。repaint 多泵的那一轮 processEvents 意味着什么，您讲得明。

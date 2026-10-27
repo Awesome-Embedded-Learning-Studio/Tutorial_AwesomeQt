@@ -11,15 +11,12 @@
 #include <QPropertyAnimation>
 #include <QScrollBar>
 
-SmoothScrollArea::SmoothScrollArea(QWidget* parent)
-    : QScrollArea(parent)
-{
+SmoothScrollArea::SmoothScrollArea(QWidget* parent) : QScrollArea(parent) {
     setWidgetResizable(true);
     configureScrollbar();
 }
 
-void SmoothScrollArea::smoothScrollTo(int targetY)
-{
+void SmoothScrollArea::smoothScrollTo(int targetY) {
     QScrollBar* vBar = verticalScrollBar();
     if (!vBar) {
         return;
@@ -44,11 +41,12 @@ void SmoothScrollArea::smoothScrollTo(int targetY)
     // Duration scales with distance, clamped between 200ms and 800ms
     const int duration = std::max(200, std::min(800, distance * 2));
 
-    // Use the existing animation object if possible to avoid repeated allocation
+    // DeleteWhenStopped makes each run self-delete (destroyed below resets the
+    // pointer), so in practice we allocate a fresh animation every scroll —
+    // the else-branch only guards against a future non-deleting policy.
     if (!m_scrollAnimation) {
         m_scrollAnimation = new QPropertyAnimation(vBar, "value", this);
     } else {
-        // Re-target to the current scrollbar in case it was replaced
         m_scrollAnimation->setTargetObject(vBar);
         m_scrollAnimation->setPropertyName("value");
     }
@@ -66,21 +64,18 @@ void SmoothScrollArea::smoothScrollTo(int targetY)
             [this]() { m_scrollAnimation = nullptr; });
 }
 
-void SmoothScrollArea::scrollToTop()
-{
+void SmoothScrollArea::scrollToTop() {
     smoothScrollTo(0);
 }
 
-void SmoothScrollArea::scrollToBottom()
-{
+void SmoothScrollArea::scrollToBottom() {
     QScrollBar* vBar = verticalScrollBar();
     if (vBar) {
         smoothScrollTo(vBar->maximum());
     }
 }
 
-void SmoothScrollArea::configureScrollbar()
-{
+void SmoothScrollArea::configureScrollbar() {
     QScrollBar* vBar = verticalScrollBar();
     if (!vBar) {
         return;

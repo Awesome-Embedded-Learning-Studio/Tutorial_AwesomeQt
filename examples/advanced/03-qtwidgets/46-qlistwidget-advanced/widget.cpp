@@ -11,10 +11,9 @@
 // CardWidget
 // ---------------------------------------------------------------------------
 
-CardWidget::CardWidget(const QString& icon, const QString& title,
-                       QListWidget* listWidget, QWidget* parent)
-    : QWidget(parent), m_listWidget(listWidget)
-{
+CardWidget::CardWidget(const QString& icon, const QString& title, QListWidget* listWidget,
+                       QWidget* parent)
+    : QWidget(parent), m_listWidget(listWidget) {
     auto* layout = new QHBoxLayout(this);
     // 紧凑布局，减少内边距让卡片看起来更紧凑
     layout->setContentsMargins(4, 2, 4, 2);
@@ -40,14 +39,13 @@ CardWidget::CardWidget(const QString& icon, const QString& title,
     layout->addWidget(removeBtn);
 }
 
-void CardWidget::onRemoveClicked()
-{
-    // @note 通过 parent() 获取 CardWidget 拥有的 QListWidgetItem 的 index widget，
-    // 然后用 itemAt 定位到具体的 QListWidgetItem 并删除
+void CardWidget::onRemoveClicked() {
+    // @note 逐行比对 itemWidget() 找到自己挂的那一条 QListWidgetItem，
+    // 再 takeItem 移除并 delete（itemWidget 的 parent 是 viewport 而非 item，
+    // 行删除时由视图的 rowsAboutToBeRemoved 回收，这里不用手动删）
     for (int i = 0; i < m_listWidget->count(); ++i) {
         QListWidgetItem* item = m_listWidget->item(i);
         if (m_listWidget->itemWidget(item) == this) {
-            // takeItem 移除项，Qt 自动回收 itemWidget（它是 item 的子对象）
             delete m_listWidget->takeItem(i);
             break;
         }
@@ -61,15 +59,14 @@ void CardWidget::onRemoveClicked()
 Widget::Widget(QWidget* parent)
     : QWidget(parent), m_listWidget(new QListWidget(this)),
       m_statusLabel(new QLabel(QStringLiteral("选中行: 无"), this)),
-      m_toggleBtn(new QPushButton(QStringLiteral("切换为 Snap 模式"), this)),
-      m_freeMovement(true)
-{
+      m_toggleBtn(new QPushButton(QStringLiteral("切换为 Snap 模式"), this)), m_freeMovement(true) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // -- 配置 QListWidget 的拖放行为 --
     // @note InternalMove 允许用户在列表内部拖动项来重新排序
     m_listWidget->setDragDropMode(QAbstractItemView::InternalMove);
-    // @note 默认使用 Free 移动模式：项可以放到任意像素位置
+    // @note 视图默认 Static；显式设 Free。Free/Snap 的像素级差异只在 IconMode 下可见，
+    // ListMode 里拖动换位的观感两者一致（movement 只作用 IconMode）
     m_listWidget->setMovement(QListView::Free);
     m_listWidget->setSelectionMode(QAbstractItemView::SingleSelection);
     // 允许在网格中自由拖放
@@ -78,15 +75,14 @@ Widget::Widget(QWidget* parent)
     m_listWidget->setResizeMode(QListView::Adjust);
 
     // 添加示例卡片数据
-    addCard(QStringLiteral("\xF0\x9F\x93\x8C"), QStringLiteral("项目 A - 设计稿"));   // 📌
-    addCard(QStringLiteral("\xF0\x9F\x93\x8B"), QStringLiteral("项目 B - 待审核"));   // 📋
-    addCard(QStringLiteral("\xF0\x9F\x9A\x80"), QStringLiteral("项目 C - 进行中"));   // 🚀
-    addCard(QStringLiteral("\xE2\x9C\x85"), QStringLiteral("项目 D - 已完成"));       // ✅
-    addCard(QStringLiteral("\xF0\x9F\x94\xA7"), QStringLiteral("项目 E - 维护中"));   // 🔧
+    addCard(QStringLiteral("\xF0\x9F\x93\x8C"), QStringLiteral("项目 A - 设计稿")); // 📌
+    addCard(QStringLiteral("\xF0\x9F\x93\x8B"), QStringLiteral("项目 B - 待审核")); // 📋
+    addCard(QStringLiteral("\xF0\x9F\x9A\x80"), QStringLiteral("项目 C - 进行中")); // 🚀
+    addCard(QStringLiteral("\xE2\x9C\x85"), QStringLiteral("项目 D - 已完成"));     // ✅
+    addCard(QStringLiteral("\xF0\x9F\x94\xA7"), QStringLiteral("项目 E - 维护中")); // 🔧
 
     // -- 连接 currentRowChanged 以展示选中反馈 --
-    connect(m_listWidget, &QListWidget::currentRowChanged, this,
-            &Widget::onCurrentRowChanged);
+    connect(m_listWidget, &QListWidget::currentRowChanged, this, &Widget::onCurrentRowChanged);
 
     // -- 切换 Movement 模式的按钮 --
     connect(m_toggleBtn, &QPushButton::clicked, this, &Widget::toggleMovementMode);
@@ -100,8 +96,7 @@ Widget::Widget(QWidget* parent)
     resize(420, 400);
 }
 
-void Widget::addCard(const QString& icon, const QString& title)
-{
+void Widget::addCard(const QString& icon, const QString& title) {
     // @note 先创建 QListWidgetItem，设置 sizeHint 以容纳自定义控件
     auto* item = new QListWidgetItem(m_listWidget);
     // itemWidget 接管尺寸，但 sizeHint 仍需要合理初始值
@@ -112,8 +107,7 @@ void Widget::addCard(const QString& icon, const QString& title)
     m_listWidget->setItemWidget(item, card);
 }
 
-void Widget::toggleMovementMode()
-{
+void Widget::toggleMovementMode() {
     if (m_freeMovement) {
         // @note Snap 模式下，项只能吸附到网格位置，行为更规整
         m_listWidget->setMovement(QListView::Snap);
@@ -127,8 +121,7 @@ void Widget::toggleMovementMode()
     }
 }
 
-void Widget::onCurrentRowChanged(int row)
-{
+void Widget::onCurrentRowChanged(int row) {
     if (row < 0) {
         m_statusLabel->setText(QStringLiteral("选中行: 无"));
     } else {
@@ -136,8 +129,7 @@ void Widget::onCurrentRowChanged(int row)
         if (item) {
             auto* card = qobject_cast<CardWidget*>(m_listWidget->itemWidget(item));
             if (card) {
-                m_statusLabel->setText(
-                    QStringLiteral("选中行: %1").arg(row));
+                m_statusLabel->setText(QStringLiteral("选中行: %1").arg(row));
             }
         }
     }

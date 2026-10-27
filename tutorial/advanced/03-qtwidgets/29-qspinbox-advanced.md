@@ -1,161 +1,88 @@
 ---
 title: "3.29 QSpinBox 进阶"
-description: "入门篇我们把 QSpinBox 和 QDoubleSpinBox 当作带箭头的数字输入框来用——setRange、setValue、valueChanged 信号，三板斧就能覆盖大多数场景。"
+description: "入门篇把 setRange、setValue、valueChanged 用顺了，进阶篇对着 6.9.1 源码把 validate、valueFromText、textFromValue 三个自定义口子认清楚，默认 textFromValue 走 locale 且不带前后缀，合成发生在私有 updateEdit，框架递给虚函数的是带前后缀的完整文本，剥离由默认实现内部的 stripped 完成，重写后剥离成了自己的责任，stepEnabled 在键盘、滚轮、长按自重复与重绘每条路径上都查过一遍，默认实现只按边界与 wrapping 给标志，stepBy 本体不查、程序直调不受限，配套示例在 examples/advanced/03-qtwidgets/29-qspinbox-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.29——QSpinBox 进阶
 
-## 1. 前言 / 什么时候你需要重写 textFromValue
+[3.28 QFontComboBox 进阶](./28-qfontcombobox-advanced.md) 收尾把话递了过来，说 QSpinBox 的正题在文本与数值之间的转换与验证，qspinbox.h 里 validate、valueFromText、textFromValue 一组虚函数，跟那篇出厂可编辑的行编辑框接得上。咱们接着这句往源码里走，调用链两头都走到了：显示这一头，私有 updateEdit 把 prefix、textFromValue 的返回值、suffix 拼成一行文本，输入那一头，editorTextChanged 与 interpret 把行编辑框里的完整文本原样递给虚函数，剥前后缀是默认实现自己在内部做的。笔者把 qspinbox.cpp 和 qabstractspinbox.cpp 对着源稿的断言逐条过了一遍，源稿里有几处说法要对着行号改，默认 textFromValue 里没有前后缀，stepEnabled 管的也远不止箭头的灰亮。
 
-入门篇我们把 QSpinBox 和 QDoubleSpinBox 当作带箭头的数字输入框来用——setRange、setValue、valueChanged 信号，三板斧就能覆盖大多数场景。但如果你做过稍微专业一点的应用——比如一个角度输入框要显示度数符号、一个内存大小选择器要用 KB/MB/GB 自动切换单位、或者一个时间输入框要用时:分格式显示分钟数——你很快就会发现 prefix/suffix 的表达能力远远不够。prefix 和 suffix 是固定文本，它们不能根据当前值动态变化。
+次序咱们摆好，从三个虚函数的分工与默认实现认起，跟着是键入路径上 validate 的三条状态与回车后的 interpret，stepEnabled 的默认实现与调用点，重写 valueFromText 之后前后缀的剥离责任收尾。正文行号都带出处，示例代码在 examples/advanced/03-qtwidgets/29-qspinbox-advanced/，Qt 内部实现指源码树里的 qspinbox.cpp、qspinbox.h 与 qabstractspinbox.cpp、qabstractspinbox.h。
 
-这就是 textFromValue 和 valueFromText 存在的意义。它们是一对虚函数，分别负责"把数值转成显示文本"和"把显示文本解析回数值"。默认实现只做简单的数字转字符串和字符串转数字，但你可以通过子类化重写它们来实现任意复杂的显示格式。配合 stepEnabled 的精确控制，你可以打造出完全定制化的数值输入体验。本篇我们就把这三件事搞透：textFromValue/valueFromText 的自定义格式化、stepEnabled 的步进控制策略，以及 prefix/suffix 在自定义格式化下的边界问题。
+## 三个虚函数各管一段，前后缀由 updateEdit 在外面拼
 
-## 2. 环境说明
+这组口子摆在 qspinbox.h 的 protected 区（第 62-65 行），咱们挨个认，validate 与 fixup 覆盖基类声明，valueFromText 与 textFromValue 是 QSpinBox 自己添的虚函数，各自带着默认实现。QDoubleSpinBox 有完全对应的一组（第 125-128 行），浮点场景沿用同一套思路。
 
-本篇基于 Qt 6.5+ 版本，CMake 3.26+，C++17 标准。依赖 QtWidgets 模块（QSpinBox、QDoubleSpinBox、QAbstractSpinBox）。所有内容不需要额外链接。
-
-## 3. 核心概念讲解
-
-### 3.1 textFromValue / valueFromText 自定义格式化
-
-QSpinBox 的 textFromValue(int value) 是一个虚函数，它的职责是把内部的整数值转换成显示在输入框中的文本。默认实现就是 QString::number(value)，再加上 prefix 和 suffix。valueFromText(const QString& text) 是它的逆操作——把输入框中的文本解析回整数值。
-
-要自定义 SpinBox 的显示格式，我们需要子类化 QSpinBox 并重写这两个函数。来看一个实际的例子：角度输入框，值范围 0-359，显示时带度数符号，但度数符号不是 suffix 而是集成在格式化逻辑中。
+textFromValue 的默认实现在 qspinbox.cpp 第 478-496 行。displayIntegerBase 为 10 的时候，它走 locale().toString(value)，默认把千位分隔符压掉（第 487-492 行），QString::number 只在进制不是 10 时出场，按 qAbs 取绝对值再补负号（第 483-485 行）。类文档把边界写在明面上，返回值里不该带 prefix 与 suffix，specialValueText 也不经过这个函数，出处第 466-470 行。前后缀从哪来，咱们跟着 updateEdit 看，私有实现一行拼齐（qabstractspinbox.cpp 第 1784 行）：
 
 ```cpp
-class AngleSpinBox : public QSpinBox
-{
-public:
-    using QSpinBox::QSpinBox;
-
-protected:
-    QString textFromValue(int value) const override
-    {
-        return QString::number(value) + QChar(0x00B0);  // ° 符号
-    }
-
-    int valueFromText(const QString& text) const override
-    {
-        // 去掉度数符号后解析
-        QString cleaned = text;
-        cleaned.remove(QChar(0x00B0));
-        return cleaned.toInt();
-    }
-};
+// qabstractspinbox.cpp updateEdit 的合成（第 1784 行）
+const QString newText = specialValue() ? specialValueText
+                                       : prefix + textFromValue(value) + suffix;
 ```
 
-这里有一个关键的设计原则：textFromValue 和 valueFromText 必须互为逆运算。也就是说，对于任意合法值 v，valueFromText(textFromValue(v)) 必须等于 v。如果你只重写了一个而忘记重写另一个，SpinBox 的输入验证会出问题——用户手动输入的文本无法被正确解析回数值，导致 validate 失败，输入被拒绝。
+值等于 minimum 且设了 specialValueText 的时候整行换成那段特殊文本，判定在第 1502-1505 行。您重写 textFromValue 返回 “2.5 MB” 这样的带单位文本，控件显示的就是它本身，外面一层都不加。
 
-再来看一个更复杂的例子：内存大小选择器。值为字节数（整数），但显示时根据大小自动选择 KB、MB 或 GB 作为单位。
+valueFromText 的默认实现（qspinbox.cpp 第 513-521 行）转手给私有 validateAndInterpret（第 1078-1146 行），后者头一件事就是 stripped 把前后缀剥掉（第 1091 行），再用 locale().toInt 解析（第 1104-1118 行）。这个机制咱们留到最后一节展开，因为重写之后剥离就换成您的活了。
+
+示例里的 UnitSpinBox 就是这套模式的实物，声明在 unit_spin_box.h 第 25 行，咱们看它怎么落地。内部值存字节数，范围 0 到 100 MB，步进 1 KB，构造函数在 unit_spin_box.cpp 第 19-26 行，一行 prefix、suffix 都没设，固定的 suffix 标不出随值换挡的单位，这件活得交给 textFromValue。textFromValue 按大小选单位（第 32-46 行），过 1 MB 显示 “x.x MB”，过 1 KB 显示 “x.x KB”，其余显示 “x B”。valueFromText 反着来（第 52-101 行），MB、KB、B 三种后缀都认，大小写不敏感，纯数字当字节，全都解析不动时返回当前 value()（第 100 行），控件不会跳去莫名的数。互为逆运算的要求类文档里写得直白，重写了 textFromValue，就该把 valueFromText 与 validate 一起带上，出处 qspinbox.cpp 第 472-473 行。
+
+## validate 守着每一次键入，Acceptable 之外各有去处
+
+keyboardTracking 默认开着，出处 qabstractspinbox.cpp 第 1406 行，行编辑框每敲一个字，都会进 editorTextChanged，出处第 1523-1541 行。validate 返回 Acceptable 才当场调 valueFromText 更新值，否则只挂起一个 pendingEmit，等下一轮处理，出处第 1530-1537 行。您按回车或让控件失焦，interpret 接手（第 1887-1920 行），validate 过不了就调一次 fixup 再验（第 1899-1907 行），QSpinBox 的 fixup 只删千位分隔符（qspinbox.cpp 第 539-543 行），救不了别的，再验还不过，就按 correctionMode 落回旧值或就近边界，出处 qabstractspinbox.cpp 第 1907-1911 行，默认是 CorrectToPreviousValue。
+
+三条状态怎么划分，默认 validateAndInterpret 里看得最清楚，出处 qspinbox.cpp 第 1093-1134 行。落在 min 与 max 之间是 Acceptable（第 1122-1123 行），空串与光杆正负号是 Intermediate（第 1096-1099 行），解析不动、或者越过边界背向零，是 Invalid，出处第 1101-1102、1120-1121、1127-1129 行。范围外的另一种落点您留意，值往零的方向够不着 min 时算 Intermediate，再敲一位数字可能就进范围了，比如范围 10 到 99 时敲了个 “1”，控件放行等您继续。
+
+示例的 validate 是自己写的正则版（unit_spin_box.cpp 第 107-150 行）。主模式认数字加可选单位（第 112-114 行），单位是可选的，纯数字自己就够 Acceptable，实测敲 “1” 值立刻变成 1，示例里真正落到 Intermediate 的，是格式合法、换算出的字节数却出了范围的输入（第 146-149 行），纯数字一路敲、越过 100 MB 上限就是一例，格式两条正则都不认才回 Invalid（第 125 行）。代码里还备了一条只认光杆数字的部分匹配（第 119-123 行），本意是接住敲到一半的中间态，可纯数字主模式直接就收了，它成了主模式的真子集，一次都轮不到跑。您照着示例扩写时多想一步，每条分支在什么输入下真的可达，中间态别判 Invalid 的原则不变，判了用户就打不完字。
+
+## stepEnabled 在每条步进路径上把门，默认实现只认边界与 wrapping
+
+StepEnabledFlag 有三个值，摆在 qabstractspinbox.h 第 40-42 行，StepNone、StepUpEnabled、StepDownEnabled，咱们从默认实现认起（qabstractspinbox.cpp 第 541-556 行）：
 
 ```cpp
-QString MemorySpinBox::textFromValue(int bytes) const
-{
-    if (bytes >= 1073741824) {  // >= 1 GB
-        return QString::number(bytes / 1073741824.0, 'f', 1) + " GB";
-    } else if (bytes >= 1048576) {  // >= 1 MB
-        return QString::number(bytes / 1048576.0, 'f', 1) + " MB";
-    } else {
-        return QString::number(bytes / 1024.0, 'f', 1) + " KB";
-    }
-}
-
-int MemorySpinBox::valueFromText(const QString& text) const override
-{
-    if (text.endsWith("GB")) {
-        return static_cast<int>(
-            text.chopped(3).trimmed().toDouble() * 1073741824);
-    } else if (text.endsWith("MB")) {
-        return static_cast<int>(
-            text.chopped(3).trimmed().toDouble() * 1048576);
-    } else {
-        return static_cast<int>(
-            text.chopped(3).trimmed().toDouble() * 1024);
-    }
-}
+// qabstractspinbox.cpp stepEnabled 的默认实现（第 541-556 行，只读分支省略）
+if (d->wrapping)
+    return StepEnabled(StepUpEnabled | StepDownEnabled);
+StepEnabled ret = StepNone;
+if (variantCompare(d->value, d->maximum) < 0)
+    ret |= StepUpEnabled;
+if (variantCompare(d->value, d->minimum) > 0)
+    ret |= StepDownEnabled;
+return ret;
 ```
 
-这个例子中，textFromValue 返回的文本包含动态变化的单位（KB/MB/GB），这是 suffix 根本做不到的——suffix 是固定不变的。但代价是 valueFromText 的解析逻辑要处理多种格式，复杂度显著增加。
+只读直接 StepNone（第 544-545 行），wrapping 一开两面标志都给（第 546-547 行），剩下按边界判。回绕的实现在私有 bound 里，wrapping 下越过 max 落到 min、跌破 min 抬到 max（第 1721-1727 行），角度、时钟这类循环量您给 setWrapping(true) 正合适，步数这类只增不减的量别给，从 “第 99 步” 绕回 “第 0 步” 用户会愣一下。
 
-### 3.2 stepEnabled 控制步进按钮状态
+笔者数过它的调用点，流传的说法把 stepEnabled 当成纯视觉开关，这个版本对不上。键盘 Up、Down、PageUp、PageDown 进 stepBy 之前要查对应标志，缺了直接 return（第 1012-1013 行），滚轮同样查过才步进（第 1159-1160 行），按住不放的自重复定时器每一拍重新取一遍，标志丢了就 reset（第 1259-1272 行），鼠标按下也查（第 1374-1381 行），连右键菜单里的 Step up、Step down 两项，都按它置灰（第 1308-1312 行）。灰亮的绘制走 paintEvent 里的 initStyleOption（第 949-955、1703-1705 行），样式提示 SH_SpinControls_DisableOnBounds 为真才采用 stepEnabled 的结果，为假恒画两面可用。不查的只有 stepBy 本体（第 616-647 行），stepUp、stepDown 两个槽直通它（第 587-601 行），程序里手动调不受标志限制。
 
-QAbstractSpinBox 提供了一个虚函数 stepEnabled()，它返回一个 StepEnabledFlag 的组合，用于控制上下箭头按钮是否可用。默认实现会根据当前值是否已到达 minimum 或 maximum 来决定——如果当前值等于 minimum，向下箭头不可用；如果等于 maximum，向上箭头不可用。
+调用频率您心里有数，每次重绘、每次滚轮、每次方向键、自重复每一拍都会跑一遍 stepEnabled，在里面做重活会直接拖响应。反过来这也是个便宜的通知点，想让箭头随外部条件变化，重写它返回相应标志就行，绘制与交互路径会自己跟上。
 
-你可以重写 stepEnabled 来实现更复杂的步进控制策略。比如，在 wrapping 为 false 的前提下，你想让某个范围的值不允许向上步进但允许向下步进：
+## 重写 valueFromText 之后，剥前后缀成了自己的活
 
-```cpp
-QAbstractSpinBox::StepEnabled CustomSpinBox::stepEnabled() const
-{
-    StepEnabled flags;
-    if (value() > minimum()) {
-        flags |= StepDownEnabled;
-    }
-    // 某些条件下禁止向上步进
-    if (value() < someThreshold() && value() < maximum()) {
-        flags |= StepUpEnabled;
-    }
-    return flags;
-}
-```
+框架递给虚函数的，是行编辑框的完整文本。interpret 从 displayText 起步，出处 qabstractspinbox.cpp 第 1895 行，validate 与 valueFromText 拿到的是同一份带前后缀的串，见第 1899、1914 行，editorTextChanged 的 keyboardTracking 路径同样如此，出处第 1528-1532 行。默认实现不怕，validateAndInterpret 内部走 stripped，出处 qspinbox.cpp 第 1091 行，写法在 qabstractspinbox.cpp 第 1460-1486 行，开头匹配 prefix 就去头，结尾匹配 suffix 就去尾，顺手 trim 两边空白。笔者核到这里停了一下，匹配不上的前后缀它不硬剥，剥得掉的前提是文本真的以 prefix 开头、以 suffix 结尾。
 
-StepEnabled 有两个枚举值：StepUpEnabled（向上箭头可用）和 StepDownEnabled（向下箭头可用）。返回空的 flags 会让两个箭头都灰掉——用户只能通过键盘输入修改值，不能用箭头步进。
+您一旦重写 valueFromText，默认的剥离不再替您跑。设了前缀 “$ ” 的框里敲 “50”，行编辑框交给虚函数的文本是 “$ 50”，默认 validate 内部自己剥、照样给 Acceptable，您的解析拿它去 toInt 只会得 0，于是键入路径上第一个字符落地，editorTextChanged 的 Acceptable 分支就把 0 设进了值里（上一节的第 1530-1534 行），50 从头到尾没进过值。事故隐蔽在输入框还显示着您敲的 “$ 50”，回车后 interpret 只是把显示刷成 “$ 0”，丢的值这才露出来。还有一层在 QSpinBoxValidator，行编辑框的验证器发现输入缺 prefix 会当场补回头、缺 suffix 补到尾（第 1960-1966 行），设了前缀的框里用户几乎敲不出不带前缀的文本，您的解析函数必然遇到它。
 
-现在有一道调试题给大家。你重写了 stepEnabled，让它返回 StepDownEnabled | StepUpEnabled，但发现向上箭头仍然是灰的。检查 value() 确实小于 maximum()。问题可能出在哪里？
+示例的处理是防御性的，valueFromText 开头把 prefix、suffix 剥掉，再往下解析（unit_spin_box.cpp 第 54-62 行），尽管构造里一个都没设。您要自定义格式，最省心的路子是跟示例一致，别用 prefix、suffix，格式的进出全部收进 textFromValue 与 valueFromText，两边不打架。
 
-问题出在 wrapping 属性上。如果 setWrapping(true) 被设置了，stepEnabled 的默认行为会改变——wrapping 模式下，即使到达了 maximum，向上箭头也应该可用（因为会回绕到 minimum）。但如果你重写了 stepEnabled 而没有考虑 wrapping，你的实现可能和基类的其他逻辑产生冲突。另外，如果你在 stepEnabled 中没有正确处理边界条件——比如在 value() == maximum() 时仍然返回了 StepUpEnabled——QSpinBox 内部的 fixup 机制会把超出范围的值钳回去，但箭头按钮的视觉状态可能和实际行为不一致。
+## 官方文档参考
 
-还有一个值得注意的行为：stepEnabled 是每次 SpinBox 需要更新按钮状态时都会调用的。这意味着它在 valueChanged 之后会被调用，在 setRange 之后也会被调用。如果你在 stepEnabled 中做了耗时的计算，会直接影响 SpinBox 的响应速度。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，QSpinBox、QDoubleSpinBox 与 QAbstractSpinBox 都在 QtWidgets，链接 Qt6::Widgets 即可。
 
-### 3.3 prefix/suffix 解析的边界情况
+[Qt 文档 · QSpinBox](https://doc.qt.io/qt-6/qspinbox.html) -- 整数步进框，textFromValue、valueFromText、validate 与 displayIntegerBase 的正式说明
 
-入门篇我们说过 prefix 和 suffix 纯粹是显示层面的，不影响 value() 的返回值。这个说法在默认情况下是对的，但在自定义 valueFromText 时需要格外小心。
+[Qt 文档 · QDoubleSpinBox](https://doc.qt.io/qt-6/qdoublespinbox.html) -- 浮点版同一组虚函数，decimals 与取整行为在这页
 
-问题在于：当 SpinBox 需要解析用户输入时，它传给 valueFromText 的 text 参数包含了 prefix 和 suffix。比如你设了 setPrefix("$ ")，用户输入了 "$ 50"，valueFromText 拿到的就是 "$ 50" 这个完整字符串。默认的 valueFromText 实现会自动剥离 prefix 和 suffix，然后对中间的数值部分做 toInt()。但如果你重写了 valueFromText，你就需要自己处理 prefix 的剥离。
+[Qt 文档 · QAbstractSpinBox](https://doc.qt.io/qt-6/qabstractspinbox.html) -- 步进框基类，stepEnabled、stepBy、correctionMode、wrapping 的定义
 
-```cpp
-int PriceSpinBox::valueFromText(const QString& text) const
-{
-    QString cleaned = text;
-    // 必须手动剥离 prefix，否则 "$ 50" 解析为 0
-    if (!prefix().isEmpty()) {
-        cleaned.remove(0, prefix().length());
-    }
-    if (!suffix().isEmpty()) {
-        cleaned.chop(suffix().length());
-    }
-    return cleaned.trimmed().toInt();
-}
-```
-
-如果你在重写 valueFromText 时忘记了剥离 prefix，"$ 50" 被 toInt() 解析会返回 0（因为 $ 不是数字字符），然后 SpinBox 的 fixup 机制会把值修正到 minimum 或保持不变，用户输入的 50 就"丢失"了。这个 bug 非常隐蔽，因为看起来一切正常——输入框显示着 "$ 50"，但 value() 返回的是 0 或 minimum。
-
-更安全的做法是：如果你要自定义格式化逻辑，干脆不要用 prefix 和 suffix，把所有格式化逻辑都放在 textFromValue 中完成。这样 textFromValue 完全控制输出格式，valueFromText 完全控制输入解析，不需要和 prefix/suffix 的自动剥离逻辑做交互。
-
-## 4. 踩坑预防
-
-第一个坑是重写 valueFromText 时忘记剥离 prefix/suffix。默认的 valueFromText 会自动处理 prefix 和 suffix 的剥离，但一旦你重写了这个函数，剥离的责任就落在了你身上。如果 valueFromText 拿到的文本包含 prefix（比如 "$ 50"）而你没有剥离，toInt() 会返回 0，用户输入的值就"丢失"了。最安全的做法是自定义格式化时完全不用 prefix/suffix，把所有格式逻辑放在 textFromValue 中。
-
-第二个坑是 stepEnabled 返回了错误的标志组合。比如在 value() == maximum() 时仍然返回 StepUpEnabled，或者在 wrapping 为 true 时没有让箭头始终可用。这会导致箭头按钮的视觉状态和实际步进行为不一致——用户看到箭头是可点击的但点了没反应，或者箭头灰了但其实值还有调整空间。记住：stepEnabled 只控制视觉状态，不控制实际步进行为。stepBy 方法的实际执行不受 stepEnabled 返回值的影响。
-
-第三个坑是 setWrapping(true) 后值在 minimum 和 maximum 之间跳跃，但 textFromValue 没有处理回绕后的显示。wrapping 模式下，value 超过 maximum 后会回绕到 minimum。如果你的 textFromValue 有某种"递增显示"的逻辑（比如 "第 1 步"、"第 2 步"），回绕后突然从 "第 N 步" 跳到 "第 1 步" 可能会让用户困惑。wrapping 适合"循环"语义（角度、时钟），不适合"递增"语义。
-
-## 5. 练习项目
-
-练习项目：多功能参数输入面板。我们要实现一个设置面板，包含三种定制的 SpinBox：第一个是角度输入框 AngleSpinBox（范围 0-359，显示 "XX°"，支持 wrapping 循环）；第二个是时间长度输入框 DurationSpinBox（内部存储秒数，范围 0-86400，显示格式根据值自动切换——小于 60 显示 "XX 秒"，60-3599 显示 "XX 分 XX 秒"，3600 以上显示 "XX 时 XX 分"）；第三个是缩放比例输入框（继承 QDoubleSpinBox，显示 "1:2"、"1:1"、"2:1" 这样的比例格式）。
-
-完成标准是三个 SpinBox 都能正确显示格式化文本，用户手动输入格式化文本后能被正确解析回数值，角度 SpinBox 的 wrapping 循环正常工作，时间 SpinBox 的单位自动切换无歧义。提示几个关键点：DurationSpinBox 的 textFromValue 需要做分段格式化，valueFromText 需要支持解析所有三种格式；角度 SpinBox 的 validate 需要接受 "90°" 这种输入；缩放比例的 valueFromText 需要从 "1:2" 格式中提取分子分母。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QSpinBox](https://doc.qt.io/qt-6/qspinbox.html) -- 整数步进框，包含 textFromValue/valueFromText 虚函数说明
-
-[Qt 文档 · QDoubleSpinBox](https://doc.qt.io/qt-6/qdoublespinbox.html) -- 浮点数步进框，同样的虚函数接口
-
-[Qt 文档 · QAbstractSpinBox](https://doc.qt.io/qt-6/qabstractspinbox.html) -- 步进框基类，stepEnabled 和 stepBy 的定义
-
-[Qt 文档 · QAbstractSpinBox::StepEnabledFlag](https://doc.qt.io/qt-6/qabstractspinbox.html#StepEnabledFlag-enum) -- 步进按钮状态枚举
+[Qt 文档 · QAbstractSpinBox::StepEnabledFlag](https://doc.qt.io/qt-6/qabstractspinbox.html#StepEnabledFlag-enum) -- StepNone、StepUpEnabled、StepDownEnabled 三个枚举值
 
 ---
 
-到这里，QSpinBox 的进阶内容就全部讲完了。textFromValue/valueFromText 这对虚函数是 SpinBox 定制化的核心——它们让你可以完全控制数值和显示文本之间的双向映射，突破 prefix/suffix 只能附加固定文本的限制。stepEnabled 给了你对箭头按钮状态的精确控制权。而 prefix/suffix 在自定义格式化场景下的边界问题，搞清楚后你就知道什么时候该用默认机制、什么时候该完全自己来。把这些能力组合起来，你可以构建出任意复杂的数值输入体验——角度、时间、内存大小、缩放比例，全都不在话下。
+输入类刚开个头，下一站 [3.30 QDateTimeEdit 进阶](./30-qdatetimeedit-advanced.md)。它同样是 QAbstractSpinBox 的子类，qdatetimeedit.h 第 21 行写得分明，今天认的 validate 与 interpret 链子，到它身上换成按日期节段处理，咱们去那边接着认。
+
+想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/29-qspinbox-advanced/，可执行文件 29-qspinbox-advanced），窗口里一枚 UnitSpinBox 加两块标签，初始值 512 KB（main.cpp 第 30 行），标签实时显示显示文本与内部值（第 41-45 行）。
+
+实验咱们顺着正文走三步。第一步，您点几下上箭头，显示从 “512.0 KB” 一格一格往上走，这是 textFromValue 的 KB 分支在出文本，出处 unit_spin_box.cpp 第 39-43 行。第二步，全选后敲 “1048576”，值当场就在变，底部标签逐键跟上，keyboardTracking 确实在每敲一键时就收值，输入框里却始终是裸数字 “1048576”，回车或失焦后才跳成 “1.0 MB”。值已变、显示未变，这个错位本身就是个好的观察点，根因一句话，示例的 validate 只判状态、不改写文本，editorTextChanged 里 setValue(v, EmitIfChanged, tmp != t) 的第三参算出来是 false，updateEdit 不跑（qabstractspinbox.cpp 第 1533 行），收值与刷显示是两条路，回车后的 interpret 换成 setValue(v, ep, true)，才无条件把显示刷成 textFromValue 的样子（第 1917 行），单位切换由值的大小决定，出处第 34-38 行。第三步，敲 “2.5 ”，能进，主模式认纯数字带尾随空格，再补一个 “M”，进不去，敲到 “2.5 M” 时主模式与部分匹配两条正则都不认，validate 判 Invalid，行编辑框直接拒收，不是中间态漏算了它，是哪条分支都没给它留位置。这是写 validate 时最容易漏的一类中间态，单位的前缀得一个字符一个字符敲上去，您要是想让 “2.5 MB” 能手敲进去，实测 “2.5 B” 敲得出、卡住的只是单位字母，把单位的前缀补进部分匹配的清单就行。
+
+完成标准咱们照旧列好，单位随值切换无歧义，手敲的纯数字按字节收，进不去的字符您能说出卡在哪条状态上。

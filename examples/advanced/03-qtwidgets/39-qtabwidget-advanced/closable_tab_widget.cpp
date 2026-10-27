@@ -18,10 +18,7 @@
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-ClosableTabWidget::ClosableTabWidget(QWidget* parent)
-    : QWidget(parent)
-    , m_tabCounter(0)
-{
+ClosableTabWidget::ClosableTabWidget(QWidget* parent) : QWidget(parent), m_tabCounter(0) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // 顶部按钮栏：提供"新建标签"操作
@@ -35,16 +32,16 @@ ClosableTabWidget::ClosableTabWidget(QWidget* parent)
 
     // 核心标签页控件
     m_tabWidget = new QTabWidget;
-    m_tabWidget->setTabsClosable(true);       // 开启关闭按钮（仅视觉，不自动移除）
-    m_tabWidget->setDocumentMode(true);       // 去掉标签栏外框，现代编辑器风格
-    m_tabWidget->setMovable(true);            // 允许拖拽重排标签
-    m_tabWidget->setElideMode(Qt::ElideRight);// 标签文字超长时右侧省略
+    m_tabWidget->setTabsClosable(true);        // 开启关闭按钮（仅视觉，不自动移除）
+    m_tabWidget->setDocumentMode(true);        // 去掉标签栏外框，现代编辑器风格
+    m_tabWidget->setMovable(true);             // 允许拖拽重排标签
+    m_tabWidget->setElideMode(Qt::ElideRight); // 标签文字超长时右侧省略
 
     // documentMode 下标签栏和页面之间没有分隔线，通过 QSS 补一条顶线
     m_tabWidget->setStyleSheet(
         QStringLiteral("QTabWidget::pane { border-top: 1px solid #c0c0c0; }"));
 
-    // 通过 tabBar() 设置图标大小——QTabWidget 没有直接暴露此接口
+    // 这里走 tabBar()->setIconSize 细调——QTabWidget 自己也有 setIconSize 属性，两条路都能到
     m_tabWidget->tabBar()->setIconSize(QSize(20, 20));
 
     mainLayout->addWidget(m_tabWidget, 1);
@@ -57,12 +54,11 @@ ClosableTabWidget::ClosableTabWidget(QWidget* parent)
 
     // tabCloseRequested → 手动移除标签页
     // QTabWidget 只负责发信号，不负责移除，必须在槽函数中完成 removeTab + deleteLater
-    connect(m_tabWidget, &QTabWidget::tabCloseRequested,
-            this, &ClosableTabWidget::handleCloseRequested);
+    connect(m_tabWidget, &QTabWidget::tabCloseRequested, this,
+            &ClosableTabWidget::handleCloseRequested);
 
     // 标签切换 → 更新底部状态栏
-    connect(m_tabWidget, &QTabWidget::currentChanged,
-            this, &ClosableTabWidget::updateStatusBar);
+    connect(m_tabWidget, &QTabWidget::currentChanged, this, &ClosableTabWidget::updateStatusBar);
 
     // 新建标签按钮
     connect(addBtn, &QPushButton::clicked, this, &ClosableTabWidget::addNewTab);
@@ -94,8 +90,7 @@ ClosableTabWidget::ClosableTabWidget(QWidget* parent)
 // 新建标签页
 // ─────────────────────────────────────────────────────────────────────────────
 
-void ClosableTabWidget::addNewTab()
-{
+void ClosableTabWidget::addNewTab() {
     ++m_tabCounter;
     auto* editor = new QTextEdit;
     editor->setPlaceholderText(QStringLiteral("在这里输入内容..."));
@@ -109,8 +104,7 @@ void ClosableTabWidget::addNewTab()
 // 处理 tabCloseRequested
 // ─────────────────────────────────────────────────────────────────────────────
 
-void ClosableTabWidget::handleCloseRequested(int index)
-{
+void ClosableTabWidget::handleCloseRequested(int index) {
     // 关键步骤：先取出页面指针，再移除标签，最后清理
     // removeTab 后 widget(index) 返回的就是下一个页面了，顺序不能反
     QWidget* page = m_tabWidget->widget(index);
@@ -121,13 +115,11 @@ void ClosableTabWidget::handleCloseRequested(int index)
     // 如果页面是 QTextEdit 且内容被修改过，弹出确认对话框
     auto* editor = qobject_cast<QTextEdit*>(page);
     if (editor && editor->document()->isModified()) {
-        const int ret = QMessageBox::question(
-            this,
-            QStringLiteral("关闭确认"),
-            QStringLiteral("文档 \"%1\" 已修改但未保存，确定关闭吗？")
-                .arg(m_tabWidget->tabText(index)),
-            QMessageBox::Yes | QMessageBox::No,
-            QMessageBox::No);
+        const int ret =
+            QMessageBox::question(this, QStringLiteral("关闭确认"),
+                                  QStringLiteral("文档 \"%1\" 已修改但未保存，确定关闭吗？")
+                                      .arg(m_tabWidget->tabText(index)),
+                                  QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
 
         if (ret != QMessageBox::Yes) {
             return;
@@ -143,8 +135,7 @@ void ClosableTabWidget::handleCloseRequested(int index)
 // 更新底部状态栏
 // ─────────────────────────────────────────────────────────────────────────────
 
-void ClosableTabWidget::updateStatusBar()
-{
+void ClosableTabWidget::updateStatusBar() {
     // 通过 property 取出状态标签（构造时存入）
     auto* statusLabel = m_tabWidget->property("statusLabel").value<QWidget*>();
     if (!statusLabel) {
@@ -166,9 +157,7 @@ void ClosableTabWidget::updateStatusBar()
     if (editor) {
         const int charCount = editor->toPlainText().length();
         const int tabIdx = m_tabWidget->currentIndex();
-        label->setText(QStringLiteral("标签 %1 | 字数: %2")
-                           .arg(tabIdx + 1)
-                           .arg(charCount));
+        label->setText(QStringLiteral("标签 %1 | 字数: %2").arg(tabIdx + 1).arg(charCount));
     }
 }
 
@@ -176,8 +165,7 @@ void ClosableTabWidget::updateStatusBar()
 // 通过 tabBar() 的 setTabButton 在标签上嵌入进度条
 // ─────────────────────────────────────────────────────────────────────────────
 
-void ClosableTabWidget::attachProgressButton(int index)
-{
+void ClosableTabWidget::attachProgressButton(int index) {
     // 演示通过 tabBar() 访问 QTabWidget 未直接暴露的 setTabButton 接口
     // 注意：setTabsClosable(true) 已经在 RightSide 放了内置关闭按钮
     // 在 LeftSide 放进度条，避免覆盖关闭按钮

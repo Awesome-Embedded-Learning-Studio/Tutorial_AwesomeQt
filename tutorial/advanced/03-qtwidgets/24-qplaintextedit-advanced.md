@@ -1,174 +1,136 @@
 ---
 title: "3.24 QPlainTextEdit 进阶"
-description: "入门篇我们把 QPlainTextEdit 和 QTextEdit 的区别、appendPlainText 追加日志、setMaximumBlockCount 限制行数、当前行高亮这四个基础维度过了一遍。进阶篇要把视角从'怎么用'转到'怎么构建真正的代码编辑器'。"
+description: "入门篇把 appendPlainText 追加日志、setMaximumBlockCount 限制行数和当前行高亮过了一遍，进阶篇从 QTextEdit 与 QPlainTextEdit 两个类的分工讲起，摸清 block 布局与坐标换算，看清行号侧栏的信号联动，捋清大日志淘汰发生在哪一步与代价记在哪儿，末尾收拾自动缩进与括号匹配，配套示例在 examples/advanced/03-qtwidgets/24-qplaintextedit-advanced/。"
 ---
 
 # 现代Qt开发教程（进阶篇）3.24——QPlainTextEdit 进阶
 
-## 1. 前言 / 从日志查看器到代码编辑器
+[3.23 QTextEdit 进阶](./23-qtextedit-advanced.md) 收尾把话递到了这里，纯文本兄弟登场，咱们这就把分工接住。两个类共用同一个 QTextDocument，frame 与 block 的文档树照旧，分歧出在排版这一层：QTextEdit 挂全套的 QTextDocumentLayout，表格、嵌套 frame、图文混排都给排，QPlainTextEdit 换成 QPlainTextDocumentLayout，Qt 给这个布局类的定位说得很直白，排版不按垂直像素算，按段落（内部叫 block）算，文档的高度等于段落数，表格与嵌套 frame 一概不支持。入门篇说它俩是兄弟关系，这句话落到源码层面，就落在布局类的差别上。
 
-入门篇我们把 QPlainTextEdit 的基础能力过了一遍——appendPlainText 追加日志、setMaximumBlockCount 限制行数、ExtraSelection 做当前行高亮。说实话，如果你只是做日志终端那些知识完全够用了。但如果你要做代码编辑器——哪怕轻量级的脚本编辑器——你就得面对一组全新的问题：左侧怎么画行号、大日志文件怎么保证不卡、缩进怎么自动处理、括号怎么匹配高亮。这些问题入门篇一个都没碰，而它们恰恰是区分"能用"和"好用"的分水岭。
+笔者把落差摆在前面。appendPlainText 追加日志、setMaximumBlockCount 限行数、ExtraSelection 当前行高亮，入门篇这几样够您搭一个日志窗口。需求一走到代码编辑器，哪怕轻量的脚本编辑器，行号、括号、缩进这些问题立刻冒出来，大日志场景里淘汰机制的细节也值得从头捋一遍。本篇按下面的次序走，看看 block 布局给了咱们什么底子，再逐路看行号侧栏，然后是大日志的淘汰路径与代价，末尾收自动缩进与括号匹配。
 
-这篇文章我们就把 QPlainTextEdit 的四个进阶维度拆清楚：基于 block 的布局模型与行号侧边栏实现、maximumBlockCount 在高性能日志场景中的深度用法、以及代码编辑器功能（缩进和括号匹配）。
+## 布局按 block 走，坐标换算是头一道关
 
-## 2. 环境说明
+QPlainTextEdit 的文档里，一个段落就是一个 QTextBlock，全部 block 线性串成一条，没有 frame 嵌套也没有表格，排版代价跟着段落走，这正是它扛得住大文档的原因。咱们要做行号，手上需要三样东西，firstVisibleBlock() 给出视口里第一个可见的 block，blockBoundingRect() 给出 block 自身坐标系里的矩形（原点在 block 左上角），contentOffset() 给出滚动偏移。这三样全是 protected 成员，子类和友元才摸得着，示例把侧栏声明成编辑器的友元类（line_number_editor.h 第 28 行），根由就在这儿。
 
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。QPlainTextEdit 属于 QtWidgets，链接 Qt6::Widgets 即可。行号侧边栏的实现涉及 QPainter（QtGui）的基本绘图操作。
-
-## 3. 核心概念讲解
-
-### 3.1 Block 布局模型——QPlainTextEdit 的渲染单位
-
-QPlainTextEdit 的文档模型比 QTextEdit 简单得多，核心概念只有一个：QTextBlock。每个段落就是一个 block，所有 block 组成一个线性双向链表——没有 QTextFrame 嵌套，没有 QTextTable 二维结构。QPlainTextEdit 的渲染就是逐 block 从上到下绘制，只画可见 block，这是它性能优于 QTextEdit 的核心原因之一。
-
-理解 block 布局模型的关键是三个方法：`blockCount()` 返回文档 block 总数，`blockBoundingRect(const QTextBlock &)` 返回某个 block 在文档坐标系中的矩形区域，`firstVisibleBlock()` 返回当前视口第一个可见 block。这三个方法构成了"从 block 索引到屏幕坐标"的映射基础。
+blockBoundingRect 给出的矩形以 block 自己的左上角为原点，问哪一块 top 拿回来都是 0，它不携带这块在文档里的纵向位置，要文档坐标系里的矩形得换 blockBoundingGeometry。首块的视口位置正好等于 0 减去滚动偏移，所以拿首块的 top 减去 contentOffset() 的 y 分量，后面的块按各自高度累加往下走，咱们把换算这两行单独拎出来：
 
 ```cpp
-// 获取第一个可见 block 及其几何信息
-QTextBlock firstBlock = plainEdit->firstVisibleBlock();
-int blockNumber = firstBlock.blockNumber();
-qreal blockTop = plainEdit->blockBoundingRect(firstBlock).top();
-qreal blockHeight = plainEdit->blockBoundingRect(firstBlock).height();
+QTextBlock block = editor->firstVisibleBlock();
+qreal viewportY = editor->blockBoundingRect(block).top()
+                  - editor->contentOffset().y();   // 首块专用换算，后续块按高度累加
 ```
 
-blockBoundingRect 返回的坐标是文档坐标系（以文档左上角为原点），不是视口坐标系。你需要减去 contentOffset()（滚动偏移量）才能转换为视口坐标。contentOffset() 返回的是一个 QPointF，y 分量表示垂直方向的滚动偏移：
+有两处容易想岔，咱们摆在前面说。头一个是空文档的 blockCount() 拿回来就是 1，官方属性文档写明这个默认值，侧栏算宽度时示例用 qMax(1, ...) 托住位数（line_number_sidebar.cpp 第 33 行）。另一个是 blockCount 数的是段落，自动换行把一段折成三行，计数还是 1，行号也是一段只画一个。编号落在折行块的哪条可视行上，由 drawText 怎么摆框说了算，示例拿整块高度当框高、配 AlignVCenter 垂直居中，您把窗口压窄造出一个折行段就能看见，编号落在中间的可视行上。官方 Code Editor Example 是另一种摆法，框高取 fontMetrics().height() 的单行高度，编号贴着段落首行。要拿折行后的可视行数，得问 block.lineCount()，折出来的这些可视行由 block 自带的 QTextLayout 排版，要细看单行的几何，问它。
+
+## 行号侧栏：三路联动各管一段，断光两路才露馅
+
+| 联动入口 | 在侧栏里承担什么 |
+| ---- | ---- |
+| blockCountChanged(int newBlockCount) | 行数变动时重算侧栏宽度，两位数长成三位数那一刻主要靠它 |
+| updateRequest(const QRect &rect, int dy) | 编辑器请求重绘时侧栏跟着重绘，dy 带垂直滚过的像素，槽尾一道保险顺带重算宽度 |
+| resizeEvent | 窗口尺寸变化时把侧栏的几何位置重新摆正 |
+
+前两路是 QPlainTextEdit 的信号，咱们把官方注释里的说明摆出来，updateRequest 的用途就是给行号、断点这类附属控件供绘制时机，滚动时 rect 覆盖整个视口，dy 给垂直滚过的像素。示例在构造函数里连上这两路（line_number_editor.cpp 第 22 与 26 行），第三路走 resizeEvent 重载（第 37 行）。
+
+侧栏本体是一枚普通 QWidget 子控件，固定在编辑器左侧。构造里有一行不能省，它把鼠标事件让给下面的编辑器，靠的是 setAttribute(Qt::WA_TransparentForMouseEvents)，落在 line_number_sidebar.cpp 第 23 行。省掉它的后果很具体，行号区域上的按下与拖动全被侧栏吃掉，您在那儿划选区划不动，根因是子控件占住视口旁边那块边距区，鼠标事件落到它头上，轮不到编辑器的视口。
+
+宽度按位数算。示例的 calculateWidth 拿单个字符 9 的宽度当单位，fontMetrics().horizontalAdvance(QLatin1Char('9')) 乘位数，再加左右边距，落在 line_number_sidebar.cpp 第 30-38 行。编辑器那头要让出这块空间，用的是 setViewportMargins，落在 line_number_editor.cpp 第 80 行，它同样是 protected，友元或子类是第二重前提。官方的 Code Editor Example 与示例是同一个路数，想看官方写法您顺着文末链接走。
+
+咱们看示例 paintEvent 的主干，从 firstVisibleBlock 起步，block.next() 一块块走，top 累加每块高度，出了重绘区域就停，可见且落在区域内的才画，行号取 blockNumber + 1（给人看的行号从 1 数起，block 编号从 0 数起）：
 
 ```cpp
-QPointF offset = plainEdit->contentOffset();
-qreal viewportY = blockTop - offset.y();
-```
-
-### 3.2 行号侧边栏——blockCountChanged / updateRequest / blockBoundingRect 三件套
-
-行号侧边栏是代码编辑器的标配功能。Qt 没有提供内置的行号组件，但 QPlainTextEdit 提供了三个信号和方法让你自己实现：`blockCountChanged(int)` 在文档 block 数量变化时发射，用来更新行号区域的宽度；`updateRequest(const QRect &, int)` 在编辑器需要重绘某个区域时发射，用来同步更新行号的绘制；`blockBoundingRect(const QTextBlock &)` 用来获取指定 block 的几何信息，把 block 编号映射到屏幕位置。
-
-实现行号侧边栏的核心思路是创建一个自定义 QWidget 作为 QPlainTextEdit 的子控件，固定在编辑器左侧。它的宽度根据最大行号位数动态计算——blockCount 为 100 时按三位数算宽度。绘制时遍历从 firstVisibleBlock 开始的所有可见 block，在对应位置画出行号文字。
-
-行号的绘制逻辑分三步。第一步是 sizeHint 中根据 blockCount 的位数计算行号区域的宽度——blockCount 为 100 时按三位数算，`fontMetrics().horizontalAdvance('9') * digits` 加上左右边距。第二步是 paintEvent 中从 firstVisibleBlock 开始遍历，逐 block 计算它在视口中的 Y 坐标（blockBoundingRect 的 top 减去 contentOffset 的 y），在重绘区域内就画出行号。第三步是三个信号的联动：blockCountChanged 更新行号区域宽度，updateRequest 触发行号区域重绘，resizeEvent 调整行号区域的几何位置。这三个联动缺一不可——如果你只连了 updateRequest 没连 blockCountChanged，当行数从 99 变成 100 时行号区域宽度不会增加，三位数字的行号就会被截断。
-
-```cpp
-// paintEvent 核心绘制循环（简化）
-QTextBlock block = m_editor->firstVisibleBlock();
-int blockNumber = block.blockNumber();
-int top = static_cast<int>(
-    m_editor->blockBoundingRect(block).top()
-    - m_editor->contentOffset().y());
-
-while (block.isValid() && top <= event->rect().bottom()) {
-    int height = static_cast<int>(
-        m_editor->blockBoundingRect(block).height());
-    if (block.isVisible() && (top + height) >= event->rect().top()) {
-        painter.drawText(0, top, width() - 5, height,
-            Qt::AlignRight | Qt::AlignVCenter,
-            QString::number(blockNumber + 1));
-    }
-    top += height;
+// LineNumberSidebar::paintEvent 的主干（示例第 68-92 行）
+while (block.isValid()) {
+    if (blockTop > event->rect().bottom())
+        break;                                       // 出了重绘区就停
+    if (block.isVisible() && (blockTop + blockHeight) >= event->rect().top())
+        painter.drawText(0, static_cast<int>(blockTop), width() - 4,
+                         static_cast<int>(blockHeight),
+                         Qt::AlignRight | Qt::AlignVCenter,
+                         QString::number(blockNumber + 1));
     block = block.next();
+    blockTop += blockHeight;
+    blockHeight = editor->blockBoundingRect(block).height();  // 下一块高度重取，折行块不一样高
     ++blockNumber;
 }
 ```
 
-完整的 LineNumberArea 实现还需要在构造函数中设置 `setAttribute(Qt::WA_TransparentForMouseEvents)` 让鼠标事件穿透到编辑器，以及通过 `setViewportMargins` 给行号区域留出左侧空间。Qt 官方的 Code Editor Example 提供了完整的参考实现。
+咱们再看 updateRequest 带来的 rect，它是编辑器视口的坐标，跟侧栏自己的坐标系对不上号。所以侧栏的 paintEvent 按自己的 event->rect() 算可见范围，示例的 onUpdateRequest 拿 rect 的纵向位置，折算成侧栏自己的 update（line_number_editor.cpp 第 64 行），滚动时 dy 不为 0，直接 scroll(0, dy) 整体平移，省一次全量重绘（第 61 行）。槽的末尾还埋着一道保险，rect 把编辑器视口整个盖住时，顺手重算一次侧栏宽度（第 68-70 行），官方 Code Editor Example 同款。
 
-### 3.3 maximumBlockCount 深度——高性能日志场景的隐藏代价
+这道保险平时不出声，兜的就是行数悄悄过线的场合。blockCountChanged 只在行数变动那一刻发一次，而窗口高度有限，一屏也就二三十行，您一路敲回车，光标早越过了视口下缘，换行键被 Qt 收下之后必调 ensureCursorVisible 把光标挪回可见区，文档跟着往下滚，这次滚动发出的 updateRequest 携带的 rect 恰好盖住整个视口，保险必中。宽度重算因此有两道入口，blockCountChanged 走明面，保险藏在 updateRequest 槽尾，断掉明面那道，两位数长成三位数的活照样有人接。
 
-入门篇我们讲了 setMaximumBlockCount 的基本用法——超过上限就删旧行。进阶篇要搞清楚它删行的时机和代价。QPlainTextEdit 在每次内容变更后检查 blockCount 是否超过 maximumBlockCount，超过了就从文档开头删除多余的 block。删除本身是 O(1) 的（修改链表头指针），但会触发布局重算和视口重绘。在高性能日志场景中（每秒追加上百行），触发频率非常高——上限 1000、速率每秒 200 行的话，每 5 秒就触发一次批量删除，blockCountChanged 信号发射后如果你的行号区域在监听它做更新，会有额外开销。
+这件事当场能验，实验分两步走。第一步，把 blockCountChanged 的连接注释掉，重新编译（line_number_editor.cpp 第 22 行），连敲回车把行数顶过 99，侧栏宽度照样从两位数长到三位数，笔者在离屏环境实测，视口左边距从 23px 长到 30px，此时 updateRequest 照样响、paintEvent 照样画，槽尾那道保险把宽度重算接了过去。第二步，把 onUpdateRequest 末尾的保险分支一并注释掉（第 68-70 行），再连敲回车把行数顶过 99，这回宽度才真停住，实测视口左边距恒在 16px，那是启动时文档还空着、按一位数算出来的值，此后再没有一路去重算它，行号过 99 之后三位数画不全，绘制右对齐，裁掉的是百位那一头，宽度停在几位数，超过的编号就只剩末几位。两步对照下来，blockCountChanged 与保险两道入口断一道另一道还顶着，断光两道才露馅。想更稳，宽度按当前位数加一预留，行数逼近 100 的时候就不会闪。
 
-有一个容易忽略的细节：maximumBlockCount 触发删除时，被删除 block 上的 QTextBlock::userData 也会被一起销毁。如果你在每个 block 上存储了日志级别或时间戳等元数据，旧行删除后就丢失了。实战中推荐的做法是把 maximumBlockCount 设为"用户期望回溯的行数"加 20% 缓冲。另外，遍历文档时要在遍历前保存 blockCount 快照，因为遍历过程中 maximumBlockCount 可能触发删除导致迭代器失效。
+## 大日志不卡：淘汰发生在哪一步，代价记在哪儿
 
-现在有一道调试题给大家。下面这段代码在追加日志的同时手动清理旧行，但运行一段时间后程序崩溃——为什么？
+setMaximumBlockCount 的基本用法入门篇过了，进阶咱们把剪裁的时机讲清楚。进入稳态（blockCount 已到上限）之后，appendPlainText 每追加一段，就从文档头退掉一段，淘汰逐段进行。它的内部走一条专门路径，把上限临时摘成 0，追加新段，再用一枚光标从文档头把出头的那块 removeSelectedText 掉，最后把上限挂回去，appendHtml 走的是同一条路径。滚动跟随也在同一条路径里做完，追加前视口停在底部，追加完滚动条自动拉到底，您往上翻着看历史，它就不打扰。打字这类其余编辑不走 append 的私有路径，由 QTextDocument 在每次编辑收尾时统一检查淘汰，同样从文档头删。
+
+照这个机制看，流传很广的兜底写法是在 append 之后再手动删一遍，咱们拿条件推一下，它根本不会执行：
 
 ```cpp
 logView->appendPlainText(msg);
+// 走到这里 blockCount 已经被剪回上限，下面的条件永远不成立
 if (logView->blockCount() > logView->maximumBlockCount()) {
-    QTextCursor cursor(logView->document());
-    cursor.movePosition(QTextCursor::Start);
-    cursor.movePosition(QTextCursor::Down, QTextCursor::KeepAnchor,
-                        logView->blockCount() - logView->maximumBlockCount());
-    cursor.removeSelectedText();
+    // ...手动删除多余行
 }
 ```
 
-问题出在手动清理逻辑上。appendPlainText 在 maximumBlockCount > 0 时已经会自动删除旧行，你再手动删一遍等于双倍删除——cursor 的 removeSelectedText 和 appendPlainText 的自动删除冲突，导致删多了或删除了正在使用的 block。解决方案很简单：不要手动删，让 maximumBlockCount 自动处理。
+根因是剪裁内置在 append 的私有路径里，函数返回之前就做完了，轮不到外面补第二遍。您真想自己管淘汰，把上限设为 0 自己删，Qt 内部做的也是同一件事，光标选中文档头再 removeSelectedText。只是把上限设 0 的那一刻，撤销已经被顺手关掉了，既想自己管淘汰又想留着撤销，得补一次 setUndoRedoEnabled(true)，重开只在上限为 0 时走得通，缘由下一段展开。
 
-### 3.4 代码编辑器功能——缩进处理与括号匹配
+咱们把代价看两处。明面上那笔是编辑成本，每次淘汰都是一次真实的文档编辑，contentsChange 照发，布局照算，视口照重绘，监听 blockCountChanged 做更新的行号侧栏跟着多干活，高频日志下这笔成本按行数线性付。隐蔽的一笔在撤销上，setMaximumBlockCount 会顺手把文档的撤销功能关掉，上限大于 0 时想再打开也不行，日志窗口里 Ctrl+Z 没反应属于设计如此，别当故障排查。
 
-QPlainTextEdit 不提供内置的代码编辑功能，但它的 block 模型和 QTextCursor 操作为实现这些功能提供了基础。这里讲两个最常见的代码编辑功能：自动缩进和括号匹配。
+挂在被删 block 上的数据跟着退场。block 数据析构时它携带的 QTextBlockUserData 一并 delete，您在上面存的日志级别、时间戳随之消失，blockCountChanged 只告诉您数量变了，不告诉您哪一块没了。要么把上限设为 0 自己管理，要么在外部维护独立的环形缓冲，渲染最后几行时再回填元数据。上限的取值咱们给个经验值，设成用户期望回溯的行数再加两成余量，别压着刚好。
 
-自动缩进的核心思路是在 keyPressEvent 中拦截 Enter 键，根据当前行的缩进级别自动插入相同数量的空格或制表符。判断缩进级别的方法是获取当前 block 的 text，找到前导空白字符的长度：
+从外面遍历文档，咱们有一句要嘱咐，存 QTextCursor 比存 position 整数稳当，光标随文档编辑自动调整位置，整数不会，淘汰一发生，全文的 position 整体前移。性能上还有一枚现成的开关，centerOnScroll 按官方文档的说法能让日志查看器更快，滚动量小了，追加的代价跟着小。
+
+## 缩进与括号匹配：一个拦按键，一个跟光标
+
+QPlainTextEdit 不内置任何代码编辑功能，好在 block 模型与 QTextCursor 把地基打好了。QTextCursor 的选区与位置模型 3.23 刚讲过，这里不重讲，用着不熟的您回 3.23 补课。
+
+自动缩进挂在 keyPressEvent 上，拦换行键。Key_Return 与 Key_Enter 都得拦，主键盘回车发前者，小键盘回车发后者，只拦一个就漏一半，您按小键盘回车，缩进没跟上的话，回这里查。缩进量取当前行的前导空白，行尾是大括号再进一级：
 
 ```cpp
-void CodeEditor::keyPressEvent(QKeyEvent *event)
-{
-    if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
-        QString currentText = textCursor().block().text();
-        QString indent;
-        for (auto c : currentText) {
-            if (c == ' ' || c == '\t') {
-                indent.append(c);
-            } else {
-                break;
-            }
-        }
-        // 如果行末是 '{'，下一行额外缩进
-        QString trimmed = currentText.trimmed();
-        if (trimmed.endsWith('{')) {
-            indent.append("    ");  // 追加一级缩进
-        }
-        QPlainTextEdit::keyPressEvent(event);  // 先让 Qt 处理换行
-        textCursor().insertText(indent);       // 再插入缩进
-        return;
-    }
-    QPlainTextEdit::keyPressEvent(event);
+// keyPressEvent 里拦到换行键后，算好要补的缩进
+QString indent;
+const QString line = textCursor().block().text();
+for (const QChar c : line) {
+    if (c == ' ' || c == '\t')
+        indent.append(c);
+    else
+        break;                                  // 前导空白到头为止
 }
+if (line.trimmed().endsWith(QLatin1Char('{')))
+    indent.append(QStringLiteral("    "));      // 大括号行尾，下一行再进一级
 ```
 
-括号匹配的实现思路是在 cursorPositionChanged 信号中检查光标前后的字符是否是括号。检查 `doc->characterAt(pos - 1)` 是否是开括号 `(`、`[`、`{`，如果是就向前搜索对应的闭括号；同时检查 `doc->characterAt(pos)` 是否是闭括号，如果是就向后搜索对应的开括号。搜索方法是从当前位置向对应方向逐字符扫描，维护一个深度计数器：遇到同类型括号就 depth++，遇到匹配的另一半就 depth--，depth 为 0 时就是匹配位置。匹配成功的括号对通过 ExtraSelection 设置背景色高亮——每个括号创建一个只选中单个字符的 ExtraSelection，背景色设为绿色表示匹配成功。
+顺序得讲究，放行基类让 Qt 把换行做完，然后再把缩进 insertText 进去。倒过来插缩进，缩进落在上一行行尾，每敲一次回车，上一行的尾巴就多出一截空白。示例专心做行号，没收录缩进，您把这段片段补进自己的编辑器子类就能用。
+
+括号匹配挂在 cursorPositionChanged 上，光标动一次查两格。characterAt(pos - 1) 查左邻，左邻是开括号就向右搜配对，characterAt(pos) 查右邻，右邻是闭括号就向左搜。搜索用深度计数器，从当前位置逐字符扫，遇同类括号加一，遇配对的另一半减一，计数归零即命中，嵌套的括号对照这个规则也能配出来。高亮走 ExtraSelection，每个括号一枚只选中单个字符的选区，配上了给绿底，拼装方式咱们在 3.23 刚过一遍，这里不重复。
 
 ```cpp
-// 括号匹配触发点（在 cursorPositionChanged 信号中调用）
-void matchParentheses()
-{
-    QList<QTextEdit::ExtraSelection> selections;
-    QTextDocument *doc = document();
-    int pos = textCursor().position();
-
-    // 检查光标左侧的开括号
-    if (pos > 0) {
-        QChar ch = doc->characterAt(pos - 1);
-        if (ch == '(' || ch == '[' || ch == '{') {
-            int matchPos = findForwardMatch(doc, pos - 1, ch);
-            if (matchPos >= 0) {
-                addMatchSelection(selections, pos - 1, matchPos);
-            }
-        }
-    }
-    setExtraSelections(selections);
-}
+// cursorPositionChanged 的槽里，两格各查一次
+const int pos = textCursor().position();
+const QChar before = doc->characterAt(pos - 1);   // 左邻是开括号则向右搜
+const QChar after  = doc->characterAt(pos);       // 右邻是闭括号则向左搜
 ```
 
-## 4. 踩坑预防
+边界顺带交代，pos 为 0 时您去摸 pos - 1，characterAt 给回空字符，匹配自然落空，程序不会崩，守卫还是写上，读代码的人一眼看到边界在哪。
 
-第一个坑是 maximumBlockCount 静默删除旧行导致用户数据丢失。setMaximumBlockCount 的删除操作没有信号通知，被删除 block 上的 QTextBlock::userData 也会被清除。如果你的逻辑依赖遍历所有 block 的数据，要么不用 maximumBlockCount 自己管理，要么在外部维护独立的数据结构。
+## 官方文档参考
 
-第二个坑是 updateRequest 的 rect 不一定覆盖行号区域的完整宽度。updateRequest 的 QRect 是编辑器视口中需要重绘的区域，而行号区域的绘制范围是它自己的宽度，两者可能不重合。解决方案是在行号区域的 paintEvent 中自行计算可见 block 范围，而不是直接用 updateRequest 的 rect。
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17。QPlainTextEdit 在 QtWidgets，行号绘制用 QPainter（QtGui），链接 Qt6::Widgets 一并带上，示例可在 Linux、macOS、Windows 桌面平台编译运行。
 
-第三个坑是行号宽度在 blockCount 从 99 变成 100 时没有及时更新。blockCountChanged 信号的异步处理可能导致短暂的一帧截断。更稳妥的做法是在 sizeHint 中预留一位数的余量——blockCount 是 95 时就按三位数计算宽度。
+[Qt 文档 · QPlainTextEdit](https://doc.qt.io/qt-6/qplaintextedit.html) -- 纯文本编辑器，blockCountChanged、updateRequest 与 maximumBlockCount
 
-## 5. 练习项目
+[Qt 文档 · QTextBlock](https://doc.qt.io/qt-6/qtextblock.html) -- 文本块，blockNumber、lineCount 与 userData
 
-练习项目：带行号和括号匹配的迷你代码编辑器。我们要在 QPlainTextEdit 的基础上实现一个轻量级的代码编辑器组件。核心功能包括：左侧行号侧边栏（跟随滚动、跟随行数变化更新宽度）、当前行高亮（浅蓝色背景）、括号匹配高亮（匹配成功为绿色、失败为红色）、自动缩进（Enter 键后保持当前缩进级别，遇到 `{` 额外增加一级缩进）、以及状态栏显示当前光标的行号和列号。完成标准是行号滚动时正确对齐、行数从 99 变成 100 时宽度自动增加不截断、括号匹配能处理嵌套对、自动缩进不累加多余空格。提示几个关键点：行号区域通过 setViewportMargins 留出空间，bracket matching 在 cursorPositionChanged 中用 `QTextDocument::characterAt` 触发，行列号用 `blockNumber() + 1` 和 `positionInBlock() + 1` 计算。
+[Qt 文档 · QTextCursor](https://doc.qt.io/qt-6/qtextcursor.html) -- 编辑与选区接口，removeSelectedText 的用法
 
-## 6. 官方文档参考链接
+[Qt 文档 · QTextLayout](https://doc.qt.io/qt-6/qtextlayout.html) -- block 内的可视行布局信息
 
-[Qt 文档 · QPlainTextEdit](https://doc.qt.io/qt-6/qplaintextedit.html) -- 纯文本编辑器，blockCountChanged/updateRequest/firstVisibleBlock
+[Qt 源码 · Code Editor Example](https://code.qt.io/cgit/qt/qtbase.git/tree/tests/manual/textrendering/codeeditor?h=6.9) -- 官方带行号的代码编辑器示例，Qt 6 文档页已撤，完整例子在源码树里
 
-[Qt 文档 · QTextBlock](https://doc.qt.io/qt-6/qtextblock.html) -- 文本块，blockNumber/layout/userData
+---
 
-[Qt 文档 · QTextCursor](https://doc.qt.io/qt-6/qtextcursor.html) -- 光标操作，positionInBlock/block
-
-[Qt 文档 · QTextLayout](https://doc.qt.io/qt-6/qtextlayout.html) -- 文本排版，block 内的行布局信息
-
-[Qt 示例 · Code Editor Example](https://doc.qt.io/qt-6/qtwidgets-widgets-codeeditor-example.html) -- Qt 官方带行号的代码编辑器示例
-
-到这里，QPlainTextEdit 的进阶内容就过完了。Block 布局模型是理解渲染机制的基础——每个 block 是独立的排版单元，只有可见的 block 才参与绘制。行号侧边栏依赖 blockCountChanged/updateRequest/blockBoundingRect 三件套。maximumBlockCount 在高频日志场景中需要关注删除时机和用户数据丢失。代码编辑器功能通过 keyPressEvent 和 cursorPositionChanged 驱动实现。掌握这些，你就有了构建专业代码编辑器的基础。
+输入类五连走到第三篇。[3.25 QTextBrowser 进阶](./25-qtextbrowser-advanced.md) 是第四站，3.23 埋的那颗种子在这儿发芽，QTextBrowser 补上 anchorClicked 信号与 openExternalLinks 属性，纯文本这边点链接没反应的事到它那儿有个交代。想动手的，您把示例跑起来（examples/advanced/03-qtwidgets/24-qplaintextedit-advanced/，可执行文件 24-qplaintextedit-advanced），连敲回车把行数顶过 99，看侧栏自己加宽。再把 line_number_editor.cpp 第 22 行的连接注释掉，重新编译，行数过 99 宽度照样加宽，onUpdateRequest 末尾那道保险（第 68-70 行）把它接住了，把保险分支也注释掉，宽度才停住，三位行号被裁掉百位那一头。把 line_number_sidebar.cpp 第 23 行的穿透属性注释掉，在行号区划两下，选区动不了。最后在 main.cpp 里加个 QTimer，每 50ms 追加一行，配上 setMaximumBlockCount(100)，然后打印 blockCount()，前 100 次追加里数字一路爬，稳态之后它恒为 100，isUndoRedoEnabled() 给的是 false。加码的话，把本篇的自动缩进与括号匹配补进这个编辑器，再配当前行高亮，状态栏的行列号也好算，blockNumber() 加一，positionInBlock() 加一。完成标准咱们给您列好，行号滚动要对得齐，嵌套括号要配得上，缩进不能累加多余空白。

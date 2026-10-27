@@ -3,7 +3,7 @@
 ///
 /// 本示例展示：
 /// - 自定义 QAbstractListModel 管理超大数据集（100,000+ 项）
-/// - QListView 虚拟滚动：只为可见行创建 delegate，内存占用恒定
+/// - QListView 虚拟化：paintEvent 只把与视口相交的条目交给委托绘制
 /// - canFetchMore/fetchMore 实现增量加载，模拟分批读取
 /// - 底部标签实时显示总项数和当前可见范围
 ///
@@ -22,11 +22,10 @@
 ///
 /// 通过 canFetchMore / fetchMore 机制，初始只加载一小批数据，
 /// 用户滚动到列表底部时自动追加下一批，避免一次性构造全部字符串。
-class LargeDataModel : public QAbstractListModel
-{
+class LargeDataModel : public QAbstractListModel {
     Q_OBJECT
 
-public:
+  public:
     /// @brief 构造函数，设置总数据量和每批加载大小。
     /// @param[in] totalItems 模拟的总数据条数。
     /// @param[in] batchSize  每次 fetchMore 加载的条数。
@@ -64,29 +63,28 @@ public:
     /// @return 已加载条数。
     int loadedItemCount() const;
 
-private:
-    int m_totalItems;                  ///< 模拟的总数据条数
-    int m_batchSize;                   ///< 每批加载条数
-    int m_loadedCount;                 ///< 当前已加载条数
-    QVector<QString> m_data;           ///< 已加载的数据缓存
+  private:
+    int m_totalItems;        ///< 模拟的总数据条数
+    int m_batchSize;         ///< 每批加载条数
+    int m_loadedCount;       ///< 当前已加载条数
+    QVector<QString> m_data; ///< 已加载的数据缓存
 };
 
 /// @brief 主窗口，包含一个 QListView 和状态信息标签。
 ///
 /// 通过自定义 LargeDataModel 演示虚拟滚动和增量加载机制，
 /// 窗口底部实时显示总项数和当前可见行范围。
-class Widget : public QWidget
-{
+class Widget : public QWidget {
     Q_OBJECT
 
-public:
+  public:
     /// @brief 构造函数，初始化模型、视图和状态标签。
     /// @param[in] parent 父控件指针。
     explicit Widget(QWidget* parent = nullptr);
 
-private:
+  private:
     /// @brief 更新底部状态标签，显示当前项数和可见范围。
-    /// @note 通过 listView 的 visibleIndexes 或定时刷新获取可见范围。
+    /// @note 可见范围用 viewport 高度除以行高估算，或用 indexAt 取视口顶底的索引。
     void updateStatusLabel();
 
     /// @brief 响应模型数据变化，刷新状态标签。
@@ -96,8 +94,8 @@ private:
     /// @note 一次性加载全部数据以对比性能表现。
     void onLoadAll();
 
-    LargeDataModel* m_model;         ///< 自定义大数据模型
-    QListView* m_listView;           ///< 列表视图
-    QLabel* m_statusLabel;           ///< 底部状态标签
-    QPushButton* m_loadAllBtn;       ///< 加载全部数据的按钮
+    LargeDataModel* m_model;   ///< 自定义大数据模型
+    QListView* m_listView;     ///< 列表视图
+    QLabel* m_statusLabel;     ///< 底部状态标签
+    QPushButton* m_loadAllBtn; ///< 加载全部数据的按钮
 };

@@ -1,181 +1,103 @@
 ---
 title: "3.72 QPrinter 进阶"
-description: "入门篇我们学会了 QPrinter 的基本用法：设置输出格式、创建 QPainter 绑定 QPrinter、绘制内容、结束绘制。进阶篇要解决的是工程中真正复杂的问题——怎么把长内容正确分页、怎么在每一页上画页眉页脚、以及页面坐标系和绘制坐标系之间的换算关系。"
+description: "进阶篇把 QPrinter 的行为对到源码行上：构造函数请求的是原生输出，找不到有效打印机时静默退回 PdfFormat（qprinter.cpp 第 63、68-74 行），Qt 6 的 OutputFormat 只有 NativeFormat 与 PdfFormat 两值、没有 PostScriptFormat（qprinter.h 第 69 行），PDF 路线一只 QPdfPrintEngine 同时充当打印引擎与绘制引擎（qprinter.cpp 第 87-89 行），画笔原点默认落在可打印区左上角、由 pageMatrix 的平移实现（qpdf.cpp 第 3561-3564 行），setFullPage(true) 才把原点挪到纸角，QMarginsF 的边距顺序是左上右下（qmargins.h 第 274 行），newPage 在引擎不活跃时返回 false、末页之后调用会在文档尾多一张空白页（qprinter.cpp 第 1246-1252、297-301 行），PrinterMode 默认 ScreenResolution、HighResolution 下 PDF 引擎分辨率取 1200（qprintengine_pdf.cpp 第 367-371 行），示例在 examples/advanced/03-qtwidgets/72-qprinter-advanced/"
 ---
 
 # 现代Qt开发教程（进阶篇）3.72——QPrinter 进阶
 
-## 1. 前言 / 打印不是把内容画上去就完事的
+71 篇的结语把咱们送到这里，说是打印设备与输出格式的控制在这边等咱们，说的就是 QPrinter。它不住在 QtWidgets 里，归属在 QtPrintSupport 模块，CMake 里要单独引入 PrintSupport 组件并链接 Qt6::PrintSupport，配套示例的构建脚本就是那么写的。模块归属意味着打印这一类功能可以脱离 Widgets 单独用，您在纯 Gui 程序里导 PDF 也不需要 Widgets。
 
-入门篇我们学会了 QPrinter 的基本用法：设置输出格式、创建 QPainter 绑定 QPrinter、绘制内容、结束绘制。说实话，打印一页简单内容到 PDF 已经够用了——但如果你的应用需要打印报表、导出多页文档、或者在每一页上添加统一的页眉页脚，事情就变得复杂了。分页逻辑、页面边距与绘制区域的计算、每页都要重复绘制的页眉页脚——这些才是打印功能里真正费心思的部分。
+引用文件咱们照例交代清楚。笔者主读 QtPrintSupport 里的 qprinter.cpp，枚举对 qprinter.h，私有默认值对 qprinter_p.h，PDF 引擎的实现在 qprintengine_pdf.cpp，画笔原点一条线还追进了 QtGui 的 qpdf.cpp。入门篇走过的输出格式设置与单页绘制，本篇不重讲，咱们管的是页面配置、分页推进与页眉页脚，示例的完整玩法放结语。
 
-这篇文章要深挖的是四个核心议题：QPrinter 的输出格式和页面配置（setPageSize、setPageMargins），QPainter + QPrinter 的分页绘制逻辑（newPage、内容切分），自定义页眉页脚的绘制（每页绘制前后插入页眉页脚），以及页面坐标系和绘制区域的精确换算。
+## 构造那一刻就选好了分辨率
 
-## 2. 环境说明
-
-本篇基于 Qt 6.5+，CMake 3.26+，C++17 标准。QPrinter 属于 QtPrintSupport 模块，需要在 CMakeLists.txt 中添加 `find_package(Qt6 REQUIRED COMPONENTS PrintSupport)` 并链接 `Qt6::PrintSupport`。输出 PDF 格式不需要额外的依赖，输出到物理打印机则需要系统安装打印机驱动。
-
-## 3. 核心概念讲解
-
-### 3.1 QPrinter 输出格式设置
-
-QPrinter 支持多种输出格式，通过 setOutputFormat 设置。QPrinter::NativeFormat 是默认值，使用系统原生的打印驱动输出到物理打印机。QPrinter::PdfFormat 直接输出 PDF 文件，不经过打印机驱动——这是最常用的开发调试方式，因为不需要物理打印机就能验证打印效果。QPrinter::PostScriptFormat 输出 PostScript 文件（在某些平台上不可用）。
+PrinterMode 分三档（qprinter.h 第 31 行），构造函数的默认实参，落在 ScreenResolution（第 33 行）。另一档是 HighResolution，第三档 PrinterResolution 已被文档弃用，它在各平台的等效行为不一致（qprinter.cpp 第 337-341 行）。档位落到 PDF 引擎上就是一句分辨率赋值，咱们把这段源码原文贴给您看。
 
 ```cpp
-QPrinter printer;
-printer.setOutputFormat(QPrinter::PdfFormat);
-printer.setOutputFileName("report.pdf");
+resolution = 72;
+if (m == QPrinter::HighResolution)
+    resolution = 1200;
+else if (m == QPrinter::ScreenResolution)
+    resolution = qt_defaultDpi();
 ```
 
-输出 PDF 时，setOutputFileName 指定文件路径。如果输出格式是 NativeFormat 且没有调用 setOutputFileName，打印内容会发送到系统默认打印机。这里有一个工程中很实用的技巧：开发阶段始终使用 PdfFormat 输出到文件，方便调试分页和布局，调试完成后再切换到 NativeFormat 适配真实打印机。
+（qprintengine_pdf.cpp 第 367-371 行）72 起步，HighResolution 拉到 1200，ScreenResolution 取屏幕逻辑 dpi，那个函数按主屏的 logicalDotsPerInch 走，桌面环境通常在 96 上下（qfont.cpp 第 105-119 行）。您想中途改，setResolution 要赶在 QPainter::begin() 之前调，文档写明过了这一刻就未必全平台生效（qprinter.cpp 第 1030-1031 行）。示例构造时直接给了 HighResolution（widget.cpp 第 57 行），为的是打印件上文字边缘更干净，代价咱们后面马上看到，所有按像素计的常量都要跟着 dpi 口径走。
 
-QPrinter 还支持 setPrinterName 选择特定的打印机。如果你的系统安装了多台打印机（包括虚拟 PDF 打印机），可以用 QPrinterInfo::availablePrinters() 获取可用打印机列表，然后让用户选择。
+字号与分辨率的关系，文档有一条提醒，以 point 计的字号不随设备分辨率变化（qprinter.cpp 第 347-349 行），图文混排想保住相对比例时，反而可以考虑用像素计的字号（第 350-352 行）。咱们在屏幕上惯用的“多少像素”直觉，到了 1200 dpi 的页面上要重新换算，物理单位与设备单位本来就分家，引擎没有替咱们抹平的意思。
 
-### 3.2 setPageSize 与 setPageMargins 页面配置
+## 输出格式：要的是原生，拿不到就退回 PDF
 
-页面配置是打印的第一步——不搞清楚纸张大小和边距，后面的绘制全都是空中楼阁。
-
-setPageSize 设置纸张大小，可以用预定义的尺寸（QPageSize::A4、QPageSize::Letter 等）或自定义尺寸。setPageMargins 设置页面边距，有四个值分别对应上、右、下、左（注意是 TRBL 顺序，不是常用的上左下右）。边距可以用 QPageLayout::Millimeter 或 QPageLayout::Point 等单位指定。
+构造函数请求的格式是 NativeFormat（qprinter.cpp 第 474 行），但 initEngines 内部的起点写死了 PdfFormat，只有平台打印插件在场、且能找到默认打印机或第一台可用打印机时，才升到 NativeFormat（第 62-74 行）。也就是说，一台没配打印机的机器上，QPrinter 默认构造完 outputFormat() 报出来的就是 PdfFormat，中间没有任何提示。您在开发机上调试时看到的“默认就是 PDF”，其实是上一句讲的回退在兜底。
 
 ```cpp
-printer.setPageSize(QPageSize(QPageSize::A4));
-printer.setPageMargins(QMarginsF(15, 20, 15, 20), QPageLayout::Millimeter);
+// Default to PdfFormat
+outputFormat = QPrinter::PdfFormat;
 ```
 
-这里有一个关键概念要搞清楚：QPrinter 的 pageRect 和 paperRect 的区别。paperRect 是整张纸的矩形区域（从 (0,0) 到纸张右下角），pageRect 是减去边距后可用的绘制区域。QPainter 在 QPrinter 上绘制时，坐标系的原点是 paperRect 的左上角，也就是纸张的物理左上角。所以如果你想在边距内的区域绘制内容，需要从 pageRect 的左上角开始。
+（qprinter.cpp 第 62-63 行）顺着回退路径往下看，还有两条跟目的地联动的格式规则。setOutputFileName 给的文件名以 .pdf 结尾，不分大小写，输出格式直接切到 PdfFormat，给空名则切回 NativeFormat（第 723-726 行）。setPrinterName 走三分支，空名切 PdfFormat，无效打印机名什么也不改，有效名才切 NativeFormat（第 646-655 行）。咱们把这些合起来看，格式跟着输出目的地走。
+
+这里笔者要驳回旧稿的一处说法，它称存在 QPrinter::PostScriptFormat。Qt 6 的枚举里只定义了两个成员，一个是 NativeFormat，另一个是 PdfFormat（qprinter.h 第 69 行），PostScript 输出没有对应枚举值。旧稿还把 NativeFormat 说成无条件默认值，漏掉了上面的静默退回，两处都按源码改讲。PDF 侧另有版本可选，PdfVersion_1_4、PdfVersion_A1b、PdfVersion_1_6 三档，引擎映射的缺省值是 1.4（qprinter.cpp 第 81-86 行）。
+
+打印进行中想改配置，此路是不通的。一排 setter 开头都挂着 ABORT_IF_ACTIVE 宏，引擎一旦处于 Active 状态，宏就 qWarning 一声，然后直接返回（qprinter.cpp 第 30-40 行），setPrinterName 在名单上，setOutputFileName 也在，setResolution 同样（第 641、720、1039 行）。咱们要在 begin 之前把页面、格式、目的地一次配齐。
+
+## 一只引擎两副面孔：PDF 路线的打印与绘制是一体的
+
+PDF 分支里引擎只造了一只，new QPdfPrintEngine 一次，paintEngine 指向它，printEngine 也指向它（qprinter.cpp 第 87-89 行）。原生分支才是两只引擎分工，createNativePrintEngine 造一只，createPaintEngine 再造一只（第 78-79 行）。您用 paintEngine() 和 printEngine() 取回来的，在 PDF 模式下是同一个对象，这件事笔者刚开始也没料到，翻到 initEngines 才确认。
+
+格式切换走 changeEngines，旧引擎的属性挨个搬进新引擎（第 104-117 行），份数与打印机名还有专门的迁移处理（第 109-114 行）。所以咱们中途切格式，页面大小与边距不会丢。自带引擎的话另说，setEngines 文档写明 QPrinter 不接管自定义引擎的所有权，实例得您自己管（第 482-486 行），默认引擎才由析构函数删除（第 512-513 行）。
+
+咱们再把同族的对象认一认。QPdfWriter 归属在 QtGui，不依赖 PrintSupport（qpdfwriter.h 第 22 行），纯导 PDF 的场景它是更轻的选择，页面配置接口出自同一个基类，都挂在 QPagedPaintDevice 名下。QPrinter 也继承它（qprinter.cpp 第 447 行），setPageSize 从基类来，setPageMargins 与 pageRanges 也从基类来。另有一条硬约束，QCoreApplication 出现之前构造 QPrinter，直接 qFatal（第 466-470 行），您在全局对象里放一只 QPrinter 就是给自己埋雷。
+
+## 画笔原点：默认已经在可打印区的左上角
+
+旧稿正文称，画笔绑上 QPrinter 后原点在纸张左上角，要从 pageRect 的左上角起画才不会压到边距。这话不成立，而且它与旧稿后面自认的另一条说法直接打架。咱们拿两处源码对正。setFullPage 的文档写明，默认关闭时坐标系原点与可打印区左上角重合，开启后才与纸张左上角重合（qprinter.cpp 第 982-988 行）。引擎侧的实现就是页矩阵里的一次平移。
 
 ```cpp
-QRectF page_rect = printer.pageRect(QPrinter::DevicePixel);
-// page_rect 的 top-left 就是边距后的起始位置
-// page_rect 的 width/height 就是可绘制区域的宽高
-```
-
-这里还有一个容易搞混的单位问题。QPrinter 内部使用的单位是 DevicePixel（设备像素），和屏幕像素不同。打印机的分辨率通常是 72 DPI 或 300 DPI，而屏幕可能是 96 DPI 或更高。如果你习惯用毫米来思考布局，建议始终用 QPageLayout::Millimeter 设置边距，然后在绘制时通过 pageRect(QPrinter::Millimeter) 获取毫米单位的可用区域，这样不用关心 DPI 转换。
-
-### 3.3 QPainter + QPrinter 的分页绘制逻辑
-
-单页内容打印很简单——画完就结束。但多页内容的分页逻辑才是打印功能的核心难点。
-
-分页的基本思路是：我们有一个"逻辑内容流"（比如一个很长的 QTextDocument 或者一大段自定义绘制内容），需要把它切分成若干页。每一页开始时，我们创建 QPainter，在当前页的 pageRect 内绘制内容，画满一页后调用 QPrinter::newPage() 创建新的一页，继续绘制剩余内容。
-
-```cpp
-QPainter painter(&printer);
-QRectF page = printer.pageRect(QPrinter::DevicePixel);
-
-qreal y_offset = 0;
-const qreal page_height = page.height();
-
-for (const auto& content_block : content_blocks) {
-    qreal block_height = calculate_block_height(content_block, page.width());
-
-    // 当前页放不下了，换页
-    if (y_offset + block_height > page_height) {
-        printer.newPage();
-        y_offset = 0;
-        // 可选：在新页面绘制页眉
-        draw_header(&painter, page);
-        y_offset += header_height;
-    }
-
-    draw_content_block(&painter, content_block, page.x(), page.y() + y_offset, page.width());
-    y_offset += block_height;
-}
-
-painter.end();
-```
-
-这段伪代码展示了分页的核心逻辑：维护一个 y_offset 追踪当前页面的垂直位置，每画一个内容块前检查是否能放得下，放不下就 newPage 并重置 y_offset。实际工程中，这个逻辑需要根据你的内容类型做调整——如果是文本内容，可能需要按行切分；如果是表格，可能需要在行边界处分页；如果是图片，可能需要缩放以适应页面。
-
-这里有一个非常重要的行为需要理解：调用 newPage() 后，QPainter 的绘制状态（画笔、画刷、字体等）会被保留——你不需要重新设置。但 QPainter 的坐标系不会自动重置，也就是说调用 newPage() 后 QPainter 的坐标原点仍然是上一页的某个位置。所以换页后必须手动将 y 坐标重置（或者用 save/restore + translate 来管理坐标）。
-
-现在有一道调试题给大家。下面这段代码有什么问题？
-
-```cpp
-QPainter painter(&printer);
-QRectF page = printer.pageRect(QPrinter::DevicePixel);
-
-for (int i = 0; i < 50; ++i) {
-    painter.drawText(page.toRect(), Qt::AlignTop | Qt::TextWordWrap,
-                     QString("Line %1: some long text...").arg(i));
-    if ((i + 1) % 10 == 0) {
-        printer.newPage();
-    }
+QTransform tmp(scale, 0.0, 0.0, -scale, 0.0, m_pageLayout.fullRectPoints().height() / userUnit);
+if (m_pageLayout.mode() != QPageLayout::FullPageMode) {
+    QRect r = m_pageLayout.paintRectPixels(resolution);
+    tmp.translate(r.left(), r.top());
 }
 ```
 
-问题出在每一行文字都画在同一个位置——page.toRect() 的 top-left。drawText 不会自动偏移，所以 10 行文字全部重叠在第一行。正确的做法是维护一个 y 坐标，每次 drawText 后根据 QFontMetrics 计算文字高度并累加 y。另外 newPage() 后 y 坐标需要重置为 page.top()。
+（qpdf.cpp 第 3561-3564 行）标准模式下 pageMatrix 把 pageRect 的左上偏移叠进变换，咱们从 (0, 0) 落笔，起点就在边距内侧，不必自己加偏移。FullPageMode 不平移，原点回到纸角，按 QPageLayout 的规则（qpagelayout.cpp 第 220-222 行），paintRect 直接等于 fullRect，pageRect 与 paperRect 两个查询就此重合，边距全归您自己管。两个查询的入口在 QPrinter::pageRect 与 paperRect，单位自选，DevicePixel 口径下，pageRect 内部走 paintRectPixels，paperRect 走 fullRectPixels（qprinter.cpp 第 1157-1182 行，属性侧见 qprintengine_pdf.cpp 第 285-290 行）。
 
-### 3.4 自定义页眉页脚绘制
+边距的填法还有一处方向性细节要纠正。QMarginsF 的构造顺序是左、上、右、下（qmargins.h 第 274 行），旧稿写成上、右、下、左，照它填边距，四条边就转了位。setPageMargins 的第二参，默认值就是毫米（qpagedpaintdevice.h 第 38 行）。示例没有另设边距，只给了 A4 纸张（widget.cpp 第 60 行），页眉页脚全按 pageRect 排布，咱们看输出就知道默认边距留了多少。
 
-页眉页脚是打印报表的标配——页码、文档标题、打印日期、公司名称这些信息通常放在每一页的顶部和底部。实现方式是在每一页的绘制过程中，先画页眉，再画内容，最后画页脚。
+## newPage 只管推进纸，画笔状态您自己管
 
-关键是要把可用绘制区域正确地分为三个部分：页眉区域、内容区域、页脚区域。页眉和页脚的高度是固定的（你决定的），内容区域的高度 = pageRect 高度 - 页眉高度 - 页脚高度。
+咱们从 newPage 本体看起，QPrinter::newPage 开头就查引擎状态，引擎不处于 Active 就直接返回 false（qprinter.cpp 第 1249-1250 行）。类文档另给两条使用语义，第一页在 QPainter::begin() 时已经备好，前面不必调 newPage，末页画完再调一次，文档尾会多出一张空白页（第 297-301 行）。
 
-```cpp
-const qreal kHeaderHeight = 30.0;  // 页眉高度
-const qreal kFooterHeight = 30.0;  // 页脚高度
+引擎侧 QPdfEngine::newPage 做的事是写完当前页、新开页对象、重发三类脏标记，画刷、画笔、裁剪路径（qpdf.cpp 第 1318-1333 行，脏标记在第 1325 行）。画笔的 worldTransform 不在那批脏标记里，它是 QPainter 一侧的状态，换了页也没人动，您第一页 translate 过，第二页那个平移还跟着，笔尖可能已经出了页外。稳妥做法是每页从同一个基准起笔，示例正是这么写的，每页开头画页眉（widget.cpp 第 103 行），正文 y 从 bodyTop 起算（第 107 行），不依赖上一页留下的任何坐标。
 
-void draw_header(QPainter* painter, const QRectF& page, int page_num)
-{
-    // 页眉画在 page 顶部
-    QRectF header_rect(page.x(), page.y(), page.width(), kHeaderHeight);
-    painter->drawText(header_rect, Qt::AlignVCenter | Qt::AlignLeft,
-                      "Document Title");
-    painter->drawText(header_rect, Qt::AlignVCenter | Qt::AlignRight,
-                      QString("Page %1").arg(page_num));
-    // 页眉下方的分隔线
-    qreal line_y = header_rect.bottom() + 2;
-    painter->drawLine(QPointF(page.x(), line_y), QPointF(page.right(), line_y));
-}
+分页推进本身是咱们自己的活，引擎不代劳。drawText 不会替您进位，同一个矩形里画五十次就是五十层文字叠在一起，行距要自己拿 QFontMetrics 算。度量必须绑打印设备构造：QFontMetricsF(bodyFont, &printer)（widget.cpp 第 72 行），绑屏幕算出来的行高，放到 1200 dpi 的页面上会差出一个量级，分页立刻全乱。示例的推进逻辑朴素而够用，按行切段，每页行数用可用高度除以行距得出（第 81 行），切段与逐页循环画满就 newPage（第 88-117 行）。
 
-void draw_footer(QPainter* painter, const QRectF& page, const QString& date)
-{
-    // 页脚画在 page 底部
-    QRectF footer_rect(page.x(), page.bottom() - kFooterHeight,
-                       page.width(), kFooterHeight);
-    painter->drawText(footer_rect, Qt::AlignVCenter | Qt::AlignCenter,
-                      QString("Printed on %1").arg(date));
-}
-```
+## 页眉页脚与总页数：一遍数页，一遍落笔
 
-内容区域就是页眉下方到页脚上方之间的空间：
+总页数是页脚的难点，咱们画到第几页才知道一共几页，“Page X / Y” 的 Y 却要每页当场写。示例的解法是纯算术预数，全文按换行切段，每页行数算出来后总页数整除向上取整（widget.cpp 第 88-93 行），一遍画完。这个口径对等行距的纯文本成立，富文本或表格高度不定时，就得走两遍遍历，第一遍只算不画数出页数，第二遍才落笔，工程里这是常见代价。
 
-```cpp
-QRectF content_rect(page.x(), page.y() + kHeaderHeight,
-                    page.width(),
-                    page.height() - kHeaderHeight - kFooterHeight);
-```
+页眉三件，标题居左、日期居右、下方一条分隔线（widget.cpp 第 122-147 行），页脚页码居中（第 149-167 行）。您留意示例每画一段就重设一次字体，页眉、正文、页脚三套字号各自 setFont（第 106、127、153 行），这正是把跨页状态依赖压到零的做法，与新页重发脏标记的机制相配，谁也不指望谁。
 
-这个 content_rect 就是你在分页逻辑中用于放置实际内容的可用区域——y_offset 从 content_rect.top() 开始累加，超过 content_rect.bottom() 就换页。
+收尾前咱们把打印范围这组接口归拢一下。PrintRange 枚举有四个值（qprinter.h 第 72 行），私有侧的默认值是 AllPages（qprinter_p.h 第 51 行），另有 Selection、PageRange，还有 CurrentPage。读写页范围的接口在基类（qpagedpaintdevice.cpp 第 188-201 行），旧的 setFromTo 内部写的也是同一份页范围（qprinter.cpp 第 1415-1420 行）。选打印机另有入口，QPrinterInfo 的 availablePrinters()，拿来就是系统清单（qprinterinfo.h 第 58 行）。您要让这些值真正生效，得配合打印对话框让用户确认，那是下一篇的主角。
 
-页眉页脚绘制的一个常见需求是"总页数"，比如 "Page 3 of 12"。但问题是：在打印过程中你不知道总共有多少页（除非先做一次预计算）。有两种解决方案：第一种是先做一次"干运行"（dry run）——只计算内容分页，不实际绘制，统计总页数后再做第二次"真正绘制"。第二种是先输出到 PDF，然后读取 PDF 的页数，再在页眉中填入总页数——但这需要修改 PDF 文件，比较麻烦。工程中推荐第一种方案，虽然需要两次遍历但逻辑清晰可靠。
+## 官方文档参考
 
-## 4. 踩坑预防
+本篇基于 Qt 6.5+ / CMake 3.26+ / C++17，构建需引入 Qt6 的 PrintSupport 组件，行为咱们在 Qt 6.9.1 源码核对过。
 
-第一个坑是 QPainter 绑定 QPrinter 后坐标系原点是 paperRect 的左上角而非 pageRect 的左上角。这意味着如果你直接用 (0, 0) 作为绘制起点，内容会画在纸张的物理边缘上——也就是边距区域内。解决方案是始终使用 pageRect() 获取可绘制区域的起始坐标，从 pageRect.topLeft() 开始绘制。
+[Qt 文档 · QPrinter](https://doc.qt.io/qt-6/qprinter.html) -- 打印设备类，输出格式、页面配置与 newPage 的语义出处
 
-第二个坑是 newPage() 后 QPainter 坐标不重置。调用 newPage() 只是告诉 QPrinter "开始新的一页"，QPainter 的所有变换矩阵（translate、scale 等）都保持不变。如果你在第一页用了 translate 移动了绘制位置，到第二页这个 translate 还在——你的内容可能画在页面之外看不见。解决方案是在每页开始时用 save/restore 管理状态，或者在换页后显式 resetMatrix 重新设置变换。
+[Qt 文档 · QPagedPaintDevice](https://doc.qt.io/qt-6/qpagedpaintdevice.html) -- 分页绘制设备基类，setPageMargins 与 pageRanges 的定义处
 
-第三个坑是 setFullPage 的影响。QPrinter 默认 setFullPage(false)，此时 QPainter 的原点是 pageRect 的左上角（已经减去了边距）。如果调用 setFullPage(true)，QPainter 的原点变成 paperRect 的左上角（纸张物理边缘），此时 pageRect 和 paperRect 相同，你需要自己计算边距。很多教程代码没有说明这个设置，导致边距行为不一致。建议保持默认的 setFullPage(false)，不要轻易改动。
+[Qt 文档 · QPageLayout](https://doc.qt.io/qt-6/qpagelayout.html) -- 页面布局类，pageRect 与 paperRect 的计算依据
 
-第四个坑是高分辨率打印机上的字体大小问题。打印机的 DPI 通常是 300 或 600，而屏幕 DPI 是 96。如果你在屏幕上用了 12pt 的字体觉得大小合适，在打印机上同样的 12pt 字体在视觉上会小很多——因为打印机的点更密集。解决方案是使用 QFont 的 pointSize 而不是 pixelSize——pointSize 是物理单位（1 pt = 1/72 英寸），在不同 DPI 的设备上能保持一致的物理大小。如果你确实需要更大的字体，调整 pointSize 而不是切换到 pixelSize。
+[Qt 文档 · QPdfWriter](https://doc.qt.io/qt-6/qpdfwriter.html) -- QtGui 一侧的 PDF 写出类，不依赖 PrintSupport
 
-## 5. 练习项目
-
-练习项目：多页报表打印器。我们要实现一个简单的报表打印功能：将一个 QStringList 的长文本列表（比如 100 行数据）分页输出到 PDF，每页都有页眉（报表标题 + 页码）和页脚（打印日期），内容区域均匀分布文本行。要求支持 A4 纸张，上下左右边距各 15mm，页眉高度 25pt，页脚高度 25pt。
-
-完成标准是：输出的 PDF 能正确分页，每页行数合理不溢出；页眉显示 "Report" 和 "Page X of Y"（总页数需要预计算）；页脚显示打印日期；每页内容不与页眉页脚重叠；最后一页即使只有少量内容也有正确的页眉页脚。提示几个关键点：先做一次 dry run 计算总页数（用 QFontMetrics 计算每行高度，除以每页内容区域高度得到行数/页），然后再做正式绘制；换页时别忘了重置 y 坐标并重新绘制页眉。
-
-## 6. 官方文档参考链接
-
-[Qt 文档 · QPrinter](https://doc.qt.io/qt-6/qprinter.html) -- 打印机类，包含输出格式、页面配置、newPage 方法说明
-
-[Qt 文档 · QPageSize](https://doc.qt.io/qt-6/qpagesize.html) -- 页面尺寸类，包含 A4/Letter 等预定义尺寸和自定义尺寸
-
-[Qt 文档 · QPageLayout](https://doc.qt.io/qt-6/qpagelayout.html) -- 页面布局类，包含边距设置和 pageRect/paperRect 计算
-
-[Qt 文档 · QPainter](https://doc.qt.io/qt-6/qpainter.html) -- 绘制类，绑定 QPrinter 后的坐标系和绘制行为
+[Qt 文档 · QPrinterInfo](https://doc.qt.io/qt-6/qprinterinfo.html) -- 打印机信息类，可用打印机清单的入口
 
 ---
 
-到这里，QPrinter 的进阶内容就过了一遍。输出格式用 PdfFormat 开发调试最方便，上线再切 NativeFormat。pageRect 和 paperRect 的区别是打印布局的基础——搞不清这个，边距和坐标系全都会乱。分页逻辑的核心是维护 y_offset 累加并在超出可用区域时 newPage，换页后必须重置坐标。页眉页脚需要在每页绘制前后插入固定区域，总页数通过 dry run 预计算。把这些搞清楚了，你的打印功能就能正确地处理多页内容了。
+widgets 卷的打印地带咱们走到一半，下一篇 [3.73 QPrintDialog 进阶](./73-qprintdialog-advanced.md)，打印范围、份数、选哪台打印机，这些交给用户拍板的活都归它管。本篇留下的 printRange，还有 pageRanges，正好是它要操作的接口。
+
+想动手的您把示例跑起来（examples/advanced/03-qtwidgets/72-qprinter-advanced/，可执行文件 72-qprinter-advanced）。窗口是一块文本编辑器加一只 Print to PDF 按钮，粘上几屏长文，按下按钮选好保存路径，输出的 PDF 每页顶部是标题加日期加分隔线，底部居中是页码，正文按固定行距排布。有个一分钟的实验值得做，把逐页循环里 page > 1 的判断去掉（widget.cpp 第 98-100 行），再跑一次，PDF 开头会多出一张空白页，这正是类文档写明的行为，第一页本来就不需要 newPage（qprinter.cpp 第 297-299 行）。您再对比把构造参数换成 ScreenResolution 的一份输出，同样的文本页数变多或变少，因为 pageRect 的设备像素尺寸随分辨率变了，行数每页跟着变。
+
+完成标准照旧。默认构造拿不到打印机时 outputFormat() 报什么，您答得出。画笔默认原点落在哪、setFullPage(true) 把它挪到哪，您指得准。QMarginsF 四个值按什么顺序填，您写得对。newPage 之后哪些状态被引擎重发、哪些原样留着，您数得清。

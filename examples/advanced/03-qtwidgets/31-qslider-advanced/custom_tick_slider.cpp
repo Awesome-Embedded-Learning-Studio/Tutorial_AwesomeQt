@@ -15,8 +15,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 CustomTickSlider::CustomTickSlider(Qt::Orientation orientation, QWidget* parent)
-    : QSlider(orientation, parent)
-{
+    : QSlider(orientation, parent) {
     // 默认的刻度标注：五等分
     m_tickRatios = {0.0, 0.25, 0.5, 0.75, 1.0};
 
@@ -29,20 +28,19 @@ CustomTickSlider::CustomTickSlider(Qt::Orientation orientation, QWidget* parent)
 // 公有方法
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CustomTickSlider::setTickLabels(const QVector<double>& ratios)
-{
+void CustomTickSlider::setTickLabels(const QVector<double>& ratios) {
     m_tickRatios = ratios;
-    update();    // 触发重绘以显示新的刻度标注
+    update(); // 触发重绘以显示新的刻度标注
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 鼠标事件重写——直接映射点击位置到滑块值
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CustomTickSlider::mousePressEvent(QMouseEvent* event)
-{
+void CustomTickSlider::mousePressEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton) {
-        // 将点击位置直接映射为值，绕过默认的"移动手柄到点击位置"逻辑
+        // 拦下左键，把点击位置直接映射成值调 setValue 写入，不经基类的
+        // triggerAction（页步进连发不会发生）
         setValue(posToValue(event->position().toPoint()));
         // 事件已处理，不再传递给基类（避免默认行为覆盖我们的映射）
         event->accept();
@@ -51,8 +49,7 @@ void CustomTickSlider::mousePressEvent(QMouseEvent* event)
     }
 }
 
-void CustomTickSlider::mouseMoveEvent(QMouseEvent* event)
-{
+void CustomTickSlider::mouseMoveEvent(QMouseEvent* event) {
     if (event->buttons() & Qt::LeftButton) {
         // 拖拽过程中同样使用直接映射，保持和点击一致的行为
         setValue(posToValue(event->position().toPoint()));
@@ -66,8 +63,7 @@ void CustomTickSlider::mouseMoveEvent(QMouseEvent* event)
 // 绘制事件——在 groove 下方添加百分比数值标注
 // ─────────────────────────────────────────────────────────────────────────────
 
-void CustomTickSlider::paintEvent(QPaintEvent* event)
-{
+void CustomTickSlider::paintEvent(QPaintEvent* event) {
     // 先让基类完成默认绘制（groove、handle、tick lines）
     QSlider::paintEvent(event);
 
@@ -106,8 +102,7 @@ void CustomTickSlider::paintEvent(QPaintEvent* event)
 // 私有工具方法
 // ─────────────────────────────────────────────────────────────────────────────
 
-int CustomTickSlider::posToValue(const QPoint& pos) const
-{
+int CustomTickSlider::posToValue(const QPoint& pos) const {
     QRect gr = grooveRect();
     if (!gr.isValid()) {
         return value();
@@ -127,13 +122,11 @@ int CustomTickSlider::posToValue(const QPoint& pos) const
     return minimum() + static_cast<int>(ratio * (maximum() - minimum()));
 }
 
-QRect CustomTickSlider::grooveRect() const
-{
+QRect CustomTickSlider::grooveRect() const {
     QStyleOptionSlider opt;
     initStyleOption(&opt);
 
     // 通过 QStyle 获取 groove 的真实矩形——这考虑了 margin、padding、notch 区域等偏移
     // 比直接用 rect() 准确得多，尤其是在 TicksBelow 开启时
-    return style()->subControlRect(
-        QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove, this);
+    return style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderGroove, this);
 }

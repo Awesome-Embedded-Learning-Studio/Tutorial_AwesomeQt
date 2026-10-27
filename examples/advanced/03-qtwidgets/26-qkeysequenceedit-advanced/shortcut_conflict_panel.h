@@ -16,25 +16,23 @@ class QKeySequenceEdit;
 ///
 /// 展示三个核心知识点：
 /// - 多个 QKeySequenceEdit 实例对应不同操作，editingFinished 捕获完整序列
-/// - 冲突检测：遍历所有操作的 shortcuts() 比较是否重复
+/// - 冲突检测：遍历各配置项录入的 keySequence() 比较是否重复
 /// - 系统保留快捷键列表检查，冲突时显示警告标签
-class ShortcutConflictPanel : public QWidget
-{
+class ShortcutConflictPanel : public QWidget {
     Q_OBJECT
 
-public:
+  public:
     /// @brief 构造函数，初始化快捷键配置面板与检测逻辑。
     /// @param[in] parent 父控件指针。
     explicit ShortcutConflictPanel(QWidget* parent = nullptr);
 
-private:
+  private:
     /// @brief 描述一个快捷键配置项的内部数据结构。
-    struct ShortcutEntry
-    {
-        QString           actionName;      // 操作名称
-        QKeySequenceEdit* sequenceEdit;     // 快捷键录入控件
-        QLabel*           statusLabel;      // 状态标签（正常/冲突/系统保留）
-        QKeySequence      previousSequence; // 录制前的有效值，用于恢复
+    struct ShortcutEntry {
+        QString actionName;             // 操作名称
+        QKeySequenceEdit* sequenceEdit; // 快捷键录入控件
+        QLabel* statusLabel;            // 状态标签（正常/冲突/系统保留）
+        QKeySequence previousSequence;  // 录制前的有效值，用于恢复
     };
 
     /// @brief 初始化操作列表并创建对应的 UI 行。
@@ -58,6 +56,6 @@ private:
     /// @param[in] entryIndex 对应的 ShortcutEntry 索引。
     void onEditingFinished(int entryIndex);
 
-private:
-    QList<ShortcutEntry> m_entries;  // 所有快捷键配置项
+  private:
+    QList<ShortcutEntry> m_entries; // 所有快捷键配置项
 };

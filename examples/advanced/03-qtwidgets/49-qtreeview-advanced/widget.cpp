@@ -14,26 +14,22 @@
 // ---------------------------------------------------------------------------
 
 FullRowDelegate::FullRowDelegate(QTreeView* treeView, QObject* parent)
-    : QStyledItemDelegate(parent), m_treeView(treeView)
-{
-}
+    : QStyledItemDelegate(parent), m_treeView(treeView) {}
 
 void FullRowDelegate::paint(QPainter* painter, const QStyleOptionViewItem& option,
-                            const QModelIndex& index) const
-{
+                            const QModelIndex& index) const {
     painter->save();
 
     // -- 1. 整行选中高亮 --
-    // @note 默认行为只高亮第一列；此处对非首列也绘制选中背景
+    // @note QTreeView 默认就是整行选中（SelectRows）；委托侧按整行宽度绘制，覆盖各列
     if (option.state & QStyle::State_Selected) {
         // @note 使用整行宽度（viewport 宽度）绘制高亮背景
-        QRect fullRowRect(0, option.rect.y(),
-                          m_treeView->viewport()->width(), option.rect.height());
+        QRect fullRowRect(0, option.rect.y(), m_treeView->viewport()->width(),
+                          option.rect.height());
         painter->fillRect(fullRowRect, option.palette.highlight());
     } else if (option.state & QStyle::State_MouseOver) {
         // 鼠标悬停时绘制浅色背景
-        QRect hoverRect(0, option.rect.y(),
-                        m_treeView->viewport()->width(), option.rect.height());
+        QRect hoverRect(0, option.rect.y(), m_treeView->viewport()->width(), option.rect.height());
         QColor hoverColor = option.palette.highlight().color();
         hoverColor.setAlpha(30);
         painter->fillRect(hoverRect, hoverColor);
@@ -62,8 +58,7 @@ void FullRowDelegate::paint(QPainter* painter, const QStyleOptionViewItem& optio
     }
 
     // -- 3. 绘制文本 --
-    QRect textRect = option.rect.adjusted(
-        index.column() == 0 ? 4 : 6, 0, -4, 0);
+    QRect textRect = option.rect.adjusted(index.column() == 0 ? 4 : 6, 0, -4, 0);
 
     QColor textColor = (option.state & QStyle::State_Selected)
                            ? option.palette.highlightedText().color()
@@ -73,16 +68,15 @@ void FullRowDelegate::paint(QPainter* painter, const QStyleOptionViewItem& optio
 
     QString displayText = index.data(Qt::DisplayRole).toString();
     // @note 使用 ElidedRight 防止文本超出列宽
-    QString elidedText = option.fontMetrics.elidedText(
-        displayText, Qt::ElideRight, textRect.width());
+    QString elidedText =
+        option.fontMetrics.elidedText(displayText, Qt::ElideRight, textRect.width());
     painter->drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, elidedText);
 
     painter->restore();
 }
 
 QSize FullRowDelegate::sizeHint(const QStyleOptionViewItem& option,
-                                const QModelIndex& index) const
-{
+                                const QModelIndex& index) const {
     // @note 在默认 sizeHint 基础上增加行高，让三角形图标更清晰
     QSize baseSize = QStyledItemDelegate::sizeHint(option, index);
     baseSize.setHeight(qMax(baseSize.height(), 28));
@@ -90,8 +84,7 @@ QSize FullRowDelegate::sizeHint(const QStyleOptionViewItem& option,
 }
 
 void FullRowDelegate::drawExpandTriangle(QPainter* painter, const QRect& rect,
-                                         bool expanded) const
-{
+                                         bool expanded) const {
     // @note 使用 QPainterPath 绘制实心三角形
     QPainterPath path;
     int margin = 2;
@@ -124,12 +117,8 @@ void FullRowDelegate::drawExpandTriangle(QPainter* painter, const QRect& rect,
 // ---------------------------------------------------------------------------
 
 Widget::Widget(QWidget* parent)
-    : QWidget(parent),
-      m_model(new TreeModel(this)),
-      m_treeView(new QTreeView(this)),
-      m_delegate(nullptr),
-      m_statusLabel(new QLabel(QStringLiteral("点击节点查看信息"), this))
-{
+    : QWidget(parent), m_model(new TreeModel(this)), m_treeView(new QTreeView(this)),
+      m_delegate(nullptr), m_statusLabel(new QLabel(QStringLiteral("点击节点查看信息"), this)) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // -- 配置 QTreeView --
@@ -149,8 +138,8 @@ Widget::Widget(QWidget* parent)
     m_treeView->expandToDepth(1);
 
     // -- 连接选中变化信号 --
-    connect(m_treeView->selectionModel(), &QItemSelectionModel::currentChanged,
-            this, &Widget::onSelectionChanged);
+    connect(m_treeView->selectionModel(), &QItemSelectionModel::currentChanged, this,
+            &Widget::onSelectionChanged);
 
     // -- 组装布局 --
     mainLayout->addWidget(m_treeView, 1);
@@ -160,8 +149,7 @@ Widget::Widget(QWidget* parent)
     resize(500, 450);
 }
 
-void Widget::onSelectionChanged(const QModelIndex& current)
-{
+void Widget::onSelectionChanged(const QModelIndex& current) {
     if (!current.isValid()) {
         m_statusLabel->setText(QStringLiteral("无选中节点"));
         return;
@@ -175,6 +163,5 @@ void Widget::onSelectionChanged(const QModelIndex& current)
         idx = idx.parent();
     }
 
-    m_statusLabel->setText(
-        QStringLiteral("选中: %1").arg(pathParts.join(" > ")));
+    m_statusLabel->setText(QStringLiteral("选中: %1").arg(pathParts.join(" > ")));
 }

@@ -2,7 +2,8 @@
 /// @brief   Section 感知日期时间编辑器——演示 QDateTimeEdit 的 Section 状态机。
 ///
 /// 核心知识点：
-/// - currentSection() / currentSectionChanged 信号——追踪用户正在编辑哪个区段
+/// - currentSection() ——追踪用户正在编辑哪个区段（QDateTimeEdit 没有 currentSectionChanged
+/// 信号，见文末注）
 /// - sectionText() ——获取指定 Section 的文本内容
 /// - sectionCount() / sectionAt() ——遍历所有 Section 类型
 /// - QDateTimeEdit::Section 枚举（YearSection, MonthSection, DaySection 等）
@@ -26,16 +27,15 @@ class QLabel;
 ///
 /// 注意：QDateTimeEdit 没有提供 currentSectionChanged 信号，
 /// 因此通过事件过滤器监听鼠标点击和键盘按键来检测 Section 切换。
-class SectionAwareDateTime : public QWidget
-{
+class SectionAwareDateTime : public QWidget {
     Q_OBJECT
 
-public:
+  public:
     /// @brief 构造函数，初始化界面布局与信号槽连接。
     /// @param[in] parent 父控件指针。
     explicit SectionAwareDateTime(QWidget* parent = nullptr);
 
-private:
+  private:
     /// @brief 将 Section 枚举值转换为可读名称。
     /// @param[in] section Section 枚举值。
     /// @return 中文名称字符串。
@@ -50,10 +50,10 @@ private:
     /// @brief 事件过滤器——监听 QDateTimeEdit 上的鼠标和键盘事件以检测 Section 切换。
     bool eventFilter(QObject* watched, QEvent* event) override;
 
-    QDateTimeEdit* m_dateTimeEdit;      // 日期时间编辑器
-    QLabel* m_currentSectionLabel;      // 当前 Section 名称
-    QLabel* m_sectionIndexLabel;        // 当前 Section 索引
-    QLabel* m_sectionCountLabel;        // Section 总数
-    QLabel* m_sectionTextsLabel;        // 各 Section 的文本内容
-    QLabel* m_sectionTypesLabel;        // 所有 Section 类型列表
+    QDateTimeEdit* m_dateTimeEdit; // 日期时间编辑器
+    QLabel* m_currentSectionLabel; // 当前 Section 名称
+    QLabel* m_sectionIndexLabel;   // 当前 Section 索引
+    QLabel* m_sectionCountLabel;   // Section 总数
+    QLabel* m_sectionTextsLabel;   // 各 Section 的文本内容
+    QLabel* m_sectionTypesLabel;   // 所有 Section 类型列表
 };

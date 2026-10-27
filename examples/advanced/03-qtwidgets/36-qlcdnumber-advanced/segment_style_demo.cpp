@@ -7,8 +7,8 @@
 
 #include <QComboBox>
 #include <QHBoxLayout>
-#include <QLabel>
 #include <QLCDNumber>
+#include <QLabel>
 #include <QPushButton>
 #include <QSpinBox>
 #include <QVBoxLayout>
@@ -17,9 +17,7 @@
 // 构造函数
 // ─────────────────────────────────────────────────────────────────────────────
 
-SegmentStyleDemo::SegmentStyleDemo(QWidget* parent)
-    : QWidget(parent)
-{
+SegmentStyleDemo::SegmentStyleDemo(QWidget* parent) : QWidget(parent) {
     auto* mainLayout = new QVBoxLayout(this);
 
     mainLayout->addWidget(createStyleSection());
@@ -35,8 +33,7 @@ SegmentStyleDemo::SegmentStyleDemo(QWidget* parent)
 // SegmentStyle 三种风格对比
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* SegmentStyleDemo::createStyleSection()
-{
+QWidget* SegmentStyleDemo::createStyleSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
@@ -55,7 +52,7 @@ QWidget* SegmentStyleDemo::createStyleSection()
     // 三个 LCD 并排展示三种 SegmentStyle
     auto* lcdRow = new QHBoxLayout;
 
-    // Outline（默认）：只画轮廓边框
+    // Outline：只画轮廓边框（两个构造的默认都是 Filled）
     auto* outlineCol = new QVBoxLayout;
     auto* outlineTitle = new QLabel(QStringLiteral("Outline"));
     outlineTitle->setAlignment(Qt::AlignCenter);
@@ -71,8 +68,7 @@ QWidget* SegmentStyleDemo::createStyleSection()
     filledTitle->setAlignment(Qt::AlignCenter);
     m_filledLcd = new QLCDNumber(6);
     m_filledLcd->setSegmentStyle(QLCDNumber::Filled);
-    m_filledLcd->setStyleSheet(
-        QStringLiteral("background-color: #1a1a2e; color: #00ff88;"));
+    m_filledLcd->setStyleSheet(QStringLiteral("background-color: #1a1a2e; color: #00ff88;"));
     m_filledLcd->setFixedHeight(60);
     filledCol->addWidget(filledTitle);
     filledCol->addWidget(m_filledLcd);
@@ -83,8 +79,7 @@ QWidget* SegmentStyleDemo::createStyleSection()
     flatTitle->setAlignment(Qt::AlignCenter);
     m_flatLcd = new QLCDNumber(6);
     m_flatLcd->setSegmentStyle(QLCDNumber::Flat);
-    m_flatLcd->setStyleSheet(
-        QStringLiteral("background-color: #f5f5f5; color: #333333;"));
+    m_flatLcd->setStyleSheet(QStringLiteral("background-color: #f5f5f5; color: #333333;"));
     m_flatLcd->setFixedHeight(60);
     flatCol->addWidget(flatTitle);
     flatCol->addWidget(m_flatLcd);
@@ -111,8 +106,7 @@ QWidget* SegmentStyleDemo::createStyleSection()
 // digitCount 溢出行为
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* SegmentStyleDemo::createOverflowSection()
-{
+QWidget* SegmentStyleDemo::createOverflowSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
@@ -141,8 +135,7 @@ QWidget* SegmentStyleDemo::createOverflowSection()
     // LCD 显示
     m_overflowLcd = new QLCDNumber(4);
     m_overflowLcd->setSegmentStyle(QLCDNumber::Filled);
-    m_overflowLcd->setStyleSheet(
-        QStringLiteral("background-color: #1a1a2e; color: #00ff88;"));
+    m_overflowLcd->setStyleSheet(QStringLiteral("background-color: #1a1a2e; color: #00ff88;"));
     m_overflowLcd->setFixedHeight(50);
 
     // 溢出状态提示
@@ -171,8 +164,7 @@ QWidget* SegmentStyleDemo::createOverflowSection()
 // setMode 进制切换——内部存储值不变，只改变显示格式
 // ─────────────────────────────────────────────────────────────────────────────
 
-QWidget* SegmentStyleDemo::createModeSection()
-{
+QWidget* SegmentStyleDemo::createModeSection() {
     auto* container = new QWidget;
     auto* layout = new QVBoxLayout(container);
 
@@ -204,8 +196,7 @@ QWidget* SegmentStyleDemo::createModeSection()
     // LCD 显示——根据进制动态调整 digitCount
     m_modeLcd = new QLCDNumber(5);
     m_modeLcd->setSegmentStyle(QLCDNumber::Filled);
-    m_modeLcd->setStyleSheet(
-        QStringLiteral("background-color: #1a1a2e; color: #00ff88;"));
+    m_modeLcd->setStyleSheet(QStringLiteral("background-color: #1a1a2e; color: #00ff88;"));
     m_modeLcd->setFixedHeight(50);
 
     // 信息标签——显示内部 value() 和当前 mode
@@ -234,16 +225,14 @@ QWidget* SegmentStyleDemo::createModeSection()
 // 槽函数实现
 // ─────────────────────────────────────────────────────────────────────────────
 
-void SegmentStyleDemo::updateStyleDisplay()
-{
+void SegmentStyleDemo::updateStyleDisplay() {
     const int value = m_styleValueSpin->value();
     m_outlineLcd->display(value);
     m_filledLcd->display(value);
     m_flatLcd->display(value);
 }
 
-void SegmentStyleDemo::checkOverflow()
-{
+void SegmentStyleDemo::checkOverflow() {
     // 先更新 digitCount，再 display
     const int digits = m_digitCountSpin->value();
     const double value = m_overflowValueSpin->value();
@@ -259,7 +248,7 @@ void SegmentStyleDemo::checkOverflow()
     if (needed > digits) {
         m_overflowInfo->setText(
             QStringLiteral("提示：文本 \"%1\" 需要 %2 个槽位，但 digitCount 为 %3。"
-                           "超出范围会触发 overflow 信号，LCD 显示全横线。"
+                           "超出范围会触发 overflow 信号，画面停在旧内容上。"
                            "注意：默认 smallDecimalPoint==false 时小数点独立占位。")
                 .arg(text)
                 .arg(needed)
@@ -273,11 +262,9 @@ void SegmentStyleDemo::checkOverflow()
     }
 }
 
-void SegmentStyleDemo::switchMode()
-{
+void SegmentStyleDemo::switchMode() {
     const int value = m_modeValueSpin->value();
-    const QLCDNumber::Mode mode =
-        static_cast<QLCDNumber::Mode>(m_modeCombo->currentData().toInt());
+    const QLCDNumber::Mode mode = static_cast<QLCDNumber::Mode>(m_modeCombo->currentData().toInt());
 
     // 根据进制动态调整 digitCount，避免溢出
     // 关键：先设 digitCount 再 display，否则切换到二进制时容易溢出
@@ -285,26 +272,26 @@ void SegmentStyleDemo::switchMode()
     QString modeName;
 
     switch (mode) {
-    case QLCDNumber::Dec:
-        // 十进制 0-65535 最多 5 位
-        requiredDigits = 5;
-        modeName = QStringLiteral("Dec");
-        break;
-    case QLCDNumber::Hex:
-        // 十六进制 0xFFFF 最多 4 位
-        requiredDigits = 4;
-        modeName = QStringLiteral("Hex");
-        break;
-    case QLCDNumber::Oct:
-        // 八进制 0177777 最多 6 位
-        requiredDigits = 6;
-        modeName = QStringLiteral("Oct");
-        break;
-    case QLCDNumber::Bin:
-        // 二进制 0-65535 最多 16 位
-        requiredDigits = 16;
-        modeName = QStringLiteral("Bin");
-        break;
+        case QLCDNumber::Dec:
+            // 十进制 0-65535 最多 5 位
+            requiredDigits = 5;
+            modeName = QStringLiteral("Dec");
+            break;
+        case QLCDNumber::Hex:
+            // 十六进制 0xFFFF 最多 4 位
+            requiredDigits = 4;
+            modeName = QStringLiteral("Hex");
+            break;
+        case QLCDNumber::Oct:
+            // 八进制 0177777 最多 6 位
+            requiredDigits = 6;
+            modeName = QStringLiteral("Oct");
+            break;
+        case QLCDNumber::Bin:
+            // 二进制 0-65535 最多 16 位
+            requiredDigits = 16;
+            modeName = QStringLiteral("Bin");
+            break;
     }
 
     // 先设置 digitCount 确保不溢出，再切换 mode，最后 display
@@ -313,9 +300,8 @@ void SegmentStyleDemo::switchMode()
     m_modeLcd->display(value);
 
     // 验证 value() 不变——setMode 只影响显示，不影响内部存储
-    m_modeInfo->setText(
-        QStringLiteral("mode: %1 | digitCount: %2 | value(): %3（内部存储值不变）")
-            .arg(modeName)
-            .arg(requiredDigits)
-            .arg(m_modeLcd->value()));
+    m_modeInfo->setText(QStringLiteral("mode: %1 | digitCount: %2 | value(): %3（内部存储值不变）")
+                            .arg(modeName)
+                            .arg(requiredDigits)
+                            .arg(m_modeLcd->value()));
 }

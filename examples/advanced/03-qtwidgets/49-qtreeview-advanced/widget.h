@@ -24,12 +24,11 @@
 /// 核心功能：
 /// - 在第一列左侧绘制向右/向下的三角形作为展开/折叠指示器
 /// - 选中时整行绘制高亮背景（跨越所有列），而非仅第一列
-/// - 通过 QStyleOptionViewItem 的 state 判断展开/选中状态
-class FullRowDelegate : public QStyledItemDelegate
-{
+/// - 展开态经 m_treeView->isExpanded(index) 查询（option.state 不携带该项）；选中态走 option.state
+class FullRowDelegate : public QStyledItemDelegate {
     Q_OBJECT
 
-public:
+  public:
     /// @brief 构造函数。
     /// @param[in] treeView 关联的 QTreeView 指针，用于查询展开状态。
     /// @param[in] parent   父对象指针。
@@ -48,35 +47,32 @@ public:
     /// @param[in] option 绘制选项。
     /// @param[in] index  模型索引。
     /// @note 增加行高以留出展开图标的空间。
-    QSize sizeHint(const QStyleOptionViewItem& option,
-                   const QModelIndex& index) const override;
+    QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 
-private:
+  private:
     /// @brief 绘制三角形展开/折叠图标。
     /// @param[in] painter 画笔。
     /// @param[in] rect    图标绘制区域。
     /// @param[in] expanded 是否展开。
     /// @note 展开时绘制向下的实心三角形，折叠时绘制向右的三角形。
-    void drawExpandTriangle(QPainter* painter, const QRect& rect,
-                            bool expanded) const;
+    void drawExpandTriangle(QPainter* painter, const QRect& rect, bool expanded) const;
 
-    QTreeView* m_treeView;  ///< 关联的树视图，用于查询展开状态
+    QTreeView* m_treeView; ///< 关联的树视图，用于查询展开状态
 };
 
 /// @brief 主窗口，包含 QTreeView 和状态信息。
 ///
 /// 演示 TreeModel + FullRowDelegate 的组合使用，
 /// 底部标签显示当前选中节点的路径信息。
-class Widget : public QWidget
-{
+class Widget : public QWidget {
     Q_OBJECT
 
-public:
+  public:
     /// @brief 构造函数，初始化模型、视图和委托。
     /// @param[in] parent 父控件指针。
     explicit Widget(QWidget* parent = nullptr);
 
-private:
+  private:
     /// @brief 响应选中项变化，更新状态标签。
     /// @param[in] current 当前选中索引。
     /// @note 递归向上遍历父索引构建节点路径字符串。

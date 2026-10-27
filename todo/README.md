@@ -8,7 +8,7 @@
 入门 137✅ · 进阶 134✅ · 专家 19/102 审结（2026-08-26 作者确认全审结 · QtBase 卷剩 18/20 两篇，见 expert.md）
 实例库 widget 13/13 ✅收齐（status-led✅ + toggle-switch✅ + circle-progress✅ + speed-meter✅ + range-slider✅ + line-chart✅ + editable-table✅ + checkbox-tree✅ + checkbox-list✅ + log-viewer✅ + password-edit✅ + ip-edit✅ + fade-animation✅），app image-viewer✅ + json-editor✅ + sqlite-browser✅ + serial-tool✅ + network-tool✅ + tetris✅ + cpu-memory-monitor✅(7 件整机成品·已合 main PR#16 · Windows 路径待作者实机复验) · model 首波 5 件已产(MV3 proxy/custom/tree-drag-move + observer + toast·待审) / industrial 骨架已立
 examples 275✅ · 基建 P0✅ 基本清完
-进阶层文风优化 20/75（content_forge 五道关梭哈连跑：01✅验声 · 02-20✅ 四走查+Recheck 全过；20 含 pending 信号断言按源码改写+死循环挂守卫条件；按钮五连 4/5），待作者统一验声后从 21-qcommandlinkbutton 续推）
+进阶层文风优化 74/74 全卷收官 ✅（2026-10-27 · content_forge 五道关：01 验声 · 02-20 梭哈 · 21-55 单线 · 56-74 五批并发。篇数勘误：正文实为 74 篇（01-74 连续），旧「75」是含 index.md 的文件数。全卷翻案高光：独立层覆盖说/自动接线讹传/DontUseSheet 与 PostScriptFormat 等编造枚举十余个/内存 PDF 栅格化/复选框方向/三列两行补齐；交接单累积待作者验声时统一过目）
 ```
 
 ## 进阶层文风优化（2026-10-08 起 · 长程逐篇）

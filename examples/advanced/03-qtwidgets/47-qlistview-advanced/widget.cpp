@@ -14,14 +14,12 @@
 
 LargeDataModel::LargeDataModel(int totalItems, int batchSize, QObject* parent)
     : QAbstractListModel(parent), m_totalItems(totalItems), m_batchSize(batchSize),
-      m_loadedCount(0)
-{
+      m_loadedCount(0) {
     // @note 预分配空间以提高首次加载性能，但不填数据
     m_data.reserve(m_batchSize);
 }
 
-int LargeDataModel::rowCount(const QModelIndex& parent) const
-{
+int LargeDataModel::rowCount(const QModelIndex& parent) const {
     // 列表模型的 parent 应始终无效
     if (parent.isValid()) {
         return 0;
@@ -29,8 +27,7 @@ int LargeDataModel::rowCount(const QModelIndex& parent) const
     return m_loadedCount;
 }
 
-QVariant LargeDataModel::data(const QModelIndex& index, int role) const
-{
+QVariant LargeDataModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid() || index.row() >= m_loadedCount) {
         return QVariant();
     }
@@ -47,8 +44,7 @@ QVariant LargeDataModel::data(const QModelIndex& index, int role) const
     return QVariant();
 }
 
-bool LargeDataModel::canFetchMore(const QModelIndex& parent) const
-{
+bool LargeDataModel::canFetchMore(const QModelIndex& parent) const {
     if (parent.isValid()) {
         return false;
     }
@@ -56,8 +52,7 @@ bool LargeDataModel::canFetchMore(const QModelIndex& parent) const
     return m_loadedCount < m_totalItems;
 }
 
-void LargeDataModel::fetchMore(const QModelIndex& parent)
-{
+void LargeDataModel::fetchMore(const QModelIndex& parent) {
     if (parent.isValid()) {
         return;
     }
@@ -82,13 +77,11 @@ void LargeDataModel::fetchMore(const QModelIndex& parent)
     endInsertRows();
 }
 
-int LargeDataModel::totalItemCount() const
-{
+int LargeDataModel::totalItemCount() const {
     return m_totalItems;
 }
 
-int LargeDataModel::loadedItemCount() const
-{
+int LargeDataModel::loadedItemCount() const {
     return m_loadedCount;
 }
 
@@ -97,20 +90,19 @@ int LargeDataModel::loadedItemCount() const
 // ---------------------------------------------------------------------------
 
 Widget::Widget(QWidget* parent)
-    : QWidget(parent),
-      m_model(new LargeDataModel(100000, 1000, this)),
-      m_listView(new QListView(this)),
-      m_statusLabel(new QLabel(this)),
-      m_loadAllBtn(new QPushButton(QStringLiteral("一次性加载全部数据"), this))
-{
+    : QWidget(parent), m_model(new LargeDataModel(100000, 1000, this)),
+      m_listView(new QListView(this)), m_statusLabel(new QLabel(this)),
+      m_loadAllBtn(new QPushButton(QStringLiteral("一次性加载全部数据"), this)) {
     auto* mainLayout = new QVBoxLayout(this);
 
     // -- 配置 QListView --
-    // @note QListView 默认就是虚拟滚动：只为可见行创建 delegate widget
+    // @note QListView 虚拟化在绘制层：paintEvent 只把与视口相交的条目交给委托画，
+    // 委托只 paint 不建 widget
     m_listView->setModel(m_model);
-    // UniformItemSizes 优化：告知视图所有项尺寸一致，可跳过布局计算
+    // UniformItemSizes 优化：告知视图所有项尺寸一致，布局可复用缓存的条目尺寸
     m_listView->setUniformItemSizes(true);
-    // 开启批量加载——视图滚动到底部时自动调用 canFetchMore/fetchMore
+    // batchSize 只对 Batched 布局生效（本示例默认 SinglePass，此调用仅作配置演示）；
+    // canFetchMore/fetchMore 的触发在视图的滚动与几何更新路径，不受这里影响
     m_listView->setBatchSize(50);
 
     // -- 连接信号 --
@@ -124,9 +116,9 @@ Widget::Widget(QWidget* parent)
     statusTimer->start();
 
     // -- 组装布局 --
-    auto* topInfo = new QLabel(
-        QStringLiteral("模型包含 100,000 条数据，初始加载 1,000 条，"
-                        "滚动到底部自动增量加载"), this);
+    auto* topInfo = new QLabel(QStringLiteral("模型包含 100,000 条数据，初始加载 1,000 条，"
+                                              "滚动到底部自动增量加载"),
+                               this);
     topInfo->setWordWrap(true);
 
     mainLayout->addWidget(topInfo);
@@ -138,8 +130,7 @@ Widget::Widget(QWidget* parent)
     resize(400, 500);
 }
 
-void Widget::updateStatusLabel()
-{
+void Widget::updateStatusLabel() {
     int total = m_model->totalItemCount();
     int loaded = m_model->loadedItemCount();
 
@@ -150,21 +141,18 @@ void Widget::updateStatusLabel()
     int firstVisible = firstIdx.isValid() ? firstIdx.row() : 0;
     int lastVisible = lastIdx.isValid() ? lastIdx.row() : (loaded > 0 ? loaded - 1 : 0);
 
-    m_statusLabel->setText(
-        QStringLiteral("已加载: %1 / %2  |  可见范围: [%3..%4]")
-            .arg(loaded)
-            .arg(total)
-            .arg(firstVisible)
-            .arg(lastVisible));
+    m_statusLabel->setText(QStringLiteral("已加载: %1 / %2  |  可见范围: [%3..%4]")
+                               .arg(loaded)
+                               .arg(total)
+                               .arg(firstVisible)
+                               .arg(lastVisible));
 }
 
-void Widget::onDataChanged()
-{
+void Widget::onDataChanged() {
     updateStatusLabel();
 }
 
-void Widget::onLoadAll()
-{
+void Widget::onLoadAll() {
     // @note 一次性加载全部数据，用于对比虚拟滚动的内存优势
     while (m_model->canFetchMore()) {
         m_model->fetchMore();
