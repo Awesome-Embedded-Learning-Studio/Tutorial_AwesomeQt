@@ -32,6 +32,7 @@ QString name = obj.value("name").toString();
 |---|---|
 | `qt_src/qt6.9.1/qtbase/src/corelib/serialization/qjsondocument.h` / `.cpp` | QJsonDocument 主体、QJsonDocumentPrivate |
 | `qt_src/qt6.9.1/qtbase/src/corelib/serialization/qjsonvalue.h` / `.cpp` | QJsonValue（QCborValue 的语义包装） |
+| `qt_src/qt6.9.1/qtbase/src/corelib/serialization/qjsonobject.h` / `qt_src/qt6.9.1/qtbase/src/corelib/serialization/qjsonarray.h` | QJsonObject/QJsonArray 头文件（QCborContainerPrivate 指针成员声明） |
 | `qt_src/qt6.9.1/qtbase/src/corelib/serialization/qcborvalue_p.h` | QCborContainerPrivate / Element / ByteData 内部布局 |
 | `qt_src/qt6.9.1/qtbase/src/corelib/serialization/qjsonparser.cpp` / `qjsonparser_p.h` | 手写递归下降解析器（Parser 类） |
 | `qt_src/qt6.9.1/qtbase/src/corelib/serialization/qjson_p.h` | QJsonPrivate 命名空间、Value/fromTrustedCbor |

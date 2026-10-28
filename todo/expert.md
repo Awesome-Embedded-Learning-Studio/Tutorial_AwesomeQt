@@ -2,7 +2,7 @@
 
 ## ⚡ 交接（2026-07-08，下次从这里接）
 
-**现状（2026-08-26 更新）**：19 篇全部审结（作者确认）。QtBase 卷（21 篇）仅剩 18-signal-slot-deep-dive、20-event-loop-source 两篇即收满。**剩 83 篇。**
+**现状（2026-10-28 更新）**：QtBase 卷 21/21 全部落盘🎉（18 当日产出当日审结；20-event-loop-deep-dive 已产出待审，作者点头即整卷收官）。**剩 81 篇。**
 
 **取证复用（省重复劳动）**：2026-06-24 一批硬核基石篇的取证已跑完存档，但正文当时都没落盘。开新篇先 `git log --all -- <正文文件名>` 核实：① 正文已在→直接审改；② 正文没有但取证已存档→直接取证据写正文，省一轮取证；③ 取证也没存→重新取证。**⚠️ 已存档主题：cow / qobject / signalslot / moc / objecttree / eventloop / qstring / memory / fileio / thread / timer / variant / qprocess / plugin / i18n / logging / regex 共 17 个；之外的篇（如 16-json-parser / 18-signal-slot-deep-dive）仍要重新取证。**
 
@@ -14,7 +14,7 @@
 
 **编号**：知识点队列（文件名序号 = 本文件「102 篇队列」里的号）。新篇按队列号落盘。
 
-**下一篇**：`18-signal-slot-deep-dive`（专属·activate 调用链深拆；02 已覆盖基础可复用，须重新取证深水区如 queued 连接/QML 调用）。**注：16-json-parser 本次会话已落盘待审（A 35 条取证 + B 零打回复核，立论反转：Qt6 JSON 内部 = CBOR 子集、自 5.15 起）。**
+**下一篇**：02-qtgui 卷 `01-qpainter-backend` 已产出待审（2026-10-28，A1+A1b+A2 取证 35 条→B 复核→五道关全走，主控中途补位四处；交接单 `.audit/01-qpainter-backend.md`，code-index/qtgui 五件首建）。作者审结后接 `02-qtransform`。QtBase 卷 21/21 已落盘（20 待正式验声）。**18 已产出待审（issue #30）**：A1+A2 取证 30 条（qtbase 深水区 24 + QML 侧 6）→ B 复核全绿 → content_forge 五道关全走（写手三轮修订约 75 处，四道走查首轮 28 条问题全闭环）。立论翻案九处：发射循环无锁（131 把条带锁只归 connect/disconnect）、QMetaCallEvent 布局大改（Data 结构无 types_、prealloc 三格）、QFunctorSlotObject 已死继任 QCallableObject、connectedSignals 位图已删、onXxx 不走 QObject::connect 走 notifyList 快通道、QQmlPropertyCache 不再继承 QMetaObject、QBiPointer 双态、V4 函数名换代、spy 回调搬家。代码块分号按源码原样保留（28-35 篇口径）。交接单 `.audit/18-signal-slot-deep-dive.md`，code-index 新增 5+1 件（含 qtdeclarative 新目录）。
 
 **文件位置**：正文 `tutorial/expert/01-qtbase/`；行号证据 `tutorial/expert/code-index/qtbase/`（进站点）；审查记录 `tutorial/expert/.audit/`（不进站点、不进 git）。
 

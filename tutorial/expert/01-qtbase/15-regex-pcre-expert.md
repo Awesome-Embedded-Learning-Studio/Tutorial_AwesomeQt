@@ -96,7 +96,7 @@ QRegularExpressionMatch QRegularExpression::match(const QString &subject,
 }
 ```
 
-头一行干活的正是 `d.data()->compilePattern()`，这个写法值得您停下来看一眼。`match` 是个 const 的成员函数，`compilePattern` 在 Private 那边却声明成了非 const 的成员（`qregularexpression.cpp:713`），const 的 `match` 要调到它，借的就是 `data()` 交回来的那根裸指针。`d` 的类型是 `QExplicitlySharedDataPointer<QRegularExpressionPrivate>`（`qregularexpression.h:176`），它的 `data()` 虽然也是 const 成员函数，交回来的却是不带 const 的 `T*`（`qshareddata.h:142`），非 const 的 `compilePattern` 就从这里调进去了，这根指针拿的过程既不 detach 也不动引用计数。有些资料上讲的 `d->` 在 const 成员里会 detach，那是 `QSharedDataPointer` 那边的脾气，它的非 const `operator->` 进门就 detach（`qshareddata.h:44`），`QExplicitlySharedDataPointer` 的 `operator->` 是从来都不 detach 的（`qshareddata.h:139`）。给 const 路径加锁的事也有安排，Private 里的 `mutex` 声明成了 `mutable`（`qregularexpression.cpp:736`），const 的路径照样锁得上。
+头一行干活的正是 `d.data()->compilePattern()`，这个写法值得您停下来看一眼。`match` 是个 const 的成员函数，`compilePattern` 在 Private 那边却声明成了非 const 的成员（`qregularexpression.cpp:713`），const 的 `match` 要调到它，借的就是 `data()` 交回来的那根裸指针。`d` 的类型是 `QExplicitlySharedDataPointer<QRegularExpressionPrivate>`（`qregularexpression.h:176`），它的 `data()` 虽然也是 const 成员函数，交回来的却是不带 const 的 `T*`（`qt_src/qt6.9.1/qtbase/src/corelib/tools/qshareddata.h:142`），非 const 的 `compilePattern` 就从这里调进去了，这根指针拿的过程既不 detach 也不动引用计数。有些资料上讲的 `d->` 在 const 成员里会 detach，那是 `QSharedDataPointer` 那边的脾气，它的非 const `operator->` 进门就 detach（`qshareddata.h:44`），`QExplicitlySharedDataPointer` 的 `operator->` 是从来都不 detach 的（`qshareddata.h:139`）。给 const 路径加锁的事也有安排，Private 里的 `mutex` 声明成了 `mutable`（`qregularexpression.cpp:736`），const 的路径照样锁得上。
 
 `compilePattern` 的实现咱们照着看，它的证据在 `qt_src/qt6.9.1/qtbase/src/corelib/text/qregularexpression.cpp:885-916`（节选）：
 
