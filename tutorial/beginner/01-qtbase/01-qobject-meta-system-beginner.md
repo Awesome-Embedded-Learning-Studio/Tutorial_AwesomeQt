@@ -168,11 +168,12 @@ class MyObject : public QObject
 第二个坑和对象树有关：父对象先于子对象销毁。这个坑特别阴险，因为它不会在编译期给你任何提示，运行时直接给你一个 segfault。场景通常是这样的——你把一个 QObject 创建在栈上作为 parent，同时 new 了一个子对象指向它，然后 parent 所在的作用域结束了，parent 被销毁，顺带把子对象也删了。但问题是你手里还拿着子对象的指针，你以为它还在，下一次访问直接崩。
 
 ```cpp
-QObject *child = new QObject();
+QObject *child = nullptr;
 {
-    QObject parent(child);  // parent 在栈上，child 指向它
-}  // parent 销毁，child 被一起删除
-child->doSomething();  // 崩溃！child 已经是野指针
+    QObject parent;                // parent 在栈上
+    child = new QObject(&parent);  // child 在堆上，挂在 parent 名下
+}  // parent 销毁，顺带把 child 一起删除
+child->objectName();  // 崩溃！child 已经是野指针
 ```
 
 正确做法很简单：确保父对象生命周期长于子对象。最直接的方式是把 parent 创建在更长的作用域里，或者也用 new 分配，确保它不会先走。
