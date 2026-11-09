@@ -11,47 +11,25 @@ description: Qt 6.9.1 的 QString 到底有没有 SSO、一个 QString 在内存
 
 短串怎么放？QString 会不会学 `std::string` 的 SSO（短串优化）把字符存在对象内部，连一次堆分配都不做？拷贝怎么算？咱们把一个 1MB 的大字符串拷给另一个 QString，那 1MB 会不会真的被复制一遍？字面量怎么来？天天有人劝咱们用 `QStringLiteral`，它省的到底是哪一段，凭什么被叫作零分配？
 
-咱们把三个问题连起来看，它们正好压在 QString 内存模型的三条主轴上，短串的存放、拷贝的代价、字面量的来历。入门篇的 [1.3 字符串与编码](../../beginner/01-qtbase/03-string-encoding-beginner.md) 带咱们走过了 QString 怎么用、编码怎么回事，进阶篇的 [1.3 QString 深度性能与陷阱](../../advanced/01-qtbase/03-qstring-advanced.md) 讲的是更高阶的用法。咱们这一篇往深处走，把 QString 在内存里的样子，连同一行行的源码，拆出来给大家看。
-
-咱们同一卷里还有两篇同门。[19.COW 隐式共享](./19-cow-implicit-sharing-expert.md) 把 Qt 容器的那套 COW（Copy-On-Write，写时复制）通用机制（`QArrayData` 头部、`QArrayDataPointer` 智能指针、原子引用计数）从源码拆了一遍，[04.COW 容器实战](./04-cow-container-practice-expert.md) 拿 `QList`、`QByteArray` 把它练到了手上。本篇就站在它俩的肩膀上，只盯 QString 自己的内存特性。SSO 到底有没有？空串怎么做到零分配？字面量凭什么一次堆都不分配？这几个都是 QString 独有的问题，通用的 COW 招式笔者点到为止，练过的就不重复了。
-
-咱们把边界也划清楚，免得走着走着散了。本篇讲的只有内存模型，QString 和 QByteArray 之间那套 `QStringConverter`、`QTextCodec` 的编解码链路属于编码转换的主题，这里咱们不碰。这一块入门篇的 1.3 字符串与编码第 5 节讲过，就是 GBK、UTF-8 互转的用法，`QTextCodec` 迁移到 `QStringConverter` 的视角见入门篇的 [5.25 Qt5Compat 兼容层与迁移指南](../../beginner/05-other-modules/25-qt5compat-migration-beginner.md)，源码层面的链路拆解本教程暂时没有专篇。
-
 ## 环境说明
+
+众所周知，不讲源码版本分析代码是一种不严谨的行为，这里就交代一下看的哪个版本的源码（╮(╯▽╰)╭）
 
 本篇的源码引用都基于 `qt_src/qt6.9.1`，这个目录是官方 Qt 6.9.1 源码在咱们本地的检出。咱们已经把它 gitignore 了，所以不随仓库分发，您想自备一份，去 qt.io 下载源码或者用 git 检出 v6.9.1 的标签都行。行号会随 Qt 版本升级而漂移。您对照阅读时要是发现行号对不上，拿函数名或字段名去对应的文件里搜一下就能定位。本篇涉及的关键源码文件，咱们按出场顺序列在下面：
 
-| 文件 | 角色 |
-|---|---|
-| `qtbase/src/corelib/text/qstring.h` | QString 类声明、构造/detach/reserve/squeeze 内联实现 |
-| `qtbase/src/corelib/text/qstringliteral.h` | QStringLiteral 宏、QStringPrivate typedef、qMakeStringPrivate |
-| `qtbase/src/corelib/tools/qarraydatapointer.h` | COW 智能指针 QArrayDataPointer（三成员、needsDetach 短路） |
-| `qtbase/src/corelib/tools/qarraydata.h` | 共享数据头部 QArrayData（ref_/flags/alloc 字段） |
-| `qtbase/src/corelib/thread/qbasicatomic.h` | QBasicAtomicInt 原子引用计数（ref/deref 平台特化） |
-| `qtbase/src/corelib/tools/qrefcount.h` | 另一套引用计数封装 RefCount（-1 静态短路语义） |
-| `qtbase/src/corelib/text/qstring.cpp` | QString 大部分非内联实现（构造、reallocData、fromRawData、_empty 定义） |
-| `qtbase/src/corelib/tools/qarraydata.cpp` | QArrayData 的分配与增长策略（reallocateUnaligned） |
-| `qtbase/src/corelib/text/qstringview.h` | QStringView 只读视图 |
+| 文件                                           | 角色                                                                    |
+| ---------------------------------------------- | ----------------------------------------------------------------------- |
+| `qtbase/src/corelib/text/qstring.h`            | QString 类声明、构造/detach/reserve/squeeze 内联实现                    |
+| `qtbase/src/corelib/text/qstringliteral.h`     | QStringLiteral 宏、QStringPrivate typedef、qMakeStringPrivate           |
+| `qtbase/src/corelib/tools/qarraydatapointer.h` | COW 智能指针 QArrayDataPointer（三成员、needsDetach 短路）              |
+| `qtbase/src/corelib/tools/qarraydata.h`        | 共享数据头部 QArrayData（ref_/flags/alloc 字段）                        |
+| `qtbase/src/corelib/thread/qbasicatomic.h`     | QBasicAtomicInt 原子引用计数（ref/deref 平台特化）                      |
+| `qtbase/src/corelib/tools/qrefcount.h`         | 另一套引用计数封装 RefCount（-1 静态短路语义）                          |
+| `qtbase/src/corelib/text/qstring.cpp`          | QString 大部分非内联实现（构造、reallocData、fromRawData、_empty 定义） |
+| `qtbase/src/corelib/tools/qarraydata.cpp`      | QArrayData 的分配与增长策略（reallocateUnaligned）                      |
+| `qtbase/src/corelib/text/qstringview.h`        | QStringView 只读视图                                                    |
 
 咱们本篇不配 example，不配的理由和 [01.qobject 篇](./01-qobject-meta-system-expert.md) 一样：纯源码拆解没有合理的可跑 demo，咱们不会为了看 QString 的内存布局去单独搭一个工程，对照 `qt_src` 翻源码就是最好的实验。
-
-## 核心概念讲解
-
-咱们下源码以前把全貌对一遍。QString 的内存模型拆下来就三样东西，栈上的薄壳、堆上可选的数据块、几条不同的入口。咱们容易绕晕，多半是把构造、拷贝、字面量这几条入口搅在一起了。路线图咱们看一眼：
-
-```mermaid
-flowchart LR
-    A["入口一\n默认构造"] --> D["栈上一个 DataPointer\n（薄壳·3 个 word）"]
-    B["入口二\nQStringLiteral/_s"] --> D
-    C["入口三\n(const QChar*, size)\n或 fromRawData"] --> D
-    D --> E{"只读，还是想写？"}
-    E -- "只读 / 刚构造" --> F["d=nullptr 或指向共享堆块\n零或一次分配"]
-    E -- "写（data/operator[]）" --> G["detach 触发\nneedsDetach 判定"]
-    G -- "独占" --> H["in-place realloc\n免拷贝"]
-    G -- "共享 / 视图" --> I["新 malloc + memcpy\n深拷贝接管"]
-```
-
-三条入口（默认构造、字面量、带数据的构造）最后都汇聚到栈上那个叫 `DataPointer` 的薄壳，剩下的事只有一件：咱们接下来读它还是写它。只读的时候数据原地不动，想写的时候 detach 才登场。咱们这一篇就顺着图走一遍。不过咱们动身以前，还有一块地基要刨：QString 到底有没有 SSO？
 
 ### QString 没有 SSO：栈上的薄壳连一个字符的位置都没留
 
@@ -422,19 +400,3 @@ private:
 第三道题咱们验证容量的跳档台阶。咱们从一个空 `QString` 出发，一个字符一个字符地往里 `append`，每加一次咱们就打印一次 `size()` 和 `capacity()`。您会看到 `capacity()` 长时间都按兵不动，动的每一次都是往上跳一大档，这正是增长策略一节 `qNextPowerOfTwo` 的形状：按 2 的幂上取整的是整块的字节数，头部的固定开销也折在块里，所以换算到元素容量，每一档跳的都不止两倍。咱们再试一次提前 `reserve()` 的版本，对比两种曲线下 realloc 发生的次数，reserve 的价值您就摸到手了。
 
 第四道题咱们回到源码里做核对。您到 `qt_src/qt6.9.1` 里搜 `sharedNull`，验证全 corelib 是不是只剩下了 `qstring.cpp:2856` 一处注释，函数本体是不是真的没了。然后再打开 `qarraydata.cpp` 的增长策略那几行，把 `Q_UNLIKELY` 兜底分支上方的注释读一遍，看看 Qt 自己怎么解释 32 位平台上刚好 2G 的分配，为什么要躲开它？两处都对上了，空串一节和增长一节的断言也就落了地。
-
-## 官方文档参考链接
-
-[Qt 文档 · QString](https://doc.qt.io/qt-6.9/qstring.html)——官方的参考，咱们查 QString 的构造、容量这些接口时以它为准，本篇的基线是 6.9.1、线上页面跟着小版本滚动。
-
-[Qt 文档 · QStringView](https://doc.qt.io/qt-6.9/qstringview.html)——官方的参考，咱们查只读视图的语义时以它为准。
-
-[Qt 文档 · Implicit Sharing](https://doc.qt.io/qt-6.9/implicit-sharing.html)——COW 的总览文档，涵盖 QString/QByteArray/QList 共享数据的语义，咱们正好拿它和本篇的 detach 拆解互相印证。
-
-[Qt 文档 · QStringLiteral](https://doc.qt.io/qt-6.9/qstring.html#QStringLiteral)——官方的说明，咱们拿它和字面量一节的源码拆解对照着读。
-
----
-
-走到了这里，QString 的内存模型咱们就从源码层面拆完了。笔者拆完最深的感受，是 Qt 6 这套设计比看上去要薄、也比 Qt 5 要干净：一个 `QString` 实例就是栈上三个 `machine word` 的薄壳，真正的数据和共享元信息全在堆上那块连续分配里。空串更是连头都不要了，借一个静态 `char16_t _empty` 就够了，连 `QStringLiteral` 这样的编译期常量都被改造成了不构造头部的纯视图。咱们从 QString 没有 SSO 这个最反直觉的事实出发，一路看到了引用计数怎么靠原子操作保多线程安全、写时复制怎么靠 `needsDetach` 判断要不要深拷贝、`reallocData` 的三条路怎么在共享深拷贝、独占 in-place realloc、空串退回视图之间分流、容量怎么按 2 的幂翻倍增长，以及字面量和 `fromRawData` 怎么用 `d == nullptr` 表达不持有。这套模型和咱们同卷的 [19.COW 隐式共享](./19-cow-implicit-sharing-expert.md)、[04.COW 容器实战](./04-cow-container-practice-expert.md) 共用同一套 `QArrayData` / `QArrayDataPointer` 骨架，您以后拆别的容器、回头翻这两篇的时候，还会反复用到这一篇的判断。
-
-您要是想把本篇涉及的所有行号证据拿来一一核对，这些证据咱们已经按源码机制归了类，[code-index · QString 内存模型与编译期视图](../code-index/qtbase/qstring-memory-layout.md) 就是本篇的专页，通用的 [`QArrayDataPointer` 智能指针机制](../code-index/qtbase/qarraydatapointer.md)、[`QArrayData` 头部与分配增长策略](../code-index/qtbase/qarraydata.md)、[原子引用计数](../code-index/qtbase/atomic-operations.md) 另有专文收录，您带着行号直接去 `qt_src/qt6.9.1` 翻原文就行。
