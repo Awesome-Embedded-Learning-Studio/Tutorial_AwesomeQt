@@ -1,5 +1,7 @@
 # AwesomeQt — Qt 6 中文深度教程
 
+> PS: 正在深度重构！当前的内容的话会暂停维护，然后逐步作为素材迁移到更加好的Qt教程版本上~！
+
 > 一套聚焦 C++ / QtWidgets 的 Qt 6 中文深度教程：三层递进（入门 → 进阶 → 读源码）+ 可复用实例库，把「学会 Qt」送到「做出东西」。隶属 [Awesome-Embedded-Learning-Studio](https://github.com/Awesome-Embedded-Learning-Studio)。
 
 ---
