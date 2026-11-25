@@ -82,6 +82,12 @@ export const sharedThemeBase = {
   search: {
     provider: 'local',
     options: {
+      // 分卷构建时每卷各有一份本地搜索索引，由 scripts/build.ts 合并成一份。
+      // VitePress 默认只存 title / titles，正文 text 只参与索引、不存下来，合并时就读不回正文。
+      // 这里让每卷把 text 也存下来，合并后的那份不存正文，页面加载的体积不因此变大。
+      miniSearch: {
+        options: { storeFields: ['title', 'titles', 'text'] },
+      },
       translations: {
         button: {
           buttonText: '搜索教程',

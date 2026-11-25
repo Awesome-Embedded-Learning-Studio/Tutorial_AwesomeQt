@@ -20,7 +20,7 @@
 
 ## 3. 专家层引用的 Qt 源码 —— The Qt Company 许可
 
-专家层（`tutorial/expert/`）在讲解中会引用 Qt 源码片段并标注「文件:行号」。**Qt 源码本身**
+专家层（现归档在 `tutorial/legacy/expert/`）在讲解中会引用 Qt 源码片段并标注「文件:行号」。**Qt 源码本身**
 遵循 [The Qt Company 的 LGPL v3 / 商用双授权](https://www.qt.io/licensing/)；本仓库对这些片段
 的引用属教学性评注，不重新声明 Qt 源码的许可。读者若使用 Qt 源码，请遵守 Qt 自身条款。
 

@@ -1,5 +1,7 @@
 # 基建（填缝：P0/P0.5/P1/P4 + widget 化简 + 地基债）
 
+> **2026-11-24（[issue #35](https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/issues/35)）**：旧教程已归档到 `tutorial/legacy/`。下文提到 `tutorial/expert/...` 的条目是给旧教程记的，按归档后的位置理解。
+
 > 单点细节批量处理：扫出清单 → 逐个修。
 
 ## widget/ 构建化简（✅ 已落盘 2026-06-14 · cmake 验证通过）

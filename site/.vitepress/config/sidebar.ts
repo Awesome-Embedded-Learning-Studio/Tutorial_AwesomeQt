@@ -88,29 +88,32 @@ function hasContent(dir: string): boolean {
 export function buildSidebar(): DefaultTheme.Sidebar {
   const sidebar: DefaultTheme.Sidebar = {}
 
-  const beginnerDir = join(DOCS_ROOT, 'beginner')
+  // 旧版教程归档在 tutorial/legacy/ 下（issue #35），侧栏与网址统一带 legacy 前缀
+  const legacyRoot = join(DOCS_ROOT, 'legacy')
+
+  const beginnerDir = join(legacyRoot, 'beginner')
   if (hasContent(beginnerDir)) {
-    sidebar['/beginner/'] = scanDir(beginnerDir, '/beginner')
+    sidebar['/legacy/beginner/'] = scanDir(beginnerDir, '/legacy/beginner')
   }
 
-  const engineeringDir = join(DOCS_ROOT, 'engineering')
+  const engineeringDir = join(legacyRoot, 'engineering')
   if (hasContent(engineeringDir)) {
-    sidebar['/engineering/'] = scanDir(engineeringDir, '/engineering')
+    sidebar['/legacy/engineering/'] = scanDir(engineeringDir, '/legacy/engineering')
   }
 
-  const advancedDir = join(DOCS_ROOT, 'advanced')
+  const advancedDir = join(legacyRoot, 'advanced')
   if (hasContent(advancedDir)) {
-    const items = scanDir(advancedDir, '/advanced')
+    const items = scanDir(advancedDir, '/legacy/advanced')
     if (items.length > 0) {
-      sidebar['/advanced/'] = items
+      sidebar['/legacy/advanced/'] = items
     }
   }
 
-  const expertDir = join(DOCS_ROOT, 'expert')
+  const expertDir = join(legacyRoot, 'expert')
   if (hasContent(expertDir)) {
-    const items = scanDir(expertDir, '/expert')
+    const items = scanDir(expertDir, '/legacy/expert')
     if (items.length > 0) {
-      sidebar['/expert/'] = items
+      sidebar['/legacy/expert/'] = items
     }
   }
 

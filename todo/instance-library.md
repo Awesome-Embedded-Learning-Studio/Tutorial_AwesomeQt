@@ -1,5 +1,7 @@
 # 实例库（src/ 下 widget/app/model/industrial）
 
+> **2026-11-24（[issue #35](https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/issues/35)）**：实例文档已随旧教程归档到 `tutorial/legacy/engineering/instances/`。下文写到文档路径的地方（如 `tutorial/engineering/instances/...`）都按这个新位置理解。
+
 > 拿来学结构 / 练手 / 做发现的教学成品（非可发布产品）。文档出两套：成品导览（架构/决策/踩坑，不内联完整 code）+ 手搓手册（分步任务/提示/检查点，repo 成品当答案钥匙）。构建须 `cmake -B build && cmake --build build` 直接成功。
 
 ## 编码规范

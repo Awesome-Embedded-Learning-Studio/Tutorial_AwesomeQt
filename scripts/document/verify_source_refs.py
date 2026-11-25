@@ -17,7 +17,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 QT_SRC = REPO_ROOT / "qt_src" / "qt6.9.1"
-EXPERT_DIR = REPO_ROOT / "tutorial" / "expert"
+EXPERT_DIR = REPO_ROOT / "tutorial" / "legacy" / "expert"
 
 # 源码文件表里的完整路径：qt_src/qt6.9.1/<...>/basename.ext
 SRC_PATH_RE = re.compile(r"qt_src/qt6\.9\.1(/[^\s|`]+?\.(?:cpp|h|hpp|cc|cxx))")
@@ -80,7 +80,7 @@ def main():
         print(f"{YELLOW}verify_source_refs: 未找到 {QT_SRC}（qt_src 未下载或在 CI 中），跳过源码引用核对。{RESET}")
         sys.exit(0)
     if not EXPERT_DIR.is_dir():
-        print("verify_source_refs: 无 tutorial/expert 目录，跳过。")
+        print("verify_source_refs: 无 tutorial/legacy/expert 目录，跳过。")
         sys.exit(0)
 
     articles = [

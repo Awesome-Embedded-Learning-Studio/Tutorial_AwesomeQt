@@ -6,8 +6,8 @@ import {
 } from 'fs'
 import { join, resolve, relative, basename } from 'path'
 import { createHash } from 'crypto'
-import { createRequire } from 'module'
-const require = createRequire(import.meta.url)
+import { pathToFileURL } from 'node:url'
+import MiniSearch from 'minisearch'
 
 // ── CLI Flags ───────────────────────────────────────────────
 
@@ -22,17 +22,19 @@ interface Volume {
   urlPrefix: string
 }
 
+// 旧版教程归档在 tutorial/legacy/ 下（issue #35）：原样保留、停止维护，只改路径不改内容。
+// 卷名不变，缓存目录沿用；目录哈希变了，首次构建会全量重建一次。
 const VOLUMES: Volume[] = [
-  { name: 'beginner-00-env', srcDir: 'beginner/00-environment-setup', urlPrefix: '/beginner/00-environment-setup' },
-  { name: 'beginner-01-base', srcDir: 'beginner/01-qtbase', urlPrefix: '/beginner/01-qtbase' },
-  { name: 'beginner-02-gui', srcDir: 'beginner/02-qtgui', urlPrefix: '/beginner/02-qtgui' },
-  { name: 'beginner-03-widgets', srcDir: 'beginner/03-qtwidgets', urlPrefix: '/beginner/03-qtwidgets' },
-  { name: 'beginner-04-network', srcDir: 'beginner/04-qtnetwork', urlPrefix: '/beginner/04-qtnetwork' },
-  { name: 'beginner-05-other', srcDir: 'beginner/05-other-modules', urlPrefix: '/beginner/05-other-modules' },
-  { name: 'beginner-06-qml', srcDir: 'beginner/06-qml', urlPrefix: '/beginner/06-qml' },
-  { name: 'engineering-instances', srcDir: 'engineering/instances', urlPrefix: '/engineering/instances' },
-  { name: 'advanced', srcDir: 'advanced', urlPrefix: '/advanced' },
-  { name: 'expert', srcDir: 'expert', urlPrefix: '/expert' },
+  { name: 'beginner-00-env', srcDir: 'legacy/beginner/00-environment-setup', urlPrefix: '/legacy/beginner/00-environment-setup' },
+  { name: 'beginner-01-base', srcDir: 'legacy/beginner/01-qtbase', urlPrefix: '/legacy/beginner/01-qtbase' },
+  { name: 'beginner-02-gui', srcDir: 'legacy/beginner/02-qtgui', urlPrefix: '/legacy/beginner/02-qtgui' },
+  { name: 'beginner-03-widgets', srcDir: 'legacy/beginner/03-qtwidgets', urlPrefix: '/legacy/beginner/03-qtwidgets' },
+  { name: 'beginner-04-network', srcDir: 'legacy/beginner/04-qtnetwork', urlPrefix: '/legacy/beginner/04-qtnetwork' },
+  { name: 'beginner-05-other', srcDir: 'legacy/beginner/05-other-modules', urlPrefix: '/legacy/beginner/05-other-modules' },
+  { name: 'beginner-06-qml', srcDir: 'legacy/beginner/06-qml', urlPrefix: '/legacy/beginner/06-qml' },
+  { name: 'engineering-instances', srcDir: 'legacy/engineering/instances', urlPrefix: '/legacy/engineering/instances' },
+  { name: 'advanced', srcDir: 'legacy/advanced', urlPrefix: '/legacy/advanced' },
+  { name: 'expert', srcDir: 'legacy/expert', urlPrefix: '/legacy/expert' },
 ]
 
 const PROJECT_ROOT = resolve(import.meta.dirname, '..')
@@ -336,24 +338,62 @@ function unifyCrossVolumeData(distDir: string) {
 
 // ── Search Index Merge ──────────────────────────────────────
 
-function extractSearchDocs(indexPath: string): Array<Record<string, unknown>> {
-  const content = readFileSync(indexPath, 'utf-8')
-  const m = content.match(/^const \w+=(.+);export\{/)
-  if (!m) { log(`  ⚠ Could not parse: ${relative(PROJECT_ROOT, indexPath)}`); return [] }
-  const jsonStr: string = new Function(`return ${m[1]}`)()
-  const data = JSON.parse(jsonStr)
-  const docs: Array<Record<string, unknown>> = []
-  for (const [idStr, url] of Object.entries<string>(data.documentIds)) {
-    const fields = data.storedFields[idStr]
+interface SearchDoc {
+  /** 页内锚点网址，如 /Tutorial_AwesomeQt/legacy/advanced/01-qtbase/foo#小节标题 */
+  id: string
+  title: string
+  titles: string[]
+  text: string
+}
+
+interface SerializedMiniSearch {
+  documentIds?: Record<string, string>
+  storedFields?: Record<string, Record<string, unknown>>
+}
+
+type MiniSearchOptions = ConstructorParameters<typeof MiniSearch>[0]
+
+let searchIndexSeq = 0
+
+// 读一个分卷的本地搜索索引，还原成建索引用的文档。
+// 索引文件是 VitePress 的 localSearchPlugin 生成的 ES 模块，default 导出就是索引的 JSON 字符串。
+// 不用正则去抠字面量：VitePress 1.6.x 写的是多行模板字符串，更早的版本压成一行，格式随版本变。
+// 这里把它当模块 import 进来取 default，转义交给运行时，和浏览器加载它时的行为一致。
+// 先拷成 .mjs 再导入，保证不受外层 package.json 里 type 的影响。
+async function extractSearchDocs(indexPath: string): Promise<SearchDoc[]> {
+  const tmpFile = join(BUILD_TMP, `search-index-${searchIndexSeq++}.mjs`)
+  cpSync(indexPath, tmpFile)
+  let data: SerializedMiniSearch
+  try {
+    const mod: { default: unknown } = await import(pathToFileURL(tmpFile).href)
+    data = JSON.parse(String(mod.default)) as SerializedMiniSearch
+  } catch (err) {
+    log(`  ⚠ Could not parse: ${relative(PROJECT_ROOT, indexPath)} (${err instanceof Error ? err.message : err})`)
+    return []
+  }
+  const docs: SearchDoc[] = []
+  for (const [idStr, url] of Object.entries(data.documentIds ?? {})) {
+    const fields = data.storedFields?.[idStr]
     if (!fields) continue
-    docs.push({ id: url, title: fields.title || '', titles: fields.titles || [] })
+    docs.push({
+      id: url,
+      title: String(fields.title ?? ''),
+      titles: Array.isArray(fields.titles) ? fields.titles.map(String) : [],
+      text: String(fields.text ?? ''),
+    })
   }
   return docs
 }
 
-async function buildSearchIndexJs(docs: Array<Record<string, unknown>>): Promise<string> {
-  const MiniSearch = require('minisearch')
-  const ms = new MiniSearch({ fields: ['title', 'titles', 'text'], storeFields: ['title', 'titles'] })
+// 建索引时的选项要跟 VitePress 给每个卷建索引时用的一致，不然查询端的分词对不上索引里的词。
+// VitePress 的写法是 new MiniSearch({ fields, storeFields, ...miniSearch.options })，
+// 其中 miniSearch.options 来自 config/shared.ts，这里取同一份，只把 storeFields 固定成不存正文。
+async function buildSearchIndexJs(docs: SearchDoc[]): Promise<string> {
+  const { sharedThemeBase } = await import(pathToFileURL(join(MAIN_VP, 'config', 'shared.ts')).href)
+  const miniSearchOptions = sharedThemeBase.search.options.miniSearch?.options ?? {}
+  const options: MiniSearchOptions = { fields: ['title', 'titles', 'text'], ...miniSearchOptions }
+  options.storeFields = ['title', 'titles']
+  const ms = new MiniSearch<SearchDoc>(options)
   ms.addAll(docs)
   const json = JSON.stringify(ms.toJSON())
   return `const e=${JSON.stringify(json)};export{e as default};`
@@ -374,13 +414,13 @@ function findAllSearchIndexFiles(dir: string): string[] {
 async function mergeSearchIndexes(outputDirs: string[], finalDist: string) {
   logStep('Step 3/4: Merging search indexes')
 
-  const allDocs: Array<Record<string, string>> = []
+  const allDocs: SearchDoc[] = []
   for (const dir of outputDirs) {
     const chunksDir = join(dir, 'assets', 'chunks')
     if (!existsSync(chunksDir)) continue
     for (const f of readdirSync(chunksDir)) {
       if (!/^@localSearchIndexroot\.[^.]+\.js$/.test(f)) continue
-      const docs = extractSearchDocs(join(chunksDir, f))
+      const docs = await extractSearchDocs(join(chunksDir, f))
       log(`  ${relative(PROJECT_ROOT, dir)}: ${docs.length} docs`)
       allDocs.push(...docs)
     }
@@ -390,9 +430,8 @@ async function mergeSearchIndexes(outputDirs: string[], finalDist: string) {
 
   const seen = new Set<string>()
   const uniqueDocs = allDocs.filter(d => {
-    const id = d.id as string
-    if (seen.has(id)) return false
-    seen.add(id)
+    if (seen.has(d.id)) return false
+    seen.add(d.id)
     return true
   })
   log(`  Merging ${uniqueDocs.length} unique docs (dropped ${allDocs.length - uniqueDocs.length} duplicates)...`)
@@ -401,14 +440,16 @@ async function mergeSearchIndexes(outputDirs: string[], finalDist: string) {
   const allTargets = findAllSearchIndexFiles(finalDist)
   if (allTargets.length === 0) { log('  ⚠ No target index files in final dist!'); return }
 
+  // 每个卷的页面引用的是自己那一卷的索引文件名，所以只留一份完整的，其余改成转发，
+  // 全站任意页面打开搜索时加载到的都是同一份完整索引。
   writeFileSync(allTargets[0], js)
   const canonicalName = basename(allTargets[0])
   const stub = `export{default}from"./${canonicalName}";`
   for (let i = 1; i < allTargets.length; i++) {
     writeFileSync(allTargets[i], stub)
   }
-  const savedMB = ((js.length - stub.length) * (allTargets.length - 1) / 1024 / 1024).toFixed(1)
-  log(`  ✓ 1 canonical + ${allTargets.length - 1} stubs (saved ${savedMB} MB)`)
+  const canonicalMB = (Buffer.byteLength(js, 'utf-8') / 1024 / 1024).toFixed(2)
+  log(`  ✓ 1 canonical + ${allTargets.length - 1} stubs (canonical ${canonicalMB} MB)`)
 }
 
 // ── Sitemap ────────────────────────────────────────────────
@@ -468,8 +509,8 @@ async function main() {
     const s = join(DOCUMENTS, f)
     if (existsSync(s)) cpSync(s, join(rootSrcDir, f))
   }
-  // Copy layer index pages
-  for (const layer of ['beginner', 'engineering', 'advanced', 'expert']) {
+  // Copy layer index pages（旧版教程：legacy 总入口页 + 各层入口页，路径与 VOLUMES 的 legacy 前缀一致）
+  for (const layer of ['legacy', 'legacy/beginner', 'legacy/engineering', 'legacy/advanced', 'legacy/expert']) {
     const s = join(DOCUMENTS, `${layer}/index.md`)
     if (existsSync(s)) {
       mkdirSync(join(rootSrcDir, layer), { recursive: true })

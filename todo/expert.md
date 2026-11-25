@@ -1,5 +1,7 @@
 # 专家层（102 篇源码拆解）
 
+> **2026-11-24 起重构中（[issue #35](https://github.com/Awesome-Embedded-Learning-Studio/Tutorial_AwesomeQt/issues/35)）**：本文件记的是旧版专家教程的生产进度，已全部暂停。下文写的 `tutorial/expert/...` 都是归档前的路径，文章现在在 `tutorial/legacy/expert/` 下面（审查记录在同目录的 `.audit/`），停止维护，只作素材。
+
 ## ⚡ 交接（2026-07-08，下次从这里接）
 
 **现状（2026-10-28 更新）**：QtBase 卷 21/21 全部落盘🎉（18 当日产出当日审结；20-event-loop-deep-dive 已产出待审，作者点头即整卷收官）。**剩 81 篇。**

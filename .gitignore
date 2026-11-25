@@ -24,4 +24,4 @@ site/.vitepress/.build-cache/
 site/.vitepress/.build-tmp/
 
 # Expert audit records (internal review, not for publish)
-tutorial/expert/.audit/
+tutorial/legacy/expert/.audit/

@@ -13,7 +13,7 @@ body:
     attributes:
       label: "相关页面或文件"
       description: "请粘贴文档页面链接，或仓库中的文件路径。"
-      placeholder: "例如：tutorial/beginner/01-qtbase/01-signal-slot-beginner.md 或在线页面链接"
+      placeholder: "例如：tutorial/legacy/beginner/01-qtbase/01-signal-slot-beginner.md 或在线页面链接"
     validations:
       required: true
 

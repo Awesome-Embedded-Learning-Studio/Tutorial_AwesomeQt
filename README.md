@@ -1,6 +1,8 @@
 # AwesomeQt — Qt 6 中文深度教程
 
 > PS: 正在深度重构！当前的内容的话会暂停维护，然后逐步作为素材迁移到更加好的Qt教程版本上~！
+>
+> 旧教程（入门 / 进阶 / 专家 / 实例文档）已整套归档到 [tutorial/legacy/](tutorial/legacy/)，线上在「旧版教程」入口下，原样保留，停止维护。
 
 > 一套聚焦 C++ / QtWidgets 的 Qt 6 中文深度教程：三层递进（入门 → 进阶 → 读源码）+ 可复用实例库，把「学会 Qt」送到「做出东西」。隶属 [Awesome-Embedded-Learning-Studio](https://github.com/Awesome-Embedded-Learning-Studio)。
 
@@ -44,7 +46,7 @@ cd Tutorial_AwesomeQt
 # 打开 tutorial/index.md 选择你的起点
 
 # 3. 从环境搭建开始
-# tutorial/beginner/00-environment-setup/
+# tutorial/legacy/beginner/00-environment-setup/
 ```
 
 如果你是零基础，建议按顺序从「环境搭建」开始。如果你已经有 Qt 经验，可以直接跳到感兴趣的模块。
@@ -137,7 +139,7 @@ cd Tutorial_AwesomeQt
 
 ## 实例库 — 真成品，不是片段
 
-项目内置一套实例库：`src/widget/` 是可复用控件库（统一 `AwesomeQt::` 命名空间），`src/app/` 是整机应用。每件都是可独立编译的成品，配「成品导览 + 手搓手册」两套文档，落在 [tutorial/engineering/instances/](tutorial/engineering/instances/)。
+项目内置一套实例库：`src/widget/` 是可复用控件库（统一 `AwesomeQt::` 命名空间），`src/app/` 是整机应用。每件都是可独立编译的成品，配「成品导览 + 手搓手册」两套文档，落在 [tutorial/legacy/engineering/instances/](tutorial/legacy/engineering/instances/)。
 
 ### widget 通用控件
 

@@ -27,7 +27,7 @@ repos:
         entry: python3 scripts/document/verify_source_refs.py
         language: system
         pass_filenames: false
-        files: '^tutorial/expert/.*\.md$'
+        files: '^tutorial/legacy/expert/.*\.md$'
 
   # 基础文件卫生 + 防 5.5G 的 qt_src 误漏进 git 历史
   - repo: https://github.com/pre-commit/pre-commit-hooks
